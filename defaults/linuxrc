@@ -223,6 +223,9 @@ do
 				USE_UNIONFS_NORMAL=1
 			fi
 			;;
+		aufs)
+			USE_AUFS_NORMAL=1
+		;;
 		nounionfs)
 			USE_UNIONFS_NORMAL=0
 			;;
@@ -623,7 +626,13 @@ then
 	fi
 
 
-	if [ "${USE_UNIONFS_NORMAL}" = '1' ]
+	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
+	then
+		good_msg 'Setting up aufs mounts'
+		setup_aufs
+		CHROOT="${UNION}"
+
+	elif [ "${USE_UNIONFS_NORMAL}" = '1' ]
 	then
 		setup_unionfs ${NEW_ROOT} ${NEW_ROOT}/${FS_LOCATION}
 		CHROOT=/union
@@ -672,10 +681,6 @@ then
 		fi
 	done
 
-	if [ "${DO_slowusb}" ] || [ "${FORCE_slowusb}" ]
-	then
-		sleep 10
-	fi
 	mkdir initramfs proc tmp sys 2>/dev/null
 	chmod 1777 tmp
 
@@ -702,6 +707,11 @@ else
 		mkdir /union_changes
 		mount -t tmpfs tmpfs /union_changes
 		setup_unionfs /union_changes ${NEW_ROOT}
+		mkdir -p ${UNION}/tmp/.initrd
+	fi
+	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
+	then
+		setup_aufs
 		mkdir -p ${UNION}/tmp/.initrd
 	fi
 fi
