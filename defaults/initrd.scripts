@@ -848,6 +848,8 @@ sdelay() {
 	if [ -n "${SDELAY}" ]
 	then
 		sleep ${SDELAY}
+	elif grep cdroot /proc/cmdline > /dev/null 2>&1; then
+		sleep 3
 	else
 		sleep 1
 	fi
