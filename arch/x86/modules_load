@@ -28,3 +28,6 @@ MODULES_USB="ehci-hcd uhci usb-ohci hid usb-storage uhci-hcd ohci-hcd usbhid sl8
 # Filesystems
 MODULES_FS="ext2 ext3 ext4 reiserfs jfs nfs xfs fuse"
 
+# Crypto stuff
+MODULES_CRYPT="aes sha1 sha256 sha512 xts"
+
