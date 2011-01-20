@@ -1,7 +1,149 @@
 # ChangeLog for genkernel
-# Copyright 1999-2009 Gentoo Foundation; 2008-2009 Various authors (see AUTHORS)
+# Copyright: 
+# - 2003-2008 Gentoo Foundation
+# - 2008-2011 Various authors (see AUTHORS)
 # Distributed under the GPL v2
 # $Id$
+
+  20 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.11.1
+
+  20 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_configkernel.sh:
+  Move application of kernel config after "make mrproper" as that deletes
+  .config (whereas "make clean" does not) (bug #351906)
+
+  Special thanks:
+  - Xake
+
+  20 Jan 2011; Sebastian Pipping <sping@gentoo.org>
+  patches/busybox/1.18.1/1.18.1-mdstart.diff:
+  busybox 1.18.1: Return of mdstart as an applet (regression) (bug #351909)
+
+  16 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.11
+
+  16 Jan 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Do not sleep after vgscan (bug #351047)
+
+  16 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Changes:
+  - Fix compilation of LVM 2.02.74 (and 2.02.28) (bug #255196, bug #267383)
+  - Add minimal btrfs support (bug #303529)
+  - Add support for UUID to crypt_root (bug #315467)
+  - Run "make firmware_install" if CONFIG_FIRMWARE_IN_KERNEL != y (bug #244651)
+  - Port busybox patches from 1.7.4 to 1.18.1 (bug #331971)
+  - Handle missing kernel .config better (bug #271528)
+  - Improve slowusb handling (bug #323317)
+  - Add GnuPG 1.x support (bug #217959)
+  - Check return codes of cpio (bug #246370)
+  - Update e2fsprogs/blkid to 1.41.14 (bug #291822)
+  - Create /bin/vg* symlinks when called as /linuxrc, too (bug #307855)
+  - Pick first device when several devices are matching real_root (bug #303531)
+  - Fix warning "cannot remove `/var/cache/genkernel/src'" (bug #347213)
+  - Allow configuring the list of busybox applets (bug #326593)
+  - Fix arithmetic bug in defaults/initrd.scripts (bug #339789)
+
+  Special thanks:
+  - Amadeusz Zolnowski (LVM update)
+  - Christian Giessner (UUID crypt_root)
+  - dacook (GnuPG 1.x support)
+  - Denis Kaganovich (Busybox patch porting)
+  - devsk (Multi-device patch)
+  - Fabio Erculiani (Slowusb fixes)
+  - Kai Dietrich (Symlink analysis)
+  - Kolbjørn Barmen (Arithmetic fix)
+
+  13 Dec 2010; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.10.908
+
+  13 Dec 2010; <sping@gentoo.org> doc/genkernel.8.txt, gen_cmdline.sh:
+  docs: Document --genzimage
+
+  13 Dec 2010; <sping@gentoo.org> gen_cmdline.sh:
+  Fix a reference to --nomenuconfig into --no-menuconfig
+
+  13 Dec 2010; <sping@gentoo.org> doc/genkernel.8.txt:
+  docs: Update man page from output of --help
+
+  13 Dec 2010; <sping@gentoo.org> doc/genkernel.8.txt:
+  docs: Document keymap= and dokeymap (bug #346017)
+
+  6 Dec 2010; <sping@gentoo.org> genkernel.conf:
+  .conf: Document LUKS variable (bug #346015)
+
+  6 Dec 2010; <sping@gentoo.org> doc/genkernel.8.txt:
+  docs: Mention both "initramfs" and "ramdisk" as available actions
+  (bug #251702)
+
+  6 Dec 2010; <sping@gentoo.org> genkernel.8:
+  man page: Propagate rename of --no-initrdmodules to --no-ramdisk-modules
+
+  29 Nov 2010; <sping@gentoo.org> ChangeLog:
+  Add patch allowing compilation of busybox 1.7.4 with make 3.82 (bug #341943)
+
+  20 Feb 2010; Andrew Gaffney <agaffney@gentoo.org> defaults/initrd.scripts:
+  Apply patches from Gentoo bug #268468
+
+  19 Jan 2010; Andrew Gaffney <agaffney@gentoo.org> genkernel:
+  Only call set_bootloader is CMD_NOINSTALL is not set for Gentoo bug
+  #301454
+
+  27 Dec 2009; Andrew Gaffney <agaffney@gentoo.org> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/kernel-config, arch/ia64/modules_load,
+  arch/mips/modules_load, arch/parisc/modules_load,
+  arch/parisc64/modules_load, arch/ppc/kernel-config, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load,
+  arch/sparc64/kernel-config, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/kernel-config, arch/x86/modules_load,
+  arch/x86_64/kernel-config, arch/x86_64/modules_load,
+  defaults/kernel-config:
+  Add USB HID modules to modules_load and default kernel-config (for Gentoo
+  bug #270983)
+
+  27 Dec 2009; Andrew Gaffney <agaffney@gentoo.org>
+  arch/alpha/kernel-config, arch/alpha/modules_load, arch/arm/modules_load,
+  arch/ia64/kernel-config, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load,
+  arch/ppc/kernel-config, arch/ppc/modules_load, arch/ppc64/modules_load,
+  arch/sparc/modules_load, arch/sparc64/kernel-config,
+  arch/sparc64/modules_load, arch/um/modules_load, arch/x86/kernel-config,
+  arch/x86/modules_load, arch/x86_64/kernel-config,
+  arch/x86_64/modules_load, defaults/kernel-config, defaults/modules_load:
+  Enable ext4 by default everywhere (for Gentoo bug #268818)
+
+  27 Dec 2009; Andrew Gaffney <agaffney@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Add support for isoboot= option (for Gentoo bug #294268)
+
+  26 Dec 2009; Andrew Gaffney <agaffney@gentoo.org>
+  defaults/initrd.defaults, defaults/initrd.scripts:
+  Properly apply NFS mount options for Gentoo bug #262915
+
+  26 Dec 2009; Andrew Gaffney <agaffney@gentoo.org>
+  arch/alpha/kernel-config, arch/ia64/kernel-config, arch/ppc/kernel-config,
+  arch/x86_64/kernel-config:
+  Enable CONFIG_SCSI_MULTI_LUN option for Gentoo bug #261122
+
+  26 Dec 2009; Andrew Gaffney <agaffney@gentoo.org> defaults/initrd.scripts:
+  Apply patch to make sure loop cache directory exists for Gentoo bug
+  #297814
+
+  17 Dec 2009; Robin H. Johnson <robbat2@gentoo.org> HACKING:
+  Document how to roll a release for the next time.
+
+  17 Dec 2009; Robin H. Johnson <robbat2@gentoo.org> genkernel:
+  Tag 3.4.10.907 release.
+
+  06 Dec 2009; Andrew Gaffney <agaffney@gentoo.org> gen_initramfs.sh:
+  use a symlink instead of a hardlink for busybox utils (for Gentoo bug
+  #246370)
+
+  23 Nov 2009; Andrew Gaffney <agaffney@gentoo.org> defaults/linuxrc:
+  Fix typo for Gentoo bug #294138
+
+  16 Nov 2009; Andrew Gaffney <agaffney@gentoo.org> gen_initramfs.sh:
+  Make sure to change back to existant directory before removing the current
+  directory for Gentoo bug #291794
 
   15 Oct 2009; <craig@haquarter.de> Changelog:
   added iSCSI support
@@ -178,6 +320,7 @@
 
   23 Dec 2008; Andrew Gaffney <agaffney@gentoo.org> gen_cmdline.sh:
   Allow old 'initramfs' option instead of 'ramdisk' for compatability
+  (bug #251702)
 
   17 Dec 2008; Andrew Gaffney <agaffney@gentoo.org> defaults/linuxrc:
   Remove the use of 'env -i' when calling switch_root due to Gentoo bug

@@ -3,12 +3,14 @@
 
 longusage() {
   echo "Gentoo Linux Genkernel ${GK_V}"
+  echo
   echo "Usage: "
   echo "  genkernel [options] action"
   echo
   echo "Available Actions: "
   echo "  all				Build all steps"
   echo "  bzImage			Build only the kernel"
+  echo "  initramfs			Build only the ramdisk/initramfs"
   echo "  kernel			Build only the kernel and modules"
   echo "  ramdisk			Build only the ramdisk/initramfs"
   echo
@@ -90,10 +92,12 @@ longusage() {
   echo "	--bootloader=grub	Add new kernel to GRUB configuration"
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
   echo "	--busybox-config=<file>	Specifies a user created busybox config"
+  echo "	--genzimage		Make and install kernelz image (PowerPC)"
   echo "	--disklabel		Include disk label and uuid support in your"
   echo "				ramdisk"
   echo "	--luks			Include LUKS support"
   echo "				--> 'emerge cryptsetup-luks' with USE=-dynamic"
+  echo "	--gpg			Include GPG-armored LUKS key support"
   echo "	--no-busybox    Do not include busybox in the initramfs."
   echo "	--unionfs       Include support for unionfs"
   echo "	--netboot       Create a self-contained env in the initramfs"
@@ -138,6 +142,7 @@ longusage() {
 
 usage() {
   echo "Gentoo Linux Genkernel ${GK_V}"
+  echo
   echo "Usage: "
   echo "	genkernel [options] all"
   echo
@@ -307,7 +312,7 @@ parse_cmdline() {
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
 				echo "Error: You need a terminal with at least 80 columns"
-				echo "		 and 19 lines for --menuconfig; try --nomenuconfig..."
+				echo "		 and 19 lines for --menuconfig; try --no-menuconfig..."
 				exit 1
 			fi
 			CMD_MENUCONFIG=1
@@ -519,6 +524,10 @@ parse_cmdline() {
 		--luks)
 			CMD_LUKS=1
 			print_info 2 "CMD_LUKS: ${CMD_LUKS}"
+			;;
+		--gpg)
+			CMD_GPG=1
+			print_info 2 "CMD_GPG: ${CMD_GPG}"
 			;;
 		--firmware)
 			CMD_FIRMWARE=1

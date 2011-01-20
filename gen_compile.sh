@@ -203,6 +203,7 @@ apply_patches() {
 		print_info 1 "${util}: >> Applying patches..."
 		for i in ${GK_SHARE}/patches/${util}/${version}/*{diff,patch}
 		do
+			[ -f "${i}" ] || continue
 			patch_success=0
 			for j in `seq 0 5`
 			do
@@ -213,8 +214,10 @@ apply_patches() {
 					break
 				fi
 			done
-			if [ ${patch_success} != 1 ]
+			if [ ${patch_success} -eq 1 ]
 			then
+				print_info 1 "          - `basename ${i}`"
+			else
 				gen_die "could not apply patch ${i} for ${util}-${version}"
 			fi
 		done
@@ -264,7 +267,7 @@ compile_generic() {
 		eval ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> ${LOGFILE} 2>&1
 		RET=$?
 	fi
-	[ "${RET}" -ne '0' ] &&
+	[ ${RET} -ne 0 ] &&
 		gen_die "Failed to compile the \"${target}\" target..."
 
 	unset MAKE
@@ -298,6 +301,15 @@ compile_kernel() {
 	then
 		print_info 1 "        >> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2}..."
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
+	fi
+
+	local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${KERNEL_DIR}"/.config`
+	if [ -n "${firmware_in_kernel_line}" -a "${firmware_in_kernel_line}" != CONFIG_FIRMWARE_IN_KERNEL=y ]
+	then
+		print_info 1 "        >> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
+		compile_generic "firmware_install" kernel
+	else
+		print_info 1 "        >> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y)..."
 	fi
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
@@ -405,7 +417,6 @@ compile_busybox() {
 }
 
 compile_lvm() {
-	compile_device_mapper
 	if [ ! -f "${LVM_BINCACHE}" ]
 	then
 		[ -f "${LVM_SRCTAR}" ] ||
@@ -421,11 +432,13 @@ compile_lvm() {
 			gen_die "Could not extract device-mapper binary cache!";
 		
 		cd "${LVM_DIR}"
+		apply_patches lvm ${LVM_VER}
 		print_info 1 'lvm: >> Configuring...'
-			LDFLAGS="-L${TEMP}/device-mapper/lib" \
-			CFLAGS="-I${TEMP}/device-mapper/include" \
-			CPPFLAGS="-I${TEMP}/device-mapper/include" \
-			./configure --enable-static_link --prefix=${TEMP}/lvm >> ${LOGFILE} 2>&1 ||
+			CFLAGS="-fPIC" \
+			./configure --enable-static_link --prefix=${TEMP}/lvm \
+				--with-lvm1=internal --with-clvmd=none --with-cluster=none \
+				--disable-readline --disable-selinux --with-mirrors=internal \
+				--with-snapshots=internal --with-pool=internal >> ${LOGFILE} 2>&1 || \
 				gen_die 'Configure of lvm failed!'
 		print_info 1 'lvm: >> Compiling...'
 			compile_generic '' utils
@@ -502,6 +515,7 @@ compile_device_mapper() {
 		[ ! -d "${DEVICE_MAPPER_DIR}" ] &&
 			gen_die "device-mapper directory ${DEVICE_MAPPER_DIR} invalid"
 		cd "${DEVICE_MAPPER_DIR}"
+		CFLAGS="-fPIC" \
 		./configure --prefix=${TEMP}/device-mapper --enable-static_link \
 			--disable-selinux >> ${LOGFILE} 2>&1 ||
 			gen_die 'Configuring device-mapper failed!'
@@ -525,8 +539,10 @@ compile_device_mapper() {
 }
 
 compile_e2fsprogs() {
-	if [ ! -f "${BLKID_BINCACHE}" ]
+	if [ -f "${BLKID_BINCACHE}" ]
 	then
+		print_info 1 "blkid: >> Using cache"
+	else
 		[ ! -f "${E2FSPROGS_SRCTAR}" ] &&
 			gen_die "Could not find e2fsprogs source tarball: ${E2FSPROGS_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
@@ -536,7 +552,7 @@ compile_e2fsprogs() {
 			gen_die "e2fsprogs directory ${E2FSPROGS_DIR} invalid"
 		cd "${E2FSPROGS_DIR}"
 		print_info 1 'e2fsprogs: >> Configuring...'
-		./configure  --with-ldopts=-static >> ${LOGFILE} 2>&1 ||
+		LDFLAGS=-static ./configure >> ${LOGFILE} 2>&1 ||
 			gen_die 'Configuring e2fsprogs failed!'
 		print_info 1 'e2fsprogs: >> Compiling...'
 		MAKE=${UTILS_MAKE} compile_generic "" ""
@@ -663,3 +679,46 @@ compile_iscsi() {
 	fi
 }
 
+compile_gpg() {
+	if [ -f "${GPG_BINCACHE}" ]
+	then
+		print_info 1 "gnupg: >> Using cache"
+	else
+		[ ! -f "${GPG_SRCTAR}" ] &&
+			gen_die "Could not find gnupg source tarball: ${GPG_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
+		cd "${TEMP}"
+		rm -rf "${GPG_DIR}"
+		tar -jxf "${GPG_SRCTAR}"
+		[ ! -d "${GPG_DIR}" ] &&
+			gen_die "gnupg directory ${GPG_DIR} invalid"
+		cd "${GPG_DIR}"
+		print_info 1 'gnupg: >> Configuring...'
+		# --enable-minimal works, but it doesn't reduce the command length much.
+		# Given its history and the precision this needs, explicit is cleaner.
+		LDFLAGS='-static' CFLAGS='-Os' ./configure --prefix=/ \
+			--enable-static-rnd=linux --disable-dev-random --disable-asm \
+			--disable-selinux-support --disable-gnupg-iconv --disable-card-support \
+			--disable-agent-support --disable-bzip2 --disable-exec \
+			--disable-photo-viewers --disable-keyserver-helpers --disable-ldap \
+			--disable-hkp --disable-finger --disable-generic --disable-mailto \
+			--disable-keyserver-path --disable-dns-srv --disable-dns-pka \
+			--disable-dns-cert --disable-nls --disable-threads --disable-regex \
+			--disable-optimization --with-included-zlib --without-capabilities \
+			--without-tar --without-ldap --without-libcurl --without-mailprog \
+			--without-libpth-prefix --without-libiconv-prefix --without-libintl-prefix\
+			--without-zlib --without-bzip2 --without-libusb --without-readline \
+				>> ${LOGFILE} 2>&1 || gen_die 'Configuring gnupg failed!'
+		print_info 1 'gnupg: >> Compiling...'
+		compile_generic "" "utils"
+		print_info 1 'gnupg: >> Copying to cache...'
+		[ -f "${TEMP}/${GPG_DIR}/g10/gpg" ] ||
+			gen_die 'gnupg executable does not exist!'
+		strip "${TEMP}/${GPG_DIR}/g10/gpg" ||
+			gen_die 'Could not strip gpg binary!'
+		bzip2 -z -c "${TEMP}/${GPG_DIR}/g10/gpg" > "${GPG_BINCACHE}" ||
+			gen_die 'Could not copy the gpg binary to the package directory, does the directory exist?'
+
+		cd "${TEMP}"
+		rm -rf "${GPG_DIR}" > /dev/null
+	fi
+}

@@ -94,7 +94,7 @@ print_info() {
 
 	# PRINT TO SCREEN ONLY IF PASSED LOGLEVEL IS HIGHER THAN
 	# OR EQUAL TO SET DEBUG LEVEL
-	if [ "$1" -lt "${LOGLEVEL}" -o "$1" -eq "${LOGLEVEL}" ]
+	if [ "$1" -lt "${LOGLEVEL}" -o "$1" = "${LOGLEVEL}" ]
 	then
 		SCRPRINT='1'
 	fi
@@ -106,7 +106,7 @@ print_info() {
 	fi
 
 	# STRUCTURE DATA TO BE OUTPUT TO SCREEN, AND OUTPUT IT
-	if [ "${SCRPRINT}" -eq '1' ]
+	if [ "${SCRPRINT}" = '1' ]
 	then
 		if [ "${PREFIXLINE}" = '1' ]
 		then
@@ -124,7 +124,7 @@ print_info() {
 	fi
 
 	# STRUCTURE DATA TO BE OUTPUT TO FILE, AND OUTPUT IT
-	if [ "${SCRPRINT}" -eq '1' -o "${FORCEFILE}" -eq '1' ]
+	if [ "${SCRPRINT}" = '1' -o "${FORCEFILE}" = '1' ]
 	then
 		STRR=${2//${WARN}/}
 		STRR=${STRR//${BAD}/}
@@ -140,13 +140,13 @@ print_info() {
 
 		if [ "${NEWLINE}" = '0' ]
 		then
-			if [ "${TODEBUGCACHE}" -eq '1' ]; then
+			if [ "${TODEBUGCACHE}" = '1' ]; then
 				DEBUGCACHE="${DEBUGCACHE}${STR}"
 			else
 				echo -ne "${STR}" >> ${LOGFILE}
 			fi	
 		else
-			if [ "${TODEBUGCACHE}" -eq '1' ]; then
+			if [ "${TODEBUGCACHE}" = '1' ]; then
 				DEBUGCACHE="${DEBUGCACHE}${STR}"$'\n'
 			else
 				echo "${STR}" >> ${LOGFILE}
@@ -250,13 +250,11 @@ setup_cache_dir()
 if [ "${CLEAR_CACHE_DIR}" == 'yes' ]
 then
 	print_info 1 "Clearing cache dir contents from ${CACHE_DIR}"
-	CACHE_DIR_CONTENTS=`ls ${CACHE_DIR}|grep -v CVS|grep -v cpio|grep -v README`
-	
-	for i in ${CACHE_DIR_CONTENTS}
+	while read i
 	do
 		print_info 1 "	 >> removing ${i}"
-		rm ${CACHE_DIR}/${i}
-	done
+		rm "${i}"
+	done < <(find "${CACHE_DIR}" -maxdepth 1 -type f -name '*.tar.*' -o -name '*.bz2')
 fi
 
 }
@@ -265,13 +263,13 @@ clear_tmpdir()
 {
 if ! isTrue ${CMD_NOINSTALL}
 then
-    TMPDIR_CONTENTS=`ls ${TMPDIR}`
-    print_info 1 "Removing tmp dir contents"
-    for i in ${TMPDIR_CONTENTS}
-    do
-	print_info 1 "	 >> removing ${i}"
-	rm ${TMPDIR}/${i}
-    done
+	TMPDIR_CONTENTS=`ls ${TMPDIR}`
+	print_info 1 "Removing tmp dir contents"
+	for i in ${TMPDIR_CONTENTS}
+	do
+		print_info 1 "	 >> removing ${i}"
+		rm ${TMPDIR}/${i}
+	done
 fi
 }	
 
@@ -303,7 +301,7 @@ copy_image_with_preserve() {
 
 	# Old product might be a different version.  If so, we need to read
 	# the symlink to see what it's name is, if there are symlinks.
-	if [ "${SYMLINK}" -eq '1' ]
+	if [ "${SYMLINK}" = '1' ]
 	then
  		print_info 4 "automatically managing symlinks and old images." 1 0
 		if [ -e "${BOOTDIR}/${symlinkName}" ]
@@ -349,7 +347,7 @@ copy_image_with_preserve() {
 
 	# When symlinks are not being managed by genkernel, old symlinks might
     # still be useful.  Leave 'em alone unless managed.
-	if [ "${SYMLINK}" -eq '1' ]
+	if [ "${SYMLINK}" = '1' ]
 	then
 		print_info 5 "  Deleting old symlinks, if any."
 		rm -f "${BOOTDIR}/${symlinkName}"
@@ -367,7 +365,7 @@ copy_image_with_preserve() {
 		#
  		print_info 5 "  Same base version.  May have to delete old image to make room."
 
-		if [ "${currDestImageExists}" -eq '1' ]
+		if [ "${currDestImageExists}" = '1' ]
 		then
 			if [ -e "${BOOTDIR}/${currDestImage}.old" ]
 			then
@@ -395,14 +393,14 @@ copy_image_with_preserve() {
 	cp "${newSrceImage}" "${BOOTDIR}/${currDestImage}" ||
 	    gen_die "Could not copy the ${symlinkName} image to ${BOOTDIR}!"
 
-	if [ "${SYMLINK}" -eq '1' ]
+	if [ "${SYMLINK}" = '1' ]
 	then
 		print_info 5 "  Make new symlink(s) (from ${BOOTDIR}):"
 		print_info 5 "    ${symlinkName} -> ${currDestImage}"
 		pushd ${BOOTDIR} >/dev/null
 		ln -s "${currDestImage}" "${symlinkName}" || 
 		    gen_die "Could not create the ${symlinkName} symlink!"
-		if [ "${prevDestImageExists}" -eq '1' ]
+		if [ "${prevDestImageExists}" = '1' ]
 		then
 			print_info 5 "    ${symlinkName}.old -> ${prevDestImage}"
 			ln -s "${prevDestImage}" "${symlinkName}.old" ||
@@ -486,7 +484,7 @@ set_config_with_override() {
 		fi
 	fi
 
-	if [ "$VarType" -eq "1" ]
+	if [ "${VarType}" = "1" ]
 	then
 		if isTrue "${Result}"
 		then
@@ -500,7 +498,7 @@ set_config_with_override() {
 }
 
 check_distfiles() {
-	for i in $BUSYBOX_SRCTAR $DEVICE_MAPPER_SRCTAR $MULTIPATH_SRCTAR $LVM_SRCTAR $DMRAID_SRCTAR $E2FSPROGS_SRCTAR $ISCSI_SRCTAR
+	for i in $BUSYBOX_SRCTAR $DEVICE_MAPPER_SRCTAR $MULTIPATH_SRCTAR $LVM_SRCTAR $DMRAID_SRCTAR $E2FSPROGS_SRCTAR $ISCSI_SRCTAR $GPG_SRCTAR
 	do
 		if [ ! -f "${i}" ]
 		then

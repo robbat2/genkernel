@@ -20,6 +20,11 @@ get_KV() {
 		# Configure the kernel
 		# If BUILD_KERNEL=0 then assume --no-clean, menuconfig is cleared
 
+		if [ ! -f "${KERNEL_DIR}"/Makefile ]
+		then
+			gen_die "Kernel Makefile (${KERNEL_DIR}/Makefile) missing.  Maybe re-install the kernel sources."
+		fi
+
 		VER=`grep ^VERSION\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
 		PAT=`grep ^PATCHLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
 		SUB=`grep ^SUBLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
@@ -29,6 +34,7 @@ get_KV() {
 		then
 			# Handle O= build directories
 			KERNEL_SOURCE_DIR=`grep ^MAKEARGS\ \:\=  ${KERNEL_DIR}/Makefile | awk '{ print $4 };'`
+			[ -z "${KERNEL_SOURCE_DIR}" ] && gen_die "Deriving \${KERNEL_SOURCE_DIR} failed"
 			SUB=`grep ^SUBLEVEL\ \= ${KERNEL_SOURCE_DIR}/Makefile | awk '{ print $3 };'`
 			EXV=`grep ^EXTRAVERSION\ \= ${KERNEL_SOURCE_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
 		fi
@@ -110,6 +116,7 @@ determine_real_args() {
 	set_config_with_override 2 REAL_ROOT			CMD_REAL_ROOT
 	set_config_with_override 1 DISKLABEL            CMD_DISKLABEL
 	set_config_with_override 1 LUKS                 CMD_LUKS
+	set_config_with_override 1 GPG                  CMD_GPG
 	set_config_with_override 1 MDADM                CMD_MDADM
 	set_config_with_override 1 MULTIPATH            CMD_MULTIPATH
 	set_config_with_override 1 FIRMWARE             CMD_FIRMWARE
@@ -133,6 +140,7 @@ determine_real_args() {
 	BLKID_BINCACHE=`cache_replace "${BLKID_BINCACHE}"`
 	FUSE_BINCACHE=`cache_replace "${FUSE_BINCACHE}"`
 	UNIONFS_FUSE_BINCACHE=`cache_replace "${UNIONFS_FUSE_BINCACHE}"`
+	GPG_BINCACHE=`cache_replace "${GPG_BINCACHE}"`
   
 	DEFAULT_KERNEL_CONFIG=`arch_replace "${DEFAULT_KERNEL_CONFIG}"`
 	BUSYBOX_CONFIG=`arch_replace "${BUSYBOX_CONFIG}"`
@@ -144,6 +152,7 @@ determine_real_args() {
 	BLKID_BINCACHE=`arch_replace "${BLKID_BINCACHE}"`
 	FUSE_BINCACHE=`arch_replace "${FUSE_BINCACHE}"`
 	UNIONFS_FUSE_BINCACHE=`arch_replace "${UNIONFS_FUSE_BINCACHE}"`
+	GPG_BINCACHE=`arch_replace "${GPG_BINCACHE}"`
 
 	if [ -n "${CMD_BOOTLOADER}" ]
 	then

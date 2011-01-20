@@ -72,8 +72,17 @@ findmediamount() {
 
 	if [ "$#" -gt "0" ]
 	then
-
 		[ ! -d "${mntdir}" ] && mkdir -p ${mntdir} 2>/dev/null >/dev/null
+		if [ -n "${ISOBOOT}" ]
+		then
+			mntcddir="${mntdir%${media}}iso"
+			if [ ! -f ${mntcddir} ]
+			then
+				mkdir ${mntcddir}
+			fi
+		else
+			mntcddir=${mntdir}
+		fi
 
 		for x in $*
 		do
@@ -104,9 +113,18 @@ findmediamount() {
 #				else
 #					mount -r -t auto ${x} ${mntdir} &>/dev/null
 #				fi
-				mount -r -t ${CDROOT_TYPE} ${x} ${mntdir} >/dev/null 2>&1
+				mount -r -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
 				if [ "$?" = '0' ]
 				then
+					if [ -n "${ISOBOOT}" ]; then
+						if [ -f ${mntcddir}/${ISOBOOT} ]; then
+							mount -o loop ${mntcddir}/${ISOBOOT} ${mntdir}
+							if [ "$?" = "0" ]; then
+								good_msg "iso mounted on ${mntdir}"
+							fi
+						fi
+					fi
+
 					# Check for the media
 					if [ -f "${mntdir}/${recon}" ]
 					then
@@ -115,7 +133,7 @@ findmediamount() {
 						good_msg "Media found on ${x}" ${CRYPT_SILENT}
 						break
 					else
-						umount ${mntdir}
+						umount ${mntcddir}
 					fi
 				fi
 			fi
@@ -175,6 +193,8 @@ cache_cd_contents() {
 			# z=$(($z + $i)) ; done
 			# echo $z
 			good_msg "Copying loop file for caching..."
+			# Verify that the needed directory exists
+			mkdir -p "$(dirname ${NEW_ROOT}/mnt/${LOOP})"
 			cp -a ${NEW_ROOT}/mnt/cdrom/${LOOP} ${NEW_ROOT}/mnt/${LOOP}
 			if [ $? -ne 0 ]
 			then
@@ -192,7 +212,7 @@ cache_cd_contents() {
 mount_sysfs() {
 	mount -t sysfs /sys /sys >/dev/null 2>&1
 	ret=$?
-	[ "$ret" -eq '0' ] || bad_msg "Failed to mount /sys!"
+	[ ${ret} -eq 0 ] || bad_msg "Failed to mount /sys!"
 }
 
 aufs_setup_dir() {
@@ -241,10 +261,19 @@ findnfsmount() {
 
 		if [ "${NFSROOT}" != '' ]
 		then
+			NFSOPTIONS=${NFSROOT#*,}
+			NFSROOT=${NFSROOT%%,*}
+			if [ "${NFSOPTIONS}" = "${NFSROOT}" ]
+			then
+				NFSOPTIONS=$DEFAULT_NFSOPTIONS
+			else
+				NFSOPTIONS="${DEFAULT_NFSOPTIONS},${NFSOPTIONS}"
+			fi
+
 			if [ "${CDROOT}" != '0' ]
 			then
-				good_msg "Attempting to mount NFS CD image on ${NFSROOT}"
-				mount -t nfs -o ro,nolock,rsize=1024,wsize=1024 ${NFSROOT} ${NEW_ROOT}/mnt/cdrom
+				good_msg "Attempting to mount NFS CD image on ${NFSROOT} with options ${NFSOPTIONS}"
+				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}/mnt/cdrom
 				if [ "$?" = '0' ]
 				then
 					REAL_ROOT="/dev/nfs"
@@ -252,8 +281,8 @@ findnfsmount() {
 					bad_msg "NFS Mounting failed. Is the path corrent ?"
 				fi
 			else	
-				good_msg "Attempting to mount NFS root on ${NFSROOT}"
-				mount -t nfs -o ro,nolock,rsize=1024,wsize=1024 ${NFSROOT} ${NEW_ROOT}
+				good_msg "Attempting to mount NFS root on ${NFSROOT} with options ${NFSOPTIONS}"
+				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}
 				if [ "$?" = '0' ]
 				then
 					REAL_ROOT="/dev/nfs"
@@ -329,11 +358,16 @@ warn_msg() {
 }
 
 crypt_filter() {
-	if [ ${CRYPT_SILENT} -eq 1 ]
+	if [ "${CRYPT_SILENT}" = '1' ]
 	then
 		eval $1 >/dev/null 2>/dev/null
 	else
+		splash 'verbose' > /dev/null &
 		eval $1
+		if [ $? -eq 0 ]
+		then
+			splash set_msg 'Disk unlocked.'
+		fi
 	fi
 }
 
@@ -383,12 +417,23 @@ setup_hotplug() {
 	fi
 }
 
-check_slowusb() {
-	[ "${DO_slowusb}" ] || \
-	for x in /sys/bus/usb/drivers/usb-storage/*
+setup_slowusb() {
+	# slowusb already set?
+	if [ "${DO_slowusb}" = "1" ]
+	then
+		return
+	fi
+
+	local usb_storage_dir="/sys/bus/usb/drivers/usb-storage"
+	if [ ! -d "${usb_storage_dir}" ]
+	then
+		# no automated slowusb required. no usb-storage devices attached.
+		return
+	fi
+	for x in "${usb_storage_dir}"/*
 	do
-		[ -d "${x}" ]  && [ "${x}" != "/sys/bus/usb/drivers/usb-storage/module" ] \
-			&& FORCE_slowusb="1"
+		[ -d "${x}" ]  && [ "${x}" != "${usb_storage_dir}/module" ] \
+			&& { DO_slowusb="1" ; break ; }
 	done
 }
 
@@ -396,11 +441,8 @@ start_dev_mgr() {
 	if [ "${KV_2_6_OR_GREATER}" ]
 	then
 		cd /sys
-		check_slowusb
 		good_msg 'Activating mdev'
 		runmdev
-		[ "${DO_slowusb}" ] || \
-		[ "${FORCE_slowusb}" ] && sdelay
 		cd /
 	fi
 }
@@ -479,7 +521,7 @@ setup_keymap() {
 
 		[ "${DEVBIND}" = '1' ] && umount /dev
 		
-		if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" -eq '1' ]
+		if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" = '1' ]
 		then
 			mkdir -p ${NEW_ROOT}/etc/sysconfig/
 			cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
@@ -491,6 +533,7 @@ chooseKeymap() {
 	good_msg "Loading keymaps"
 	if [ -z "${keymap}" ]
 	then
+		splash 'verbose' > /dev/null &
 		cat /lib/keymaps/keymapList
 		read -t 10 -p '<< Load keymap (Enter for default): ' keymap
 		case ${keymap} in
@@ -544,17 +587,19 @@ chooseKeymap() {
 		loadkmap < /lib/keymaps/${keymap}.map
 #		xkeymap=${keymap}
 #		echo ${keymap} | egrep -e "[0-9]+" >/dev/null 2>&1
-#		if [ "$?" -eq '0'  ]
+#		if [ $? -eq 0 ]
 #		then
 #			xkeymap=`tail -n 7 /lib/keymaps/keymapList | grep ${keymap} | sed -r "s/.*\s+${keymap}\s+([a-z-]+).*/\1/g" | egrep -v 1`
 #		fi
 		mkdir -p /etc/sysconfig
 #		echo "XKEYBOARD=${xkeymap}" > /etc/sysconfig/keyboard
 		echo "XKEYBOARD=${keymap}" > /etc/sysconfig/keyboard
+		splash set_msg "Set keymap to ${keymap}"
 	elif [ -z "${keymap}" ]
 	then
 		echo
 		good_msg "Keeping default keymap"
+		splash set_msg "Keeping default keymap"
 	else
 		bad_msg "Sorry, but keymap ''${keymap}'' is invalid!"
 		unset keymap
@@ -573,7 +618,7 @@ startVolumes() {
 		ln -sf /dev/device-mapper /dev/mapper/control
 	fi
 	
-	if [ "${USE_MDADM}" -eq '1' ]
+	if [ "${USE_MDADM}" = '1' ]
 	then
 		if [ ! -e '/etc/mdadm.conf' ]
 		then
@@ -607,7 +652,6 @@ startVolumes() {
 
 			good_msg "Scanning for Volume Groups"
 			/bin/vgscan --ignorelockingfailure --mknodes 2>/dev/null
-			sleep 2
 			good_msg "Activating Volume Groups"
 			/bin/vgchange -ay --ignorelockingfailure 2>/dev/null
 
@@ -678,6 +722,9 @@ startiscsi() {
 		fi
 
 		iscsistart -i "${ISCSI_INITIATORNAME}" -t "${ISCSI_TARGET}" -a "${ISCSI_ADDRESS}" ${ADDITIONAL}
+
+		# let iscsid settle - otherwise mounting the iSCSI-disk will fail (very rarely, though)
+		sleep 1
 	fi
 }
 
@@ -705,6 +752,7 @@ openLUKS() {
 	[ ! -e /sbin/cryptsetup ] && bad_msg "The ramdisk does not support LUKS" && exit 1
 	while [ 1 ]
 	do
+		local gpg_cmd=""
 		# if crypt_silent=1 and some error occurs, enter shell quietly
 		if [ \( ${CRYPT_SILENT} -eq 1 \) -a \( \( \( ${DEV_ERROR} -eq 1 \) -o \( ${KEY_ERROR} -eq 1 \) \) -o \( ${KEYDEV_ERROR} -eq 1 \) \) ]
 		then
@@ -722,9 +770,36 @@ openLUKS() {
 			whereis "LUKS_KEYDEV" "${LUKS_NAME} key device"
 			KEYDEV_ERROR=0
 		else
+			case "${LUKS_DEVICE}" in
+				UUID\=*|LABEL\=*)
+					local REAL_LUKS=""
+					local retval=1
+
+					if [ "${retval}" -ne 0 ]; then
+						REAL_LUKS=`findfs "${LUKS_DEVICE}" 2>/dev/null`
+						retval=$?
+					fi
+
+					if [ "$retval" -ne 0 ]; then
+						REAL_LUKS=`busybox findfs "${LUKS_DEVICE}" 2>/dev/null`
+						retval=$?
+					fi
+
+					if [ "${retval}" -ne 0 ]; then
+						REAL_LUKS=`blkid -l -t "${LUKS_DEVICE}" | cut -d ":" -f 1 2>/dev/null`
+						retval=$?
+					fi
+
+					if [ "${retval}" -eq 0 ] && [ -n "${REAL_LUKS}" ]; then
+						good_msg "Detected device ${REAL_LUKS}"
+						LUKS_DEVICE="${REAL_LUKS}"
+					fi
+				;;
+			esac
+
 			setup_md_device ${LUKS_DEVICE}
 			cryptsetup isLuks ${LUKS_DEVICE}
-			if [ ! "$?" -eq '0' ]
+			if [ $? -ne 0 ]
 			then
 				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" ${CRYPT_SILENT}
 				DEV_ERROR=1
@@ -789,10 +864,17 @@ openLUKS() {
 					fi
 					# At this point a candidate key exists (either mounted before or not)
 					good_msg "${LUKS_KEY} on device ${LUKS_KEYDEV} found" ${CRYPT_SILENT}
-					cryptsetup_options="-d ${mntkey}${LUKS_KEY}"
+					if [ $(echo ${LUKS_KEY} | grep -o '.gpg$') = ".gpg" ] && [ -e /sbin/gpg ] ; then
+						[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
+						mknod /dev/tty c 5 1
+						cryptsetup_options="-d -"
+						gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
+					else
+						cryptsetup_options="-d ${mntkey}${LUKS_KEY}"
+					fi
 				fi
 				# At this point, keyfile or not, we're ready!
-				crypt_filter "cryptsetup ${cryptsetup_options} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
+				crypt_filter "${gpg_cmd}cryptsetup ${cryptsetup_options} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
 				if [ $? -eq 0 ]
 				then
 					good_msg "LUKS device ${LUKS_DEVICE} opened" ${CRYPT_SILENT}
@@ -843,15 +925,15 @@ startLUKS() {
 }
 
 sdelay() {
-	# Sleep a specific number of seconds if SDELAY is set otherwise only sleep
-	# 1 second
-	if [ -n "${SDELAY}" ]
+	# Sleep a specific number of seconds if SDELAY is set
+	if [ "${SDELAY}" ]
 	then
+		good_msg 'Waiting ${SDELAY} seconds...'
 		sleep ${SDELAY}
 	elif grep cdroot /proc/cmdline > /dev/null 2>&1; then
 		sleep 3
 	else
-		sleep 1
+		good_msg 'Hint: Use parameter scandelay[=seconds] if you need waiting here'
 	fi
 }
 
@@ -884,6 +966,11 @@ cdupdate() {
 	fi
 }
 
+setup_btrfsctl() {
+	# start BTRFS volume detection, if available
+	[ -x /sbin/btrfsctl ] && /sbin/btrfsctl -a
+}
+
 setup_md_device() {
 	local device
 
@@ -897,7 +984,7 @@ setup_md_device() {
 		if [ ! -e /dev/md${MD_NUMBER} ]
 		then
 			mknod /dev/md${MD_NUMBER} b 9 ${MD_NUMBER} >/dev/null 2>&1
-			[ "$?" -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed..."
+			[ $? -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed..."
 		fi
 		mdstart ${MDPART} /dev/md${MD_NUMBER}
 	fi
@@ -1058,7 +1145,7 @@ setup_unionfs() {
 #                         # mount tmpfs only in the case when changes= boot parameter was 	 
 #                         # empty or we were not able to mount the storage device 	 
 #                         ret=$? 	 
-#                         if [ "${ret}" -ne 0 ] 	 
+#                         if [ ${ret} -ne 0 ]
 #                         then 	 
 #                                 bad_msg "mount of $CHANGESDEV failed falling back to ramdisk based unionfs" 	 
 #                                 mount -t tmpfs tmpfs $MEMORY 	 
@@ -1083,7 +1170,7 @@ setup_unionfs() {
 		good_msg "Creating union mount"
 		unionfs -o allow_other,cow,noinitgroups,suid,dev,default_permissions,use_ino ${rw_dir}=RW:${ro_dir}=RO ${UNION} 2>/dev/null
 		ret=$?
-		if [ "${ret}" -ne 0 ]
+		if [ ${ret} -ne 0 ]
 		then
 			bad_msg "Can't setup union mount!"
 			USE_UNIONFS_NORMAL=0
