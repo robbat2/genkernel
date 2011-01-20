@@ -69,7 +69,7 @@ determine_real_args() {
 	set_config_with_override 2 KNAME                CMD_KERNNAME             "genkernel"
 
 	set_config_with_override 2 MAKEOPTS             CMD_MAKEOPTS             "$DEFAULT_MAKEOPTS"
-	set_config_with_override 2 KERNEL_MAKE          CMD_KERNEL_MAKE          ""
+	set_config_with_override 2 KERNEL_MAKE          CMD_KERNEL_MAKE          "$DEFAULT_KERNEL_MAKE"
 	set_config_with_override 2 UTILS_MAKE           CMD_UTILS_MAKE           "$DEFAULT_UTILS_MAKE"
 	set_config_with_override 2 KERNEL_CC            CMD_KERNEL_CC            ""
 	set_config_with_override 2 KERNEL_LD            CMD_KERNEL_LD            ""
