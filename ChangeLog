@@ -5,6 +5,68 @@
 # Distributed under the GPL v2
 # $Id$
 
+  30 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.12.5
+
+  30 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Give blkid of e2fsprogs precedence over busybox re-write by putting it into
+  /sbin, not /bin (bug #352746)
+
+  30 Jan 2011; Sebastian Pipping <sping@gentoo.org> arch/x86_64/kernel-config:
+  Enable CONFIG_USB_SUSPEND and CONFIG_PM_RUNTIME for x86_64 (bug #351376)
+
+  30 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.12.4
+
+  30 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Enhance console handling on netboot linuxrc (bug #353084)
+  Enable shadow on netboot's busybox config (bug #353085)
+
+  Special thanks:
+  - Raúl Porcel
+
+  29 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.12.3
+
+  29 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_compile.sh:
+  No longer require device mapper bincache for compiling lvm (bug #353026)
+
+  Special thanks:
+  - Peter Hjalmarsson
+
+  27 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.12.2
+
+  27 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_determineargs.sh:
+  Revert kernel release detection fix (regression) (bug #352787)
+
+  23 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.12.1
+
+  23 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Fix copying of mdadm/mdmon to the initramfs (bug #352496). Thanks to Malcolm
+  Lashley for reporting.
+
+  23 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.12
+
+  22 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Enable CONFIG_USB_SUSPEND for x86/amd64 (bug #351376)
+  Replace "${MAKEOPTS/-j?/j1}" by "${MAKEOPTS} -j1" (bug #277607)
+
+  21 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_determineargs.sh:
+  Do not query generated files (like include/config/kernel.release) for kernel
+  version, as they may be out of sync (bug #263927)
+
+  20 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Add proper mdadm support (bug #282100)
+
+  Special thanks:
+  - Craig Andrews (Testing)
+  - Laurent Pinchart (mdmon/IMSM support)
+  - Matthias Dahl (Initial patch)
+  - Peter Hjalmarsson (Testing)
+
   20 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
   Bump version to 3.4.11.1
 
@@ -13,7 +75,7 @@
   .config (whereas "make clean" does not) (bug #351906)
 
   Special thanks:
-  - Xake
+  - Peter Hjalmarsson
 
   20 Jan 2011; Sebastian Pipping <sping@gentoo.org>
   patches/busybox/1.18.1/1.18.1-mdstart.diff:
@@ -51,7 +113,7 @@
   - devsk (Multi-device patch)
   - Fabio Erculiani (Slowusb fixes)
   - Kai Dietrich (Symlink analysis)
-  - Kolbj�rn Barmen (Arithmetic fix)
+  - Kolbjørn Barmen (Arithmetic fix)
 
   13 Dec 2010; Sebastian Pipping <sping@gentoo.org> genkernel:
   Bump version to 3.4.10.908

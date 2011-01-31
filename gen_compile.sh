@@ -252,8 +252,8 @@ compile_generic() {
 	# ARGS='CC="ccache gcc"'
 	if [ "${argstype}" == 'runtask' ]
 	then
-		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS/-j?/j1} ${ARGS} ${target} $*" 1 0 1
-		eval ${MAKE} -s ${MAKEOPTS/-j?/-j1} "${ARGS}" ${target} $*
+		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
+		eval ${MAKE} -s ${MAKEOPTS} -j1 "${ARGS}" ${target} $*
 		RET=$?
 	elif [ "${LOGLEVEL}" -gt "1" ]
 	then
@@ -417,8 +417,10 @@ compile_busybox() {
 }
 
 compile_lvm() {
-	if [ ! -f "${LVM_BINCACHE}" ]
+	if [ -f "${LVM_BINCACHE}" ]
 	then
+		print_info 1 "lvm: >> Using cache"
+	else
 		[ -f "${LVM_SRCTAR}" ] ||
 			gen_die "Could not find LVM source tarball: ${LVM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
@@ -427,10 +429,6 @@ compile_lvm() {
 			gen_die 'Could not extract LVM source tarball!'
 		[ -d "${LVM_DIR}" ] ||
 			gen_die 'LVM directory ${LVM_DIR} is invalid!'
-		rm -rf "${TEMP}/device-mapper" > /dev/null
-		/bin/tar -jxpf "${DEVICE_MAPPER_BINCACHE}" -C "${TEMP}" ||
-			gen_die "Could not extract device-mapper binary cache!";
-		
 		cd "${LVM_DIR}"
 		apply_patches lvm ${LVM_VER}
 		print_info 1 'lvm: >> Configuring...'
@@ -454,6 +452,44 @@ compile_lvm() {
 		cd "${TEMP}"
 		rm -rf "${TEMP}/device-mapper" > /dev/null
 		rm -rf "${LVM_DIR}" lvm
+	fi
+}
+
+compile_mdadm() {
+	if [ -f "${MDADM_BINCACHE}" ]
+	then
+		print_info 1 '		MDADM: Using cache'
+	else
+		[ -f "${MDADM_SRCTAR}" ] ||
+			gen_die "Could not find MDADM source tarball: ${MDADM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
+		cd "${TEMP}"
+		rm -rf "${MDADM_DIR}" > /dev/null
+		/bin/tar -jxpf "${MDADM_SRCTAR}" ||
+			gen_die 'Could not extract MDADM source tarball!'
+		[ -d "${MDADM_DIR}" ] ||
+			gen_die 'MDADM directory ${MDADM_DIR} is invalid!'
+
+		cd "${MDADM_DIR}"
+		sed -i "/^CFLAGS = /s:^CFLAGS = \(.*\)$:CFLAGS = -Os:" Makefile
+		sed -i "/^CXFLAGS = /s:^CXFLAGS = \(.*\)$:CXFLAGS = -Os:" Makefile
+		sed -i "/^CWFLAGS = /s:^CWFLAGS = \(.*\)$:CWFLAGS = -Wall:" Makefile
+		sed -i "s/^# LDFLAGS = -static/LDFLAGS = -static/" Makefile
+
+		print_info 1 'mdadm: >> Compiling...'
+			compile_generic 'mdadm mdmon' utils
+
+		mkdir -p "${TEMP}/mdadm/sbin"
+		install -m 0755 -s mdadm "${TEMP}/mdadm/sbin/mdadm"
+		install -m 0755 -s mdmon "${TEMP}/mdadm/sbin/mdmon"
+		print_info 1 '      >> Copying to bincache...'
+		cd "${TEMP}/mdadm"
+		strip "sbin/mdadm" "sbin/mdmon" ||
+			gen_die 'Could not strip mdadm binaries!'
+		/bin/tar -cjf "${MDADM_BINCACHE}" sbin/mdadm sbin/mdmon ||
+			gen_die 'Could not create binary cache'
+
+		cd "${TEMP}"
+		rm -rf "${MDADM_DIR}" mdadm
 	fi
 }
 

@@ -58,7 +58,8 @@ get_KV() {
 			LOV=`echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//"`
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		else
-			LCV=`grep ^CONFIG_LOCALVERSION= ${KERNEL_DIR}/.config | sed -r -e "s/.*=\"(.*)\"/\1/"`
+			determine_config_file
+			LCV=`grep ^CONFIG_LOCALVERSION= "${KERNEL_CONFIG}" | sed -r -e "s/.*=\"(.*)\"/\1/"`
 			KV=${VER}.${PAT}.${SUB}${EXV}${LCV}
 		fi
 	fi
@@ -135,6 +136,7 @@ determine_real_args() {
 	BUSYBOX_BINCACHE=`cache_replace "${BUSYBOX_BINCACHE}"`
 	DEVICE_MAPPER_BINCACHE=`cache_replace "${DEVICE_MAPPER_BINCACHE}"`
 	LVM_BINCACHE=`cache_replace "${LVM_BINCACHE}"`
+	MDADM_BINCACHE=`cache_replace "${MDADM_BINCACHE}"`
 	DMRAID_BINCACHE=`cache_replace "${DMRAID_BINCACHE}"`
 	ISCSI_BINCACHE=`cache_replace "${ISCSI_BINCACHE}"`
 	BLKID_BINCACHE=`cache_replace "${BLKID_BINCACHE}"`
@@ -147,6 +149,7 @@ determine_real_args() {
 	BUSYBOX_BINCACHE=`arch_replace "${BUSYBOX_BINCACHE}"`
 	DEVICE_MAPPER_BINCACHE=`arch_replace "${DEVICE_MAPPER_BINCACHE}"`
 	LVM_BINCACHE=`arch_replace "${LVM_BINCACHE}"`
+	MDADM_BINCACHE=`arch_replace "${MDADM_BINCACHE}"`
 	DMRAID_BINCACHE=`arch_replace "${DMRAID_BINCACHE}"`
 	ISCSI_BINCACHE=`arch_replace "${ISCSI_BINCACHE}"`
 	BLKID_BINCACHE=`arch_replace "${BLKID_BINCACHE}"`

@@ -75,10 +75,10 @@ append_blkid(){
 		rm -r "${TEMP}/initramfs-blkid-temp/"
 	fi
 	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-blkid-temp/bin/"
-	[ "${DISKLABEL}" = '1' ] && { /bin/bzip2 -dc "${BLKID_BINCACHE}" > "${TEMP}/initramfs-blkid-temp/bin/blkid" ||
+	mkdir -p "${TEMP}/initramfs-blkid-temp/sbin/"
+	[ "${DISKLABEL}" = '1' ] && { /bin/bzip2 -dc "${BLKID_BINCACHE}" > "${TEMP}/initramfs-blkid-temp/sbin/blkid" ||
 		gen_die "Could not extract blkid binary cache!"; }
-	chmod a+x "${TEMP}/initramfs-blkid-temp/bin/blkid"
+	chmod a+x "${TEMP}/initramfs-blkid-temp/sbin/blkid"
 	cd "${TEMP}/initramfs-blkid-temp/"
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
 			|| gen_die "compressing blkid cpio"
@@ -339,10 +339,23 @@ append_mdadm(){
 	fi
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-mdadm-temp/etc/"
+	mkdir -p "${TEMP}/initramfs-mdadm-temp/sbin/"
 	if [ "${MDADM}" = '1' ]
 	then
 		cp -a /etc/mdadm.conf "${TEMP}/initramfs-mdadm-temp/etc" \
 			|| gen_die "Could not copy mdadm.conf!"
+		if [ -e '/sbin/mdadm' ] && LC_ALL="C" ldd /sbin/mdadm | grep -q 'not a dynamic executable' \
+		&& [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
+		then
+			print_info 1 '		MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)...'
+			cp /sbin/mdadm /sbin/mdmon "${TEMP}/initramfs-mdadm-temp/sbin/" ||
+				gen_die 'Could not copy over mdadm!'
+		else
+			print_info 1 '		MDADM: Adding support (compiling binaries)...'
+			compile_mdadm
+			/bin/tar -jxpf "${MDADM_BINCACHE}" -C "${TEMP}/initramfs-mdadm-temp" ||
+				gen_die "Could not extract mdadm binary cache!";
+		fi
 	fi
 	cd "${TEMP}/initramfs-mdadm-temp/"
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
