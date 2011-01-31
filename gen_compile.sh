@@ -421,29 +421,10 @@ compile_lvm() {
 	then
 		print_info 1 "lvm: >> Using cache"
 	else
-		[ -f "${LVM_SRCTAR}" ] ||
-			gen_die "Could not find LVM source tarball: ${LVM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
-		cd "${TEMP}"
-		rm -rf ${LVM_DIR} > /dev/null
-		/bin/tar -zxpf ${LVM_SRCTAR} ||
-			gen_die 'Could not extract LVM source tarball!'
-		[ -d "${LVM_DIR}" ] ||
-			gen_die 'LVM directory ${LVM_DIR} is invalid!'
-		cd "${LVM_DIR}"
-		apply_patches lvm ${LVM_VER}
-		print_info 1 'lvm: >> Configuring...'
-			CFLAGS="-fPIC" \
-			./configure --enable-static_link --prefix=${TEMP}/lvm \
-				--with-lvm1=internal --with-clvmd=none --with-cluster=none \
-				--disable-readline --disable-selinux --with-mirrors=internal \
-				--with-snapshots=internal --with-pool=internal >> ${LOGFILE} 2>&1 || \
-				gen_die 'Configure of lvm failed!'
-		print_info 1 'lvm: >> Compiling...'
-			compile_generic '' utils
-			compile_generic 'install' utils
-
+		install -d "${TEMP}/lvm/sbin"
 		cd "${TEMP}/lvm"
 		print_info 1 '      >> Copying to bincache...'
+		cp /sbin/lvm.static "${TEMP}/lvm/sbin" || gen_die "Couldn't find /sbin/lvm.static"
 		strip "sbin/lvm.static" ||
 			gen_die 'Could not strip lvm.static!'
 		/bin/tar -cjf "${LVM_BINCACHE}" sbin/lvm.static ||
