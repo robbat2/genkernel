@@ -2,7 +2,7 @@
 # $Id$
 
 longusage() {
-  echo "Gentoo Linux Genkernel ${GK_V}"
+  echo "Funtoo Linux Genkernel ${GK_V}"
   echo
   echo "Usage: "
   echo "  genkernel [options] action"
@@ -142,7 +142,7 @@ longusage() {
 }
 
 usage() {
-  echo "Gentoo Linux Genkernel ${GK_V}"
+  echo "Funtoo Linux Genkernel ${GK_V}"
   echo
   echo "Usage: "
   echo "	genkernel [options] all"

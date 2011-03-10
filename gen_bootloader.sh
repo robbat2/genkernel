@@ -62,7 +62,7 @@ set_bootloader_grub() {
 
 			# Add grub configuration to grub.conf	
 			echo "# Genkernel generated entry, see GRUB documentation for details" >> ${GRUB_CONF}
-			echo "title=Gentoo Linux ($KV)" >> ${GRUB_CONF}
+			echo "title=Funtoo Linux ($KV)" >> ${GRUB_CONF}
 			if [ "${BUILD_INITRD}" = '0' ]
 			then
 				echo -e "\tkernel /kernel-${KNAME}-${ARCH}-${KV} root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
@@ -139,7 +139,7 @@ set_bootloader_grub_duplicate_default() {
 	sed -n 1,$((${startline}-1))p "${GRUB_CONF}" > "${GRUB_CONF_TMP}"
 
 	# Put in our title
-	echo "title=Gentoo Linux (${KV})" >> "${GRUB_CONF_TMP}"
+	echo "title=Funtoo Linux (${KV})" >> "${GRUB_CONF_TMP}"
 
 	# Pass the default entry (minus the title) through to the replacement function and pipe the output to GRUB_CONF_TMP
 	sed -n $((${startline}+1)),$((${stopline}-1))p "${GRUB_CONF}" | set_bootloader_grub_duplicate_default_replace_kernel_initrd >> "${GRUB_CONF_TMP}"
