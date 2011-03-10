@@ -2,12 +2,12 @@
 .\"     Title: genkernel
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.0 <http://docbook.sf.net/>
-.\"      Date: 01/31/2011
-.\"    Manual: genkernel 3.4.12.6
-.\"    Source: genkernel 3.4.12.6
+.\"      Date: 03/09/2011
+.\"    Manual: genkernel 3.4.12.6-r3
+.\"    Source: genkernel 3.4.12.6-r3
 .\"  Language: English
 .\"
-.TH "GENKERNEL" "8" "01/31/2011" "genkernel 3\&.4\&.12\&.6" "genkernel 3\&.4\&.12\&.6"
+.TH "GENKERNEL" "8" "03/09/2011" "genkernel 3\&.4\&.12\&.6\-r3" "genkernel 3\&.4\&.12\&.6\-r3"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -596,10 +596,19 @@ The initrd scripts have limited support for network booting\&. This is activated
 The initrd scripts will extract any *\&.tar\&.gz files found in the \fI/add\fR directory of the livecd into the root filesystem during boot\&. This way it is easy to extend a netbooted LiveCD i\&.e\&. add custom tools, or other kernel modules\&.
 .SH "REPORTING BUGS"
 .sp
-If you believe you have found a bug in the genkernel scripts, then please file a bug on the Gentoo Linux Bugzilla: \fIhttp://bugs\&.gentoo\&.org\fR, assigning your bug to genkernel@gentoo\&.org\&. We cannot assist you with kernel compilation failures unless they are caused by a genkernel bug\&.
-.sp
-Kernel issues for Gentoo\-supported kernels, including compilation failures should go to \fIhttp://bugs\&.gentoo\&.org\fR and should be assigned to kernel@gentoo\&.org\&. Please check if an existing bug documents the same issue before opening a new bug\&. Issues for kernel sources not supported by Gentoo should go to their relevant authors\&.
+If you believe you have found a bug in the genkernel scripts, then please file a bug on the funtoo\-dev mailing list (see http://www\&.funtoo\&.org)\&.
 .SH "AUTHORS"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Daniel Robbins <drobbins@funtoo\&.org>
+.RE
 .sp
 .RS 4
 .ie n \{\
