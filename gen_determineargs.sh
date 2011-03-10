@@ -112,16 +112,17 @@ determine_real_args() {
 	set_config_with_override 1 DMRAID               CMD_DMRAID
 	set_config_with_override 1 ISCSI                CMD_ISCSI
 	set_config_with_override 1 BUSYBOX              CMD_BUSYBOX              "yes"
-	set_config_with_override 1 UNIONFS				CMD_UNIONFS
-	set_config_with_override 1 NETBOOT				CMD_NETBOOT
-	set_config_with_override 2 REAL_ROOT			CMD_REAL_ROOT
+	set_config_with_override 1 UNIONFS		CMD_UNIONFS
+	set_config_with_override 1 NETBOOT		CMD_NETBOOT
+	set_config_with_override 2 REAL_ROOT		CMD_REAL_ROOT
 	set_config_with_override 1 DISKLABEL            CMD_DISKLABEL
 	set_config_with_override 1 LUKS                 CMD_LUKS
 	set_config_with_override 1 GPG                  CMD_GPG
 	set_config_with_override 1 MDADM                CMD_MDADM
 	set_config_with_override 1 MULTIPATH            CMD_MULTIPATH
 	set_config_with_override 1 FIRMWARE             CMD_FIRMWARE
-	set_config_with_override 2 FIRMWARE_DIR         CMD_FIRMWARE_DIR         "/lib/firmware"
+	set_config_with_override 2 FIRMWARE_DST		CMD_FIRMWARE_DST	"/lib/firmware"
+	set_config_with_override 2 FIRMWARE_SRC         CMD_FIRMWARE_SRC         "$FIRMWARE_DST"
 	set_config_with_override 2 FIRMWARE_FILES       CMD_FIRMWARE_FILES
 	set_config_with_override 1 INTEGRATED_INITRAMFS CMD_INTEGRATED_INITRAMFS
 	set_config_with_override 1 GENZIMAGE            CMD_GENZIMAGE

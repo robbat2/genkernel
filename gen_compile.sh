@@ -25,6 +25,8 @@ compile_kernel_args() {
 		then
 			ARGS="${ARGS} ARCH=\"${KERNEL_ARCH}\""
 		fi
+		# tweak destination for firmware install...
+		ARGS="${ARGS} INSTALL_FW_PATH=\"${FIRMWARE_DST}\""
 	fi
 	echo -n "${ARGS}"
 }
