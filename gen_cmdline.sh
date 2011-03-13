@@ -455,9 +455,19 @@ parse_cmdline() {
 			print_info 2 "CMD_LOGFILE: ${CMD_LOGFILE}"
 			print_info 2 "LOGFILE: ${CMD_LOGFILE}"
 			;;
+		--build-src=*)
+			CMD_BUILD_SRC=`parse_opt "$*"`
+			print_info 2 "CMD_BUILD_SRC: ${CMD_BUILD_SRC}"
+			;;
+		--build-dst=*)
+			CMD_BUILD_DST=`parse_opt "$*"`
+			print_info 2 "CMD_BUILD_DST: ${CMD_BUILD_DST}"
+			;;
 		--kerneldir=*)
-			CMD_KERNEL_DIR=`parse_opt "$*"`
-			print_info 2 "CMD_KERNEL_DIR: ${CMD_KERNEL_DIR}"
+			CMD_BUILD_SRC=`parse_opt "$*"`
+			CMD_BUILD_DST="$CMD_BUILD_SRC"
+			print_info 2 "CMD_BUILD_SRC: ${CMD_BUILD_SRC}"
+			print_info 2 "CMD_BUILD_DST: ${CMD_BUILD_DST}"
 			;;
 		--kernel-config=*)
 			CMD_KERNEL_CONFIG=`parse_opt "$*"`

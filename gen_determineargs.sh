@@ -71,7 +71,8 @@ determine_real_args() {
 	#                          Config File          Command Line             Arch Default
 	#                          -----------          ------------             ------------
 	set_config_with_override 2 DEBUGFILE            CMD_DEBUGFILE
-	set_config_with_override 2 KERNEL_DIR           CMD_KERNEL_DIR           "${DEFAULT_KERNEL_SOURCE}"
+	set_config_with_override 2 BUILD_SRC            CMD_BUILD_SRC           "${DEFAULT_KERNEL_SOURCE}"
+	set_config_with_override 2 BUILD_DST            CMD_BUILD_DST           "${BUILD_SRC}"
 	set_config_with_override 1 NO_KERNEL_SOURCES    CMD_NO_KERNEL_SOURCES
 	set_config_with_override 2 KNAME                CMD_KERNNAME             "genkernel"
 

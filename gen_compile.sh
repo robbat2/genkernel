@@ -676,9 +676,9 @@ compile_iscsi() {
 		mkdir -p "${TEMP}/initramfs-iscsi-temp/lib/modules/${RELEASE}/kernel/drivers/scsi/"
 		for modname in iscsi_tcp libiscsi scsi_transport_iscsi
 		do
-			if [ -e "${CMD_KERNEL_DIR}/drivers/scsi/${modname}.ko" ]
+			if [ -e "${BUILD_DST}/drivers/scsi/${modname}.ko" ]
 			then
-				cp ${CMD_KERNEL_DIR}/drivers/scsi/${modname}.ko "${TEMP}/initramfs-iscsi-temp/lib/modules/${RELEASE}/kernel/drivers/scsi/"
+				cp ${BUILD_DST}/drivers/scsi/${modname}.ko "${TEMP}/initramfs-iscsi-temp/lib/modules/${RELEASE}/kernel/drivers/scsi/"
 			fi
 		done
 
