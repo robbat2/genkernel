@@ -28,7 +28,7 @@ determine_config_file() {
 
 config_kernel() {
 	determine_config_file
-	cd "${BUILD_DST}" || gen_die 'Could not switch to the kernel directory!'
+	cd "${BUILD_SRC}" || gen_die 'Could not switch to the kernel directory!'
 
 	# Backup current kernel .config
 	if isTrue "${MRPROPER}" || [ ! -f "${BUILD_DST}/.config" ]
@@ -132,4 +132,4 @@ config_kernel() {
 	then
 		sed -i ${BUILD_DST}/.config -e 's/#\? \?CONFIG_FB_SPLASH is.*/CONFIG_FB_SPLASH=y/g'
 	fi
-}/
+}

@@ -29,7 +29,7 @@ compile_kernel_args() {
 		ARGS="${ARGS} INSTALL_FW_PATH=\"${FIRMWARE_DST}\""
 	fi
 	# point to the sources we are building:
-	ARGS="${ARGS} O=\"${BUILD_SRC}\""
+	ARGS="${ARGS} O=\"${BUILD_DST}\""
 	echo -n "${ARGS}"
 }
 
@@ -330,7 +330,7 @@ compile_kernel() {
 			"kernel-${KNAME}-${ARCH}-${KV}"
 
 		copy_image_with_preserve "System.map" \
-			"System.map" \
+			"${BUILD_DST}/System.map" \
 			"System.map-${KNAME}-${ARCH}-${KV}"
 
 		if isTrue "${GENZIMAGE}"

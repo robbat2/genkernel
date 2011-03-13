@@ -512,7 +512,7 @@ find_kernel_binary() {
 	do
 		if [ -e "${i}" ]
 		then
-			tmp_kernel_binary=$i
+			tmp_kernel_binary=$(pwd)/$i
 			break
 		fi
 	done
