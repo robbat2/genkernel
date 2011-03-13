@@ -20,36 +20,36 @@ get_KV() {
 		# Configure the kernel
 		# If BUILD_KERNEL=0 then assume --no-clean, menuconfig is cleared
 
-		if [ ! -f "${KERNEL_DIR}"/Makefile ]
+		if [ ! -f "${BUILD_SRC}"/Makefile ]
 		then
-			gen_die "Kernel Makefile (${KERNEL_DIR}/Makefile) missing.  Maybe re-install the kernel sources."
+			gen_die "Kernel Makefile (${BUILD_SRC}/Makefile) missing.  Maybe re-install the kernel sources."
 		fi
 
-		VER=`grep ^VERSION\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
-		PAT=`grep ^PATCHLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
-		SUB=`grep ^SUBLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
-		EXV=`grep ^EXTRAVERSION\ \= ${KERNEL_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
+		VER=`grep ^VERSION\ \= ${BUILD_SRC}/Makefile | awk '{ print $3 };'`
+		PAT=`grep ^PATCHLEVEL\ \= ${BUILD_SRC}/Makefile | awk '{ print $3 };'`
+		SUB=`grep ^SUBLEVEL\ \= ${BUILD_SRC}/Makefile | awk '{ print $3 };'`
+		EXV=`grep ^EXTRAVERSION\ \= ${BUILD_SRC}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
 
 		if [ -z "${SUB}" ]; 
 		then
 			# Handle O= build directories
-			KERNEL_SOURCE_DIR=`grep ^MAKEARGS\ \:\=  ${KERNEL_DIR}/Makefile | awk '{ print $4 };'`
+			KERNEL_SOURCE_DIR=`grep ^MAKEARGS\ \:\=  ${BUILD_SRC}/Makefile | awk '{ print $4 };'`
 			[ -z "${KERNEL_SOURCE_DIR}" ] && gen_die "Deriving \${KERNEL_SOURCE_DIR} failed"
 			SUB=`grep ^SUBLEVEL\ \= ${KERNEL_SOURCE_DIR}/Makefile | awk '{ print $3 };'`
 			EXV=`grep ^EXTRAVERSION\ \= ${KERNEL_SOURCE_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
 		fi
 
-		cd ${KERNEL_DIR}
+		cd ${BUILD_SRC}
 		#compile_generic prepare kernel > /dev/null 2>&1
 		cd - > /dev/null 2>&1
-		[ -f "${KERNEL_DIR}/include/linux/version.h" ] && \
-			VERSION_SOURCE="${KERNEL_DIR}/include/linux/version.h"
-		[ -f "${KERNEL_DIR}/include/linux/utsrelease.h" ] && \
-			VERSION_SOURCE="${KERNEL_DIR}/include/linux/utsrelease.h"
+		[ -f "${BUILD_SRC}/include/linux/version.h" ] && \
+			VERSION_SOURCE="${BUILD_SRC}/include/linux/version.h"
+		[ -f "${BUILD_SRC}/include/linux/utsrelease.h" ] && \
+			VERSION_SOURCE="${BUILD_SRC}/include/linux/utsrelease.h"
 		# Handle new-style releases where version.h doesn't have UTS_RELEASE
-		if [ -f ${KERNEL_DIR}/include/config/kernel.release ]
+		if [ -f ${BUILD_SRC}/include/config/kernel.release ]
 		then
-			UTS_RELEASE=`cat ${KERNEL_DIR}/include/config/kernel.release`
+			UTS_RELEASE=`cat ${BUILD_SRC}/include/config/kernel.release`
 			LOV=`echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//"`
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		elif [ -n "${VERSION_SOURCE}" ]
@@ -171,24 +171,24 @@ determine_real_args() {
 	
 	if [ "${NO_KERNEL_SOURCES}" != "1" ]
 	then
-		if [ ! -d ${KERNEL_DIR} ]
+		if [ ! -d ${BUILD_SRC} ]
 		then
-			gen_die "kernel source directory \"${KERNEL_DIR}\" was not found!"
+			gen_die "kernel source directory \"${BUILD_SRC}\" was not found!"
 		fi
 	fi
 
 	if [ -z "${KERNCACHE}" ]
 	then
-		if [ "${KERNEL_DIR}" = '' -a "${NO_KERNEL_SOURCES}" != "1" ]
+		if [ "${BUILD_SRC}" = '' -a "${NO_KERNEL_SOURCES}" != "1" ]
 		then
 			gen_die 'No kernel source directory!'
 		fi
-		if [ ! -e "${KERNEL_DIR}" -a "${NO_KERNEL_SOURCES}" != "1" ]
+		if [ ! -e "${BUILD_SRC}" -a "${NO_KERNEL_SOURCES}" != "1" ]
 		then
 			gen_die 'No kernel source directory!'
 		fi
 	else
-		if [ "${KERNEL_DIR}" = '' ]
+		if [ "${BUILD_SRC}" = '' ]
 		then
 			gen_die 'Kernel Cache specified but no kernel tree to verify against!'
 		fi

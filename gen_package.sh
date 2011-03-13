@@ -20,7 +20,7 @@ gen_minkernpackage() {
 		then
 			gen_die "Cannot locate kernel binary"
 		fi
-		cd "${KERNEL_DIR}"
+		cd "${BUILD_DST}"
 		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${KV}" || gen_die 'Could not the copy kernel for the min kernel package!'
 		cp ".config" "${TEMP}/minkernpackage/config-${ARCH}-${KV}" || gen_die 'Could not the copy kernel config for the min kernel package!'
 		if isTrue "${GENZIMAGE}"
@@ -38,7 +38,7 @@ gen_minkernpackage() {
 	then
 		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} System.map-${ARCH}-${KV}
 	else
-		cp "${KERNEL_DIR}/System.map" "${TEMP}/minkernpackage/System.map-${ARCH}-${KV}" || gen_die 'Could not copy System.map for the kernel package!';
+		cp "${BUILD_DST}/System.map" "${TEMP}/minkernpackage/System.map-${ARCH}-${KV}" || gen_die 'Could not copy System.map for the kernel package!';
 	fi
 	
 	cd "${TEMP}/minkernpackage" 
@@ -75,11 +75,11 @@ gen_kerncache()
 		gen_die "Cannot locate kernel binary"
 	fi
 
-	cd "${KERNEL_DIR}"
+	cd "${BUILD_DST}"
 	cp "${tmp_kernel_binary}" "${TEMP}/kerncache/kernel-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the kernel package!'
-	cp "${KERNEL_DIR}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}"
+	cp "${BUILD_DST}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}"
 	cp "${KERNEL_CONFIG}" "${TEMP}/kerncache/config-${ARCH}-${KV}.orig"
-	cp "${KERNEL_DIR}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}"
+	cp "${BUILD_DST}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}"
 	if isTrue "${GENZIMAGE}"
 	then
 		cp "${tmp_kernel_binary2}" "${TEMP}/kerncache/kernelz-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the kernel package"
@@ -164,7 +164,7 @@ gen_kerncache_is_valid()
 	else
 		if [ -e "${KERNCACHE}" ] 
 		then
-			KERNEL_CONFIG="/${KERNEL_DIR}/.config"
+			KERNEL_CONFIG="/${BUILD_DST}/.config"
 			if [ "${CMD_KERNEL_CONFIG}" != '' ]
 			then
 				KERNEL_CONFIG="${CMD_KERNEL_CONFIG}"

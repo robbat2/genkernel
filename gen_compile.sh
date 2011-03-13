@@ -28,6 +28,8 @@ compile_kernel_args() {
 		# tweak destination for firmware install...
 		ARGS="${ARGS} INSTALL_FW_PATH=\"${FIRMWARE_DST}\""
 	fi
+	# point to the sources we are building:
+	ARGS="${ARGS} O=\"${BUILD_SRC}\""
 	echo -n "${ARGS}"
 }
 
@@ -285,7 +287,7 @@ compile_generic() {
 
 compile_modules() {
 	print_info 1 "        >> Compiling ${KV} modules..."
-	cd ${KERNEL_DIR}
+	cd ${BUILD_SRC}
 	compile_generic modules kernel
 	export UNAME_MACHINE="${ARCH}"
 	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
@@ -296,7 +298,7 @@ compile_modules() {
 compile_kernel() {
 	[ "${KERNEL_MAKE}" = '' ] &&
 		gen_die "KERNEL_MAKE undefined - I don't know how to compile a kernel for this arch!"
-	cd ${KERNEL_DIR}
+	cd ${BUILD_SRC}
 	print_info 1 "        >> Compiling ${KV} ${KERNEL_MAKE_DIRECTIVE/_install/ [ install ]/}..."
 	compile_generic "${KERNEL_MAKE_DIRECTIVE}" kernel
 	if [ "${KERNEL_MAKE_DIRECTIVE_2}" != '' ]
@@ -305,7 +307,7 @@ compile_kernel() {
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
-	local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${KERNEL_DIR}"/.config`
+	local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${BUILD_DST}"/.config`
 	if [ -n "${firmware_in_kernel_line}" -a "${firmware_in_kernel_line}" != CONFIG_FIRMWARE_IN_KERNEL=y ]
 	then
 		print_info 1 "        >> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."

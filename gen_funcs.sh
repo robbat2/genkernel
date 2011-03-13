@@ -507,7 +507,7 @@ find_kernel_binary() {
 	local kernel_binary=$*
 	local curdir=$(pwd)
 
-	cd "${KERNEL_DIR}"
+	cd "${BUILD_DST}"
 	for i in ${kernel_binary}
 	do
 		if [ -e "${i}" ]

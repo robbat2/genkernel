@@ -226,7 +226,7 @@ then
 	then
 		print_info 1 "Copying config for successful build to /etc/kernels/kernel-config-${ARCH}-${KV}"
 		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
-		cp "${KERNEL_DIR}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}"
+		cp "${BUILD_DST}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}"
 	fi
 fi
 
