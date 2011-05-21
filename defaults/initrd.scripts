@@ -210,7 +210,7 @@ cache_cd_contents() {
 }
 
 mount_sysfs() {
-	mount -t sysfs /sys /sys >/dev/null 2>&1
+	mount -t sysfs sysfs /sys -o noexec,nosuid,nodev >/dev/null 2>&1
 	ret=$?
 	[ ${ret} -eq 0 ] || bad_msg "Failed to mount /sys!"
 }
@@ -314,8 +314,21 @@ run_shell() {
 }
 
 runmdev() {
-	# busybox udev replacement
-	mdev -s
+	# Use devtmpfs if enabled in kernel,
+	# else tmpfs. Always run mdev just in case
+	devfs=tmpfs
+	if grep -qs devtmpfs /proc/filesystems ; then
+		devfs=devtmpfs
+	fi
+
+	# Options copied from /etc/init.d/udev-mount, should probably be kept in sync
+	mount -t $devfs -o "exec,nosuid,mode=0755,size=10M" udev /dev \
+		|| bad_msg "Failed to mount /dev as ${devfs}"
+
+	# http://git.busybox.net/busybox/plain/docs/mdev.txt
+	mkdir /dev/pts
+	mount -t devpts devpts /dev/pts  || bad_msg "Failed to mount /dev/pts"
+	mdev -s  || bad_msg "Failed to receive dynamic updates from mdev"
 }
 
 test_success() {
@@ -413,11 +426,12 @@ setup_hotplug() {
 }
 
 setup_slowusb() {
-	# slowusb already set?
-	if [ "${DO_slowusb}" = "1" ]
-	then
-		return
-	fi
+	# This function removes unset DO_slowusb if there is no usb-storage attached.
+	# If noslowusb is set, skip this function
+	[ "${DO_slowusb}" ] || return
+
+	# Unset DO_slowusb, so we can set it again if usb-storage has something attached
+	unset DO_slowusb
 
 	local usb_storage_dir="/sys/bus/usb/drivers/usb-storage"
 	if [ ! -d "${usb_storage_dir}" ]
@@ -460,7 +474,7 @@ cmdline_hwopts() {
 			fi
 			if [ "$(echo ${y} | cut -b -7)" = "keymap=" ]
 			then
-				MY_HWOPTS="${MY_HWOPTS} dokeymap"
+				MY_HWOPTS="${MY_HWOPTS} keymap"
 			fi
 		done
 	done
@@ -615,11 +629,6 @@ startVolumes() {
 	
 	if [ "${USE_MDADM}" = '1' ]
 	then
-		if [ ! -e '/etc/mdadm.conf' ]
-		then
-			echo "DEVICE /dev/sd[a-z]* /dev/hd[a-z]*" >/etc/mdadm.conf
-			/sbin/mdadm --examine --scan >>/etc/mdadm.conf
-		fi
 		/sbin/mdadm --assemble --scan
 	fi
 
@@ -683,10 +692,16 @@ startVolumes() {
 }
 
 startiscsi() {
+	
+	if [ ! -n "${ISCSI_NOIBFT}" ]
+	then
+		good_msg "Activating iSCSI via iBFT"
+		iscsistart -b
+	fi
 
 	if [ -n "${ISCSI_INITIATORNAME}" ] && [ -n "${ISCSI_TARGET}" ] && [ -n "${ISCSI_ADDRESS}" ]
 	then
-		good_msg "Activating iSCSI"
+		good_msg "Activating iSCSI via cmdline"
 
 		if [ "${ISCSI_TGPT}" ]
 		then

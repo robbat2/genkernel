@@ -79,11 +79,11 @@ longusage() {
   echo "				--> 'emerge evms' in the host operating system"
   echo "				first"
   echo "	--lvm			Include LVM support"
-  echo "	--mdadm			Copy /etc/mdadm.conf to initramfs"
+  echo "	--mdadm			Include MDADM/MDMON support"
+  echo "	--mdadm-config=<file>	Use file as mdadm.conf in initramfs"
   echo "	--dmraid		Include DMRAID support"
   echo "	--multipath		Include Multipath support"
   echo "	--iscsi			Include iSCSI support"
-  echo "	--slowusb		Enables extra pauses for slow USB CD boots"
   echo "	--bootloader=grub	Add new kernel to GRUB configuration"
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
   echo "	--busybox-config=<file>	Specifies a user created busybox config"
@@ -254,6 +254,10 @@ parse_cmdline() {
 			CMD_MDADM=1
 			print_info 2 "CMD_MDADM: $CMD_MDADM"
 			;;
+		--mdadm-config=*)
+			CMD_MDADM_CONFIG=`parse_opt "$*"`
+			print_info 2 "CMD_MDADM_CONFIG: $CMD_MDADM_CONFIG"
+			;;
 		--no-busybox)
 			CMD_BUSYBOX=0
 			print_info 2 "CMD_BUSYBOX: ${CMD_BUSYBOX}"
@@ -269,10 +273,6 @@ parse_cmdline() {
 		--real-root=*)
 			CMD_REAL_ROOT=`parse_opt "$*"`
 			print_info 2 "CMD_REAL_ROOT: ${CMD_REAL_ROOT}"
-			;;
-		--slowusb)
-			CMD_SLOWUSB=1
-			print_info 2 "CMD_SLOWUSB: ${CMD_SLOWUSB}"
 			;;
 		--dmraid)
 			if [ ! -e /usr/include/libdevmapper.h ]

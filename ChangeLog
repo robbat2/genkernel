@@ -5,6 +5,67 @@
 # Distributed under the GPL v2
 # $Id$
 
+  28 Mar 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump to 3.4.15
+
+  24 Mar 2011; Peter Hjalmarsson <xake@rymdraket.net> defaults/linuxrc, initrd.scripts:
+  Rescue /proc and /sys over into chroot
+  Apply mount options noexec,nosuid,nodev to /proc and /sys
+
+  22 Mar 2011; Fabio Erculiani <lxnay@sabayon.org> gen_compile.sh, patches/iscsi/*:
+  Fix compilation of iSCSI
+
+  23 Mar 2011; Peter Hjalmarsson <xake@rymdraket.net> doc/genkernel.8.txt,
+  gen_cmdline.sh, gen_initramfs.sh:
+  Remove "--slowusb" as it is enabled by default now. Also document "noslowusb"
+  ramdisk option that skips it.
+
+  22 Mar 2011; Peter Hjalmarsson <xake@rymdraket.net> defaults/initrd.defaults,
+  defaults/initrd.scripts:
+  Set DO_slowusb as default, and make setup_slowusb unset it if it cannot find
+  a usb-storage attached. This makes genkernel ramdisk adhere to "noslowusb",
+  makes the ramdisk only wait if there is a usb-storage attached and should fix
+  gentoo bug #359619.
+
+  16 Mar 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.14
+
+  16 Mar 2011; Fabio Erculiani <lxnay@sabayon.org> **/modules_load:
+  Add btrfs to MODULES_FS
+
+  07 Mar 2011; Peter Hjalmarsson <xake@rymdraket.net> defaults/initrd.scripts:
+  Fix typo where the kernelcmd version "dokeymap" was added to MY_HWOPTS
+  instead of the HWOPTS version "keymap".
+  Broke setups where only "keymap=<...>" was added to kernelcmd (bug #356167)
+
+  24 Feb 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Fix handling of mdadm.conf (bug #354809)
+
+  Special thanks:
+  - Peter Hjalmarsson
+
+  10 Feb 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.13
+
+  09 Feb 2011; Sebastian Pipping <sping@gentoo.org> genkernel.conf:
+  Add SPLASH and SPLASH_THEME to genkernel.conf (bug #268468)
+
+  Special thanks:
+  - PhobosK
+
+  08 Feb 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Add iBFT support for iSCSI (bug #314575)
+
+  Special thanks:
+  - Stefan Behte
+
+  7 Feb 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
+  Use devtmpfs/tmpfs for /dev (bug #353024)
+  Rescue devtmpfs /dev over to chroot (bug #353024, bug #344407)
+
+  Special thanks:
+  - Peter Hjalmarsson
+
   31 Jan 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
   Bump version to 3.4.12.6
 
