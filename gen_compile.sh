@@ -29,7 +29,10 @@ compile_kernel_args() {
 		ARGS="${ARGS} INSTALL_FW_PATH=\"${FIRMWARE_DST}\""
 	fi
 	# point to the sources we are building:
-	ARGS="${ARGS} O=\"${BUILD_DST}\""
+	if [ "$BUILD_SRC" != "$BUILD_DST" ]
+	then
+		ARGS="${ARGS} O=\"${BUILD_DST}\""
+	fi
 	echo -n "${ARGS}"
 }
 
