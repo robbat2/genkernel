@@ -1,15 +1,26 @@
 #!/bin/sh
 
+run() {
+	if [ -n "$DRYRUN" ]
+	then
+		echo $*
+	elif [ -n "$DEBUG" ]
+	then
+		echo $*
+		$*
+	fi
+}
+
 linky() {
 	out=$1
 	shift
 	if [ "$*" = "statically linked" ]
 	then
-		echo "static"
+		echo "# static"
 		return
 	elif [ "$*" = "not a dynamic executable" ]
 	then
-		echo "static"
+		echo "# static"
 		return
 	elif [ "${1:0:1}" == "/" ]
 	then
@@ -23,16 +34,19 @@ linky() {
 	fi
 	libname=${libsrcpath##*/}
 	libnewpath=$out/${libname}
-	#echo "libsrcpath $libsrcpath"
-	#echo "libname $libname"
-	#echo "libnewpath $libnewpath"
 	if [ -L $libsrcpath ]; then
 		linkdest=$(readlink $libsrcpath)
-		#[ ! -L $libnewpath ] && 
-		echo "ln -sf $linkdest $libnewpath"
+		if [ ! -L $libnewpath ]; then
+			run "ln -sf $linkdest $libnewpath"
+		else
+			echo "# $libnewpath exists, skipping"	
+		fi
 	else
-		#[ ! -e $libnewpath ] && 
-		echo "cp $libsrcpath $libnewpath"
+		if [ ! -e $libnewpath ]; then
+			run "cp $libsrcpath $libnewpath"
+		else
+			echo "# $libnewpath exists, skipping"
+		fi
 		dynagrab $libsrcpath $out
 	fi
 }
@@ -44,11 +58,12 @@ dynagrab() {
 }
 
 binarygrab() {
-	[ ! -e $2/bin ] && echo "install -d $2/bin"
-	[ ! -e $2/lib ] && echo "install -d $2/lib"
-	echo "cp $1 $2/bin"
+	[ ! -e $2/bin ] && run "install -d $2/bin"
+	[ ! -e $2/lib ] && run "install -d $2/lib"
+	run "cp $1 $2/bin"
 	dynagrab $1 $2/lib
 }
-
+export DRYRUN=1
 # grab all shared libs required by binary $1 and copy to destination chroot/initramfs root $2:
+[ "$2" = "" ] && echo "Please specify a target chroot as a second argument. Exiting" && exit 1
 binarygrab $1 $2
