@@ -170,7 +170,7 @@ KERNEL LOCATIONS
 
 *--build-dst*=<dir>::
     This specifies the location of the target directory in which to
-    build the kernel sources. It defaults to the --kerneldir setting
+    build the kernel sources. It defaults to the --build-src setting
     if not specified.
 
 *--kernel-config*=<file>::
