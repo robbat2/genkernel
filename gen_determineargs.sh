@@ -226,4 +226,7 @@ determine_real_args() {
 	fi
 	
 	get_KV
+
+	set_config_with_override 2 FULLNAME		CMD_FULLNAME		"${KNAME}-${ARCH}-${KV}"
+	echo "DEBUG FULLNAME: $FULLNAME"
 }

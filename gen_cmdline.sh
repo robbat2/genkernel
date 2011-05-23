@@ -497,6 +497,10 @@ parse_cmdline() {
 			CMD_KERNNAME=`parse_opt "$*"`
 			print_info 2 "KERNNAME: ${CMD_KERNNAME}"
 			;;
+		--fullname=*)
+			CMD_FULLNAME=`parse_opt "$*"`
+			print_info 2 "FULLNAME: ${CMD_FULLNAME}"
+			;;
 		--symlink)
 			CMD_SYMLINK=1
 			print_info 2 "CMD_SYMLINK: ${CMD_SYMLINK}"

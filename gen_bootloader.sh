@@ -65,12 +65,12 @@ set_bootloader_grub() {
 			echo "title=Funtoo Linux ($KV)" >> ${GRUB_CONF}
 			if [ "${BUILD_INITRD}" = '0' ]
 			then
-				echo -e "\tkernel /kernel-${KNAME}-${ARCH}-${KV} root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
+				echo -e "\tkernel /kernel-${FULLNAME} root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
 			else
-				echo -e "\tkernel /kernel-${KNAME}-${ARCH}-${KV} root=/dev/ram0 init=/linuxrc real_root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
+				echo -e "\tkernel /kernel-${FULLNAME} root=/dev/ram0 init=/linuxrc real_root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
 				if [ "${PAT}" -gt '4' ]
 				then
-				    echo -e "\tinitrd /initramfs-${KNAME}-${ARCH}-${KV}" >> ${GRUB_CONF}
+				    echo -e "\tinitrd /initramfs-${FULLNAME}-${KV}" >> ${GRUB_CONF}
 				fi
 			fi
 			echo >> ${GRUB_CONF}
@@ -92,14 +92,14 @@ set_bootloader_grub() {
 }
 
 set_bootloader_grub_duplicate_default_replace_kernel_initrd() {
-	sed -r -e "/^[[:space:]]*kernel/s/kernel-[[:alnum:][:punct:]]+/kernel-${KNAME}-${ARCH}-${KV}/" - |
-	sed -r -e "/^[[:space:]]*initrd/s/init(rd|ramfs)-[[:alnum:][:punct:]]+/init\1-${KNAME}-${ARCH}-${KV}/"
+	sed -r -e "/^[[:space:]]*kernel/s/kernel-[[:alnum:][:punct:]]+/kernel-${FULLNAME}/" - |
+	sed -r -e "/^[[:space:]]*initrd/s/init(rd|ramfs)-[[:alnum:][:punct:]]+/init\1-${FULLNAME}/"
 }
 
 set_bootloader_grub_check_for_existing_entry() {
 	local GRUB_CONF=$1
-	if grep -q "^[[:space:]]*kernel[[:space:]=]*.*/kernel-${KNAME}-${ARCH}-${KV}\([[:space:]]\|$\)" "${GRUB_CONF}" &&
-		grep -q "^[[:space:]]*initrd[[:space:]=]*.*/initramfs-${KNAME}-${ARCH}-${KV}\([[:space:]]\|$\)" "${GRUB_CONF}"
+	if grep -q "^[[:space:]]*kernel[[:space:]=]*.*/kernel-${FULLNAME}\([[:space:]]\|$\)" "${GRUB_CONF}" &&
+		grep -q "^[[:space:]]*initrd[[:space:]=]*.*/initramfs-${FULLNAME}\([[:space:]]\|$\)" "${GRUB_CONF}"
 	then
 		return 0
 	fi

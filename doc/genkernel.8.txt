@@ -158,8 +158,20 @@ KERNEL COMPILATION
 KERNEL LOCATIONS
 ~~~~~~~~~~~~~~~~
 *--kerneldir*=<dir>::
-    This specifies the location of the kernel sources;  the default
-    is '/usr/src/linux'.
+    This specifies the location of both the kernel sources and the
+    location to use for building the kernel. It defaults to
+    '/usr/src/linux'. Note that Funtoo Linux genkernel now allows
+    these locations -- source and build directory -- to be set
+    separately. See --build-src and --build-dst below.
+
+*--build-src*=<dir>::
+    This specifies the location of the kernel sources to be built.
+    It defaults to the --kerneldir setting if not specified.
+
+*--build-dst*=<dir>::
+    This specifies the location of the target directory in which to
+    build the kernel sources. It defaults to the --kerneldir setting
+    if not specified.
 
 *--kernel-config*=<file>::
     This specifies a kernel configuration file to use for compilation;
@@ -320,9 +332,20 @@ INTERNALS
 OUTPUT SETTINGS
 ~~~~~~~~~~~~~~~
 *--kernname*=<...>::
-    Tag the kernel and initrd with a name, if not defined this
-    option defaults to genkernel
+    This option is used to change part of the suffix appended to the
+    kernel and initrd that defaults to "genkernel". The full suffix 
+    is set by the --fullname option -- see below.  Note that in Funtoo 
+    Linux, this is considered a somewhat deprecated option and --fullname should
+    typically be used instead.
 
+*--fullname*=<...>::
+    This option is used to set the full suffix for the kernel and
+    initrd/initramfs. It is appended to the kernel and initramfs with
+    a hyphen. This option defaults to  {kernname}-{arch}-{KV} where 
+    {kernname} is the --kernname setting, or "genkernel" if not set and
+    KV is the version of the kernel from the kernel MAKEFILE with the 
+    EXTRAVERSION from the kernel Makefile appended to it. 
+   
 *--minkernpackage*=<tbz2>::
     File to output a .tar.bz2'd kernel and initrd: no modules outside
     of the initrd will be included...
