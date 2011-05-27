@@ -2,12 +2,12 @@
 .\"     Title: genkernel
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.0 <http://docbook.sf.net/>
-.\"      Date: 05/23/2011
-.\"    Manual: genkernel 3.4.15-funtoo
-.\"    Source: genkernel 3.4.15-funtoo
+.\"      Date: 05/26/2011
+.\"    Manual: genkernel 3.4.15-r1-funtoo
+.\"    Source: genkernel 3.4.15-r1-funtoo
 .\"  Language: English
 .\"
-.TH "GENKERNEL" "8" "05/23/2011" "genkernel 3\&.4\&.15\-funtoo" "genkernel 3\&.4\&.15\-funtoo"
+.TH "GENKERNEL" "8" "05/26/2011" "genkernel 3\&.4\&.15\-r1\-funt" "genkernel 3\&.4\&.15\-r1\-funt"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -454,7 +454,7 @@ This option is used to change part of the suffix appended to the kernel and init
 .PP
 \fB\-\-fullname\fR=<\&...>
 .RS 4
-This option is used to set the full suffix for the kernel and initrd/initramfs\&. It is appended to the kernel and initramfs with KV is the version of the kernel from the kernel MAKEFILE with the EXTRAVERSION from the kernel Makefile appended to it\&.
+This option is used to set the full suffix for the kernel and initrd/initramfs\&. It is appended to the kernel and initramfs with a hyphen\&. This option defaults to kernname\-arch\-KV where kernname is the \-\-kernname setting, or "genkernel" if not set and KV is the version of the kernel from the kernel MAKEFILE with the EXTRAVERSION from the kernel Makefile appended to it\&.
 .RE
 .PP
 \fB\-\-minkernpackage\fR=<tbz2>
@@ -492,7 +492,18 @@ Enable copying of firmware into initramfs\&.
 \fB\-\-firmware\-dir\fR=<dir>
 .RS 4
 Specify directory to copy firmware from (defaults to
+\fI/lib/firmware\fR)\&. Deprecated\&. Use \-\-firmware\-src instead\&.
+.RE
+.PP
+\fB\-\-firmware\-dst\fR=<dir>
+.RS 4
+Specify directory to copy firmware to (defaults to
 \fI/lib/firmware\fR)\&.
+.RE
+.PP
+\fB\-\-firmware\-src\fR=<dir>
+.RS 4
+Specify directory to copy firmware from\&. Defaults to the value of \-\-firmware\-dst\&.
 .RE
 .PP
 \fB\-\-firmware\-files\fR=<files>

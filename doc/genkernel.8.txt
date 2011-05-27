@@ -341,8 +341,8 @@ OUTPUT SETTINGS
 *--fullname*=<...>::
     This option is used to set the full suffix for the kernel and
     initrd/initramfs. It is appended to the kernel and initramfs with
-    a hyphen. This option defaults to  {kernname}-{arch}-{KV} where 
-    {kernname} is the --kernname setting, or "genkernel" if not set and
+    a hyphen. This option defaults to kernname-arch-KV where 
+    kernname is the --kernname setting, or "genkernel" if not set and
     KV is the version of the kernel from the kernel MAKEFILE with the 
     EXTRAVERSION from the kernel Makefile appended to it. 
    
@@ -371,7 +371,14 @@ OUTPUT SETTINGS
     Enable copying of firmware into initramfs.
 
 *--firmware-dir*=<dir>::
-    Specify directory to copy firmware from (defaults to '/lib/firmware').
+    Specify directory to copy firmware from (defaults to '/lib/firmware'). Deprecated.
+    Use --firmware-src instead.
+
+*--firmware-dst*=<dir>::
+   Specify directory to copy firmware to (defaults to '/lib/firmware').
+
+*--firmware-src*=<dir>::
+   Specify directory to copy firmware from. Defaults to the value of --firmware-dst.
 
 *--firmware-files*=<files>::
     Specifies specific firmware files to copy. This overrides *--firmware-dir*.
