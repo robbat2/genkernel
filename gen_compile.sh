@@ -310,14 +310,9 @@ compile_kernel() {
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
-	local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${BUILD_DST}"/.config`
-	if [ -n "${firmware_in_kernel_line}" -a "${firmware_in_kernel_line}" != CONFIG_FIRMWARE_IN_KERNEL=y ]
-	then
-		print_info 1 "        >> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
-		compile_generic "firmware_install" kernel
-	else
-		print_info 1 "        >> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y)..."
-	fi
+	# workaround for bug #244651 fix not being very good for RHEL:
+	print_info 1 "        >> Installing firmware ('make firmware_install')..."
+	compile_generic "firmware_install" kernel
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
 	local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
@@ -420,64 +415,6 @@ compile_busybox() {
 
 		cd "${TEMP}"
 		rm -rf "${BUSYBOX_DIR}" > /dev/null
-	fi
-}
-
-compile_lvm() {
-	if [ -f "${LVM_BINCACHE}" ]
-	then
-		print_info 1 "lvm: >> Using cache"
-	else
-		install -d "${TEMP}/lvm/sbin"
-		cd "${TEMP}/lvm"
-		print_info 1 '      >> Copying to bincache...'
-		cp /sbin/lvm.static "${TEMP}/lvm/sbin" || gen_die "Couldn't find /sbin/lvm.static"
-		strip "sbin/lvm.static" ||
-			gen_die 'Could not strip lvm.static!'
-		/bin/tar -cjf "${LVM_BINCACHE}" sbin/lvm.static ||
-			gen_die 'Could not create binary cache'
-
-		cd "${TEMP}"
-		rm -rf "${TEMP}/device-mapper" > /dev/null
-		rm -rf "${LVM_DIR}" lvm
-	fi
-}
-
-compile_mdadm() {
-	if [ -f "${MDADM_BINCACHE}" ]
-	then
-		print_info 1 '		MDADM: Using cache'
-	else
-		[ -f "${MDADM_SRCTAR}" ] ||
-			gen_die "Could not find MDADM source tarball: ${MDADM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
-		cd "${TEMP}"
-		rm -rf "${MDADM_DIR}" > /dev/null
-		/bin/tar -jxpf "${MDADM_SRCTAR}" ||
-			gen_die 'Could not extract MDADM source tarball!'
-		[ -d "${MDADM_DIR}" ] ||
-			gen_die 'MDADM directory ${MDADM_DIR} is invalid!'
-
-		cd "${MDADM_DIR}"
-		sed -i "/^CFLAGS = /s:^CFLAGS = \(.*\)$:CFLAGS = -Os:" Makefile
-		sed -i "/^CXFLAGS = /s:^CXFLAGS = \(.*\)$:CXFLAGS = -Os:" Makefile
-		sed -i "/^CWFLAGS = /s:^CWFLAGS = \(.*\)$:CWFLAGS = -Wall:" Makefile
-		sed -i "s/^# LDFLAGS = -static/LDFLAGS = -static/" Makefile
-
-		print_info 1 'mdadm: >> Compiling...'
-			compile_generic 'mdadm mdmon' utils
-
-		mkdir -p "${TEMP}/mdadm/sbin"
-		install -m 0755 -s mdadm "${TEMP}/mdadm/sbin/mdadm"
-		install -m 0755 -s mdmon "${TEMP}/mdadm/sbin/mdmon"
-		print_info 1 '      >> Copying to bincache...'
-		cd "${TEMP}/mdadm"
-		strip "sbin/mdadm" "sbin/mdmon" ||
-			gen_die 'Could not strip mdadm binaries!'
-		/bin/tar -cjf "${MDADM_BINCACHE}" sbin/mdadm sbin/mdmon ||
-			gen_die 'Could not create binary cache'
-
-		cd "${TEMP}"
-		rm -rf "${MDADM_DIR}" mdadm
 	fi
 }
 

@@ -245,36 +245,20 @@ append_lvm(){
 	if [ -e '/sbin/lvm.static' ]
 	then
 		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm.static)...'
-		cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/bin/lvm" ||
-			gen_die 'Could not copy over lvm!'
+		cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
 	elif [ -e '/sbin/lvm' ] && LC_ALL="C" ldd /sbin/lvm|grep -q 'not a dynamic executable'
 	then
 		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm)...'
-		cp /sbin/lvm "${TEMP}/initramfs-lvm-temp/bin/lvm" ||
-			gen_die 'Could not copy over lvm!'
+		cp /sbin/lvm "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
 	else
-		print_info 1 '          LVM: Adding support (compiling binaries)...'
-		compile_lvm
-		/bin/tar -jxpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
-			gen_die "Could not extract lvm binary cache!";
-		mv ${TEMP}/initramfs-lvm-temp/sbin/lvm.static ${TEMP}/initramfs-lvm-temp/bin/lvm ||
-			gen_die 'LVM error: Could not move lvm.static to lvm!'
+		gen_die "Couldn't find /sbin/lvm or /sbin/lvm.static"
 	fi
-	if [ -x /sbin/lvm ]
+	if [ -x /etc/lvm/lvm.conf ]
 	then
-#		lvm dumpconfig 2>&1 > /dev/null || gen_die 'Could not copy over lvm.conf!'
-#		ret=$?
-#		if [ ${ret} != 0 ]
-#		then
-			cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" ||
-				gen_die 'Could not copy over lvm.conf!'
-#		else
-#			gen_die 'Could not copy over lvm.conf!'
-#		fi
+		cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" || gen_die 'Could not copy over lvm.conf!'
 	fi
 	cd "${TEMP}/initramfs-lvm-temp/"
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing lvm cpio"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}"  || gen_die "compressing lvm cpio"
 	cd "${TEMP}"
 	rm -r "${TEMP}/initramfs-lvm-temp/"
 }
@@ -359,18 +343,13 @@ append_mdadm(){
 		&& [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
 		then
 			print_info 1 '		MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)...'
-			cp /sbin/mdadm /sbin/mdmon "${TEMP}/initramfs-mdadm-temp/sbin/" ||
-				gen_die 'Could not copy over mdadm!'
+			cp /sbin/mdadm /sbin/mdmon "${TEMP}/initramfs-mdadm-temp/sbin/" || gen_die 'Could not copy over mdadm!'
 		else
-			print_info 1 '		MDADM: Adding support (compiling binaries)...'
-			compile_mdadm
-			/bin/tar -jxpf "${MDADM_BINCACHE}" -C "${TEMP}/initramfs-mdadm-temp" ||
-				gen_die "Could not extract mdadm binary cache!";
+			gen_die "Could not find /sbin/mdadm or /sbin/mdmon for initramfs"
 		fi
 	fi
 	cd "${TEMP}/initramfs-mdadm-temp/"
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing mdadm cpio"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" || gen_die "compressing mdadm cpio"
 	cd "${TEMP}"
 	rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
 }
