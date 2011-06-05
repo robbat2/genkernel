@@ -39,3 +39,7 @@
   - Interactive
     - Ask user what to do
 
+Funtoo - 
+
+	add mdadm runtime dep to next genkernel. Also, it seems mdadm is always static even with -static.
+
