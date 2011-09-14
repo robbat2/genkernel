@@ -332,10 +332,6 @@ compile_kernel() {
 			compile_generic "firmware_install" kernel
 	fi
 
-	# workaround for bug #244651 fix not being very good for RHEL:
-	print_info 1 "        >> Installing firmware ('make firmware_install')..."
-	compile_generic "firmware_install" kernel
-
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
 	local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
 	if [ -z "${tmp_kernel_binary}" ]
