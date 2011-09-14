@@ -71,7 +71,8 @@ determine_real_args() {
 	#                               Dest / Config File   Command Line             Arch Default
 	#                               ------------------   ------------             ------------
 	set_config_with_override STRING LOGFILE              CMD_LOGFILE
-	set_config_with_override STRING KERNEL_DIR           CMD_KERNEL_DIR           "${DEFAULT_KERNEL_SOURCE}"
+        set_config_with_override STRING BUILD_SRC            CMD_BUILD_SRC           "${DEFAULT_KERNEL_SOURCE}"
+        set_config_with_override STRING BUILD_DST            CMD_BUILD_DST           "${BUILD_SRC}"
 	set_config_with_override BOOL   NO_KERNEL_SOURCES    CMD_NO_KERNEL_SOURCES
 	set_config_with_override STRING KNAME                CMD_KERNNAME             "genkernel"
 
@@ -218,6 +219,5 @@ determine_real_args() {
 
 	get_KV
 
-	set_config_with_override 2 FULLNAME		CMD_FULLNAME		"${KNAME}-${ARCH}-${KV}"
-	echo "DEBUG FULLNAME: $FULLNAME"
+	set_config_with_override STRING FULLNAME		CMD_FULLNAME		"${KNAME}-${ARCH}-${KV}"
 }
