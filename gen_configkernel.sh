@@ -24,6 +24,7 @@ determine_config_file() {
 	else
 		gen_die 'Error: No kernel .config specified, or file not found!'
 	fi
+    KERNEL_CONFIG="$(readlink -f "${KERNEL_CONFIG}")"
 }
 
 config_kernel() {
@@ -72,11 +73,11 @@ config_kernel() {
 	else
 		print_info 1 "kernel: --clean is disabled; not running 'make clean'."
 	fi
-	
+
 	if isTrue ${MENUCONFIG}
 	then
 		print_info 1 'kernel: >> Invoking menuconfig...'
-		compile_generic menuconfig runtask
+		compile_generic menuconfig kernelruntask
 		[ "$?" ] || gen_die 'Error: menuconfig failed!'
 	elif isTrue ${CMD_GCONFIG}
 	then

@@ -5,6 +5,140 @@
 # Distributed under the GPL v2
 # $Id$
 
+  13 Sep 2011; Fabio Erculiani <lxnay@gentoo.org> gen_compile.sh,
+  gen_initramfs.sh:
+  dmraid requires dmsetup to assign UUID to discovered RAID volumes, close bug
+  #382555
+
+  11 Sep 2011; Fabio Erculiani <lxnay@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  drop parse_opt usage and crufty, deprecated subshelling through 
+
+  30 Aug 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Fix quoting issue (bug #380729).
+
+  Thanks to:
+  - Axel Bringenberg
+
+  30 Aug 2011; Sebastian Pipping <sping@gentoo.org>
+  +patches/mdadm/3.1.4/mdadm-3.1.4-z-now.patch, gen_compile.sh:
+  Enable patch application for mdadm, add patch to fix compilation (bug
+  #381089)
+
+  28 Aug 2011; Fabio Erculiani <lxnay@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc, doc/genkernel.8.txt:
+  Add basic support to AUFS2, requires kernel with aufs module or built-in
+
+  16 Aug 2011; Fabio Erculiani <lxnay@gentoo.org> gen_compile.sh:
+  gen_compile: correct MAKEOPTS usage on utils task
+
+  16 Aug 2011; Fabio Erculiani <lxnay@gentoo.org> gen_compile.sh:
+  gen_compile: always use -j1 with kernel *_install targets, fixes compilation
+  with make 3.82
+
+  06 Aug 2011; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  No longer copy /lib/libsysfs*so* for multipath-tools (bug #300841, bug
+  #377709)
+
+  31 Jul 2011; Sebastian Pipping <sping@gentoo.org>
+  -patches/busybox/1.7.4/1.7.4-ash-timeout.diff,
+  -patches/busybox/1.7.4/1.7.4-mdstart.diff,
+  -patches/busybox/1.7.4/1.7.4-mount-umount-i-option.diff,
+  -patches/busybox/1.7.4/1.7.4-openvt.diff,
+  -patches/busybox/1.7.4/1.7.4-static-error.diff,
+  -patches/busybox/1.7.4/1.7.4-make-3.82.diff, -patches/busybox/1.7.4/README,
+  -patches/busybox/1.7.4/busybox-1.7.4-signal-hack.patch:
+  End support for 4 years old busybox 1.7.4 (bug #377133)
+
+  31 Jul 2011; Sebastian Pipping <sping@gentoo.org> doc/genkernel.8.txt:
+  Improve doc on filing bugs
+
+  28 Jul 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.18
+
+  27 Jul 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Fix display of seconds waiting (bug #376575)
+
+  Thanks to Richard Scott
+
+  26 Jul 2011; Robin H. Johnson <robbat2@gentoo.org> gen_arch.sh:
+  Bug #376467: fix kernel version checks for 3.0 kernel.
+
+  23 Jul 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  netboot/linuxrc.x:
+  Fix permissions of /dev/pts (bug #375947)
+
+  20 Jul 2011; Fabio Erculiani <lxnay@sabayon.org> defaults/config.sh,
+  doc/genkernel.8.txt, gen_cmdline.sh, gen_compile.sh:
+  Make possible to compile XEN based kernels providing --kernel-target= and
+  --kernel-binary= switches
+
+  03 Jul 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Set version to 3.4.17
+
+  03 Jul 2011; Sebastian Pipping <sping@gentoo.org> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/modules_load, arch/x86_64/modules_load,
+  defaults/initrd.defaults, defaults/initrd.scripts, defaults/linuxrc,
+  defaults/modules_load, doc/genkernel.8.txt, gen_cmdline.sh,
+  gen_determineargs.sh, gen_initramfs.sh, genkernel, genkernel.conf,
+  maintenance/docmatcher.py:
+  Remove support for sys-fs/evms, as it was removed from Gentoo (bug #372423)
+
+  22 Jun 2011; Sebastian Pipping <sping@gentoo.org> gen_compile.sh:
+  Make --arch-override= affect "make menuconfig" (bug #247246)
+
+  13 Jun 2011; Sebastian Pipping <sping@gentoo.org> arch/x86_64/kernel-config:
+  Unset CONFIG_EMBEDDED on arch amd64
+
+  13 Jun 2011; Sebastian Pipping <sping@gentoo.org> arch/x86/kernel-config,
+  arch/x86_64/kernel-config, defaults/kernel-config:
+  Apply CONFIG_USB_HID=y to archs amd64/x86/default (bug #270983)
+
+  13 Jun 2011; Sebastian Pipping <sping@gentoo.org> arch/x86/kernel-config,
+  arch/x86_64/kernel-config, defaults/kernel-config:
+  Unset CONFIG_IDE on archs amd64/x86/default (bug #357213)
+
+  07 Jun 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.16
+
+  07 Jun 2011; Sebastian Pipping <sping@gentoo.org> doc/genkernel.8.txt:
+  Document most undocumented boot parameters (bug #370369)
+
+  07 Jun 2011; Sebastian Pipping <sping@gentoo.org> doc/genkernel.8.txt:
+  Docs: Fix mixup of boot parameters real_init= and init_opts=
+
+  04 Jun 2011; Sebastian Pipping <sping@gentoo.org> genkernel.conf,
+  maintenance/docmatcher.py:
+  Document remaining options inside genkiernel.conf (bug #367233)
+
+  01 Jun 2011; Sebastian Pipping <sping@gentoo.org> defaults/linuxrc,
+  doc/genkernel.8.txt:
+  Document option lvmraid= and make it imply dolvm (bug #153502)
+
+  31 May 2011; Sebastian Pipping <sping@gentoo.org> defaults/linuxrc,
+  doc/genkernel.8.txt:
+  Add rootfstype= boot parameter (bug #221245)
+
+  Special thanks:
+  - Marcin Kurek
+
+  31 May 2011; Nelson Batalha <nelson.batalha@gmail.com> defaults/initrd.defaults:
+  Add Kernel 3.0.0 support (bug #369481)
+
+  31 May 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Output warning in warning color
+
+  31 May 2011; Sebastian Pipping <sping@gentoo.org> doc/genkernel.8.txt,
+  genkernel:
+  Document boot parameter domdadm (bug #369415)
+
+  12 May 2011; Amadeusz Żołnowski <aidecoe@aidecoe.name>
+  defaults/modules_load:
+  Added hpsa to defaults/modules_load; fixes bug #363369
+
   28 Mar 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
   Bump to 3.4.15
 

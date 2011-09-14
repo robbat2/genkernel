@@ -2,7 +2,7 @@
 # $Id$
 
 PATH="${PATH}:/sbin:/usr/sbin"
-GK_V='3.4.15-r1-funtoo'
+GK_V='3.4.18_alpha1-funtoo'
 
 # Set the default for TMPDIR.  May be modified by genkernel.conf or the
 # --tempdir command line option.
@@ -344,14 +344,18 @@ fi
 if [ "${BUILD_RAMDISK}" = '1' ]
 then
 	echo
-	print_info 1 'WARNING... WARNING... WARNING...'
-	print_info 1 'Additional kernel cmdline arguments that *may* be required to boot properly...'
-	[ "${SPLASH}" = '1' ] && print_info 1 "add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
-	[ "${LVM}" = '1' ] && print_info 1 'add "dolvm" for lvm support'
-	[ "${EVMS}" = '1' ] && print_info 1 'add "doevms" for evms support'
-	[ "${DMRAID}" = '1' ] && print_info 1 'add "dodmraid" for dmraid support'
-	[ "${DMRAID}" = '1' ] && print_info 1 '	or "dodmraid=<additional options>"'
-	[ "${ISCSI}" = '1' ] && print_info 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
+	print_warning 1 'WARNING... WARNING... WARNING...'
+	print_warning 1 'Additional kernel cmdline arguments that *may* be required to boot properly...'
+	[ "${SPLASH}" = '1' ] && print_warning 1 "add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
+	[ "${LVM}" = '1' ] && print_warning 1 'add "dolvm" for lvm support'
+	[ "${DMRAID}" = '1' ] && print_warning 1 'add "dodmraid" for dmraid support'
+	[ "${MDADM}" = '1' ] && print_warning 1 'add "domdadm" for RAID support'
+	[ "${DMRAID}" = '1' ] && print_warning 1 '	or "dodmraid=<additional options>"'
+	[ "${ISCSI}" = '1' ] && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
+	if [ `grep 'CONFIG_EXT[0-9]_FS=' "${KERNEL_DIR}"/.config | wc -l` -ge 2 ]; then
+		print_warning 1 'With support for several ext* filesystems around it may be needed to'
+		print_warning 1 'add "rootfstype=ext3" or "rootfstype=ext4"'
+	fi
 fi
 
 [ "${BOOTRW}" != '' ] && mount -o remount,ro ${BOOTDIR}
@@ -360,7 +364,7 @@ echo
 print_info 1 'Do NOT report kernel bugs as genkernel bugs unless your bug'
 print_info 1 'is about the default genkernel configuration...'
 print_info 1 ''
-print_info 1 'Make sure you have the latest genkernel before reporting bugs.'
+print_info 1 'Make sure you have the latest ~arch genkernel before reporting bugs.'
 
 #Final Cleanup
 cleanup

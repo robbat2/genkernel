@@ -25,7 +25,7 @@ append_base_layout() {
 
 	echo "/dev/ram0     /           ext2    defaults	0 0" > ${TEMP}/initramfs-base-temp/etc/fstab
 	echo "proc          /proc       proc    defaults    0 0" >> ${TEMP}/initramfs-base-temp/etc/fstab
-	
+
 	cd ${TEMP}/initramfs-base-temp/dev
 	mknod -m 660 console c 5 1
 	mknod -m 660 null c 1 3
@@ -61,7 +61,7 @@ append_busybox() {
 		ln -s busybox ${TEMP}/initramfs-busybox-temp/bin/$i ||
 			gen_die "Busybox error: could not link ${i}!"
 	done
-	
+
 	cd "${TEMP}/initramfs-busybox-temp/"
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
 			|| gen_die "compressing busybox cpio"
@@ -148,7 +148,7 @@ append_multipath(){
 	mkdir -p "${TEMP}/initramfs-multipath-temp/lib/"
 
 	# Copy files to /lib
-	for i in /lib/{ld-*,libc-*,libc.*,libdl-*,libdl.*,libsysfs*so*,libdevmapper*so*,libpthread*,librt*,libreadline*,libncurses*}
+	for i in /lib/{ld-*,libc-*,libc.*,libdl-*,libdl.*,libdevmapper*so*,libpthread*,librt*,libreadline*,libncurses*}
 	do
 		cp -a "${i}" "${TEMP}/initramfs-multipath-temp/lib" \
 			|| gen_die "Could not copy file ${i} for MULTIPATH"
@@ -174,7 +174,7 @@ append_multipath(){
 			|| gen_die "Could not copy file ${i} for MULTIPATH"
 	done
 
-	if [ -x /sbin/multipath ] 
+	if [ -x /sbin/multipath ]
 	then
 		cp /etc/multipath.conf "${TEMP}/initramfs-multipath-temp/etc/" || gen_die 'could not copy /etc/multipath.conf please check this'
 	fi
@@ -261,59 +261,6 @@ append_lvm(){
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}"  || gen_die "compressing lvm cpio"
 	cd "${TEMP}"
 	rm -r "${TEMP}/initramfs-lvm-temp/"
-}
-
-append_evms(){
-	if [ -d "${TEMP}/initramfs-evms-temp" ]
-	then
-		rm -r "${TEMP}/initramfs-evms-temp/"
-	fi
-	mkdir -p "${TEMP}/initramfs-evms-temp/lib/evms"
-	mkdir -p "${TEMP}/initramfs-evms-temp/etc/"
-	mkdir -p "${TEMP}/initramfs-evms-temp/bin/"
-	mkdir -p "${TEMP}/initramfs-evms-temp/sbin/"
-	if [ "${EVMS}" = '1' ]
-	then
-		print_info 1 '		EVMS: Adding support...'
-		mkdir -p ${TEMP}/initramfs-evms-temp/lib
-		cp -a /lib/ld-* "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		if [ -n "`ls /lib/libgcc_s*`" ]
-		then
-			cp -a /lib/libgcc_s* "${TEMP}/initramfs-evms-temp/lib" \
-				|| gen_die 'Could not copy files for EVMS!'
-		fi
-		cp -a /lib/libc-* /lib/libc.* "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /lib/libdl-* /lib/libdl.* "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /lib/libpthread* "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /lib/libuuid*so* "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /lib/libevms*so* "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /lib/evms "${TEMP}/initramfs-evms-temp/lib" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /lib/evms/* "${TEMP}/initramfs-evms-temp/lib/evms" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp -a /etc/evms.conf "${TEMP}/initramfs-evms-temp/etc" \
-			|| gen_die 'Could not copy files for EVMS!'
-		cp /sbin/evms_activate "${TEMP}/initramfs-evms-temp/sbin" \
-			|| gen_die 'Could not copy over evms_activate!'
-
-		# Fix EVMS complaining that it can't find the swap utilities.
-		# These are not required in the initramfs
-		for swap_libs in "${TEMP}/initramfs-evms-temp/lib/evms/*/swap*.so"
-		do
-			rm ${swap_libs}
-		done
-	fi
-	cd "${TEMP}/initramfs-evms-temp/"
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing evms cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-evms-temp/"
 }
 
 append_mdadm(){
@@ -494,12 +441,12 @@ append_modules() {
 	else
 	  cd /
 	fi
-	
+
 	if [ -d "${TEMP}/initramfs-modules-${KV}-temp" ]
 	then
 		rm -r "${TEMP}/initramfs-modules-${KV}-temp/"
 	fi
-	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/lib/modules/${KV}"	
+	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/lib/modules/${KV}"
 	for i in `gen_dep_list`
 	do
 		mymod=`find ./lib/modules/${KV} -name "${i}${MOD_EXT}" 2>/dev/null| head -n 1 `
@@ -508,11 +455,11 @@ append_modules() {
 			print_warning 2 "Warning :: ${i}${MOD_EXT} not found; skipping..."
 			continue;
 		fi
-		
+
 		print_info 2 "initramfs: >> Copying ${i}${MOD_EXT}..."
 		cp -ax --parents "${mymod}" "${TEMP}/initramfs-modules-${KV}-temp"
 	done
-	
+
 	cp -ax --parents ./lib/modules/${KV}/modules* ${TEMP}/initramfs-modules-${KV}-temp 2>/dev/null
 
 	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/etc/modules"
@@ -538,13 +485,13 @@ append_auxilary() {
 	then
 		rm -r "${TEMP}/initramfs-aux-temp/"
 	fi
-	mkdir -p "${TEMP}/initramfs-aux-temp/etc"	
-	mkdir -p "${TEMP}/initramfs-aux-temp/sbin"	
+	mkdir -p "${TEMP}/initramfs-aux-temp/etc"
+	mkdir -p "${TEMP}/initramfs-aux-temp/sbin"
 	if [ -f "${CMD_LINUXRC}" ]
 	then
 		cp "${CMD_LINUXRC}" "${TEMP}/initramfs-aux-temp/init"
 		print_info 2 "        >> Copying user specified linuxrc: ${CMD_LINUXRC} to init"
-	else	
+	else
 		if isTrue ${NETBOOT}
 		then
 			cp "${GK_SHARE}/netboot/linuxrc.x" "${TEMP}/initramfs-aux-temp/init"
@@ -565,12 +512,12 @@ append_auxilary() {
 	# big cpio.
 	cd ${TEMP}/initramfs-aux-temp
 	ln -s init linuxrc
-#	ln ${TEMP}/initramfs-aux-temp/init ${TEMP}/initramfs-aux-temp/linuxrc 
+#	ln ${TEMP}/initramfs-aux-temp/init ${TEMP}/initramfs-aux-temp/linuxrc
 
 	if [ -f "${GK_SHARE}/arch/${ARCH}/initrd.scripts" ]
 	then
 		cp "${GK_SHARE}/arch/${ARCH}/initrd.scripts" "${TEMP}/initramfs-aux-temp/etc/initrd.scripts"
-	else	
+	else
 		cp "${GK_SHARE}/defaults/initrd.scripts" "${TEMP}/initramfs-aux-temp/etc/initrd.scripts"
 	fi
 
@@ -585,13 +532,13 @@ append_auxilary() {
 	then
 		sed -i "s:^REAL_ROOT=.*$:REAL_ROOT='${REAL_ROOT}':" "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 	fi
-	
-	echo -n 'HWOPTS="$HWOPTS ' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"	
+
+	echo -n 'HWOPTS="$HWOPTS ' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 	for group_modules in ${!MODULES_*}; do
 		group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
 		echo -n "${group} " >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 	done
-	echo '"' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"	
+	echo '"' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 
 	if [ -f "${GK_SHARE}/arch/${ARCH}/modprobe" ]
 	then
@@ -626,7 +573,7 @@ append_auxilary() {
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
 			|| gen_die "compressing auxilary cpio"
 	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-aux-temp/"	
+	rm -r "${TEMP}/initramfs-aux-temp/"
 }
 
 append_data() {
@@ -655,7 +602,6 @@ create_initramfs() {
 	append_data 'lvm' "${LVM}"
 	append_data 'dmraid' "${DMRAID}"
 	append_data 'iscsi' "${ISCSI}"
-	append_data 'evms' "${EVMS}"
 	append_data 'mdadm' "${MDADM}"
 	append_data 'luks' "${LUKS}"
 	append_data 'multipath' "${MULTIPATH}"
