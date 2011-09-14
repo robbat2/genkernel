@@ -81,9 +81,6 @@ determine_real_args() {
 	set_config_with_override STRING KERNEL_CC            CMD_KERNEL_CC            ""
 	set_config_with_override STRING KERNEL_LD            CMD_KERNEL_LD            ""
 	set_config_with_override STRING KERNEL_AS            CMD_KERNEL_AS            ""
-	set_config_with_override STRING UTILS_CC             CMD_UTILS_CC             "$DEFAULT_UTILS_CC"
-	set_config_with_override STRING UTILS_LD             CMD_UTILS_LD             "$DEFAULT_UTILS_LD"
-	set_config_with_override STRING UTILS_AS             CMD_UTILS_AS             "$DEFAULT_UTILS_AS"
 
 	set_config_with_override STRING KERNEL_CROSS_COMPILE CMD_KERNEL_CROSS_COMPILE
 	set_config_with_override STRING UTILS_CROSS_COMPILE  CMD_UTILS_CROSS_COMPILE
