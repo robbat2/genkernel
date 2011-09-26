@@ -6,14 +6,6 @@ backup() {
 	echo -ne "\033[0G\033[0K"
 }
 
-parse_opt() {
-	case "$1" in
-		*\=*)
-			echo "$1" | cut -d= -f2-
-		;;
-	esac
-}
-
 modules_load() {
 	for module in $*
 	do
@@ -326,8 +318,8 @@ runmdev() {
 		|| bad_msg "Failed to mount /dev as ${devfs}"
 
 	# http://git.busybox.net/busybox/plain/docs/mdev.txt
-	mkdir /dev/pts
-	mount -t devpts devpts /dev/pts  || bad_msg "Failed to mount /dev/pts"
+	mkdir -m 0755 /dev/pts
+	mount -t devpts -o gid=5,mode=0620 devpts /dev/pts  || bad_msg "Failed to mount /dev/pts"
 	mdev -s  || bad_msg "Failed to receive dynamic updates from mdev"
 }
 
@@ -384,7 +376,7 @@ crypt_filter() {
 	fi
 }
 
-whereis(){
+prompt_user(){
 	# $1 = variable whose value is the path (examples: "REAL_ROOT",
 	#      "LUKS_KEYDEV")
 	# $2 = label
@@ -393,7 +385,7 @@ whereis(){
 	eval local oldvalue='$'${1}
 
 	[ \( $# != 2 \) -a \( $# != 3 \) ] && \
-		bad_msg "Bad invocation of function whereis, please file a bug \
+		bad_msg "Bad invocation of function prompt_user, please file a bug \
 		report with this message" && exit 1
 	[ -n "${3}" ] && local explnt=" or : ${3}" || local explnt="."
 	
@@ -667,26 +659,8 @@ startVolumes() {
 			# And finally execute it all (/proc/... needed if lvm is compiled without readline)
 			good_msg "Scanning for and activating Volume Groups"
 			printf "%b\n" "${lvm_commands}" | /bin/lvm /proc/self/fd/0
-
-			# Disable EVMS since lvm is activated and they dont work together.
-			if [ "${USE_EVMS_NORMAL}" = '1' ]
-			then
-				bad_msg "Disabling EVMS Support because LVM started"
-				bad_msg "Do not add dolvm to the cmdline if this is not what you want"
-				bad_msg "LVM and EVMS do not work well together"
-				USE_EVMS_NORMAL=0
-			fi
 		else
 			bad_msg "vgscan or vgchange not found: skipping LVM volume group activation!"
-		fi
-	fi
-
-	if [ "${USE_EVMS_NORMAL}" = '1' ]
-	then
-		if [ -e '/sbin/evms_activate' ]
-		then
-			good_msg "Activating EVMS"
-			evms_activate
 		fi
 	fi
 }
@@ -778,15 +752,15 @@ openLUKS() {
 			run_shell
 		elif [ ${DEV_ERROR} -eq 1 ]
 		then
-			whereis "LUKS_DEVICE" "${LUKS_NAME}"
+			prompt_user "LUKS_DEVICE" "${LUKS_NAME}"
 			DEV_ERROR=0
 		elif [ ${KEY_ERROR} -eq 1 ]
 		then
-			whereis "LUKS_KEY" "${LUKS_NAME} key"
+			prompt_user "LUKS_KEY" "${LUKS_NAME} key"
 			KEY_ERROR=0
 		elif [ ${KEYDEV_ERROR} -eq 1 ]
 		then
-			whereis "LUKS_KEYDEV" "${LUKS_NAME} key device"
+			prompt_user "LUKS_KEYDEV" "${LUKS_NAME} key device"
 			KEYDEV_ERROR=0
 		else
 			case "${LUKS_DEVICE}" in
@@ -883,7 +857,7 @@ openLUKS() {
 					fi
 					# At this point a candidate key exists (either mounted before or not)
 					good_msg "${LUKS_KEY} on device ${LUKS_KEYDEV} found" ${CRYPT_SILENT}
-					if [ $(echo ${LUKS_KEY} | grep -o '.gpg$') = ".gpg" ] && [ -e /sbin/gpg ] ; then
+					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ] && [ -e /sbin/gpg ] ; then
 						[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
 						mknod /dev/tty c 5 1
 						cryptsetup_options="-d -"
@@ -947,9 +921,14 @@ sdelay() {
 	# Sleep a specific number of seconds if SDELAY is set
 	if [ "${SDELAY}" ]
 	then
-		good_msg 'Waiting ${SDELAY} seconds...'
+		good_msg "Waiting ${SDELAY} seconds..."
 		sleep ${SDELAY}
-	elif grep cdroot /proc/cmdline > /dev/null 2>&1; then
+	elif [ "${CDROOT}" = '1' ]
+	then
+		# many CD/DVD drives require extra sleep, especially when
+		# connected via USB. Many people reported that 1 second sleep
+		# is not enough on their notebooks, that's why sleep 3, when booting
+		# off a livecd is a better default.
 		sleep 3
 	else
 		good_msg 'Hint: Use parameter scandelay[=seconds] if you need waiting here'
@@ -1109,32 +1088,32 @@ getdvhoff() {
 	echo $(( $(hexdump -n 4 -s $((316 + 12 * $2)) -e '"%i"' $1) * 512))
 }
 
-setup_aufs() {
+setup_squashfs_aufs() {
+	(
+	# Setup aufs directories and vars
+	local overlay=/mnt/overlay
+	local static=/mnt/livecd
 
-	# Directory used for rw changes in union mount filesystem
-	UNION=/aufs
-	OVERLAY=/overlay
-
-	mkdir -p "${UNION}"
-	mkdir -p "${OVERLAY}"
-	mount -t tmpfs none "${OVERLAY}"
-	good_msg "Loading aufs module (if module)"
+	for i in "${overlay}" "${static}"; do
+		[ ! -d "${i}" ] && mkdir -p "${i}"
+	done
+	good_msg "Loading aufs"
 	modprobe aufs > /dev/null 2>&1
 
-	aufs_setup_dir "${UNION}" "${NEW_ROOT}/${FS_LOCATION}"
+	cd "${NEW_ROOT}"
+	mount -t squashfs -o loop,ro "mnt/cdrom${LOOPEXT}${LOOP}" "${static}"
+	mount -t tmpfs none "${overlay}"
+	mount -t aufs -o br:${overlay}:${static} aufs "${NEW_ROOT}"
 
-	# setup internal mounts
-	mkdir -p "${UNION}/mnt/livecd"
-	if [ ! -e "${UNION}/mnt/cdrom" ]; then
-		mkdir "${UNION}/mnt/cdrom" -p
-	fi
-	mount --bind "${NEW_ROOT}/${FS_LOCATION}" "${UNION}/mnt/livecd"
-	mount --bind "${NEW_ROOT}/mnt/cdrom" "${UNION}/mnt/cdrom"
+	[ ! -d "${NEW_ROOT}${overlay}" ] && mkdir -p "${NEW_ROOT}${overlay}"
+	[ ! -d "${NEW_ROOT}${static}" ] && mkdir -p "${NEW_ROOT}${static}"
+	echo "aufs / aufs defaults 0 0" > "${NEW_ROOT}"/etc/fstab
+	for i in "${overlay}" "${static}"; do mount --move "${i}" "${NEW_ROOT}${i}"; done
 
-	# Make sure fstab notes livecd is mounted ro.  Makes system skip remount which fails on aufs $
-	sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' "/${UNION}/etc/fstab" > "/${UNION}/etc/fstab.new"
-	mv "/${UNION}/etc/fstab.new" "/${UNION}/etc/fstab"
-
+	# have handy /mnt/cdrom as well
+	[ ! -d "${NEW_ROOT}/mnt/cdrom" ] && mkdir -p "${NEW_ROOT}/mnt/cdrom"
+	mount --bind mnt/cdrom "${NEW_ROOT}/mnt/cdrom"
+	)
 }
 
 setup_unionfs() {

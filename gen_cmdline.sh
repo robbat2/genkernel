@@ -59,6 +59,9 @@ longusage() {
   echo "	--kernel-ld=<linker>	Linker to use for kernel"
   echo "	--kernel-cross-compile=<cross var> CROSS_COMPILE kernel variable"
   echo "	--kernel-make=<makeprg> GNU Make to use for kernel"
+  echo "	--kernel-target=<t>	Override default make target (bzImage)"
+  echo "	--kernel-binary=<path>	Override default kernel binary path (arch/foo/boot/bar)"
+
   echo "	--utils-cc=<compiler>	Compiler to use for utilities"
   echo "	--utils-as=<assembler>	Assembler to use for utils"
   echo "	--utils-ld=<linker>	Linker to use for utils"
@@ -77,9 +80,6 @@ longusage() {
   echo "	--splash-res=<res>	Select splash theme resolutions to install"
   echo "	--do-keymap-auto	Forces keymap selection at boot"
   echo "	--no-keymap		Disables keymap selection support"
-  echo "	--evms			Include EVMS support"
-  echo "				--> 'emerge evms' in the host operating system"
-  echo "				first"
   echo "	--lvm			Include LVM support"
   echo "	--mdadm			Include MDADM/MDMON support"
   echo "	--mdadm-config=<file>	Use file as mdadm.conf in initramfs"
@@ -181,6 +181,14 @@ parse_cmdline() {
 			CMD_KERNEL_MAKE=`parse_opt "$*"`
 			print_info 2 "CMD_KERNEL_MAKE: ${CMD_KERNEL_MAKE}"
 			;;
+		--kernel-target=*)
+			KERNEL_MAKE_DIRECTIVE_OVERRIDE=`parse_opt "$*"`
+			print_info 2 "KERNEL_MAKE_DIRECTIVE_OVERRIDE: ${KERNEL_MAKE_DIRECTIVE_OVERRIDE}"
+			;;
+		--kernel-binary=*)
+			KERNEL_BINARY_OVERRIDE=`parse_opt "$*"`
+			print_info 2 "KERNEL_BINARY_OVERRIDE: ${KERNEL_BINARY_OVERRIDE}"
+			;;
 		--kernel-cross-compile=*)
 			CMD_KERNEL_CROSS_COMPILE=`parse_opt "$*"`
 			CMD_KERNEL_CROSS_COMPILE=$(echo ${CMD_KERNEL_CROSS_COMPILE}|sed -e 's/.*[^-]$/&-/g')
@@ -235,16 +243,6 @@ parse_cmdline() {
 		--no-keymap)
 			CMD_KEYMAP=0
 			print_info 2 "CMD_KEYMAP: ${CMD_KEYMAP}"
-			;;
-		--evms)
-			CMD_EVMS=1
-			print_info 2 "CMD_EVMS: ${CMD_EVMS}"
-			;;
-		--evms2)
-			CMD_EVMS=1
-			print_info 2 "CMD_EVMS: ${CMD_EVMS}"
-			echo
-			print_warning 1 "Please use --evms, as --evms2 is deprecated."
 			;;
 		--lvm)
 			CMD_LVM=1
@@ -436,11 +434,11 @@ parse_cmdline() {
 			TEMP=${TMPDIR}/$RANDOM.$RANDOM.$RANDOM.$$
 			print_info 2 "TMPDIR: ${TMPDIR}"
 			print_info 2 "TEMP: ${TEMP}"
-			;; 
+			;;
 		--postclear)
 			CMD_POSTCLEAR=1
 			print_info 2 "CMD_POSTCLEAR: ${CMD_POSTCLEAR}"
-			;; 
+			;;
 		--arch-override=*)
 			CMD_ARCHOVERRIDE=`parse_opt "$*"`
 			print_info 2 "CMD_ARCHOVERRIDE: ${CMD_ARCHOVERRIDE}"

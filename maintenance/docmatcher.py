@@ -14,6 +14,10 @@ NON_VARIABLES = ('UTF', 'USE', 'TCP', 'SMP', 'PXE', 'PPC', 'MAC',
 	'TFTP', 'SYSTEM', 'SPARC', 'RAID', 'LABEL', 'PROMPT', 'KERNEL',
 	'GRP', 'DOCTYPE', 'DHCP', 'DEFAULT', 'ATARAID', 'APPEND')
 
+NON_CONFIG_VARIABLES = ('BUILD_KERNEL', 'BUILD_MODULES', 'BUILD_RAMDISK',
+	'TERM_COLUMNS', 'TERM_LINES', 'SPLASH_RES', 'TEMP')
+
+
 EXTRA_VARIABLES = ['ARCH_OVERRIDE', 'BOOTLOADER', 'CLEAR_CACHE_DIR', 'DEFAULT_KERNEL_SOURCE', 'DISTDIR', 'GK_SHARE', 'BUSYBOX_APPLETS']
 for app in ('DEVICE_MAPPER', 'UNIONFS_FUSE', 'BUSYBOX', 'DMRAID', 'LVM', 'ISCSI', 'FUSE', 'GPG', 'MDADM'):
 	for prop in ('DIR', 'SRCTAR', 'VER'):
@@ -23,7 +27,7 @@ EXTRA_VARIABLES = tuple(EXTRA_VARIABLES)
 IGNORE_OPTIONS = ('help', 'version')
 _GPG_PARAMETERS = ('symmetric', )
 IGNORE_PARAMETERS = _GPG_PARAMETERS
-DEPRECATED_PARAMETERS = ('lvm2', 'evms2', 'gensplash', 'gensplash-res')
+DEPRECATED_PARAMETERS = ('lvm2', 'gensplash', 'gensplash-res')
 
 
 def exract_gen_cmdline_sh():
@@ -66,6 +70,8 @@ def exract_gen_cmdline_sh():
 	for match in re.finditer('^\s*([A-Z_]+)=', parsing_code, re.MULTILINE):
 		var_name = match.group(1)
 		if var_name.startswith('CMD_'):
+			continue
+		if var_name in NON_CONFIG_VARIABLES:
 			continue
 		gen_cmdline_sh_variables.add(var_name)
 
@@ -166,7 +172,7 @@ def extract_gen_determineargs_sh():
 	f.close()
 
 	gen_determineargs_sh_variables = set()
-	for match in re.finditer('set_config_with_override\s+[0-9]+\s+([A-Z_]+)', gen_determineargs_sh):
+	for match in re.finditer('set_config_with_override\s+(?:BOOL|STRING)\s+([A-Z_]+)', gen_determineargs_sh):
 		var_name = match.group(1)
 		gen_determineargs_sh_variables.add(var_name)
 
