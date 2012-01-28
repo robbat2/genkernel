@@ -343,6 +343,68 @@ append_mdadm(){
 	rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
 }
 
+append_zfs(){
+	if [ -d "${TEMP}/initramfs-zfs-temp" ]
+	then
+		rm -r "${TEMP}/initramfs-zfs-temp"
+	fi
+
+	mkdir -p "${TEMP}/initramfs-zfs-temp/etc/zfs/"
+	mkdir -p "${TEMP}/initramfs-zfs-temp/lib64/"
+	mkdir -p "${TEMP}/initramfs-zfs-temp/sbin/"
+	mkdir -p "${TEMP}/initramfs-zfs-temp/usr/bin/"
+	mkdir -p "${TEMP}/initramfs-zfs-temp/usr/lib64/"
+	mkdir -p "${TEMP}/initramfs-zfs-temp/usr/sbin/"
+
+	# Copy files to /etc/zfs
+	for i in /etc/zfs/{zdev.conf,zpool.cache}
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	# Copy files to /lib64
+	for i in /lib64/{ld-*,libc-*,libc.*,libdl-*,libdl.*,libm-*,libm.*,libuuid*so*,libpthread*,librt*,libz.so*}
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/lib64" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	# Copy files to /sbin
+	for i in /sbin/mount.zfs
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/sbin" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	# Copy files to /usr/bin
+	for i in /usr/bin/{hostid,zpool_layout}
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/usr/bin" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	# Copy files to /usr/lib64
+	for i in /usr/lib64/{libnvpair.so*,libuutil.so*,libzpool.so*,libzfs.so*}
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/usr/lib64" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	# Copy files to /usr/sbin
+	for i in /usr/sbin/{zfs,zpool}
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/usr/sbin" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	cd "${TEMP}/initramfs-zfs-temp/"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+			|| gen_die "compressing zfs cpio"
+	cd "${TEMP}"
+	rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
+}
+
 append_splash(){
 	splash_geninitramfs=`which splash_geninitramfs 2>/dev/null`
 	if [ -x "${splash_geninitramfs}" ]
@@ -656,6 +718,8 @@ create_initramfs() {
 	else
 		print_info 1 "initramfs: Not copying modules..."
 	fi
+
+	append_data 'zfs' "${ZFS}"
 
 	append_data 'blkid' "${DISKLABEL}"
 
