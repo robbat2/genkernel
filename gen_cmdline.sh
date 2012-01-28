@@ -532,8 +532,8 @@ parse_cmdline() {
 			print_info 2 "CMD_INTEGRATED_INITRAMFS=${CMD_INTEGRATED_INITRAMFS}"
 			;;
 		--compress-initramfs|--no-compress-initramfs)
-			CMD_COMPRESS_INITRAMFS=`parse_optbool "$*"`
-			print_info 2 "CMD_COMPRESS_INITRAMFS=${CMD_COMPRESS_INITRAMFS}"
+			CMD_COMPRESS_INITRD=`parse_optbool "$*"`
+			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
 			;;
 		--config=*)
 			print_info 2 "CMD_GK_CONFIG: `parse_opt "$*"`"
