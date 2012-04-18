@@ -96,6 +96,14 @@ do
 			DMRAID_OPTS=${x#*=}
 			USE_DMRAID_NORMAL=1
 		;;
+		dozfs*)
+			USE_ZFS=1
+
+			if [ "${x#*=}" = 'force' ]
+			then
+				ZPOOL_FORCE=-f
+			fi
+		;;
 		# Debug Options
 		debug)
 			DEBUG='yes'
@@ -189,6 +197,10 @@ do
 		root_keydev=*)
 			CRYPT_ROOT_KEYDEV=${x#*=}
 		;;
+		root_trim=*)
+			CRYPT_ROOT_TRIM=${x#*=}
+		;;
+
 		swap_key=*)
 			CRYPT_SWAP_KEY=${x#*=}
 		;;
@@ -239,15 +251,44 @@ then
 	REAL_ROOT="${FAKE_ROOT}"
 fi
 
+# Set variables based on the value of REAL_ROOT
+case "${REAL_ROOT}" in
+	ZFS*)
+		USE_ZFS=1
+	;;
+esac
+
+# Verify that it is safe to use ZFS
+if [ "USE_ZFS" = "1" ]
+then
+	if [ -x /sbin/zfs ]
+	then
+		MY_HWOPTS="${MY_HWOPTS} zfs"
+	else
+		bad_msg 'zfs binary not found: aborting use of zfs!'
+		USE_ZFS=0
+	fi
+fi
+
 splash 'init'
 
 cmdline_hwopts
+
+# Mount devfs
+mount_devfs
 
 # Mount sysfs
 mount_sysfs
 
 # Setup hotplugging for firmware loading
 setup_hotplug
+
+# Start mdev
+if [ "${KV_2_6_OR_GREATER}" ]
+then
+	good_msg 'Activating mdev'
+	( cd /sys && mdev -s ) || bad_msg "Failed to receive dynamic updates from mdev"
+fi
 
 # Load modules listed in MY_HWOPTS if /lib/modules exists for the running kernel
 if [ -z "${DO_modules}" ]
@@ -276,8 +317,7 @@ sdelay
 # Setup slow USB bits
 setup_slowusb
 
-# Start device manager
-start_dev_mgr
+cd /
 
 # if doslowusb is passed, pause other 10 seconds here, after mdev load
 [ "${DO_slowusb}" ] && sleep 10
@@ -351,11 +391,12 @@ then
 	good_msg "Making tmpfs for ${NEW_ROOT}"
 	mount -n -t tmpfs tmpfs "${NEW_ROOT}"
 
-	for i in dev mnt mnt/cdrom mnt/livecd mnt/key tmp tmp/.initrd mnt/gentoo sys
+	for i in dev mnt mnt/livecd mnt/key tmp tmp/.initrd mnt/gentoo sys
 	do
 		mkdir -p "${NEW_ROOT}/${i}"
 		chmod 755 "${NEW_ROOT}/${i}"
 	done
+	[ ! -d "${CDROOT_PATH}" ] && mkdir -p "${CDROOT_PATH}"
 	[ ! -e "${NEW_ROOT}/dev/null" ] && mknod "${NEW_ROOT}"/dev/null c 1 3
 	[ ! -e "${NEW_ROOT}/dev/console" ] && mknod "${NEW_ROOT}"/dev/console c 5 1
 
@@ -445,6 +486,49 @@ do
 					continue
 				fi
 				;;
+			ZFS*)
+				ROOT_DEV="${REAL_ROOT#*=}"
+				if [ "${ROOT_DEV}" != 'ZFS' ] 
+				then
+					zfs get type ${ROOT_DEV} > /dev/null
+
+					if [ "$?" = '0' ]
+					then
+						got_good_root=1;
+						REAL_ROOT=${ROOT_DEV}
+						ROOTFSTYPE=zfs
+					fi
+				else
+					BOOTFS=$(/sbin/zpool list -H -o bootfs)
+					if [ "${BOOTFS}" != '-' ]
+					then
+
+						for i in ${BOOTFS}
+						do
+
+							zfs get type ${i} > /dev/null
+							retval=$?
+
+							if [ ${retval} -eq 0 ];	then
+								got_good_root=1
+								REAL_ROOT=${i}
+								ROOTFSTYPE=zfs
+								break
+							fi	
+						
+						done;
+
+					fi
+
+				fi
+
+				if [ ${got_good_root} -ne 1 ]; then
+					prompt_user "REAL_ROOT" "root block device"
+					got_good_root=0
+				fi
+					
+				continue
+				;;
 		esac
 
 		if [ "${REAL_ROOT}" = '' ]
@@ -476,19 +560,29 @@ do
 		# there is no isofs filesystem to worry about
 		break
 	else
-		good_msg "Mounting root..."
+		good_msg "Mounting $REAL_ROOT as root..."
+
+		if [ "${ROOTFSTYPE}" = 'zfs' ]
+		then
+			MOUNT_STATE=rw
+		else
+			MOUNT_STATE=ro
+		fi
 
 		# Try to mount the device as ${NEW_ROOT}
 		if [ "${REAL_ROOT}" = '/dev/nfs' ]; then
 			findnfsmount
 		else
+			# If $REAL_ROOT is a symlink
+			# Resolve it like util-linux mount does
+			[ -L ${REAL_ROOT} ] && REAL_ROOT=`readlink ${REAL_ROOT}`
 			# mount ro so fsck doesn't barf later
 			if [ "${REAL_ROOTFLAGS}" = '' ]; then
-				good_msg "Using mount -t ${ROOTFSTYPE} -o ro"
-				mount -t ${ROOTFSTYPE} -o ro ${REAL_ROOT} ${NEW_ROOT}
+				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE}"
+				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}
 			else
-				good_msg "Using mount -t ${ROOTFSTYPE} -o ro,${REAL_ROOTFLAGS}"
-				mount -t ${ROOTFSTYPE} -o ro,${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
+				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS}"
+				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
 			fi
 		fi
 
@@ -530,11 +624,11 @@ then
 	# If encrypted, find key and mount, otherwise mount as usual
 	if [ -n "${CRYPT_ROOT}" ]
 	then
-		CRYPT_ROOT_KEY="$(head -n 1 ${NEW_ROOT}/mnt/cdrom/livecd)"
+		CRYPT_ROOT_KEY="$(head -n 1 "${CDROOT_PATH}"/livecd)"
 		CRYPT_ROOT='/dev/loop0'
 		good_msg 'You booted an encrypted livecd' "${CRYPT_SILENT}"
 
-		losetup /dev/loop0 "${NEW_ROOT}/mnt/cdrom/${LOOPEXT}${LOOP}"
+		losetup /dev/loop0 "${CDROOT_PATH}/${LOOPEXT}${LOOP}"
 		test_success 'Preparing loop filesystem'
 
 		startLUKS
@@ -555,14 +649,26 @@ then
 		if [ "${LOOPTYPE}" = 'normal' ]
 		then
 			good_msg 'Mounting loop filesystem'
-			mount -t ext2 -o loop,ro "${NEW_ROOT}/mnt/cdrom/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
+			mount -t ext2 -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
 			test_success 'Mount filesystem'
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'squashfs' ]
 		then
 			if [ "${USE_AUFS_NORMAL}" != '1' ]; then
 				good_msg 'Mounting squashfs filesystem'
-				mount -t squashfs -o loop,ro "${NEW_ROOT}/mnt/cdrom/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
+				_CACHED_SQUASHFS_PATH="${NEW_ROOT}/mnt/${LOOP}"
+				_squashfs_path="${CDROOT_PATH}/${LOOPEXT}${LOOP}"  # Default to uncached
+				# Upgrade to cached version if possible
+				[ "${DO_cache}" -a -f "${_CACHED_SQUASHFS_PATH}" ] \
+						&& _squashfs_path=${_CACHED_SQUASHFS_PATH}
+				mount -t squashfs -o loop,ro "${_squashfs_path}" "${NEW_ROOT}/mnt/livecd" || {
+					bad_msg "Squashfs filesystem could not be mounted, dropping into shell."
+					if [ -e /proc/filesystems ]; then
+						fgrep -q squashfs /proc/filesystems || \
+							bad_msg "HINT: Your kernel does not know filesystem \"squashfs\"."
+					fi
+					do_rundebugshell
+				}
 			else
 				good_msg 'Mounting squashfs & aufs filesystems'
 				setup_squashfs_aufs
@@ -572,7 +678,7 @@ then
 		elif [ "${LOOPTYPE}" = 'gcloop' ]
 		then
 			good_msg 'Mounting gcloop filesystem'
-			echo ' ' | losetup -E 19 -e ucl-0 -p0 "${NEW_ROOT}/dev/loop0" "${NEW_ROOT}/mnt/cdrom/${LOOPEXT}${LOOP}"
+			echo ' ' | losetup -E 19 -e ucl-0 -p0 "${NEW_ROOT}/dev/loop0" "${CDROOT_PATH}/${LOOPEXT}${LOOP}"
 			test_success 'losetup the loop device'
 
 			mount -t ext2 -o ro "${NEW_ROOT}/dev/loop0" "${NEW_ROOT}/mnt/livecd"
@@ -580,10 +686,10 @@ then
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'zisofs' ]
 		then
-			FS_LOCATION="mnt/cdrom/${LOOPEXT}${LOOP}"
+			FS_LOCATION="${CDROOT_PATH/\/}/${LOOPEXT}${LOOP}"
 		elif [ "${LOOPTYPE}" = 'noloop' ]
 		then
-			FS_LOCATION='mnt/cdrom'
+			FS_LOCATION="${CDROOT_PATH/\/}"
 		elif [ "${LOOPTYPE}" = 'sgimips' ]
 		then
 			# getdvhoff finds the starting offset (in bytes) of the squashfs
@@ -616,9 +722,9 @@ then
 	# We do this now, so that additional packages can add whereever they want.
 	if [ "${REAL_ROOT}" = '/dev/nfs' ]
 	then
-		if [ -e "${NEW_ROOT}/mnt/cdrom/add" ]
+		if [ -e "${CDROOT_PATH}/add" ]
 		then
-				for targz in $(ls ${NEW_ROOT}/mnt/cdrom/add/*.tar.gz)
+				for targz in $(ls ${CDROOT_PATH}/add/*.tar.gz)
 				do
 					tarname=$(basename ${targz})
 					good_msg "Adding additional package ${tarname}"
@@ -636,13 +742,16 @@ then
 
 	elif [ "${USE_UNIONFS_NORMAL}" = '1' ]
 	then
-		setup_unionfs ${NEW_ROOT} ${NEW_ROOT}/${FS_LOCATION}
+		setup_unionfs ${NEW_ROOT} /${FS_LOCATION}
 		CHROOT=/union
 	elif [ "${USE_AUFS_NORMAL}" != '1' ]; then
 
 	good_msg "Copying read-write image contents to tmpfs"
 	# Copy over stuff that should be writable
-	(cd "${NEW_ROOT}/${FS_LOCATION}"; cp -a ${ROOT_TREES} "${NEW_ROOT}")
+	(cd "${NEW_ROOT}/${FS_LOCATION}"; cp -a ${ROOT_TREES} "${NEW_ROOT}") || {
+		bad_msg "Copying failed, dropping into a shell."
+		do_rundebugshell
+	}
 
 	# Now we do the links.
 	for x in ${ROOT_LINKS}
@@ -713,6 +822,32 @@ else
 	fi
 fi
 
+# Mount the additional things as required by udev & systemd
+if [ -f ${NEW_ROOT}/etc/initramfs.mounts ]; then
+	fslist=$(get_mounts_list)
+else
+	fslist="/usr" 
+fi
+
+for fs in $fslist; do
+	dev=$(get_mount_device $fs)
+	[ -z "${dev}" ] && continue
+	# Resolve it like util-linux mount does
+	[ -L ${dev} ] && dev=`readlink ${dev}`
+	# In this case, it's probably part of the filesystem
+	# and not a mountpoint
+	[ -z "$dev" ] && continue
+	fstype=$(get_mount_fstype $fs)
+	# ro must be trailing, and the options will always contain at least 'defaults'
+	opts="$(get_mount_options $fs | strip_mount_options),ro"
+	mnt=${NEW_ROOT}${fs}
+	cmd="mount -t $fstype -o $opts $dev $mnt"
+	good_msg "Mounting $dev as ${fs}: $cmd"
+	if ! $cmd; then
+		bad_msg "Unable to mount $dev for $fs"
+	fi
+done
+
 # Execute script on the cdrom just before boot to update things if necessary
 cdupdate
 
@@ -758,10 +893,11 @@ exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${REAL_INIT:-/sbin/init}" 
 # If we get here, something bad has happened
 splash 'verbose'
 
-echo 'A fatal error has probably occured since /sbin/init did not'
-echo 'boot correctly. Trying to open a shell...'
+echo "A fatal error has probably occured since ${REAL_INIT:-/sbin/init} did not"
+echo "boot correctly. Trying to open a shell..."
 echo
 exec /bin/bash
 exec /bin/sh
 exec /bin/ash
+exec /bin/dash
 exec sh

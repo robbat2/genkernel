@@ -3,6 +3,45 @@
 
 CPIO_ARGS="--quiet -o -H newc"
 
+# The copy_binaries function is explicitly released under the CC0 license to
+# encourage wide adoption and re-use.  That means:
+# - You may use the code of copy_binaries() as CC0 outside of genkernel
+# - Contributions to this function are licensed under CC0 as well.
+# - If you change it outside of genkernel, please consider sending your
+#   modifications back to genkernel@gentoo.org.
+#
+# On a side note: "Both public domain works and the simple license provided by
+#                  CC0 are compatible with the GNU GPL."
+#                 (from https://www.gnu.org/licenses/license-list.html#CC0)
+#
+# Written by: 
+# - Sebastian Pipping <sebastian@pipping.org> (error checking)
+# - Robin H. Johnson <robbat2@gentoo.org> (complete rewrite)
+# - Richard Yao <ryao@cs.stonybrook.edu> (original concept)
+# Usage:
+# copy_binaries DESTDIR BINARIES...
+copy_binaries() {
+	local destdir=$1
+	shift
+
+	for binary in "$@"; do
+		[[ -e "${binary}" ]] \
+				|| gen_die "Binary ${binary} could not be found"
+
+		if LC_ALL=C lddtree "${binary}" 2>&1 | fgrep -q 'not found'; then
+			gen_die "Binary ${binary} is linked to missing libraries and may need to be re-built"
+		fi
+	done
+	# This must be OUTSIDE the for loop, we only want to run lddtree etc ONCE.
+	lddtree "$@" \
+			| tr ')(' '\n' \
+			| awk  '/=>/{ if($3 ~ /^\//){print $3}}' \
+			| sort \
+			| uniq \
+			| cpio -p --make-directories --dereference --quiet "${destdir}" \
+			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
+}
+
 append_base_layout() {
 	if [ -d "${TEMP}/initramfs-base-temp" ]
 	then
@@ -13,8 +52,13 @@ append_base_layout() {
 	mkdir -p ${TEMP}/initramfs-base-temp/bin
 	mkdir -p ${TEMP}/initramfs-base-temp/etc
 	mkdir -p ${TEMP}/initramfs-base-temp/usr
+	mkdir -p ${TEMP}/initramfs-base-temp/lib
+	mkdir -p ${TEMP}/initramfs-base-temp/mnt
+	mkdir -p ${TEMP}/initramfs-base-temp/run
+	mkdir -p ${TEMP}/initramfs-base-temp/sbin
 	mkdir -p ${TEMP}/initramfs-base-temp/proc
 	mkdir -p ${TEMP}/initramfs-base-temp/temp
+	mkdir -p ${TEMP}/initramfs-base-temp/tmp
 	mkdir -p ${TEMP}/initramfs-base-temp/sys
 	mkdir -p ${TEMP}/initramfs-temp/.initrd
 	mkdir -p ${TEMP}/initramfs-base-temp/var/lock/dmraid
@@ -29,9 +73,12 @@ append_base_layout() {
 	cd ${TEMP}/initramfs-base-temp/dev
 	mknod -m 660 console c 5 1
 	mknod -m 660 null c 1 3
+	mknod -m 660 zero c 1 5
+	mknod -m 600 tty0 c 4 0
 	mknod -m 600 tty1 c 4 1
+	mknod -m 600 ttyS0 c 4 64
 
-	date '+%Y%m%d' > ${TEMP}/initramfs-base-temp/etc/build_date
+	date -u '+%Y%m%d-%H%M%S' > ${TEMP}/initramfs-base-temp/etc/build_date
 
 	cd "${TEMP}/initramfs-base-temp/"
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
@@ -142,37 +189,10 @@ append_multipath(){
 		rm -r "${TEMP}/initramfs-multipath-temp"
 	fi
 	print_info 1 '	Multipath support being added'
-	mkdir -p "${TEMP}/initramfs-multipath-temp/bin/"
-	mkdir -p "${TEMP}/initramfs-multipath-temp/etc/" 
-	mkdir -p "${TEMP}/initramfs-multipath-temp/sbin/"
-	mkdir -p "${TEMP}/initramfs-multipath-temp/lib/"
+	mkdir -p "${TEMP}"/initramfs-multipath-temp/{bin,etc,sbin,lib}/
 
-	# Copy files to /lib
-	for i in /lib/{ld-*,libc-*,libc.*,libdl-*,libdl.*,libdevmapper*so*,libpthread*,librt*,libreadline*,libncurses*,libudev*}
-	do
-		cp -a "${i}" "${TEMP}/initramfs-multipath-temp/lib" \
-			|| gen_die "Could not copy file ${i} for MULTIPATH"
-	done
-
-	for i in /usr/lib/libaio*
-	do
-		 cp -a "${i}" "${TEMP}/initramfs-multipath-temp/lib" \
-			|| gen_die "Could not copy file ${i} for MULTIPATH"
-	done
-
-	# Copy files to /sbin
-	for i in /sbin/{multipath,kpartx,mpath_prio_*,devmap_name,dmsetup} /lib64/udev/scsi_id
-	do
-		cp -a "${i}" "${TEMP}/initramfs-multipath-temp/sbin" \
-			|| gen_die "Could not copy file ${i} for MULTIPATH"
-	done
-
-	# Copy files to /bin
-	for i in /bin/mountpoint
-	do
-		cp -a "${i}" "${TEMP}/initramfs-multipath-temp/bin" \
-			|| gen_die "Could not copy file ${i} for MULTIPATH"
-	done
+	# Copy files
+	copy_binaries "${TEMP}/initramfs-multipath-temp" /sbin/{multipath,kpartx,mpath_prio_*,devmap_name,dmsetup} /lib64/udev/scsi_id /bin/mountpoint
 
 	if [ -x /sbin/multipath ]
 	then
@@ -242,7 +262,7 @@ append_lvm(){
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-lvm-temp/bin/"
 	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/"
-	if [ -e '/sbin/lvm.static' ]
+	if false && [ -e '/sbin/lvm.static' ]
 	then
 		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm.static)...'
 		cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
@@ -301,6 +321,31 @@ append_mdadm(){
 	rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
 }
 
+append_zfs(){
+	if [ -d "${TEMP}/initramfs-zfs-temp" ]
+	then
+		rm -r "${TEMP}/initramfs-zfs-temp"
+	fi
+
+	mkdir -p "${TEMP}/initramfs-zfs-temp/etc/zfs/"
+
+	# Copy files to /etc/zfs
+	for i in /etc/zfs/{zdev.conf,zpool.cache}
+	do
+		cp -a "${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" \
+			|| gen_die "Could not copy file ${i} for ZFS"
+	done
+
+	# Copy binaries
+	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zfs,zpool}
+
+	cd "${TEMP}/initramfs-zfs-temp/"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+			|| gen_die "compressing zfs cpio"
+	cd "${TEMP}"
+	rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
+}
+
 append_splash(){
 	splash_geninitramfs=`which splash_geninitramfs 2>/dev/null`
 	if [ -x "${splash_geninitramfs}" ]
@@ -338,6 +383,10 @@ append_overlay(){
 }
 
 append_luks() {
+	local _luks_error_format="LUKS support cannot be included: %s.  Please emerge sys-fs/cryptsetup[static]."
+	local _luks_source=/sbin/cryptsetup
+	local _luks_dest=/sbin/cryptsetup
+
 	if [ -d "${TEMP}/initramfs-luks-temp" ]
 	then
 		rm -r "${TEMP}/initramfs-luks-temp/"
@@ -349,20 +398,11 @@ append_luks() {
 
 	if isTrue ${LUKS}
 	then
-		if is_static /bin/cryptsetup
-		then
-			print_info 1 "Including LUKS support"
-			cp /bin/cryptsetup ${TEMP}/initramfs-luks-temp/sbin/cryptsetup
-			chmod +x "${TEMP}/initramfs-luks-temp/sbin/cryptsetup"
-		elif is_static /sbin/cryptsetup
-		then
-			print_info 1 "Including LUKS support"
-			cp /sbin/cryptsetup ${TEMP}/initramfs-luks-temp/sbin/cryptsetup
-			chmod +x "${TEMP}/initramfs-luks-temp/sbin/cryptsetup"
-		else
-			print_info 1 "LUKS support requires static cryptsetup at /bin/cryptsetup or /sbin/cryptsetup"
-			print_info 1 "Not including LUKS support"
-		fi
+		[ -x "${_luks_source}" ] \
+				|| gen_die "$(printf "${_luks_error_format}" "no file ${_luks_source}")"
+
+		print_info 1 "Including LUKS support"
+		copy_binaries "${TEMP}/initramfs-luks-temp/" /sbin/cryptsetup
 	fi
 
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
@@ -552,8 +592,10 @@ append_auxilary() {
 	fi
 	if isTrue $CMD_KEYMAP
 	then
-		mkdir -p "${TEMP}/initramfs-aux-temp/lib/keymaps"
-		/bin/tar -C "${TEMP}/initramfs-aux-temp/lib/keymaps" -zxf "${GK_SHARE}/defaults/keymaps.tar.gz"
+		print_info 1 "        >> Copying keymaps"
+		mkdir -p "${TEMP}/initramfs-aux-temp/lib/"
+		cp -R "${GK_SHARE}/defaults/keymaps" "${TEMP}/initramfs-aux-temp/lib/" \
+				|| gen_die "Error while copying keymaps"
 	fi
 
 	cd ${TEMP}/initramfs-aux-temp/sbin && ln -s ../init init
@@ -589,6 +631,7 @@ append_data() {
 }
 
 create_initramfs() {
+	local compress_ext=""
 	print_info 1 "initramfs: >> Initializing..."
 
 	# Create empty cpio
@@ -607,12 +650,14 @@ create_initramfs() {
 	append_data 'multipath' "${MULTIPATH}"
 	append_data 'gpg' "${GPG}"
 
-	if [ "${NORAMDISKMODULES}" = '0' ]
+	if [ "${RAMDISKMODULES}" = '1' ]
 	then
 		append_data 'modules'
 	else
 		print_info 1 "initramfs: Not copying modules..."
 	fi
+
+	append_data 'zfs' "${ZFS}"
 
 	append_data 'blkid' "${DISKLABEL}"
 
@@ -631,17 +676,79 @@ create_initramfs() {
 		append_data 'overlay'
 	fi
 
-	gzip -9 "${CPIO}"
-	mv -f "${CPIO}.gz" "${CPIO}"
-
 	if isTrue "${INTEGRATED_INITRAMFS}"
 	then
-		mv ${TMPDIR}/initramfs-${KV} ${TMPDIR}/initramfs-${KV}.cpio.gz
+		# Explicitly do not compress if we are integrating into the kernel.
+		# The kernel will do a better job of it than us.
+		mv ${TMPDIR}/initramfs-${KV} ${TMPDIR}/initramfs-${KV}.cpio
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' ${BUILD_DST}/.config
-		echo -e "CONFIG_INITRAMFS_SOURCE=\"${TMPDIR}/initramfs-${KV}.cpio.gz\"\nCONFIG_INITRAMFS_ROOT_UID=0\nCONFIG_INITRAMFS_ROOT_GID=0" >> ${BUILD_DST}/.config
+		cat >>${BUILD_DST}/.config	<<-EOF
+		CONFIG_INITRAMFS_SOURCE="${TMPDIR}/initramfs-${KV}.cpio${compress_ext}"
+		CONFIG_INITRAMFS_ROOT_UID=0
+		CONFIG_INITRAMFS_ROOT_GID=0
+		EOF
+	else
+		if isTrue "${COMPRESS_INITRD}"
+		then
+			cmd_xz=$(type -p xz)
+			cmd_lzma=$(type -p lzma)
+			cmd_bzip2=$(type -p bzip2)
+			cmd_gzip=$(type -p gzip)
+			cmd_lzop=$(type -p lzop)
+			pkg_xz='app-arch/xz-utils'
+			pkg_lzma='app-arch/xz-utils'
+			pkg_bzip2='app-arch/bzip2'
+			pkg_gzip='app-arch/gzip'
+			pkg_lzop='app-arch/lzop'
+			local compression
+			case ${COMPRESS_INITRD_TYPE} in
+				xz|lzma|bzip2|gzip|lzop) compression=${COMPRESS_INITRD_TYPE} ;;
+				lzo) compression=lzop ;;
+				best|fastest)
+					for tuple in \
+							'CONFIG_RD_XZ    cmd_xz    xz' \
+							'CONFIG_RD_LZMA  cmd_lzma  lzma' \
+							'CONFIG_RD_BZIP2 cmd_bzip2 bzip' \
+							'CONFIG_RD_GZIP  cmd_gzip  gzip' \
+							'CONFIG_RD_LZO   cmd_lzop  lzop'; do
+						set -- ${tuple}
+						kernel_option=$1
+						cmd_variable_name=$2
+						if grep -sq "^${kernel_option}=y" ${BUILD_DST}/.config && test -n "${!cmd_variable_name}" ; then
+							compression=$3
+							[[ ${COMPRESS_INITRD_TYPE} == best ]] && break
+						fi
+					done
+					;;
+				*)
+					gen_die "Compression '${COMPRESS_INITRD_TYPE}' unknown"
+					;;
+			esac
+
+			# Check for actual availability
+			cmd_variable_name=cmd_${compression}
+			pkg_variable_name=pkg_${compression}
+			[[ -z "${!cmd_variable_name}" ]] && gen_die "Compression '${compression}' is not available. Please install package '${!pkg_variable_name}'."
+
+			case $compression in
+				xz) compress_ext='.xz' compress_cmd="${cmd_xz} -e --check=none -z -f -9" ;;
+				lzma) compress_ext='.lzma' compress_cmd="${cmd_lzma} -z -f -9" ;;
+				bzip2) compress_ext='.bz2' compress_cmd="${cmd_bzip2} -z -f -9" ;;
+				gzip) compress_ext='.gz' compress_cmd="${cmd_gzip} -f -9" ;;
+				lzop) compress_ext='.lzo' compress_cmd="${cmd_lzop} -f -9" ;;
+			esac
+	
+			if [ -n "${compression}" ]; then
+				print_info 1 "        >> Compressing cpio data (${compress_ext})..."
+				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
+				mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
+			else
+				print_info 1 "        >> Not compressing cpio data ..."
+			fi
+		fi
 	fi
 
-	if ! isTrue "${CMD_NOINSTALL}"
+	if isTrue "${CMD_INSTALL}"
 	then
 		if ! isTrue "${INTEGRATED_INITRAMFS}"
 		then

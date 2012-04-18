@@ -6,13 +6,15 @@ KERNEL_MAKE_DIRECTIVE="vmlinux"
 KERNEL_MAKE_DIRECTIVE_2=""
 KERNEL_BINARY="vmlinux"
 
-COMPRESS_INITRD=yes
 USECOLOR="no"
 
 #
 # Arch-specific defaults that can be overridden in the config file or on the
 # command line.
 #
+DEFAULT_COMPRESS_INITRD=yes
+DEFAULT_COMPRESS_INITRD_TYPE=best
+
 DEFAULT_MAKEOPTS="-j1"
 
 DEFAULT_KERNEL_MAKE=make

@@ -5,6 +5,337 @@
 # Distributed under the GPL v2
 # $Id$
 
+  18 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  lddtree call must be outside the for loop.
+
+  16 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Use CC0 instead of public domain for copy_binaries to cover French
+  jurisdiction concerns.
+
+  16 Apr 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.30
+
+  16 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Support a non-static cryptsetup binary (bug #409277)
+ 
+  15 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Release copy_binaries function as public domain.
+
+  15 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Handle other binary paths for LVM.
+
+  09 Apr 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  defaults/keymaps/keymapList, defaults/keymaps/sf.map:
+  Add keymap "sf" from Pentoo
+
+  08 Apr 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.29
+
+  08 Apr 2012; Mike Auty <ikelos@gentoo.org> gen_bootloader.sh:
+  Support for Grub 2, adjustements by Tomasz Wasiak
+
+  08 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh,
+  genkernel.conf:
+  Add "fastest" to supported initrd compressions
+
+  08 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Support comression "lzop" (not just "lzo") as wrongly advertised by comments
+  in genkernel.conf before
+
+  08 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Be more helpful when requested compression is not available
+
+  08 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Error out on unknown initrd compression, reported by Peter Gantner (bug
+  #411197)
+
+  08 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Fix initrd compression "gzip", reported by Peter Gantner (bug #411197)
+
+  30 Mar 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.28
+
+  29 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Restore original /dev/tty after GPG (bug #410073), report and initial patch
+  by Brendan Pike
+
+  22 Mar 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.27
+
+  22 Mar 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Fail hard on LUKS inclusion error (bug #409277), advise about
+  sys-fs/cryptsetup[static], drop support for cryptsetup binary from /bin/
+
+  22 Mar 2012; Sebastian Pipping <sping@gentoo.org> gen_funcs.sh,
+  gen_initramfs.sh:
+  Make errors stand out more
+
+  22 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Fix docache (bug #397309)
+
+  22 Mar 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.26
+
+  16 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Drop into debug shell when squashfs could not be mounted
+
+  16 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Drop into debug shell when files could not be copied into tmpfs
+
+  16 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Improve handling of missing /etc/fstab
+
+  16 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  No longer use parameter "-r" (for regex intervals) that busybox awk does not
+  support
+
+  10 Mar 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel:
+  Bump version for release.
+
+  25 Feb 2012; Sebastian Pipping <sping@gentoo.org> arch/x86/modules_load,
+  arch/x86_64/modules_load, defaults/modules_load:
+  Make sure the sha256 module makes it into the initramfs (bug #405495).
+  Reported by Ogelpre.
+
+  20 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/linuxrc:
+  With the new /usr mounting, if the device path that ends up in /proc/mounts
+  ends up being different than in /etc/fstab due to symlinks, mount -a will
+  always exit 32. Avoid by resolving symlinks like util-linux does.
+
+  14 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> gen_compile.sh,
+  gen_initramfs.sh:
+  dmraid is entirely broken if you try to use the system static
+  LVM/device-mapper. Instead start always building LVM2 for the initramfs,
+  using DESTDIR for cleaner install. Dead code paths for old LVM2 build not
+  removed yet until more users have tested.
+
+  12 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> gen_compile.sh:
+  More UTILS_CROSS_COMPILE prefix on strip calls.
+
+  12 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/modules_load, arch/x86_64/modules_load,
+  defaults/modules_load:
+  Bug #401583: include more DM and MD modules for other RAID/LVM
+  configurations.
+
+  12 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> gen_compile.sh:
+  Bug #265005: ensure CROSS_COMPILE is set for cross-compile strip calls to
+  work.
+
+  12 Feb 2012; Robin H. Johnson <robbat2@gentoo.org>
+  +patches/dmraid/dmraid-1.0.0_rc16-as-needed2.patch,
+  +patches/dmraid/dmraid-1.0.0_rc16-return-all-sets.patch,
+  +patches/dmraid/dmraid-1.0.0_rc16-static-build-fixes.patch,
+  +patches/dmraid/dmraid-1.0.0_rc16-undo-p-rename.patch,
+  +patches/dmraid/dmraid-1.0.0.rc16-3-staticlink.patch, genkernel.conf:
+  Bug #398467: Update dmraid. Also add other patches from Portage tree.
+
+  12 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> gen_cmdline.sh,
+  gen_compile.sh, gen_determineargs.sh, gen_funcs.sh, genkernel.conf:
+  device-mapper "update". It was merged into LVM2-2.02.67 upstream in 2010.
+  Bug #398467 is wrong for the device-mapper update.
+
+  09 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Dogfooding of the /usr mount code with the matching OpenRC change to make the
+  mounts RW revealed some bugs and gotchas in our prior code, now fixed and
+  verified to work.
+
+  06 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> arch/alpha/config.sh,
+  arch/arm/config.sh, arch/ia64/config.sh, arch/mips/config.sh,
+  arch/parisc/config.sh, arch/parisc64/config.sh, arch/ppc/config.sh,
+  arch/ppc64/config.sh, arch/sparc/config.sh, arch/sparc64/config.sh,
+  arch/um/config.sh, arch/x86/config.sh, arch/x86_64/config.sh:
+  Ensure default for new initramfs compression is used.
+
+  06 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Bugfixes in new code branches that I didn't test fully.
+
+  06 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> doc/genkernel.8.txt,
+  gen_cmdline.sh:
+  Update documentation for new initramfs compression.
+
+  06 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/config.sh,
+  gen_cmdline.sh, gen_determineargs.sh, gen_initramfs.sh, genkernel.conf:
+  Import customizable compression for initramfs, based on Pentoo development.
+
+  06 Feb 2012: Richard Yao <ryao@cs.stonybrook.edu> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/modules_load, arch/x86_64/modules_load,
+  defaults/busy-config, defaults/initrd.scripts, defaults/linuxrc,
+  defaults/modules_load, doc/genkernel.8.txt, gen_cmdline.sh,
+  gen_determineargs.sh, gen_initramfs.sh, genkernel:
+  This provides ZFS support, to go with the sys-fs/zfs package.
+
+  06 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Refactor copy_binaries and multipath slightly for ease of usage and readability.
+
+  06 Feb 2012: Richard Yao <ryao@cs.stonybrook.edu> gen_initramfs.sh:
+  Refactor multipath initramfs generation using copy_binaries.
+
+  06 Feb 2012: Richard Yao <ryao@cs.stonybrook.edu> gen_initramfs.sh:
+  copy_binaries utility function for putting binaries and librares into
+  initramfs (see git commit for full details).
+
+  06 Feb 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts:
+  Support virtio devices, and provide fallback of all remaining devices.
+
+  03 Feb 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Support SD card readers. Patch by Rick Farina
+
+  24 Jan 2012; Sebastian Pipping <sping@gentoo.org> .gitignore, genkernel:
+  Bump version to 3.4.24
+
+  24 Jan 2012; Sebastian Pipping <sping@gentoo.org> arch/alpha/kernel-config,
+  arch/ia64/kernel-config, arch/ppc/kernel-config, arch/sparc64/kernel-config,
+  arch/x86/kernel-config:
+  Unset CONFIG_SYSFS_DEPRECATED for udev (bug #335763)
+
+  15 Jan 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.23.1
+
+  14 Jan 2012; Sebastian Pipping <sping@gentoo.org> defaults/busy-config:
+  Re-activate mdstart in busybox config
+
+  14 Jan 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/busybox/1.19.3/busybox-1.19.3-mdstart.patch:
+  Port mdstart patch to busybox 1.19.3
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org> defaults/busy-config:
+  Busybox config: Enable verbose usage
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org> defaults/busy-config:
+  Update busybox config using "yes '' | make oldconfig"
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.23
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/busybox/1.19.3/1.18.1-openvt.diff,
+  +patches/busybox/1.19.3/busybox-1.7.4-signal-hack.patch:
+  Copy patches from busybox/1.18.1 to busybox/1.19.3
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/e2fsprogs/1.42/e2fsprogs-1.41.12-getpagesize.patch:
+  Add a patch for e2fsprogs/1.42 from main tree
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/lvm/2.02.88/lvm2-2.02.72-no-export-dynamic.patch:
+  Copy patch from lvm/2.02.74 to lvm/2.02.88
+
+  13 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> gen_determineargs.sh:
+  Prior to commit a141d715, CMD_NOINSTALL had no default set, but most of the
+  usages were of the form "! isTrue ${CMD_NOINSTALL}", which on an unset value,
+  came out as false. These were replaced by "isTrue ${CMD_INSTALL}", but my
+  analysis of the needed default value was wrong, and was set to false instead
+  of true.
+
+  13 Jan 2012; Sebastian Pipping <sping@gentoo.org> genkernel.conf:
+  Replace "# FOO=bar" by "#FOO=bar" in genkernel.conf to (1) distinguish
+  commented-out options from their explanatory comments and (2) to return
+  consistenty (bug #398471)
+
+  12 Jan 2012; Sebastian Pipping <sping@gentoo.org> gen_compile.sh:
+  Support application of patches before compilation for tools which previously
+  lacked that support. Special thanks to Tomasz Wasiak (bug #398469)
+
+  08 Jan 2012; Sebastian Pipping <sping@gentoo.org> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/modules_load, arch/x86_64/modules_load:
+  Add mpt2sas to auto-load SCSI modules as requested by Borg Onion
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel:
+  Bump to 3.4.22 to reflect /usr mount support.
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Code to mount /usr and other filesystems as needed for new udev and systemd.
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel:
+  Bump version to 3.4.21.2. Stock configuration of 3.4.21.1 generates
+  unbootable initramfs!
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> gen_determineargs.sh,
+  genkernel.conf:
+  Fix some defaults otherwise you get an initramfs without any modules!
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/busy-config:
+  Awk support in busybox is needed for initramfs setup code (to parse fstab).
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> TODO:
+  Multipath has been done for a while now.
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel.conf:
+  Add a configuration option for --install, so users can get it as a default.
+  Defaults to "no", due to catalyst.
+
+  06 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> ChangeLog:
+  Fix up changelog
+
+  05 Jan 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.21.1
+
+  05 Jan 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc, doc/genkernel.8.txt:
+  Introduce boot parameter root_trim=(yes|no) for SSDs.
+  Special thanks:
+  - Christian Kruse
+
+  04 Jan 2012; Sebastian Pipping <sping@gentoo.org> arch/um/busy-config,
+  defaults/busy-config, netboot/busy-config:
+  Set CONFIG_NFSMOUNT=n in busybox config to fix compilation with glibc 2.14.
+  Special thanks:
+  - Borg Onion
+
+  04 Jan 2012; Robin H. Johnson <robbat2@gentoo.org> arch/mips/config.sh,
+  doc/genkernel.8.txt, gen_cmdline.sh, gen_compile.sh, gen_determineargs.sh,
+  gen_funcs.sh, gen_initramfs.sh, genkernel, genkernel.conf:
+  Provide real boolean commandline options for options that were previously
+  only available as booleans in the config, so that they can be enable in
+  configuration and overridden to disable on the commandline. Remove negation
+  on options: NOINSTALL, NORAMDISKMODULES, NO_KERNEL_SOURCES.
+
+  08 Nov 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.20
+
+  31 Oct 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Fix return value of crypt_filter() which caused bogus LUKS opening errors
+  (bug #383545)
+
+  30 Oct 2011; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.19
+
+  25 Oct 2011; Fabio Erculiani <lxnay@gentoo.org> gen_compile.sh:
+  fix random build failures during e2fsprogs, force -j1
+
+  08 Oct 2011; Fabio Erculiani <lxnay@gentoo.org> defaults/initrd.defaults,
+  defaults/initrd.scripts, defaults/linuxrc:
+  Do not hardcode /mnt/cdrom path across the whole code, use CDROOT_PATH
+  instead. At the same time, mount cdrom into /mnt/cdrom instead of
+  /newroot/mnt/cdrom (which is now just a bind mount), this avoids
+  losetup to expose unavailable paths inside the live system, breaking
+  mkfs.btrfs (next upstream version, which does silly things with
+  /proc/mounts).
+
+  07 Oct 2011; Robin H. Johnson <robbat2@gentoo.org>
+  patches/busybox/1.18.1/1.18.1-mdstart.diff:
+  Fix patch typo that broke compile.
+
+  22 Sep 2011; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts,
+  defaults/linuxrc:
+  Fix trailing backtick and root-on-LVM.
+
   13 Sep 2011; Fabio Erculiani <lxnay@gentoo.org> gen_compile.sh,
   gen_initramfs.sh:
   dmraid requires dmsetup to assign UUID to discovered RAID volumes, close bug
@@ -16,7 +347,6 @@
 
   30 Aug 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
   Fix quoting issue (bug #380729).
-
   Thanks to:
   - Axel Bringenberg
 
@@ -58,7 +388,6 @@
 
   27 Jul 2011; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
   Fix display of seconds waiting (bug #376575)
-
   Thanks to Richard Scott
 
   26 Jul 2011; Robin H. Johnson <robbat2@gentoo.org> gen_arch.sh:
@@ -121,7 +450,6 @@
   31 May 2011; Sebastian Pipping <sping@gentoo.org> defaults/linuxrc,
   doc/genkernel.8.txt:
   Add rootfstype= boot parameter (bug #221245)
-
   Special thanks:
   - Marcin Kurek
 
@@ -174,7 +502,6 @@
 
   24 Feb 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
   Fix handling of mdadm.conf (bug #354809)
-
   Special thanks:
   - Peter Hjalmarsson
 
@@ -183,20 +510,17 @@
 
   09 Feb 2011; Sebastian Pipping <sping@gentoo.org> genkernel.conf:
   Add SPLASH and SPLASH_THEME to genkernel.conf (bug #268468)
-
   Special thanks:
   - PhobosK
 
   08 Feb 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
   Add iBFT support for iSCSI (bug #314575)
-
   Special thanks:
   - Stefan Behte
 
   7 Feb 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
   Use devtmpfs/tmpfs for /dev (bug #353024)
   Rescue devtmpfs /dev over to chroot (bug #353024, bug #344407)
-
   Special thanks:
   - Peter Hjalmarsson
 
@@ -205,7 +529,6 @@
 
   31 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
   Speed up LVM activation (bug #351047)
-
   Special thanks:
   - Peter Hjalmarsson
 
@@ -225,7 +548,6 @@
   30 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
   Enhance console handling on netboot linuxrc (bug #353084)
   Enable shadow on netboot's busybox config (bug #353085)
-
   Special thanks:
   - Raúl Porcel
 
@@ -234,7 +556,6 @@
 
   29 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_compile.sh:
   No longer require device mapper bincache for compiling lvm (bug #353026)
-
   Special thanks:
   - Peter Hjalmarsson
 
@@ -264,7 +585,6 @@
 
   20 Jan 2011; Sebastian Pipping <sping@gentoo.org> ChangeLog:
   Add proper mdadm support (bug #282100)
-
   Special thanks:
   - Craig Andrews (Testing)
   - Laurent Pinchart (mdmon/IMSM support)
@@ -277,7 +597,6 @@
   20 Jan 2011; Sebastian Pipping <sping@gentoo.org> gen_configkernel.sh:
   Move application of kernel config after "make mrproper" as that deletes
   .config (whereas "make clean" does not) (bug #351906)
-
   Special thanks:
   - Peter Hjalmarsson
 
@@ -308,7 +627,6 @@
   - Fix warning "cannot remove `/var/cache/genkernel/src'" (bug #347213)
   - Allow configuring the list of busybox applets (bug #326593)
   - Fix arithmetic bug in defaults/initrd.scripts (bug #339789)
-
   Special thanks:
   - Amadeusz Zolnowski (LVM update)
   - Christian Giessner (UUID crypt_root)

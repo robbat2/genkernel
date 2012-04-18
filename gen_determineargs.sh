@@ -2,7 +2,7 @@
 # $Id$
 
 get_KV() {
-	if [ "${NO_KERNEL_SOURCES}" = '1' -a -e "${KERNCACHE}" ]
+	if [ "${KERNEL_SOURCES}" = '0' -a -e "${KERNCACHE}" ]
 	then
 		/bin/tar -xj -C ${TEMP} -f ${KERNCACHE} kerncache.config 
 		if [ -e ${TEMP}/kerncache.config ]
@@ -73,9 +73,10 @@ determine_real_args() {
 	set_config_with_override STRING LOGFILE              CMD_LOGFILE
         set_config_with_override STRING BUILD_SRC            CMD_BUILD_SRC           "${DEFAULT_KERNEL_SOURCE}"
         set_config_with_override STRING BUILD_DST            CMD_BUILD_DST           "${BUILD_SRC}"
-	set_config_with_override BOOL   NO_KERNEL_SOURCES    CMD_NO_KERNEL_SOURCES
 	set_config_with_override STRING KNAME                CMD_KERNNAME             "genkernel"
 
+	set_config_with_override STRING COMPRESS_INITRD      CMD_COMPRESS_INITRD      "$DEFAULT_COMPRESS_INITRD"
+	set_config_with_override STRING COMPRESS_INITRD_TYPE CMD_COMPRESS_INITRD_TYPE "$DEFAULT_COMPRESS_INITRD_TYPE"
 	set_config_with_override STRING MAKEOPTS             CMD_MAKEOPTS             "$DEFAULT_MAKEOPTS"
 	set_config_with_override STRING KERNEL_MAKE          CMD_KERNEL_MAKE          "$DEFAULT_KERNEL_MAKE"
 	set_config_with_override STRING UTILS_MAKE           CMD_UTILS_MAKE           "$DEFAULT_UTILS_MAKE"
@@ -96,8 +97,8 @@ determine_real_args() {
 	set_config_with_override STRING MINKERNPACKAGE       CMD_MINKERNPACKAGE
 	set_config_with_override STRING MODULESPACKAGE       CMD_MODULESPACKAGE
 	set_config_with_override STRING KERNCACHE            CMD_KERNCACHE
-	set_config_with_override BOOL   NORAMDISKMODULES     CMD_NORAMDISKMODULES
-	set_config_with_override BOOL   ALLRAMDISKMODULES    CMD_ALLRAMDISKMODULES
+	set_config_with_override BOOL   RAMDISKMODULES       CMD_RAMDISKMODULES        "yes"
+	set_config_with_override BOOL   ALLRAMDISKMODULES    CMD_ALLRAMDISKMODULES     "no"
 	set_config_with_override STRING INITRAMFS_OVERLAY    CMD_INITRAMFS_OVERLAY
 	set_config_with_override BOOL   MOUNTBOOT            CMD_MOUNTBOOT
 	set_config_with_override BOOL   BUILD_STATIC         CMD_STATIC
@@ -117,6 +118,7 @@ determine_real_args() {
 	set_config_with_override BOOL   GPG                  CMD_GPG
 	set_config_with_override BOOL   MDADM                CMD_MDADM
 	set_config_with_override STRING MDADM_CONFIG         CMD_MDADM_CONFIG
+	set_config_with_override BOOL   ZFS                  CMD_ZFS
 	set_config_with_override BOOL   MULTIPATH            CMD_MULTIPATH
 	set_config_with_override BOOL   FIRMWARE             CMD_FIRMWARE
 	set_config_with_override STRING FIRMWARE_DST	     CMD_FIRMWARE_DST	      "/lib/firmware"
@@ -127,13 +129,13 @@ determine_real_args() {
 	set_config_with_override BOOL   KEYMAP               CMD_KEYMAP               "yes"
 	set_config_with_override BOOL   DOKEYMAPAUTO         CMD_DOKEYMAPAUTO
 	set_config_with_override STRING BUSYBOX_CONFIG       CMD_BUSYBOX_CONFIG
+	set_config_with_override BOOL   INSTALL              CMD_INSTALL              "yes"
 
 	BOOTDIR=`arch_replace "${BOOTDIR}"`
 	BOOTDIR=${BOOTDIR%/}    # Remove any trailing slash
 
 	CACHE_DIR=`arch_replace "${CACHE_DIR}"`
 	BUSYBOX_BINCACHE=`cache_replace "${BUSYBOX_BINCACHE}"`
-	DEVICE_MAPPER_BINCACHE=`cache_replace "${DEVICE_MAPPER_BINCACHE}"`
 	DMRAID_BINCACHE=`cache_replace "${DMRAID_BINCACHE}"`
 	ISCSI_BINCACHE=`cache_replace "${ISCSI_BINCACHE}"`
 	BLKID_BINCACHE=`cache_replace "${BLKID_BINCACHE}"`
@@ -144,7 +146,6 @@ determine_real_args() {
 	DEFAULT_KERNEL_CONFIG=`arch_replace "${DEFAULT_KERNEL_CONFIG}"`
 	BUSYBOX_CONFIG=`arch_replace "${BUSYBOX_CONFIG}"`
 	BUSYBOX_BINCACHE=`arch_replace "${BUSYBOX_BINCACHE}"`
-	DEVICE_MAPPER_BINCACHE=`arch_replace "${DEVICE_MAPPER_BINCACHE}"`
 	DMRAID_BINCACHE=`arch_replace "${DMRAID_BINCACHE}"`
 	ISCSI_BINCACHE=`arch_replace "${ISCSI_BINCACHE}"`
 	BLKID_BINCACHE=`arch_replace "${BLKID_BINCACHE}"`
@@ -162,7 +163,7 @@ determine_real_args() {
 		fi
 	fi
 
-	if [ "${NO_KERNEL_SOURCES}" != "1" ]
+	if [ "${KERNEL_SOURCES}" != "0" ]
 	then
 		if [ ! -d ${BUILD_SRC} ]
 		then
