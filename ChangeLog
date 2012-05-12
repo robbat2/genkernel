@@ -9,10 +9,6 @@
   Fail hard on LUKS inclusion error (bug #409277), advise about
   sys-fs/cryptsetup[static], drop support for cryptsetup binary from /bin/
 
-  17 Mar 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
-  defaults/linuxrc:
-  Fix docache (bug #397309)
-
   25 Feb 2012; Sebastian Pipping <sping@gentoo.org> arch/x86/modules_load,
   arch/x86_64/modules_load, defaults/modules_load:
   Make sure the sha256 module makes it into the initramfs (bug #405495).
