@@ -5,6 +5,133 @@
 # Distributed under the GPL v2
 # $Id$
 
+  21 Jul 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.39
+
+  17 Jul 2012; Robin H. Johnson <robbat2@gentoo.org> arch/x86_64/kernel-config:
+  Bug #399703: amd64 default kernel config did not have EFI support.
+  
+  15 July 2012; Robin H. Johnson <robbat2@gentoo.org> doc/genkernel.8.txt,
+  Document the isoboot option, as designed for GRUB2 usage 3 years ago.
+
+  09 Jul 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.38
+
+  09 Jul 2012; Sebastian Pipping <sping@gentoo.org> gen_compile.sh:
+  Fix linking of unionfs-fuse 0.24
+
+  09 Jul 2012; Sebastian Pipping <sping@gentoo.org>
+  patches/fuse/2.8.6/fuse-2.8.6-glibc-2.14.patch:
+  Allow compilation of FUSE 2.8.6 with glibc 2.14 (bug #425080)
+
+  09 Jul 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Restore previous handling of real_root due to report of regressions (bug
+  #419965)
+
+  08 Jul 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.37
+
+  08 Jul 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh,
+  genkernel:
+  Always report used kernel config file
+
+  08 Jul 2012; Sebastian Pipping <sping@gentoo.org> gen_configkernel.sh,
+  gen_initramfs.sh:
+  Catch case with no initramfs compression supported by kernel (bug #423847)
+
+  08 Jul 2012; Sebastian Pipping <sping@gentoo.org> gen_configkernel.sh,
+  gen_initramfs.sh:
+  Fix detection of initramfs compression with bzip2 as best candidate
+
+  08 Jul 2012; Sebastian Pipping <sping@gentoo.org> arch/x86/modules_load,
+  arch/x86_64/modules_load, defaults/modules_load:
+  Add xts to MODULES_CRYPTO (bug #425028)
+
+  01 Jul 2012; Sebastian Pipping <sping@gentoo.org> gen_configkernel.sh,
+  gen_package.sh:
+  Support --kernel-config=/proc/config.gz (bug #421027)
+
+  08 Jul 2012; Kenny Cheng <kenny97821419@gmail.com> defaults/linuxrc:
+  Add /run to support openrc >=0.10 (bug #425180)
+
+  11 Jun 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.36
+
+  11 Jun 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts:
+  Respect real_root for plain dm-crypt without LVM (bug #419965)
+
+  10 Jun 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.35
+
+  10 Jun 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/busybox/1.20.1/1.18.1-openvt.diff,
+  +patches/busybox/1.20.1/busybox-1.7.4-signal-hack.patch,
+  +patches/busybox/1.20.1/busybox-1.20.1-mdstart.patch:
+  Support busybox 1.20.1 (bug #419511)
+
+  04 Jun 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.34
+
+  02 Jun 2012; Sebastian Pipping <sping@gentoo.org> defaults/linuxrc:
+  Support bind mounts from /etc/initramfs.mounts (bug #418463)
+
+  02 Jun 2012; Sebastian Pipping <sping@gentoo.org> arch/x86/modules_load,
+  arch/x86_64/modules_load, defaults/modules_load:
+  Make sure that cbc.ko and aes*.ko needed for cbc-essiv:sha256 (=default) disk
+  encryption are included with the initramfs (bug #416973)
+
+  28 May 2012; Sebastian Pipping <sping@gentoo.org> gen_funcs.sh:
+  Fix an e2fsprogs compilation leftover (bug #417095), reported by Juergen Rose
+
+  17 May 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump to 3.4.33.1
+
+  17 May 2012; Sebastian Pipping <sping@gentoo.org> defaults/linuxrc:
+  Fix call to blkid as "blkid -l -t UUID=foo" (without -o device) does not seem
+  to work well with blkid of util-linux
+
+  17 May 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.33
+
+  17 May 2012; Sebastian Pipping <sping@gentoo.org>
+  -patches/e2fsprogs/1.42/e2fsprogs-1.41.12-getpagesize.patch, gen_compile.sh,
+  gen_initramfs.sh, genkernel, genkernel.conf:
+  Use blkid from system's util-linux rather than compiling e2fsprogs ourselves
+
+  14 May 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.32
+
+  14 May 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Stop removing lvm/dmsetup from the initramfs (bug #415697), reported by
+  I.zaufi, bug introduced in 9f36ecc125bf2c20bd28c0ad513577a858140a77 affects
+  genkernel >=3.4.30
+
+  12 May 2012; Sebastian Pipping <sping@gentoo.org> arch/x86/kernel-config,
+  arch/x86_64/kernel-config, defaults/kernel-config:
+  Set CONFIG_DEVTMPFS=y on x86, x86_64, default for udev
+
+  12 May 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.31
+
+  18 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  lddtree call must be outside the for loop.
+
+  16 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Use CC0 instead of public domain for copy_binaries to cover French
+  jurisdiction concerns.
+
+  16 Apr 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.30
+
+  16 Apr 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Support a non-static cryptsetup binary (bug #409277)
+ 
+  15 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Release copy_binaries function as public domain.
+
+  15 Apr 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Handle other binary paths for LVM.
+
   09 Apr 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
   defaults/keymaps/keymapList, defaults/keymaps/sf.map:
   Add keymap "sf" from Pentoo
