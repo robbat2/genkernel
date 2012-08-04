@@ -305,6 +305,11 @@ run_shell() {
 	/bin/ash
 }
 
+fs_type_in_use() {
+	fs_type=$1
+	cut -d ' ' -f 3 < /proc/mounts | fgrep -q "${fs_type}"
+}
+
 mount_devfs () {
 	# Use devtmpfs if enabled in kernel,
 	# else tmpfs. Always run mdev just in case
@@ -314,12 +319,16 @@ mount_devfs () {
 	fi
 
 	# Options copied from /etc/init.d/udev-mount, should probably be kept in sync
-	mount -t $devfs -o "exec,nosuid,mode=0755,size=10M" udev /dev \
-		|| bad_msg "Failed to mount /dev as ${devfs}"
+	if ! fs_type_in_use devtmpfs; then
+		mount -t $devfs -o "exec,nosuid,mode=0755,size=10M" udev /dev \
+			|| bad_msg "Failed to mount /dev as ${devfs}"
+	fi
 
 	# http://git.busybox.net/busybox/plain/docs/mdev.txt
-	mkdir -m 0755 /dev/pts
-	mount -t devpts -o gid=5,mode=0620 devpts /dev/pts  || bad_msg "Failed to mount /dev/pts"
+	if ! fs_type_in_use devpts; then
+		mkdir -m 0755 /dev/pts
+		mount -t devpts -o gid=5,mode=0620 devpts /dev/pts  || bad_msg "Failed to mount /dev/pts"
+	fi
 }
 
 test_success() {
@@ -409,13 +418,6 @@ prompt_user(){
 			eval ${1}'='${oldvalue}
 			;;
 	esac
-}
-
-setup_hotplug() {
-	if [ "${KV_2_6_OR_GREATER}" ]
-	then
-		echo /sbin/mdev > /proc/sys/kernel/hotplug
-	fi
 }
 
 setup_slowusb() {
@@ -613,7 +615,12 @@ startVolumes() {
 	
 	if [ "${USE_MDADM}" = '1' ]
 	then
-		/sbin/mdadm --assemble --scan
+		if [ -e '/sbin/mdadm' ]
+		then
+			/sbin/mdadm --assemble --scan
+		else
+			bad_msg "mdadm not found: skipping mdadm raid assembly!"
+		fi
 	fi
 
 	if [ "${USE_DMRAID_NORMAL}" = '1' ]
@@ -663,7 +670,43 @@ startVolumes() {
 	
 	if [ "${USE_ZFS}" = '1' ]
 	then
-		/sbin/zpool import -N -a ${ZPOOL_FORCE}
+		if [ -z "${ZFS_POOL}" ]
+		then
+			good_msg "Importing ZFS pools"
+
+			/sbin/zpool import -N -a "${ZPOOL_FORCE}"
+
+			if [ "$?" = '0' ]
+			then
+				good_msg "Importing ZFS pools succeeded"
+			else
+				bad_msg "Imported ZFS pools failed"
+			fi
+		else
+
+			if [ "$(zpool list -H -o name ${ZFS_POOL} 2>&1)" = "$ZFS_POOL" ]
+			then
+				good_msg "ZFS pool ${ZFS_POOL} already imported."
+
+				if [ -n "${CRYPT_ROOT}" -o -n "${CRYPT_SWAP}" ]
+				then
+					good_msg "LUKS detected. Reimporting ${ZFS_POOL}"
+					/sbin/zpool export -f "${ZFS_POOL}"
+					/sbin/zpool import -N "${ZPOOL_FORCE}" "${ZFS_POOL}"
+				fi
+			else
+				good_msg "Importing ZFS pool ${ZFS_POOL}"
+
+				/sbin/zpool import -N "${ZPOOL_FORCE}" "${ZFS_POOL}"
+
+				if [ "$?" = '0' ]
+				then
+					good_msg "Importing ${ZFS_POOL} succeeded"
+				else
+					bad_msg "Importing ${ZFS_POOL} failed"
+				fi
+			fi
+		fi
 	fi
 }
 
@@ -781,7 +824,7 @@ openLUKS() {
 					fi
 
 					if [ "${retval}" -ne 0 ]; then
-						REAL_LUKS=`blkid -l -t "${LUKS_DEVICE}" | cut -d ":" -f 1 2>/dev/null`
+						REAL_LUKS=`blkid -o device -l -t "${LUKS_DEVICE}"`
 						retval=$?
 					fi
 

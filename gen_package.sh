@@ -77,9 +77,15 @@ gen_kerncache()
 
 	cd "${BUILD_DST}"
 	cp "${tmp_kernel_binary}" "${TEMP}/kerncache/kernel-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the kernel package!'
-	cp "${BUILD_DST}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}"
-	cp "${KERNEL_CONFIG}" "${TEMP}/kerncache/config-${ARCH}-${KV}.orig"
-	cp "${BUILD_DST}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}"
+	cp "${KERNEL_DIR}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}"
+
+	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+		# Support --kernel-config=/proc/config.gz, mainly
+		zcat "${KERNEL_CONFIG}" > "${TEMP}/kerncache/config-${ARCH}-${KV}.orig"
+	else
+		cp "${KERNEL_CONFIG}" "${TEMP}/kerncache/config-${ARCH}-${KV}.orig"
+	fi
+	cp "${KERNEL_DIR}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}"
 	if isTrue "${GENZIMAGE}"
 	then
 		cp "${tmp_kernel_binary2}" "${TEMP}/kerncache/kernelz-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the kernel package"
@@ -180,7 +186,16 @@ gen_kerncache_is_valid()
 				else
 					test1=$(grep -v "^#" ${TEMP}/config-${ARCH}-${KV} | md5sum | cut -d " " -f 1)
 				fi
-				test2=$(grep -v "^#" ${KERNEL_CONFIG} | md5sum | cut -d " " -f 1)
+
+				if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+					# Support --kernel-config=/proc/config.gz, mainly
+					local CONFGREP=zgrep
+				else
+					local CONFGREP=grep
+				fi
+				test2=$("${CONFGREP}" -v "^#" ${KERNEL_CONFIG} | md5sum | cut -d " " -f 1)
+
+
 				if [ "${test1}" == "${test2}" ]
 				then
 					echo
