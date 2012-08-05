@@ -806,7 +806,11 @@ create_initramfs() {
 							'CONFIG_RD_LZMA  cmd_lzma  lzma' \
 							'CONFIG_RD_BZIP2 cmd_bzip2 bzip2' \
 							'CONFIG_RD_GZIP  cmd_gzip  gzip' \
-							'CONFIG_RD_LZO   cmd_lzop  lzop'; do
+							'CONFIG_RD_LZO   cmd_lzop  lzop' \
+							'CONFIG_KERNEL_LZMA  cmd_lzma  lzma' \
+							'CONFIG_KERNEL_BZIP2 cmd_bzip2 bzip2' \
+							'CONFIG_KERNEL_GZIP  cmd_gzip  gzip' \
+							'CONFIG_KERNEL_LZO   cmd_lzop  lzop'; do
 						set -- ${tuple}
 						kernel_option=$1
 						cmd_variable_name=$2
