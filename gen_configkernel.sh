@@ -59,9 +59,9 @@ config_kernel() {
 		local message='Could not copy configuration file!'
 		if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
 			# Support --kernel-config=/proc/config.gz, mainly
-			zcat "${KERNEL_CONFIG}" > "${KERNEL_DIR}/.config" || gen_die "${message}"
+			zcat "${KERNEL_CONFIG}" > "${BUILD_DST}/.config" || gen_die "${message}"
 		else
-			cp "${KERNEL_CONFIG}" "${KERNEL_DIR}/.config" || gen_die "${message}"
+			cp "${KERNEL_CONFIG}" "${BUILD_DST}/.config" || gen_die "${message}"
 		fi
 	fi
 
