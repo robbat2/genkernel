@@ -289,6 +289,10 @@ append_lvm(){
 	then
 		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm)...'
 		cp /sbin/lvm "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
+	elif [ -e '/sbin/lvm' ]
+	then
+		print_info 1 '          LVM: Adding support (using local binary /sbin/lvm)...'
+		copy_binaries "${TEMP}/initramfs-lvm-temp/bin/lvm" /sbin/lvm
 	else
 		print_info 1 '          LVM: Adding support (compiling binaries)...'
 		compile_lvm
