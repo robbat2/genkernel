@@ -1,9 +1,75 @@
 # ChangeLog for genkernel
 # Copyright: 
 # - 2003-2008 Gentoo Foundation
-# - 2008-2011 Various authors (see AUTHORS)
+# - 2008-2012 Various authors (see AUTHORS)
 # Distributed under the GPL v2
 # $Id$
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> gen_compile.sh:
+  Bug #397947: Run depmod on new modules to avoid need to run at every boot on
+  unionfs systems, or systemd that never runs it.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Put the version of genkernel used in a build into /etc/build_id.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/linuxrc:
+  Extra creation of /run in the LiveCD scope, before any union/aufs mount.
+
+  03 Oct 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.43
+
+  03 Oct 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Use actual kernel config for check of available compression methods (bug
+  #436820)
+
+  03 Oct 2012; Dustin Frisch <dustin.frisch@gmail.com> defaults/linuxrc:
+  With boot parameter real_init=/foo look for ${NEW_ROOT}/foo, not
+  ${NEW_ROOT}/sbin/init (bug #437080)
+
+  23 Sep 2012; Sebastian Pipping <sping@gentoo.org> gen_initramfs.sh:
+  Append e2fsck and mke2fs to initramfs. Original patch by Rick Farina
+
+  10 Sep 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.42
+
+  10 Sep 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/busybox/1.20.2/busybox-1.20.2-glibc-sys-resource.patch:
+  Add busybox 1.20.2 patch: busybox-1.20.2-glibc-sys-resource.patch
+
+  10 Sep 2012; Sebastian Pipping <sping@gentoo.org>
+  +patches/busybox/1.20.2/1.18.1-openvt.diff,
+  +patches/busybox/1.20.2/busybox-1.7.4-signal-hack.patch,
+  +patches/busybox/1.20.2/busybox-1.20.1-mdstart.patch:
+  Copy busybox patches from 1.20.1 to 1.20.2
+
+  30 Aug 2012; Fabio Erculiani <lxnay@gentoo.org> defaults/linuxrc:
+  mount /mnt/cdrom inside target chroot even when aufs/unionfs is disabled
+
+  14 Aug 2012; Richard Yao <ryao@gentoo.org> genkernel:
+  Bump version to 3.4.41
+
+  12 Aug 2012; Sebastian Pipping <sping@gentoo.org> +defaults/software.sh,
+  genkernel.conf:
+  Move software version defaults for defaults/software.sh to ease the
+  etc-update game
+
+  12 Aug 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Fix parsing of --config=... command line option
+
+  27 Jul 2012; Sebastian Pipping <sping@gentoo.org> defaults/initrd.scripts,
+  genkernel:
+  Bump version to 3.4.40
+
+  24 Jul 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts:
+  Flip awk return values.
+
+  24 Jul 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts:
+  Minor thinko in devpts check.
+
+  24 Jul 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.scripts:
+  Prior commit to only mount devtmpfs and devpts if they were not already
+  mounted made assumptions about the device names they were mounted as. Check
+  the filesystem column of /proc/mounts instead.
 
   21 Jul 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
   Bump version to 3.4.39

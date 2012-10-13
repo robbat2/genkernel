@@ -417,7 +417,7 @@ then
 	good_msg "Making tmpfs for ${NEW_ROOT}"
 	mount -n -t tmpfs tmpfs "${NEW_ROOT}"
 
-	for i in dev mnt mnt/livecd mnt/key tmp tmp/.initrd mnt/gentoo sys
+	for i in dev mnt proc run sys tmp mnt/livecd mnt/key tmp/.initrd mnt/gentoo
 	do
 		mkdir -p "${NEW_ROOT}/${i}"
 		chmod 755 "${NEW_ROOT}/${i}"
@@ -631,7 +631,7 @@ do
 		# else not a good root and start over.
 		if [ "$?" = '0' ]
 		then
-			if [ -d ${NEW_ROOT}/dev -a -x ${NEW_ROOT}/sbin/init ] || [ "${REAL_ROOT}" = "/dev/nfs" ]
+			if [ -d ${NEW_ROOT}/dev -a -x "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ]
 			then
 				break
 			else
@@ -829,6 +829,11 @@ then
 
 	mkdir initramfs proc tmp sys run 2>/dev/null
 	chmod 1777 tmp
+
+	# have handy /mnt/cdrom (CDROOT_PATH) as well
+	_new_cdroot="${NEW_ROOT}${CDROOT_PATH}"
+	[ ! -d "${_new_cdroot}" ] && mkdir -p "${_new_cdroot}"
+	mount --bind "${CDROOT_PATH}" "${_new_cdroot}"
 
 	fi
 

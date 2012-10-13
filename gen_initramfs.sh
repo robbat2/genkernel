@@ -88,6 +88,7 @@ append_base_layout() {
 	mknod -m 600 ttyS0 c 4 64
 
 	date -u '+%Y%m%d-%H%M%S' > ${TEMP}/initramfs-base-temp/etc/build_date
+	echo "Genkernel $GK_V" > ${TEMP}/initramfs-base-temp/etc/build_id
 
 	cd "${TEMP}/initramfs-base-temp/"
 	log_future_cpio_content
@@ -125,6 +126,23 @@ append_busybox() {
 			|| gen_die "compressing busybox cpio"
 	cd "${TEMP}"
 	rm -rf "${TEMP}/initramfs-busybox-temp" > /dev/null
+}
+
+append_e2fsprogs(){
+	if [ -d "${TEMP}"/initramfs-e2fsprogs-temp ]
+	then
+		rm -r "${TEMP}"/initramfs-e2fsprogs-temp
+	fi
+
+	cd "${TEMP}" \
+			|| gen_die "cd '${TEMP}' failed"
+	mkdir -p initramfs-e2fsprogs-temp
+	copy_binaries "${TEMP}"/initramfs-e2fsprogs-temp/ /sbin/{e2fsck,mke2fs}
+
+	cd "${TEMP}"/initramfs-e2fsprogs-temp \
+			|| gen_die "cd '${TEMP}/initramfs-e2fsprogs-temp' failed"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}"
+	rm -rf "${TEMP}"/initramfs-e2fsprogs-temp > /dev/null
 }
 
 append_blkid(){
@@ -741,6 +759,7 @@ create_initramfs() {
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
 	append_data 'busybox' "${BUSYBOX}"
+	isTrue "${CMD_E2FSPROGS}" && append_data 'e2fsprogs'
 	append_data 'lvm' "${LVM}"
 	append_data 'dmraid' "${DMRAID}"
 	append_data 'iscsi' "${ISCSI}"
@@ -791,7 +810,15 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+			# NOTE:  We do not work with ${KERNEL_CONFIG} here, since things like
+			#        "make oldconfig" or --noclean could be in effect.
+			if [ -f "${KERNEL_DIR}"/.config ]; then
+				local ACTUAL_KERNEL_CONFIG="${KERNEL_DIR}"/.config
+			else
+				local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
+			fi
+
+			if [[ "$(file --brief --mime-type "${ACTUAL_KERNEL_CONFIG}")" == application/x-gzip ]]; then
 				# Support --kernel-config=/proc/config.gz, mainly
 				local CONFGREP=zgrep
 			else
@@ -822,12 +849,12 @@ create_initramfs() {
 						set -- ${tuple}
 						kernel_option=$1
 						cmd_variable_name=$2
-						if ${CONFGREP} -q "^${kernel_option}=y" "${KERNEL_CONFIG}" && test -n "${!cmd_variable_name}" ; then
+						if ${CONFGREP} -q "^${kernel_option}=y" "${ACTUAL_KERNEL_CONFIG}" && test -n "${!cmd_variable_name}" ; then
 							compression=$3
 							[[ ${COMPRESS_INITRD_TYPE} == best ]] && break
 						fi
 					done
-					[[ -z "${compression}" ]] && gen_die "None of the initramfs we tried are supported by your kernel (config file \"${KERNEL_CONFIG}\"), strange!?"
+					[[ -z "${compression}" ]] && gen_die "None of the initramfs compression methods we tried are supported by your kernel (config file \"${ACTUAL_KERNEL_CONFIG}\"), strange!?"
 					;;
 				*)
 					gen_die "Compression '${COMPRESS_INITRD_TYPE}' unknown"
