@@ -5,6 +5,9 @@
 # Distributed under the GPL v2
 # $Id$
 
+  15 Oct 2012; Peter Hjalmarsson <xake@gentoo.org> gen_compile.sh, genkernel:
+  Call depmod after all possible kernel modules has been installed
+
   15 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel:
   Bump to 3.4.44.2 with depmod corner cases by xake.
 

@@ -301,13 +301,6 @@ compile_modules() {
 	export UNAME_MACHINE="${ARCH}"
 	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 	MAKEOPTS="${MAKEOPTS} -j1" compile_generic "modules_install" kernel
-	print_info 1 "        >> Generating module dependency data..."
-	if [ "${INSTALL_MOD_PATH}" != '' ]
-	then
-		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV}
-	else
-		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV}
-	fi
 	unset UNAME_MACHINE
 }
 

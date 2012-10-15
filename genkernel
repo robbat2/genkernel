@@ -256,6 +256,17 @@ then
 	gen_kerncache_extract_config
 fi
 
+if [ -d "${INSTALL_MOD_PATH}"/lib/modules/${KV} ]
+then
+	print_info 1 "        >> Generating module dependency data..."
+	if [ "${INSTALL_MOD_PATH}" != '' ]
+	then
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV}
+	else
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV}
+	fi
+fi
+
 # Run callback
 if [ "${CMD_CALLBACK}" != "" ]
 then
