@@ -90,6 +90,7 @@ determine_real_args() {
 	set_config_with_override STRING KERNEL_CROSS_COMPILE CMD_KERNEL_CROSS_COMPILE
 	set_config_with_override STRING UTILS_CROSS_COMPILE  CMD_UTILS_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR              CMD_BOOTDIR              "/boot"
+	set_config_with_override STRING KERNEL_OUTPUTDIR     CMD_KERNEL_OUTPUTDIR     "${DEFAULT_KERNEL_SOURCE}"
 	set_config_with_override STRING MODPROBEDIR          CMD_MODPROBEDIR          "/etc/modprobe.d"
 
 	set_config_with_override BOOL   SPLASH               CMD_SPLASH
@@ -124,6 +125,7 @@ determine_real_args() {
 	set_config_with_override STRING MDADM_CONFIG         CMD_MDADM_CONFIG
 	set_config_with_override BOOL   E2FSPROGS            CMD_E2FSPROGS            "no"
 	set_config_with_override BOOL   ZFS                  CMD_ZFS
+	set_config_with_override BOOL   VIRTIO               CMD_VIRTIO				  "no"
 	set_config_with_override BOOL   MULTIPATH            CMD_MULTIPATH
 	set_config_with_override BOOL   FIRMWARE             CMD_FIRMWARE
 	set_config_with_override STRING FIRMWARE_DIR         CMD_FIRMWARE_DIR         "/lib/firmware"

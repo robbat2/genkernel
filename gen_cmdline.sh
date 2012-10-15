@@ -31,6 +31,7 @@ longusage() {
   echo "	--no-xconfig		Don't run xconfig after oldconfig"
   echo "	--save-config		Save the configuration to /etc/kernels"
   echo "	--no-save-config	Don't save the configuration to /etc/kernels"
+  echo "	--virtio			Include VirtIO kernel code"
   echo "  Kernel Compile settings"
   echo "	--oldconfig		Implies --no-clean and runs a 'make oldconfig'"
   echo "	--clean			Run make clean before compilation"
@@ -63,6 +64,7 @@ longusage() {
   echo "	--kernel-make=<makeprg> GNU Make to use for kernel"
   echo "	--kernel-target=<t>	Override default make target (bzImage)"
   echo "	--kernel-binary=<path>	Override default kernel binary path (arch/foo/boot/bar)"
+  echo "	--kernel-outputdir=<path> Save output files outside the source tree."
 
   echo "	--utils-cc=<compiler>	Compiler to use for utilities"
   echo "	--utils-as=<assembler>	Assembler to use for utils"
@@ -214,6 +216,10 @@ parse_cmdline() {
 			CMD_KERNEL_CROSS_COMPILE=$(echo ${CMD_KERNEL_CROSS_COMPILE}|sed -e 's/.*[^-]$/&-/g')
 			print_info 2 "CMD_KERNEL_CROSS_COMPILE: ${CMD_KERNEL_CROSS_COMPILE}"
 			;;
+		--kernel-outputdir=*)
+			CMD_KERNEL_OUTPUTDIR=`parse_opt "$*"`
+			print_info 2 "CMD_KERNEL_OUTPUTDIR: ${CMD_KERNEL_OUTPUTDIR}"
+			;;
 		--utils-cc=*)
 			CMD_UTILS_CC=`parse_opt "$*"`
 			print_info 2 "CMD_UTILS_CC: ${CMD_UTILS_CC}"
@@ -315,6 +321,10 @@ parse_cmdline() {
 		--zfs|--no-zfs)
 			CMD_ZFS=`parse_optbool "$*"`
 			print_info 2 "CMD_ZFS: ${CMD_ZFS}"
+			;;
+		--virtio)
+			CMD_VIRTIO=`parse_optbool "$*"`
+			print_info 2 "CMD_VIRTIO: ${CMD_VIRTIO}"
 			;;
 		--multipath|--no-multipath)
 			CMD_MULTIPATH=`parse_optbool "$*"`

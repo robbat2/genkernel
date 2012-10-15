@@ -5,6 +5,69 @@
 # Distributed under the GPL v2
 # $Id$
 
+  15 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel:
+  Bump to 3.4.44.2 with depmod corner cases by xake.
+
+  15 Oct 2012; Peter Hjalmarsson <xake@rymdraket.net> gen_compile.sh:
+  Fix calling of depmod.
+
+  15 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> genkernel:
+  Bump for 3.4.44.1 with bugfix-only.
+
+  15 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> gen_compile.sh,
+  gen_package.sh:
+  Fix corner cases on OUTPUTDIR.
+
+  14 Oct 2012; Sebastian Pipping <sping@gentoo.org> genkernel:
+  Bump version to 3.4.44
+
+  14 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> gen_cmdline.sh,
+  gen_configkernel.sh, gen_determineargs.sh:
+  Bug #432956: Easy to include VirtIO support in kernel.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/modules_load, arch/x86_64/modules_load,
+  defaults/modules_load:
+  Clean up module drift over the years. Just MODULES_CRYPTO left.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> doc/genkernel.8.txt:
+  Document resume parameters.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> arch/alpha/modules_load,
+  arch/arm/modules_load, arch/ia64/modules_load, arch/mips/modules_load,
+  arch/parisc/modules_load, arch/parisc64/modules_load, arch/ppc/modules_load,
+  arch/ppc64/modules_load, arch/sparc/modules_load, arch/sparc64/modules_load,
+  arch/um/modules_load, arch/x86/modules_load, arch/x86_64/modules_load,
+  defaults/initrd.scripts, defaults/linuxrc, defaults/modules_load,
+  gen_configkernel.sh, gen_initramfs.sh:
+  Bug #286187: Complete multipath support.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> defaults/initrd.defaults,
+  defaults/initrd.scripts, defaults/linuxrc, doc/genkernel.8.txt:
+  Bug #351873: More livecd control, and initramfs livecd argument
+  documentation.
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> arch/alpha/kernel-config,
+  arch/ppc/kernel-config, arch/x86/kernel-config, arch/x86_64/kernel-config,
+  defaults/kernel-config:
+  Bug #336170: amd74xx was long-replaced by pata_amd. The old driver is
+  problematic, as even with the pata_amd module loaded, it will not release the
+  device. Disable the old driver on remaining platforms, add pata_amd where
+  missing & needed (not alpha).
+
+  13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> gen_initramfs.sh:
+  Bug #414581: ensure built-in initramfs compress config options are set to
+  avoid silentoldconfig bailing out.
+
+  13 Oct 2012; Łukasz Stelmach <stlman@poczta.fm> gen_cmdline.sh,
+  gen_compile.sh, gen_configkernel.sh, gen_determineargs.sh, gen_funcs.sh,
+  genkernel:
+  Bug #435210 support external kernel output location, to allow pristine
+  source.
+
   13 Oct 2012; Robin H. Johnson <robbat2@gentoo.org> gen_compile.sh:
   Bug #397947: Run depmod on new modules to avoid need to run at every boot on
   unionfs systems, or systemd that never runs it.

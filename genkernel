@@ -2,7 +2,7 @@
 # $Id$
 
 PATH="${PATH}:/sbin:/usr/sbin"
-GK_V='3.4.43'
+GK_V='3.4.44.2'
 
 # Set the default for TMPDIR.  May be modified by genkernel.conf or the
 # --tempdir command line option.
@@ -236,7 +236,9 @@ then
 	then
 		print_info 1 "Copying config for successful build to /etc/kernels/kernel-config-${ARCH}-${KV}"
 		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
-		cp "${KERNEL_DIR}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}"
+		cp "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}" || \
+			print_warning "Unable to copy the kernel configuration file."
+			# Just a warning because ordinary users are not allowed to write in /etc
 	fi
 fi
 

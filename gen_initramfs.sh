@@ -226,7 +226,10 @@ append_multipath(){
 	mkdir -p "${TEMP}"/initramfs-multipath-temp/{bin,etc,sbin,lib}/
 
 	# Copy files
-	copy_binaries "${TEMP}/initramfs-multipath-temp" /sbin/{multipath,kpartx,mpath_prio_*,devmap_name,dmsetup} /lib64/udev/scsi_id /bin/mountpoint
+	copy_binaries "${TEMP}/initramfs-multipath-temp" \
+		/bin/mountpoint \
+		/sbin/{multipath,kpartx,mpath_prio_*,devmap_name,dmsetup} \
+		/{lib,lib64}/{udev/scsi_id,multipath/*so} 
 
 	if [ -x /sbin/multipath ]
 	then
@@ -802,10 +805,28 @@ create_initramfs() {
 		# The kernel will do a better job of it than us.
 		mv ${TMPDIR}/initramfs-${KV} ${TMPDIR}/initramfs-${KV}.cpio
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' ${KERNEL_DIR}/.config
+		compress_config='INITRAMFS_COMPRESSION_NONE'
+		case ${compress_ext} in
+			gz)  compress_config='INITRAMFS_COMPRESSION_GZIP' ;;
+			bz2) compress_config='INITRAMFS_COMPRESSION_BZIP2' ;;
+			lzma) compress_config='INITRAMFS_COMPRESSION_LZMA' ;;
+			xz) compress_config='INITRAMFS_COMPRESSION_XZ' ;;
+			lzo) compress_config='INITRAMFS_COMPRESSION_LZO' ;;
+			*) compress_config='INITRAMFS_COMPRESSION_NONE' ;;
+		esac
+		# All N default except XZ, so there it gets used if the kernel does
+		# compression on it's own.
 		cat >>${KERNEL_DIR}/.config	<<-EOF
 		CONFIG_INITRAMFS_SOURCE="${TMPDIR}/initramfs-${KV}.cpio${compress_ext}"
 		CONFIG_INITRAMFS_ROOT_UID=0
 		CONFIG_INITRAMFS_ROOT_GID=0
+		CONFIG_INITRAMFS_COMPRESSION_NONE=n
+		CONFIG_INITRAMFS_COMPRESSION_GZIP=n
+		CONFIG_INITRAMFS_COMPRESSION_BZIP2=n
+		CONFIG_INITRAMFS_COMPRESSION_LZMA=n
+		CONFIG_INITRAMFS_COMPRESSION_XZ=y
+		CONFIG_INITRAMFS_COMPRESSION_LZO=n
+		CONFIG_${compress_config}=y
 		EOF
 	else
 		if isTrue "${COMPRESS_INITRD}"

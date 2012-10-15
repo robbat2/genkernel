@@ -25,6 +25,10 @@ compile_kernel_args() {
 		then
 			ARGS="${ARGS} ARCH=\"${KERNEL_ARCH}\""
 		fi
+		if [ -n "${KERNEL_OUTPUTDIR}" -a "${KERNEL_OUTPUTDIR}" != "${KERNEL_DIR}" ]
+		then
+			ARGS="${ARGS} O=\"${KERNEL_OUTPUTDIR}\""
+		fi
 	fi
 	echo -n "${ARGS}"
 }
@@ -298,7 +302,12 @@ compile_modules() {
 	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 	MAKEOPTS="${MAKEOPTS} -j1" compile_generic "modules_install" kernel
 	print_info 1 "        >> Generating module dependency data..."
-	depmod -a -e -b "${INSTALL_MOD_PATH}"/lib/modules/$KV ${KV}
+	if [ "${INSTALL_MOD_PATH}" != '' ]
+	then
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV}
+	else
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV}
+	fi
 	unset UNAME_MACHINE
 }
 
@@ -318,7 +327,7 @@ compile_kernel() {
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
-	local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${KERNEL_DIR}"/.config`
+	local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${KERNEL_OUTPUTDIR}"/.config`
 	if [ -n "${firmware_in_kernel_line}" -a "${firmware_in_kernel_line}" != CONFIG_FIRMWARE_IN_KERNEL=y ]
 	then
 		print_info 1 "        >> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
