@@ -324,46 +324,46 @@ append_lvm(){
 	cd "${TEMP}"
 	rm -r "${TEMP}/initramfs-lvm-temp/"
 }
-
 append_mdadm(){
-	if [ -d "${TEMP}/initramfs-mdadm-temp" ]
-	then
-		rm -r "${TEMP}/initramfs-mdadm-temp/"
-	fi
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-mdadm-temp/etc/"
-	mkdir -p "${TEMP}/initramfs-mdadm-temp/sbin/"
-	if [ "${MDADM}" = '1' ]
-	then
-		if [ -n "${MDADM_CONFIG}" ]
-		then
-			if [ -f "${MDADM_CONFIG}" ]
-			then
-				cp -a "${MDADM_CONFIG}" "${TEMP}/initramfs-mdadm-temp/etc/mdadm.conf" \
-				|| gen_die "Could not copy mdadm.conf!"
-			else
-				gen_die 'sl${MDADM_CONFIG} does not exist!'
-			fi
-		else
-			print_info 1 '		MDADM: Skipping inclusion of mdadm.conf'
-		fi
+        if [ -d "${TEMP}/initramfs-mdadm-temp" ]
+        then
+                rm -r "${TEMP}/initramfs-mdadm-temp/"
+        fi
+        cd ${TEMP}
+        mkdir -p "${TEMP}/initramfs-mdadm-temp/etc/"
+        mkdir -p "${TEMP}/initramfs-mdadm-temp/sbin/"
+        if [ "${MDADM}" = '1' ]
+        then
+                if [ -n "${MDADM_CONFIG}" ]
+                then
+                        if [ -f "${MDADM_CONFIG}" ]
+                        then
+                                cp -a "${MDADM_CONFIG}" "${TEMP}/initramfs-mdadm-temp/etc/mdadm.conf" \
+                                 || gen_die "Could not copy mdadm.conf!"
+                        else
+                                gen_die 'sl${MDADM_CONFIG} does not exist!'
+                        fi
+                else
+                        print_info 1 '          MDADM: Skipping inclusion of mdadm.conf'
+                fi
 
-		if [ -e '/sbin/mdadm' ] && LC_ALL="C" ldd /sbin/mdadm | grep -q 'not a dynamic executable' \
-		&& [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
-		then
-			print_info 1 '		MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)...'
-			cp /sbin/mdadm /sbin/mdmon "${TEMP}/initramfs-mdadm-temp/sbin/" || gen_die 'Could not copy over mdadm!'
-		else
-			gen_die "Could not find /sbin/mdadm or /sbin/mdmon for initramfs"
-		fi
-	fi
-	cd "${TEMP}/initramfs-mdadm-temp/"
-	log_future_cpio_content
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing mdadm cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
+                if [ -e '/sbin/mdadm' ] && LC_ALL="C" ldd /sbin/mdadm | grep -q 'not a dynamic executable' \
+                && [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
+                then
+                        print_info 1 '          MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)...'
+                        copy_binaries "${TEMP}/initramfs-mdadm-temp/sbin" /sbin/{mdadm,mdmon} || gen_die 'Could not copy over mdadm!'
+                else
+                        gen_die "Could not find /sbin/mdadm or /sbin/mdmon for initramfs"
+                fi
+        fi
+        cd "${TEMP}/initramfs-mdadm-temp/"
+        log_future_cpio_content
+        find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+                        || gen_die "compressing mdadm cpio"
+        cd "${TEMP}"
+        rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
 }
+
 
 append_zfs(){
 	if [ -d "${TEMP}/initramfs-zfs-temp" ]
