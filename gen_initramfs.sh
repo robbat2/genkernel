@@ -281,41 +281,10 @@ append_lvm(){
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-lvm-temp/bin/"
 	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/"
-	if false && [ -e '/sbin/lvm.static' ]
-	then
-		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm.static)...'
-		cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
-	elif [ -e '/sbin/lvm' ] && LC_ALL="C" ldd /sbin/lvm|grep -q 'not a dynamic executable'
-	then
-		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm)...'
-		cp /sbin/lvm "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
-	elif [ -e '/sbin/lvm' ]
-	then
-		print_info 1 '          LVM: Adding support (using local binary /sbin/lvm)...'
-		copy_binaries "${TEMP}/initramfs-lvm-temp/bin/lvm" /sbin/lvm
-	else
-		print_info 1 '          LVM: Adding support (compiling binaries)...'
-		compile_lvm
-		/bin/tar -jxpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
-			gen_die "Could not extract lvm binary cache!";
-		mv ${TEMP}/initramfs-lvm-temp/sbin/lvm.static ${TEMP}/initramfs-lvm-temp/bin/lvm ||
-			gen_die 'LVM error: Could not move lvm.static to lvm!'
-		# See bug 382555
-		mv ${TEMP}/initramfs-lvm-temp/sbin/dmsetup.static ${TEMP}/initramfs-lvm-temp/bin/dmsetup ||
-			gen_die 'LVM error: Could not move dmsetup.static to dmsetup!'
-		rm -rf ${TEMP}/initramfs-lvm-temp/{lib,share,man,include,sbin/{lvm,dmsetup}}
-	fi
-	if [ -x /sbin/lvm -o -x /bin/lvm ]
-	then
-#		lvm dumpconfig 2>&1 > /dev/null || gen_die 'Could not copy over lvm.conf!'
-#		ret=$?
-#		if [ ${ret} != 0 ]
-#		then
-			cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" ||
-				gen_die 'Could not copy over lvm.conf!'
-#		else
-#			gen_die 'Could not copy over lvm.conf!'
-#		fi
+	print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm.static)...'
+	cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/bin/lvm" || gen_die 'Could not copy over lvm!'
+	if [ -e /etc/lvm/lvm.conf ]; then
+		cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" || gen_die 'Could not copy over lvm.conf!'
 	fi
 	cd "${TEMP}/initramfs-lvm-temp/"
 	log_future_cpio_content
