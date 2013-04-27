@@ -326,7 +326,7 @@ append_mdadm(){
                 && [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
                 then
                         print_info 1 '          MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)...'
-                        copy_binaries "${TEMP}/initramfs-mdadm-temp/sbin" /sbin/{mdadm,mdmon} || gen_die 'Could not copy over mdadm!'
+                        copy_binaries "${TEMP}/initramfs-mdadm-temp" /sbin/{mdadm,mdmon} || gen_die 'Could not copy over mdadm!'
                 else
                         gen_die "Could not find /sbin/mdadm or /sbin/mdmon for initramfs"
                 fi
