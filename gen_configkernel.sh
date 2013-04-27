@@ -31,6 +31,14 @@ config_kernel() {
 	determine_config_file
 	cd "${BUILD_SRC}" || gen_die 'Could not switch to the kernel directory!'
 
+	# See FL-432: This is a fix for kernels 3.7 and up that no longer have an include/linux/version.h. Fixes modules compile.
+	if [ ! -e include/linux/version.h ]; then
+		if [ -e include/generated/uapi/linux/version.h ]; then
+			print_info 1 "fixing include/linux/version.h"
+			ln -s ../generated/uapi/linux/version.h include/linux/version.h || gen_die 'Could not fix version.h symlink!'
+		fi
+	fi
+
 	# Backup current kernel .config
 	if isTrue "${MRPROPER}" || [ ! -f "${BUILD_DST}/.config" ]
 	then
