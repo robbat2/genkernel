@@ -450,7 +450,6 @@ compile_busybox() {
 }
 
 compile_dmraid() {
-	compile_device_mapper
 	if [ ! -f "${DMRAID_BINCACHE}" ]
 	then
 		[ -f "${DMRAID_SRCTAR}" ] ||
@@ -497,10 +496,6 @@ compile_dmraid() {
 		rm -rf "${TEMP}/lvm" > /dev/null
 		rm -rf "${DMRAID_DIR}" dmraid
 	fi
-}
-
-compile_device_mapper() {
-	compile_lvm
 }
 
 compile_fuse() {
