@@ -748,13 +748,6 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
-				# Support --kernel-config=/proc/config.gz, mainly
-				local CONFGREP=zgrep
-			else
-				local CONFGREP=grep
-			fi
-
 			cmd_xz=$(type -p xz)
 			cmd_lzma=$(type -p lzma)
 			cmd_bzip2=$(type -p bzip2)
@@ -783,12 +776,12 @@ create_initramfs() {
 						set -- ${tuple}
 						kernel_option=$1
 						cmd_variable_name=$2
-						if ${CONFGREP} -q "^${kernel_option}=y" "${KERNEL_CONFIG}" && test -n "${!cmd_variable_name}" ; then
+						if grep -q "^${kernel_option}=y" "${BUILD_DST}/.config" && test -n "${!cmd_variable_name}" ; then
 							compression=$3
 							[[ ${COMPRESS_INITRD_TYPE} == best ]] && break
 						fi
 					done
-					[[ -z "${compression}" ]] && gen_die "None of the initramfs we tried are supported by your kernel (config file \"${KERNEL_CONFIG}\"), strange!?"
+					[[ -z "${compression}" ]] && gen_die "None of the initramfs we tried are supported by your kernel (config file \"$BUILD_DST/.config\"), strange!?"
 					;;
 				*)
 					gen_die "Compression '${COMPRESS_INITRD_TYPE}' unknown"
