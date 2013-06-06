@@ -35,7 +35,7 @@ Rolling a release:
   <gentoo-genkernel@lists.gentoo.org> and <genkernel@gentoo.org>.
   Use
 
-    PREV_TAG=$(git tag -l | tail -n 2 | head -n 1)
-    git diff ${PREV_TAG}..v${PV} ChangeLog | /bin/grep '^+\($\|  \)' | sed 's|^+ *||' | xsel
+    PREV_TAG=$(git tag -l | tail -n 2 | head -n 1) \
+    git shortlog ${PREV_TAG}..v${PV} | xsel
 
   to generate the mail body.
