@@ -95,6 +95,9 @@ KERNEL CONFIGURATION
     Saves, or does not save the kernel configuration to '/etc/kernels'
     if the kernel is successfully compiled.
 
+*--virtio*::
+    Adds Virtio support to kernel configuration.
+
 *--*[*no-*]*gconfig*::
     Runs, or does not run "make gconfig" after "make oldconfig".
 
