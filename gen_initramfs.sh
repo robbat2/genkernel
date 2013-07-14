@@ -438,7 +438,7 @@ append_zfs(){
 	done
 
 	# Copy binaries
-	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zfs,zpool}
+	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool}
 
 	cd "${TEMP}/initramfs-zfs-temp/"
 	log_future_cpio_content
