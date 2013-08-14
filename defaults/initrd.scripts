@@ -630,12 +630,10 @@ startVolumes() {
 			good_msg "Activating Device-Mapper RAID(s)"
 			if [ '${DMRAID_OPTS}' = '' ]
 			then
-				/sbin/dmraid -ay -p
+				/sbin/dmraid -ay
 			else
-				/sbin/dmraid -ay ${DMRAID_OPTS} -p
+				/sbin/dmraid -ay ${DMRAID_OPTS}
 			fi
-			partprobe 
-			for x in /dev/mapper/pdc* ; do kpartx -a $x ; done
 		fi
 	fi
 
