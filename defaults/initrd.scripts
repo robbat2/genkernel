@@ -641,6 +641,7 @@ chooseKeymap() {
 # This also enables us to wait a reasonable amount of time until /dev/zfs appears.
 waitForZFS() {
 	while [ ! -c /dev/zfs ]; do modprobe zfs 2> /dev/null; done;
+	exit 1
 }
 
 startVolumes() {
