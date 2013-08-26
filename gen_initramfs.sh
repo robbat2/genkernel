@@ -1,6 +1,7 @@
 #!/bin/bash
 # $Id$
 
+COPY_BINARIES=false
 CPIO_ARGS="--quiet -o -H newc"
 
 # The copy_binaries function is explicitly released under the CC0 license to
@@ -23,6 +24,8 @@ CPIO_ARGS="--quiet -o -H newc"
 copy_binaries() {
 	local destdir=$1
 	shift
+
+	COPY_BINARIES=true
 
 	for binary in "$@"; do
 		[[ -e "${binary}" ]] \
@@ -448,6 +451,28 @@ append_zfs(){
 	rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
 }
 
+append_linker() {
+	if [ -d "${TEMP}/initramfs-linker-temp" ]
+	then
+		rm -r "${TEMP}/initramfs-linker-temp"
+	fi
+
+	mkdir -p "${TEMP}/initramfs-linker-temp/etc/ld.so.conf.d"
+
+	cp "/etc/ld.so."{cache,conf} "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
+		|| gen_die "Could not copy ld.so.{cache,conf}"
+
+	cp -r "/etc/ld.so.conf.d" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
+		|| gen_die "Could not copy ld.so.conf.d"
+
+	cd "${TEMP}/initramfs-linker-temp/"
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+			|| gen_die "compressing linker cpio"
+	cd "${TEMP}"
+	rm -rf "${TEMP}/initramfs-linker-temp" > /dev/null
+}
+
 append_splash(){
 	splash_geninitramfs=`which splash_geninitramfs 2>/dev/null`
 	if [ -x "${splash_geninitramfs}" ]
@@ -798,6 +823,11 @@ create_initramfs() {
 	if [ "${INITRAMFS_OVERLAY}" != '' ]
 	then
 		append_data 'overlay'
+	fi
+
+	if ${COPY_BINARIES}
+	then
+		append_data 'linker'
 	fi
 
 	# Finalize cpio by removing duplicate files
