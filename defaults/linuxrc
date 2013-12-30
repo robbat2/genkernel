@@ -851,7 +851,7 @@ FSTAB
 				do
 					tarname=$(basename ${targz})
 					good_msg "Adding additional package ${tarname}"
-					(cd ${NEW_ROOT} ; /bin/tar -xzf ${targz})
+					(cd ${NEW_ROOT} ; /bin/tar -xf ${targz})
 				done
 		fi
 	fi

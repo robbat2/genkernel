@@ -434,7 +434,7 @@ compile_busybox() {
 	# current .config.
 	if [ -f "${BUSYBOX_BINCACHE}" ]
 	then
-		oldconfig_md5="$(tar -xjf "${BUSYBOX_BINCACHE}" -O .config.gk_orig 2>/dev/null | md5sum)"
+		oldconfig_md5="$(tar -xf "${BUSYBOX_BINCACHE}" -O .config.gk_orig 2>/dev/null | md5sum)"
 		newconfig_md5="$(md5sum < "${TEMP}/busybox-config")"
 		if [ "${oldconfig_md5}" != "${newconfig_md5}" ]
 		then
@@ -452,7 +452,7 @@ compile_busybox() {
 	then
 		cd "${TEMP}"
 		rm -rf "${BUSYBOX_DIR}" > /dev/null
-		/bin/tar -jxpf ${BUSYBOX_SRCTAR} ||
+		/bin/tar -xpf ${BUSYBOX_SRCTAR} ||
 			gen_die 'Could not extract busybox source tarball!'
 		[ -d "${BUSYBOX_DIR}" ] ||
 			gen_die "Busybox directory ${BUSYBOX_DIR} is invalid!"
@@ -475,7 +475,7 @@ compile_busybox() {
 			gen_die 'Busybox executable does not exist!'
 		${UTILS_CROSS_COMPILE}strip "${TEMP}/${BUSYBOX_DIR}/busybox" ||
 			gen_die 'Could not strip busybox binary!'
-		tar -cj -C "${TEMP}/${BUSYBOX_DIR}" -f "${BUSYBOX_BINCACHE}" busybox .config .config.gk_orig ||
+		tar -C "${TEMP}/${BUSYBOX_DIR}" -cjf "${BUSYBOX_BINCACHE}" busybox .config .config.gk_orig ||
 			gen_die 'Could not create the busybox bincache!'
 
 		cd "${TEMP}"
@@ -493,7 +493,7 @@ compile_lvm() {
 			gen_die "Could not find LVM source tarball: ${LVM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf ${LVM_DIR} > /dev/null
-		/bin/tar -zxpf ${LVM_SRCTAR} ||
+		/bin/tar -xpf ${LVM_SRCTAR} ||
 			gen_die 'Could not extract LVM source tarball!'
 		[ -d "${LVM_DIR}" ] ||
 			gen_die "LVM directory ${LVM_DIR} is invalid!"
@@ -541,7 +541,7 @@ compile_mdadm() {
 			gen_die "Could not find MDADM source tarball: ${MDADM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf "${MDADM_DIR}" > /dev/null
-		/bin/tar -jxpf "${MDADM_SRCTAR}" ||
+		/bin/tar -xpf "${MDADM_SRCTAR}" ||
 			gen_die 'Could not extract MDADM source tarball!'
 		[ -d "${MDADM_DIR}" ] ||
 			gen_die "MDADM directory ${MDADM_DIR} is invalid!"
@@ -580,13 +580,13 @@ compile_dmraid() {
 			gen_die "Could not find DMRAID source tarball: ${DMRAID_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf ${DMRAID_DIR} > /dev/null
-		/bin/tar -jxpf ${DMRAID_SRCTAR} ||
+		/bin/tar -xpf ${DMRAID_SRCTAR} ||
 			gen_die 'Could not extract DMRAID source tarball!'
 		[ -d "${DMRAID_DIR}" ] ||
 			gen_die "DMRAID directory ${DMRAID_DIR} is invalid!"
 		rm -rf "${TEMP}/lvm" > /dev/null
 		mkdir -p "${TEMP}/lvm"
-		/bin/tar -jxpf "${LVM_BINCACHE}" -C "${TEMP}/lvm" ||
+		/bin/tar -xpf "${LVM_BINCACHE}" -C "${TEMP}/lvm" ||
 			gen_die "Could not extract LVM2 binary cache!";
 
 		cd "${DMRAID_DIR}"
@@ -637,7 +637,7 @@ compile_fuse() {
 			gen_die "Could not find fuse source tarball: ${FUSE_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf "${FUSE_DIR}"
-		tar -zxpf "${FUSE_SRCTAR}"
+		tar -xpf "${FUSE_SRCTAR}"
 		[ ! -d "${FUSE_DIR}" ] &&
 			gen_die "fuse directory ${FUSE_DIR} invalid"
 		cd "${FUSE_DIR}"
@@ -675,7 +675,7 @@ compile_unionfs_fuse() {
 			gen_die "Could not find unionfs-fuse source tarball: ${UNIONFS_FUSE_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf "${UNIONFS_FUSE_DIR}"
-		tar -jxpf "${UNIONFS_FUSE_SRCTAR}"
+		tar -xpf "${UNIONFS_FUSE_SRCTAR}"
 		[ ! -d "${UNIONFS_FUSE_DIR}" ] &&
 			gen_die "unionfs-fuse directory ${UNIONFS_FUSE_DIR} invalid"
 		cd "${UNIONFS_FUSE_DIR}"
@@ -707,7 +707,7 @@ compile_iscsi() {
 			gen_die "Could not find iSCSI source tarball: ${ISCSI_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf "${ISCSI_DIR}"
-		tar -zxpf "${ISCSI_SRCTAR}"
+		tar -xpf "${ISCSI_SRCTAR}"
 		[ ! -d "${ISCSI_DIR}" ] &&
 			gen_die "ISCSI directory ${ISCSI_DIR} invalid"
 				print_info 1 'iSCSI: >> Compiling...'
@@ -762,7 +762,7 @@ compile_gpg() {
 			gen_die "Could not find gnupg source tarball: ${GPG_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf "${GPG_DIR}"
-		tar -jxf "${GPG_SRCTAR}"
+		tar -xf "${GPG_SRCTAR}"
 		[ ! -d "${GPG_DIR}" ] &&
 			gen_die "gnupg directory ${GPG_DIR} invalid"
 		cd "${GPG_DIR}"

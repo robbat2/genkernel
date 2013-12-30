@@ -7,13 +7,13 @@ gen_minkernpackage() {
 	mkdir "${TEMP}/minkernpackage" || gen_die 'Could not make a directory for the kernel package!'
 	if [ "${KERNCACHE}" != "" ]
 	then
-		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernel-${ARCH}-${KV}
+		/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernel-${ARCH}-${KV}
 		mv minkernpackage/{kernel-${ARCH}-${KV},kernel-${KNAME}-${ARCH}-${KV}}
-		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} config-${ARCH}-${KV}
+		/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} config-${ARCH}-${KV}
 		mv minkernpackage/{config-${ARCH}-${KV},config-${KNAME}-${ARCH}-${KV}}
 		if isTrue "${GENZIMAGE}"
 		then
-			/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernelz-${ARCH}-${KV}
+			/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernelz-${ARCH}-${KV}
 			mv minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}}
 		fi
 		if [ ! -f minkernpackage/kernel-${KNAME}-${ARCH}-${KV} \
@@ -44,7 +44,7 @@ gen_minkernpackage() {
 
 	if [ "${KERNCACHE}" != "" ]
 	then
-		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} System.map-${ARCH}-${KV}
+		/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} System.map-${ARCH}-${KV}
 		mv minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}} ||
 			gen_die 'Could not copy System.map from kerncache for the kernel package!'
 	else
@@ -123,7 +123,7 @@ gen_kerncache()
 
 gen_kerncache_extract_kernel()
 {
-	/bin/tar -f ${KERNCACHE} -C ${TEMP} -xj
+	/bin/tar -xf ${KERNCACHE} -C ${TEMP}
 	copy_image_with_preserve "kernel" \
 		"${TEMP}/kernel-${ARCH}-${KV}" \
 		"kernel-${KNAME}-${ARCH}-${KV}"
@@ -147,9 +147,9 @@ gen_kerncache_extract_modules()
 		print_info 1 'Extracting kerncache kernel modules'
         	if [ "${INSTALL_MOD_PATH}" != '' ]
 		then
-			/bin/tar -xjf ${KERNCACHE} --strip-components 1 -C ${INSTALL_MOD_PATH}/lib
+			/bin/tar -xf ${KERNCACHE} --strip-components 1 -C ${INSTALL_MOD_PATH}/lib
 		else
-			/bin/tar -xjf ${KERNCACHE} --strip-components 1 -C /lib
+			/bin/tar -xf ${KERNCACHE} --strip-components 1 -C /lib
 		fi
 	fi
 }
@@ -160,7 +160,7 @@ gen_kerncache_extract_config()
 	then
 		print_info 1 'Extracting kerncache config to /etc/kernels'
 		mkdir -p /etc/kernels
-        	/bin/tar -xjf ${KERNCACHE} -C /etc/kernels config-${ARCH}-${KV}
+        	/bin/tar -xf ${KERNCACHE} -C /etc/kernels config-${ARCH}-${KV}
 		mv /etc/kernels/config-${ARCH}-${KV} /etc/kernels/kernel-config-${ARCH}-${KV}
 	fi
 }
@@ -174,7 +174,7 @@ gen_kerncache_is_valid()
 		BUILD_KERNEL=0
 		# Can make this more secure ....
 
-		/bin/tar -xj -f ${KERNCACHE} -C ${TEMP}
+		/bin/tar -xf ${KERNCACHE} -C ${TEMP}
 		if [ -e ${TEMP}/config-${ARCH}-${KV} -a -e ${TEMP}/kernel-${ARCH}-${KV} ]
 		then
 			print_info 1 'Valid kernel cache found; no sources will be used'
@@ -189,7 +189,7 @@ gen_kerncache_is_valid()
 				KERNEL_CONFIG="${CMD_KERNEL_CONFIG}"
 			fi
 
-			/bin/tar -xj -f ${KERNCACHE} -C ${TEMP}
+			/bin/tar -xf ${KERNCACHE} -C ${TEMP}
 			if [ -e ${TEMP}/config-${ARCH}-${KV} -a -e ${KERNEL_CONFIG} ]
 			then
 

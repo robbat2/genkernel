@@ -143,7 +143,7 @@ append_busybox() {
 	fi
 
 	mkdir -p "${TEMP}/initramfs-busybox-temp/bin/"
-	tar -xjf "${BUSYBOX_BINCACHE}" -C "${TEMP}/initramfs-busybox-temp/bin" busybox ||
+	tar -xf "${BUSYBOX_BINCACHE}" -C "${TEMP}/initramfs-busybox-temp/bin" busybox ||
 		gen_die 'Could not extract busybox bincache!'
 	chmod +x "${TEMP}/initramfs-busybox-temp/bin/busybox"
 
@@ -224,7 +224,7 @@ append_blkid(){
 #	fi
 #	cd ${TEMP}
 #	mkdir -p "${TEMP}/initramfs-fuse-temp/lib/"
-#	tar -C "${TEMP}/initramfs-fuse-temp/lib/" -xjf "${FUSE_BINCACHE}"
+#	tar -C "${TEMP}/initramfs-fuse-temp/lib/" -xf "${FUSE_BINCACHE}"
 #	cd "${TEMP}/initramfs-fuse-temp/"
 #	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
 #			|| gen_die "compressing fuse cpio"
@@ -257,7 +257,7 @@ append_unionfs_fuse() {
 #	print_info 1 'SUSPEND: Adding support (compiling binaries)...'
 #	compile_suspend
 #	mkdir -p "${TEMP}/initramfs-suspend-temp/"
-#	/bin/tar -jxpf "${SUSPEND_BINCACHE}" -C "${TEMP}/initramfs-suspend-temp" ||
+#	/bin/tar -xpf "${SUSPEND_BINCACHE}" -C "${TEMP}/initramfs-suspend-temp" ||
 #		gen_die "Could not extract suspend binary cache!"
 #	mkdir -p "${TEMP}/initramfs-suspend-temp/etc"
 #	cp -f /etc/suspend.conf "${TEMP}/initramfs-suspend-temp/etc" ||
@@ -316,7 +316,7 @@ append_dmraid(){
 	print_info 1 'DMRAID: Adding support (compiling binaries)...'
 	compile_dmraid
 	mkdir -p "${TEMP}/initramfs-dmraid-temp/"
-	/bin/tar -jxpf "${DMRAID_BINCACHE}" -C "${TEMP}/initramfs-dmraid-temp" ||
+	/bin/tar -xpf "${DMRAID_BINCACHE}" -C "${TEMP}/initramfs-dmraid-temp" ||
 		gen_die "Could not extract dmraid binary cache!";
 	[ -x /sbin/dmsetup -a -x /sbin/kpartx ] && copy_binaries \
 		"${TEMP}/initramfs-dmraid-temp/" \
@@ -390,7 +390,7 @@ append_lvm(){
 	else
 		print_info 1 '          LVM: Adding support (compiling binaries)...'
 		compile_lvm || gen_die "Could not compile LVM"
-		/bin/tar -jxpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
+		/bin/tar -xpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
 			gen_die "Could not extract lvm binary cache!";
 		# Remove any dynamic binaries that exist, so the rest of the code will
 		# fail better if something is missing
@@ -462,7 +462,7 @@ append_mdadm(){
 		else
 			print_info 1 '		MDADM: Adding support (compiling binaries)...'
 			compile_mdadm
-			/bin/tar -jxpf "${MDADM_BINCACHE}" -C "${TEMP}/initramfs-mdadm-temp" ||
+			/bin/tar -xpf "${MDADM_BINCACHE}" -C "${TEMP}/initramfs-mdadm-temp" ||
 				gen_die "Could not extract mdadm binary cache!";
 		fi
 	fi
