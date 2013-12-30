@@ -196,6 +196,7 @@ config_kernel() {
 	if isTrue ${SPLASH}
 	then
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_SPLASH" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_CON_DECOR" "y"
 	fi
 
 	# VirtIO

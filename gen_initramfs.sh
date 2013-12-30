@@ -565,7 +565,7 @@ append_linker() {
 
 append_splash(){
 	splash_geninitramfs=`which splash_geninitramfs 2>/dev/null`
-	if [ -x "${splash_geninitramfs}" ]
+	if [ -x "${splash_geninitramfs}" ] && grep -q -E '^CONFIG_FRAMEBUFFER_CONSOLE=[y|m]' ${KERNEL_CONFIG}
 	then
 		[ -z "${SPLASH_THEME}" ] && [ -e /etc/conf.d/splash ] && source /etc/conf.d/splash
 		[ -z "${SPLASH_THEME}" ] && SPLASH_THEME=default
