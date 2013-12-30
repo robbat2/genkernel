@@ -140,20 +140,17 @@ do
 			ROOTDELAY=5
 		;;
 		firstmods=*)
-			FIRSTMODS=${x#*=}
-			FIRSTMODS=$(echo ${FIRSTMODS} | sed -e 's/,/ /g')
+			FIRSTMODS=$(echo ${FIRSTMODS} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 			;;
 		# Module no-loads
 		doload=*)
-			MDOLIST=${x#*=}
-			MDOLIST=$(echo ${MDOLIST} | sed -e 's/,/ /g')
+			MDOLIST=$(echo ${MDOLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 		;;
 		nodetect)
 			NODETECT=1
 		;;
 		noload=*)
-			MLIST=${x#*=}
-			MLIST="$(echo ${MLIST} | sed -e 's/,/ /g')"
+			MLIST=$(echo ${MLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 			export MLIST
 		;;
 		# Redirect output to a specific tty
