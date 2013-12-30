@@ -91,30 +91,25 @@ config_kernel() {
 		print_info 1 "kernel: --clean is disabled; not running 'make clean'."
 	fi
 
+	local add_config
 	if isTrue ${MENUCONFIG}
 	then
-		print_info 1 'kernel: >> Invoking menuconfig...'
-		compile_generic menuconfig kernelruntask
-		[ "$?" ] || gen_die 'Error: menuconfig failed!'
-	elif isTrue ${NCONFIG}
+		add_config=menuconfig
+	elif isTrue ${CMD_NCONFIG}
 	then
-		print_info 1 'kernel: >> Invoking nconfig...'
-		compile_generic nconfig kernelruntask
-		[ "$?" ] || gen_die 'Error: nconfig failed!'
+		add_config=nconfig
 	elif isTrue ${CMD_GCONFIG}
 	then
-		print_info 1 'kernel: >> Invoking gconfig...'
-		compile_generic gconfig kernel
-		[ "$?" ] || gen_die 'Error: gconfig failed!'
-
-		CMD_XCONFIG=0
+		add_config=gconfig
+	elif isTrue ${CMD_XCONFIG}
+	then
+		add_config=xconfig
 	fi
 
-	if isTrue ${CMD_XCONFIG}
-	then
-		print_info 1 'kernel: >> Invoking xconfig...'
-		compile_generic xconfig kernel
-		[ "$?" ] || gen_die 'Error: xconfig failed!'
+	if [ x"${add_config}" != x"" ]
+		print_info 1 "kernel: >> Invoking ${add_config}..."
+		compile_generic $add_config kernelruntask
+		[ "$?" ] || gen_die "Error: ${add_config} failed!"
 	fi
 
 	# Force this on if we are using --genzimage
