@@ -213,8 +213,23 @@ DetectPpc() {
 
 #//--------------------------------------------------------------------------------
 
+#// Determine hppa Machine Type
+#//--------------------------------------------------------------------------------
 
+DetectHppa() {
+	case "${ARCHINFO}" in
+		parisc)
+			MYARCH="HPPA"
+		;;
+		parisc64)
+			MYARCH="HPPA (64bit kernel)"
+		;;
+	esac
 
+	MACHTYPE=$(grep 'model' /proc/cpuinfo | cut -d '/' -f 3 | head -n 1 | sed -e 's/ //g')
+}
+
+#//--------------------------------------------------------------------------------
 #// Discover if the network is already running for us or not
 #//--------------------------------------------------------------------------------
 
@@ -338,6 +353,7 @@ case "${ARCHINFO}" in
 		mount -t openpromfs openprom /proc/openprom
 	;;
 	ppc*)		DetectPpc	;;
+	parisc*)	DetectHppa	;;
 	*)			MACHTYPE=$ARCHINFO	;;
 esac
 
