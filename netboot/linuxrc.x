@@ -322,17 +322,20 @@ LaunchShell() {
 	#// Completed Startup
 	touch /tmp/.startup
 
-	for i in 2 3 4 5 6; do
-		getty -n -l /bin/ashlogin 38400 tty${i} &
-	done
+	SERIAL_TTY=$(sed -e 's/.*console=\(tty[a-zA-Z0-9]*\).*/\1/' /proc/cmdline)
+	if [ "${SERIAL_TTY:0:3}" = "tty" -a "${SERIAL_TTY:0:4}" != "tty0" ]
+	then
+		# A serial tty has been specified
+		getty -n -l /bin/ashlogin 38400 ${SERIAL_TTY}
+	else
+		for i in 2 3 4 5 6; do
+			getty -n -l /bin/ashlogin 38400 tty${i} &
+		done
 
-#	# We run the getty for tty1 in the foreground so our pid 1 doesn't end
-#	getty -n -l /bin/ashlogin 38400 tty1
-
-	# We were running the above code, but that doesn't work well on serial. Until
-	# we can autodetect a serial console and start a getty there, we'll just run
-	# ash on /dev/console
-	/bin/ash
+		# If we can't autodetect a serial console and start a getty there, we'll just run
+		# ash on /dev/console
+		/bin/ash
+	fi
 }
 
 #//--------------------------------------------------------------------------------
