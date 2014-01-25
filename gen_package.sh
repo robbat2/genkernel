@@ -134,9 +134,9 @@ gen_kerncache_extract_modules()
 		print_info 1 'Extracting kerncache kernel modules'
         	if [ "${INSTALL_MOD_PATH}" != '' ]
 		then
-        		/bin/tar -xjf ${KERNCACHE} -C ${INSTALL_MOD_PATH} lib
+			/bin/tar -xjf ${KERNCACHE} --strip-components 1 -C ${INSTALL_MOD_PATH}/lib
 		else
-        		/bin/tar -xjf ${KERNCACHE} -C / lib
+			/bin/tar -xjf ${KERNCACHE} --strip-components 1 -C /lib
 		fi
 	fi
 }
