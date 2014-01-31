@@ -23,6 +23,9 @@ fi
 mount -t proc -o noexec,nosuid,nodev proc /proc >/dev/null 2>&1
 mount -o remount,rw / >/dev/null 2>&1
 
+# Prevent superfluous printks from being printed to the console
+echo 1 > /proc/sys/kernel/printk
+
 # Set up symlinks
 /bin/busybox --install -s
 
