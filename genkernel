@@ -36,6 +36,9 @@ done
 _GENKERNEL_CONF=${CMD_GK_CONFIG:-/etc/genkernel.conf}
 source "${_GENKERNEL_CONF}" || small_die "Could not read ${_GENKERNEL_CONF}"
 
+# set default LOGLEVEL if uninitialized
+LOGLEVEL=${LOGLEVEL:-1}
+
 # Start sourcing other scripts
 source ${GK_SHARE}/defaults/software.sh || small_die "Could not read ${GK_SHARE}/defaults/software.sh"
 source ${GK_SHARE}/gen_funcs.sh || small_die "Could not read ${GK_SHARE}/gen_funcs.sh"
