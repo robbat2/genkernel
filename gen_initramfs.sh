@@ -99,6 +99,8 @@ append_base_layout() {
 	date -u '+%Y%m%d-%H%M%S' > ${TEMP}/initramfs-base-temp/etc/build_date
 	echo "Genkernel $GK_V" > ${TEMP}/initramfs-base-temp/etc/build_id
 
+	printf "$(hostid | sed 's/\([0-9A-F]\{2\}\)/\\x\1/gI')" > ${TEMP}/initramfs-base-temp/etc/hostid
+
 	cd "${TEMP}/initramfs-base-temp/"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
