@@ -495,6 +495,17 @@ set_config_with_override() {
 	eval ${CfgVar}=\"${Result}\"
 }
 
+rootfs_type_is() {
+	local fstype=$1
+
+	if $(df -t ${fstype} / 2>/dev/null 1>/dev/null)
+	then
+		echo yes
+	else
+		echo no
+	fi
+}
+
 check_distfiles() {
 	for i in $BUSYBOX_SRCTAR $MULTIPATH_SRCTAR $LVM_SRCTAR $DMRAID_SRCTAR $ISCSI_SRCTAR $GPG_SRCTAR
 	do
