@@ -1,0 +1,26 @@
+diff --git a/modutils/modprobe.c b/modutils/modprobe.c
+index fb6c659..11fa521 100644
+--- a/modutils/modprobe.c
++++ b/modutils/modprobe.c
+@@ -413,7 +413,7 @@ static int do_modprobe(struct module_entry *m)
+ 	rc = 0;
+ 	while (m->deps) {
+ 		struct module_entry *m2;
+-		char *fn, *options;
++		char *fn, *options, *path;
+ 
+ 		rc = 0;
+ 		fn = llist_pop(&m->deps); /* we leak it */
+@@ -460,7 +460,11 @@ static int do_modprobe(struct module_entry *m)
+ 			continue;
+ 		}
+ 
+-		rc = bb_init_module(fn, options);
++		path = xmalloc(strlen(fn) + strlen(CONFIG_DEFAULT_MODULES_DIR) + strlen(G.uts.release) + 3);
++		sprintf(path, "%s/%s/%s", CONFIG_DEFAULT_MODULES_DIR, G.uts.release, fn);
++
++		rc = bb_init_module(path, options);
++		free(path);
+ 		DBG("loaded %s '%s', rc:%d", fn, options, rc);
+ 		if (rc == EEXIST)
+ 			rc = 0;
