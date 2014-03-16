@@ -10,12 +10,12 @@ call_func_timeout()
 	( ${func} ) & pid=$!
 	( sleep ${timeout} && kill -HUP ${pid} ) 2>/dev/null & watcher=$!
 	if wait ${pid} 2>/dev/null; then
-	    kill -HUP $watcher 2> /dev/null
-	    wait $watcher 2>/dev/null
-	    return 1
+		kill -HUP $watcher 2> /dev/null
+		wait $watcher 2>/dev/null
+		return 0
 	fi
 
-	return 0
+	return 1
 }
 
 modules_load() {
