@@ -732,7 +732,7 @@ then
 		test_success 'Mount filesystem'
 		FS_LOCATION='mnt/livecd'
 	# Setup the loopback mounts, if unencrypted
-	else
+	else # if [ -n "${CRYPT_ROOT}" ]
 		if [ "${LOOPTYPE}" = 'normal' ]
 		then
 			good_msg 'Mounting loop filesystem'
@@ -800,13 +800,14 @@ then
 			test_success 'mount /dev/loop0 /'
 			FS_LOCATION='mnt/livecd'
 		fi
-	fi
+	fi # if [ -n "${CRYPT_ROOT}" ]
 
 	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
 	then
 		union_insert_dir ${UNION} ${NEW_ROOT}/${FS_LOCATION}
 
 		# Make sure fstab notes livecd is mounted ro.  Makes system skip remount which fails on aufs dirs.
+		# TODO: remounting all tmpfs as RO seems weird, can we be more specific?
 		sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' /${UNION}/etc/fstab > /${UNION}/etc/fstab.new
 		mv /${UNION}/etc/fstab.new /${UNION}/etc/fstab
 		warn_msg "Adding all modules in $MODULESD/modules/"
@@ -842,7 +843,7 @@ then
 		setup_unionfs ${NEW_ROOT} /${FS_LOCATION}
 		CHROOT=/union
 	else
-	#XXX Note to potential reviewers. diff formats this section very very oddly. Be sure to review this hunk after applied, do NOT simply read the diff
+		#XXX Note to potential reviewers. diff formats this section very very oddly. Be sure to review this hunk after applied, do NOT simply read the diff
 		if [ ! "${USE_AUFS_NORMAL}" -eq '1' ]
 		then
 			good_msg "Copying read-write image contents to tmpfs"
@@ -886,22 +887,22 @@ then
 							# It does not exist, make a link to the livecd
 							ln -s "/${FS_LOCATION}/${directory}" "${directory}" 2>/dev/null
 							current_parent="${directory}"
-						fi
-					done
-				fi
-			done
+						fi # if [ -e "/${NEW_ROOT}/${directory}" ] ... else
+					done # while read directory
+				fi # if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ] ... else
+			done # for x in ${ROOT_LINKS}
 			mkdir -p initramfs proc tmp run sys 2>/dev/null
 			chmod 1777 tmp
 
-		fi
-	#XXX: end extremely confusing hunk
+		fi # if [ ! "${USE_AUFS_NORMAL}" -eq '1' ]
+		#XXX: end extremely confusing hunk
 
-	# have handy /mnt/cdrom (CDROOT_PATH) as well
-	_new_cdroot="${NEW_ROOT}${CDROOT_PATH}"
-	[ ! -d "${_new_cdroot}" ] && mkdir -p "${_new_cdroot}"
-	mount --bind "${CDROOT_PATH}" "${_new_cdroot}"
+		# have handy /mnt/cdrom (CDROOT_PATH) as well
+		_new_cdroot="${NEW_ROOT}${CDROOT_PATH}"
+		[ ! -d "${_new_cdroot}" ] && mkdir -p "${_new_cdroot}"
+		mount --bind "${CDROOT_PATH}" "${_new_cdroot}"
 
-	fi
+	fi # if [ "${USE_UNIONFS_NORMAL}" = '1' ] ... else
 
 	#UML=$(cat /proc/cpuinfo|grep UML|sed -e 's|model name.*: ||')
 	#if [ "${UML}" = 'UML' ]
@@ -913,7 +914,7 @@ then
 	# Let Init scripts know that we booted from CD
 	export CDBOOT
 	CDBOOT=1
-else
+else # if [ "${CDROOT}" = '1' ]
 	if [ "${USE_UNIONFS_NORMAL}" = '1' ]
 	then
 		mkdir /union_changes
@@ -927,7 +928,7 @@ else
 		mkdir -p ${UNION}/tmp/.initrd
 	fi
 
-fi
+fi # if [ "${CDROOT}" = '1' ]
 
 # Mount the additional things as required by udev & systemd
 if [ -f ${NEW_ROOT}/etc/initramfs.mounts ]; then
@@ -958,7 +959,7 @@ for fs in $fslist; do
 	if ! $cmd; then
 		bad_msg "Unable to mount $dev for $fs"
 	fi
-done
+done # for fs in $fslist; do
 
 # Execute script on the cdrom just before boot to update things if necessary
 cdupdate
