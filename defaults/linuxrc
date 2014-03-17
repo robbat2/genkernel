@@ -975,17 +975,21 @@ if [ "${USE_AUFS_NORMAL}" -eq '1' ]
 then
 	mkdir -p /${CHROOT}/.unions/memory 2>/dev/null
 	mount -o move /memory /${CHROOT}/.unions/memory || echo '*: Failed to move aufs /memory into the system root!'
-	for i in tmp var/tmp mnt/gentoo mnt/livecd
+	for i in mnt/gentoo mnt/livecd
 	do
 		mkdir -p ${CHROOT}/$i
 		chmod 755 ${CHROOT}/$i
 	done
 	# This will prevent from putting junk on the CHANGESDEV
-	mkdir -p ${CHROOT}/usr/portage/distfiles
-	mount -t tmpfs tmpfs ${CHROOT}/var/tmp
-	mount -t tmpfs tmpfs ${CHROOT}/tmp
-	mount -t tmpfs tmpfs ${CHROOT}/usr/portage/distfiles
-	warn_msg "/tmp /var/tmp /usr/portage/distfiles are mounted in ram"
+	str=""
+	for i in tmp var/tmp usr/portage/distfiles
+	do
+		mkdir -p ${CHROOT}/$i
+		chmod 755 ${CHROOT}/$i
+		mount -t tmpfs tmpfs ${CHROOT}/$i
+		str="${str} ${i}"
+	done
+	warn_msg "${str}are mounted in ram"
 	warn_msg "consider saving important files elsewhere..."
 	read -t 3 UNUSEDVAL
 	mount --bind ${NEW_ROOT}${CDROOT_PATH} ${CHROOT}${CDROOT_PATH}
