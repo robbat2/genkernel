@@ -161,6 +161,9 @@ longusage() {
   echo "				Compress or do not compress the generated initramfs"
   echo "	--compress-initramfs-type=<arg>"
   echo "				Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop)"
+  echo
+  echo "For a detailed list of supported initramfs options and flags; issue:"
+  echo "	man 8 genkernel"
 }
 
 usage() {
@@ -175,8 +178,10 @@ usage() {
   echo '	--no-mrproper		Do not run make mrproper before compilation,'
   echo '				this is implied by --no-clean.'
   echo
-  echo 'For a detailed list of supported options and flags; issue:'
+  echo 'For a detailed list of supported commandline options and flags; issue:'
   echo '	genkernel --help'
+  echo 'For a detailed list of supported initramfs options and flags; issue:'
+  echo '	man 8 genkernel'
 }
 
 parse_optbool() {
