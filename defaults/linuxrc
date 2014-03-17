@@ -891,7 +891,7 @@ then
 					done
 				fi
 			done
-			mkdir initramfs proc tmp sys 2>/dev/null
+			mkdir -p initramfs proc tmp run sys 2>/dev/null
 			chmod 1777 tmp
 
 		fi
