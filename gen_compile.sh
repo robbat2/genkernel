@@ -345,6 +345,7 @@ compile_kernel() {
 	# if source != outputdir, we need this:
 	tmp_kernel_binary="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary}"
 	tmp_kernel_binary2="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary2}"
+	systemmap="${KERNEL_OUTPUTDIR}"/System.map
 
 	if isTrue "${CMD_INSTALL}"
 	then
@@ -365,7 +366,7 @@ compile_kernel() {
 	else
 		cp "${tmp_kernel_binary}" "${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}" ||
 			gen_die "Could not copy the kernel binary to ${TMPDIR}!"
-		cp "System.map" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" ||
+		cp "${systemmap}" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" ||
 			gen_die "Could not copy System.map to ${TMPDIR}!"
 		if isTrue "${GENZIMAGE}"
 		then
@@ -469,11 +470,17 @@ compile_lvm() {
 		print_info 1 'lvm: >> Compiling...'
 		compile_generic '' utils
 		compile_generic "install DESTDIR=${TEMP}/lvm/" utils
+		echo "Finding static"
+		find ${TEMP}/lvm -name '*static'
+		echo "Done finding static"
 
 		cd "${TEMP}/lvm"
+		mkdir -p "${TEMP}/lvm/sbin"
 		print_info 1 '      >> Copying to bincache...'
+		pwd
 		${UTILS_CROSS_COMPILE}strip "sbin/lvm.static" ||
 			gen_die 'Could not strip lvm.static!'
+		exit 99
 		# See bug 382555
 		${UTILS_CROSS_COMPILE}strip "sbin/dmsetup.static" ||
 			gen_die 'Could not strip dmsetup.static'
