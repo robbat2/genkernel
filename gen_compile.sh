@@ -342,6 +342,9 @@ compile_kernel() {
 	then
 		gen_die "Cannot locate kernel binary"
 	fi
+	# if source != outputdir, we need this:
+	tmp_kernel_binary="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary}"
+	tmp_kernel_binary2="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary2}"
 
 	if isTrue "${CMD_INSTALL}"
 	then
