@@ -2,7 +2,7 @@
 # $Id$
 
 COPY_BINARIES=false
-CPIO_ARGS="--quiet -o -H newc"
+CPIO_ARGS="--quiet -o -H newc --owner root:root --force-local"
 
 # The copy_binaries function is explicitly released under the CC0 license to
 # encourage wide adoption and re-use.  That means:
