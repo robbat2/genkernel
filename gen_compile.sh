@@ -470,9 +470,8 @@ compile_lvm() {
 		print_info 1 'lvm: >> Compiling...'
 		compile_generic '' utils
 		compile_generic "install DESTDIR=${TEMP}/lvm/" utils
-		echo "Finding static"
-		find ${TEMP}/lvm -name '*static'
-		echo "Done finding static"
+		# For some bizzare reason, upstream does u-w on files, and this breaks stuff.
+		chmod -R u+w "${TEMP}/lvm/"
 
 		cd "${TEMP}/lvm"
 		mkdir -p "${TEMP}/lvm/sbin"
@@ -480,7 +479,6 @@ compile_lvm() {
 		pwd
 		${UTILS_CROSS_COMPILE}strip "sbin/lvm.static" ||
 			gen_die 'Could not strip lvm.static!'
-		exit 99
 		# See bug 382555
 		${UTILS_CROSS_COMPILE}strip "sbin/dmsetup.static" ||
 			gen_die 'Could not strip dmsetup.static'
