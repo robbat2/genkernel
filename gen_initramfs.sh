@@ -396,7 +396,7 @@ append_mdadm(){
 				cp -a "${MDADM_CONFIG}" "${TEMP}/initramfs-mdadm-temp/etc/mdadm.conf" \
 				|| gen_die "Could not copy mdadm.conf!"
 			else
-				gen_die 'sl${MDADM_CONFIG} does not exist!'
+				gen_die "${MDADM_CONFIG} does not exist!"
 			fi
 		else
 			print_info 1 '		MDADM: Skipping inclusion of mdadm.conf'
