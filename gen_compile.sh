@@ -345,6 +345,7 @@ compile_kernel() {
 	# if source != outputdir, we need this:
 	tmp_kernel_binary="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary}"
 	tmp_kernel_binary2="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary2}"
+	systemmap="${KERNEL_OUTPUTDIR}"/System.map
 
 	if isTrue "${CMD_INSTALL}"
 	then
@@ -353,7 +354,7 @@ compile_kernel() {
 			"kernel-${KNAME}-${ARCH}-${KV}"
 
 		copy_image_with_preserve "System.map" \
-			"System.map" \
+			"${systemmap}" \
 			"System.map-${KNAME}-${ARCH}-${KV}"
 
 		if isTrue "${GENZIMAGE}"
@@ -365,7 +366,7 @@ compile_kernel() {
 	else
 		cp "${tmp_kernel_binary}" "${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}" ||
 			gen_die "Could not copy the kernel binary to ${TMPDIR}!"
-		cp "System.map" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" ||
+		cp "${systemmap}" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" ||
 			gen_die "Could not copy System.map to ${TMPDIR}!"
 		if isTrue "${GENZIMAGE}"
 		then
