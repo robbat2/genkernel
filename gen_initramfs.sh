@@ -89,12 +89,13 @@ append_base_layout() {
 	echo "proc          /proc       proc    defaults    0 0" >> ${TEMP}/initramfs-base-temp/etc/fstab
 
 	cd ${TEMP}/initramfs-base-temp/dev
-	mknod -m 660 console c 5 1
-	mknod -m 660 null c 1 3
-	mknod -m 660 zero c 1 5
-	mknod -m 600 tty0 c 4 0
-	mknod -m 600 tty1 c 4 1
-	mknod -m 600 ttyS0 c 4 64
+	# TODO: this will fail as non-root
+	mknod -m 660 console c 5 1 || gen_die "failed to mknod"
+	mknod -m 660 null c 1 3 || gen_die "failed to mknod"
+	mknod -m 660 zero c 1 5 || gen_die "failed to mknod"
+	mknod -m 600 tty0 c 4 0 || gen_die "failed to mknod"
+	mknod -m 600 tty1 c 4 1 || gen_die "failed to mknod"
+	mknod -m 600 ttyS0 c 4 64 || gen_die "failed to mknod"
 
 	date -u '+%Y%m%d-%H%M%S' > ${TEMP}/initramfs-base-temp/etc/build_date
 	echo "Genkernel $GK_V" > ${TEMP}/initramfs-base-temp/etc/build_id
