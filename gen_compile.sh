@@ -468,8 +468,11 @@ compile_lvm() {
 				>> ${LOGFILE} 2>&1 || \
 				gen_die 'Configure of lvm failed!'
 		print_info 1 'lvm: >> Compiling...'
-		compile_generic '' utils
-		compile_generic "install DESTDIR=${TEMP}/lvm/" utils
+		compile_generic '' utils || gen_die "failed to build LVM"
+		mkdir -p "${TEMP}/lvm/sbin"
+		compile_generic "install DESTDIR=${TEMP}/lvm/" utils || gen_die "failed to install LVM"
+		# Upstream does u-w on files, and this breaks stuff.
+		chmod -R u+w "${TEMP}/lvm/"
 
 		cd "${TEMP}/lvm"
 		print_info 1 '      >> Copying to bincache...'

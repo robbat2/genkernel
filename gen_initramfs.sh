@@ -349,7 +349,7 @@ append_lvm(){
 		fi
 	else
 		print_info 1 '          LVM: Adding support (compiling binaries)...'
-		compile_lvm
+		compile_lvm || gen_die "Could not compile LVM"
 		/bin/tar -jxpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
 			gen_die "Could not extract lvm binary cache!";
 		mv ${TEMP}/initramfs-lvm-temp/sbin/lvm.static ${TEMP}/initramfs-lvm-temp/bin/lvm ||
