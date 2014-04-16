@@ -430,7 +430,7 @@ compile_busybox() {
 		yes '' 2>/dev/null | compile_generic oldconfig utils
 
 		print_info 1 'busybox: >> Compiling...'
-		compile_generic all utils
+		compile_generic all utils V=1
 		print_info 1 'busybox: >> Copying to cache...'
 		[ -f "${TEMP}/${BUSYBOX_DIR}/busybox" ] ||
 			gen_die 'Busybox executable does not exist!'
@@ -440,7 +440,8 @@ compile_busybox() {
 			gen_die 'Could not create the busybox bincache!'
 
 		cd "${TEMP}"
-		rm -rf "${BUSYBOX_DIR}" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${BUSYBOX_DIR}" > /dev/null
+		return 0
 	fi
 }
 
@@ -485,8 +486,9 @@ compile_lvm() {
 			gen_die 'Could not create binary cache'
 
 		cd "${TEMP}"
-		rm -rf "${TEMP}/lvm" > /dev/null
-		rm -rf "${LVM_DIR}" lvm
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/lvm" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${LVM_DIR}" lvm
+		return 0
 	fi
 }
 
@@ -525,7 +527,8 @@ compile_mdadm() {
 			gen_die 'Could not create binary cache'
 
 		cd "${TEMP}"
-		rm -rf "${MDADM_DIR}" mdadm
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${MDADM_DIR}" mdadm
+		return 0
 	fi
 }
 
@@ -574,8 +577,9 @@ compile_dmraid() {
 			gen_die 'Could not create binary cache'
 
 		cd "${TEMP}"
-		rm -rf "${TEMP}/lvm" > /dev/null
-		rm -rf "${DMRAID_DIR}" dmraid
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/lvm" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${DMRAID_DIR}" dmraid
+		return 0
 	fi
 }
 
@@ -612,7 +616,8 @@ compile_fuse() {
 #			gen_die 'Could not create fuse bincache!'
 
 		cd "${TEMP}"
-#		rm -rf "${FUSE_DIR}" > /dev/null
+#		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${FUSE_DIR}" > /dev/null
+		return 0
 	fi
 }
 
@@ -647,7 +652,8 @@ compile_unionfs_fuse() {
 			gen_die 'Could not copy the unionfs binary to the package directory, does the directory exist?'
 
 		cd "${TEMP}"
-		rm -rf "${UNIONFS_FUSE_DIR}" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${UNIONFS_FUSE_DIR}" > /dev/null
+		return 0
 	fi
 }
 
@@ -697,7 +703,8 @@ compile_iscsi() {
 			gen_die 'Could not copy the iscsistart binary to the package directory, does the directory exist?'
 
 		cd "${TEMP}"
-		rm -rf "${ISCSI_DIR}" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${ISCSI_DIR}" > /dev/null
+		return 0
 	fi
 }
 
@@ -742,6 +749,7 @@ compile_gpg() {
 			gen_die 'Could not copy the gpg binary to the package directory, does the directory exist?'
 
 		cd "${TEMP}"
-		rm -rf "${GPG_DIR}" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${GPG_DIR}" > /dev/null
+		return 0
 	fi
 }
