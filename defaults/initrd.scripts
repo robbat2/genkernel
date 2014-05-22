@@ -267,14 +267,16 @@ union_insert_modules() {
 # Function to create an ext2 fs on $CHANGESDEV, $CHANGESMNT mountpoint
 create_changefs() {
 	local size
+
 	while [ 1 ]
 	do
-		read -p '<< Size of file (Enter for default 256 Mb): ' size
+		read -p '<< Size of file (Press Enter for default 256 Mb): ' size
 		if [ -z "${size}" ]; then
-			let size=256
+		        size=256
 		fi
-		let size="${size}"
-		if [ ${size} -lt 16 ]
+		size="${size}"
+
+                if [ ${size} -lt 16 ]
 		then
 			bad_msg "Please give a size of at least 16 Mb"
 		else
@@ -282,13 +284,13 @@ create_changefs() {
 			if [ $? = '0' ]
 			then
 				good_msg "Creation of ${AUFS_CHANGESFILE}, ${size} Mb on ${CHANGESDEV} successful, formatting it ext2"
-				mke2fs -F ${CHANGESMNT}/${AUFS_CHANGESFILE}
+				mke2fs -F ${CHANGESMNT}/${AUFS_CHANGESFILE} &>/dev/null
 				break
 			else
 				rm -f ${CHANGESMNT}/${AUFS_CHANGESFILE}
 				bad_msg "Unable to create ${AUFS_CHANGESFILE} on ${CHANGESDEV} of ${size} Mb"
 				bad_msg "Please give a size of at least 16 Mb"
-				bad_msg "Also check if your disk is full or read-only ?"
+				bad_msg "Ensure your disk is not full or read-only"
 				read -p '<< Type "a" to abort, anything else to continue : ' doabort
 				if [ "${doabort}" = "a" ]; then
 					return 1
