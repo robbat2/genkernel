@@ -289,7 +289,6 @@ create_changefs() {
 			else
 				rm -f ${CHANGESMNT}/${AUFS_CHANGESFILE}
 				bad_msg "Unable to create ${AUFS_CHANGESFILE} on ${CHANGESDEV} of ${size} Mb"
-				bad_msg "Please give a size of at least 16 Mb"
 				bad_msg "Ensure your disk is not full or read-only"
 				read -p '<< Type "a" to abort, anything else to continue : ' doabort
 				if [ "${doabort}" = "a" ]; then
