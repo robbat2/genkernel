@@ -255,35 +255,35 @@ do
 		;;
 		aufs\=*)
 			USE_AUFS_NORMAL=1
-			CMD_AUFS=$(parse_opt "${x}")
-			echo ${CMD_AUFS}|grep , >/dev/null 2>&1
+			echo ${x#*=} | grep , &>/dev/null
+
 			if [ "$?" -eq '0' ]
 			then
-				UID=$(echo ${CMD_AUFS#*,})
-				AUFS=$(echo ${CMD_AUFS%,*})
+				UID=${x#*,}
+				AUFS=${x%,*}
 			else
-				AUFS=${CMD_AUFS}
+				AUFS=${x#*=}
 			fi
 		;;
 		aufs.changes\=*)
-			USE_AUFS_NORMAL=1
-			CMD_AUFS=$(parse_opt "${x}")
-			echo ${CMD_AUFS}|grep , >/dev/null 2>&1
-			if [ "$?" -eq '0' ]
-			then
-				UID=$(echo ${CMD_AUFS#*,})
-				AUFS=$(echo ${CMD_AUFS%,*})
-			else
-				AUFS=${CMD_AUFS}
-			fi
-		;;
+                        USE_AUFS_NORMAL=1
+                        echo ${x#*=} | grep , &>/dev/null
+
+                        if [ "$?" -eq '0' ]
+                        then
+                                UID=${x#*,}
+                                AUFS=${x%,*}
+                        else
+                                AUFS=${x#*=}
+                        fi
+                ;;
 		aufs.persistent)
 			USE_AUFS_NORMAL=1
 			AUFS="detect"
 		;;
 		# Allow user to specify the modules location
 		aufs.modules\=*)
-			MODULESD=$(parse_opt "${x}")
+			MODULESD=${x#*=}
 		;;
 		unionfs)
 			if [ ! -x /sbin/unionfs ]
