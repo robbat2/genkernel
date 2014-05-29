@@ -285,6 +285,7 @@ create_changefs() {
 			then
 				good_msg "Creation of ${AUFS_CHANGESFILE}, ${size} Mb on ${CHANGESDEV} successful, formatting it ext2"
 				mke2fs -F ${CHANGESMNT}/${AUFS_CHANGESFILE} &>/dev/null
+                                AUFS_CHANGES=true
 				break
 			else
 				rm -f ${CHANGESMNT}/${AUFS_CHANGESFILE}

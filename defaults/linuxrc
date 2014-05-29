@@ -811,6 +811,15 @@ then
 		# TODO: remounting all tmpfs as RO seems weird, can we be more specific?
 		sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' /${UNION}/etc/fstab > /${UNION}/etc/fstab.new
 		mv /${UNION}/etc/fstab.new /${UNION}/etc/fstab
+
+                # RC_NO_UMOUNTS variable for a clean shutdown/reboot
+                test ! $(grep 'RC_NO_UMOUNTS="/newroot|/newroot/mnt/aufs|\
+/newroot/mnt/changesdev|/mnt/livecd|/mnt/cdrom|/.unions/\
+memory|/.unions/memory/xino"' "${UNION}"/etc/rc.conf) &&
+                        echo "RC_NO_UMOUNTS=\"/newroot|/newroot/mnt/aufs|"\
+"/newroot/mnt/changesdev|/mnt/livecd|/mnt/cdrom|"\
+"/.unions/memory|/.unions/memory/xino\"">> "${UNION}"/etc/rc.conf
+
 		warn_msg "Adding all modules in $MODULESD/modules/"
 		if [ -z "${MODULESD}" ]
 		then
@@ -820,6 +829,10 @@ then
 			mount "${MODULESD}" ${NEW_ROOT}/mnt/modulesd
 			union_insert_modules ${NEW_ROOT}/mnt/modulesd
 		fi
+
+                mkdir -p "${UNION}"/newroot/mnt/aufs
+                test ${AUFS_CHANGES} && test ! -d "${UNION}"/newroot/mnt/changesdev &&
+                        mkdir "${UNION}"/newroot/mnt/changesdev
 	fi
 
 	# Unpacking additional packages from NFS mount
@@ -975,9 +988,10 @@ verbose_kmsg
 
 if [ "${USE_AUFS_NORMAL}" -eq '1' ]
 then
-	mkdir -p /${CHROOT}/.unions/memory 2>/dev/null
-	mount -o move /memory /${CHROOT}/.unions/memory || echo '*: Failed to move aufs /memory into the system root!'
-	for i in mnt/gentoo mnt/livecd
+	mkdir -p /${CHROOT}/.unions/memory
+	mount -o move /memory /${CHROOT}/.unions/memory 
+        test_success "Failed to move aufs /memory into the system root"
+        for i in mnt/gentoo mnt/livecd ${CDROOT_PATH}
 	do
 		mkdir -p ${CHROOT}/$i
 		chmod 755 ${CHROOT}/$i
