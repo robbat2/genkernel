@@ -995,7 +995,7 @@ then
 	mkdir -p /${CHROOT}/.unions/memory
 	mount -o move /memory /${CHROOT}/.unions/memory 
         test_success "Failed to move aufs /memory into the system root"
-        for i in mnt/gentoo mnt/livecd ${CDROOT_PATH}
+        for i in mnt/gentoo mnt/livecd /mnt/overlay ${CDROOT_PATH}
 	do
 		mkdir -p ${CHROOT}/$i
 		chmod 755 ${CHROOT}/$i
@@ -1012,8 +1012,9 @@ then
 	warn_msg "${str}are mounted in ram"
 	warn_msg "consider saving important files elsewhere..."
 	read -t 3 UNUSEDVAL
-	mount --bind ${NEW_ROOT}${CDROOT_PATH} ${CHROOT}${CDROOT_PATH}
-	mount --bind ${NEW_ROOT}/mnt/livecd ${CHROOT}/mnt/livecd
+        for i in ${CDROOT_PATH} ${overlay} ${static}; do
+                mount --move ${NEW_ROOT}${i} ${CHROOT}${i}
+        done
 fi
 
 good_msg "Booting (initramfs)"
