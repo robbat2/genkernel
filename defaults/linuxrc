@@ -820,6 +820,10 @@ memory|/.unions/memory/xino"' "${UNION}"/etc/rc.conf) &&
 "/newroot/mnt/changesdev|/mnt/livecd|/mnt/cdrom|"\
 "/.unions/memory|/.unions/memory/xino\"">> "${UNION}"/etc/rc.conf
 
+                # Fstab change for aufs
+                test ! $(grep aufs "${UNION}"/etc/fstab) &&
+                        echo "aufs / aufs defaults 0 0" > "${UNION}"/etc/fstab
+
 		warn_msg "Adding all modules in $MODULESD/modules/"
 		if [ -z "${MODULESD}" ]
 		then
