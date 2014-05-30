@@ -1014,26 +1014,34 @@ verbose_kmsg
 
 if [ "${USE_AUFS_NORMAL}" -eq '1' ]
 then
-	mkdir -p /${CHROOT}/.unions/memory
-	mount -o move /memory /${CHROOT}/.unions/memory 
+        UNION_MEMORY=${CHROOT}/.unions/memory
+
+	mkdir -p "${UNION_MEMORY}"
+	mount --move "${MEMORY}" "${UNION_MEMORY}"
         test_success "Failed to move aufs /memory into the system root"
-        for i in mnt/gentoo mnt/livecd /mnt/overlay ${CDROOT_PATH}
+
+        for i in /mnt/gentoo /mnt/livecd /mnt/overlay ${CDROOT_PATH}
 	do
-		mkdir -p ${CHROOT}/$i
-		chmod 755 ${CHROOT}/$i
+		mkdir -p "${CHROOT}${i}"
+		chmod 755 "${CHROOT}${i}"
 	done
+
 	# This will prevent from putting junk on the CHANGESDEV
 	str=""
-	for i in tmp var/tmp usr/portage/distfiles
+	for i in /tmp /var/tmp /usr/portage/distfiles
 	do
-		mkdir -p ${CHROOT}/$i
-		chmod 755 ${CHROOT}/$i
-		mount -t tmpfs tmpfs ${CHROOT}/$i
-		str="${str} ${i}"
+		mkdir -p "${CHROOT}${i}"
+		chmod 755 "${CHROOT}${i}"
+
+		mount -t tmpfs tmpfs "${CHROOT}${i}"
+		str="${i} ${str}"
 	done
+
 	warn_msg "${str}are mounted in ram"
 	warn_msg "consider saving important files elsewhere"
-	read -t 3 UNUSEDVAL
+
+        sleep 2
+
         for i in ${CDROOT_PATH} ${overlay} ${static}; do
                 mount --move ${NEW_ROOT}${i} ${CHROOT}${i}
         done
