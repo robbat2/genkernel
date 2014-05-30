@@ -335,7 +335,7 @@ setup_aufs() {
 		else
 			CHANGESDEV=${AUFS}
 			good_msg "mounting ${CHANGESDEV} to ${MEMORY} for aufs support"
-			mount -t auto ${CHANGESDEV} ${CHANGESMNT}
+			mount -t auto ${CHANGESDEV} ${CHANGESMNT} &>/dev/null
 			ret=$?
 			if [ "${ret}" -ne 0 ]
 			then
@@ -383,7 +383,7 @@ setup_aufs() {
 		# empty or we were not able to mount the storage device
 		if [ "${CDROOT}" -eq '1' -a ! -f ${CHANGESMNT}/${AUFS_CHANGESFILE}  ]
 		then
-			umount ${MEMORY}
+			umount ${MEMORY} &>/dev/null
 			bad_msg "failed to find ${AUFS_CHANGESFILE} file on ${CHANGESDEV}"
 			bad_msg "create an ext2 ${AUFS_CHANGESFILE} file on this device if you wish to use it for aufs"
 			bad_msg "falling back to ramdisk based aufs for safety"
