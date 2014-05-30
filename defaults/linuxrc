@@ -284,6 +284,7 @@ do
 		# Allow user to specify the modules location
 		aufs.modules\=*)
 			MODULESD=${x#*=}
+                        AUFS_MODULES=true
 		;;
 		unionfs)
 			if [ ! -x /sbin/unionfs ]
@@ -839,15 +840,18 @@ then
                 test ! $(grep -o ^aufs "${CHROOT}"/etc/fstab) &&
                         echo "aufs / aufs defaults 0 0" > "${CHROOT}"/etc/fstab
 
-		warn_msg "Adding all modules in $MODULESD/modules/"
-		if [ -z "${MODULESD}" ]
-		then
-			union_insert_modules ${CDROOT_PATH}
-		else
-			mkdir ${NEW_ROOT}/mnt/modulesd
-			mount "${MODULESD}" ${NEW_ROOT}/mnt/modulesd
-			union_insert_modules ${NEW_ROOT}/mnt/modulesd
-		fi
+                if ${AUFS_MODULES}; then
+                        warn_msg "Adding all modules in $MODULESD/modules/"
+
+                        if [ -z "${MODULESD}" ]
+                        then
+		                union_insert_modules ${CDROOT_PATH}
+		        else
+			        mkdir ${NEW_ROOT}/mnt/modulesd
+			        mount "${MODULESD}" ${NEW_ROOT}/mnt/modulesd
+			        union_insert_modules ${NEW_ROOT}/mnt/modulesd
+                        fi
+                fi
 
                 # Create the directories for our new union mounts
                 test ! -d "${CHROOT}${NEW_ROOT}" && mkdir -p "${CHROOT}${NEW_ROOT}"
