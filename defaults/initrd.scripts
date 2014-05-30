@@ -280,7 +280,7 @@ create_changefs() {
 		then
 			bad_msg "Please give a size of at least 16 Mb"
 		else
-			dd if=/dev/zero of=${CHANGESMNT}/${AUFS_CHANGESFILE} bs=1M count=${size}
+			dd if=/dev/zero of=${CHANGESMNT}/${AUFS_CHANGESFILE} bs=1M count=${size} &>/dev/null
 			if [ $? = '0' ]
 			then
 				good_msg "Creation of ${AUFS_CHANGESFILE}, ${size} Mb on ${CHANGESDEV} successful, formatting it ext2"
