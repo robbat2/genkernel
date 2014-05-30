@@ -58,6 +58,7 @@ KSUFF='.ko'
 REAL_ROOT=''
 CONSOLE='/dev/console'
 NEW_ROOT='/newroot'
+RC_NO_UMOUNTS="/newroot|/newroot/mnt/changesdev|/mnt/overlay|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino"
 CDROOT='0'
 CDROOT_DEV=''
 CDROOT_TYPE='auto'
