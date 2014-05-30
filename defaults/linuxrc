@@ -805,24 +805,38 @@ then
 
 	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
 	then
-		union_insert_dir ${UNION} ${NEW_ROOT}/${FS_LOCATION}
+		union_insert_dir ${CHROOT} ${NEW_ROOT}/${FS_LOCATION}
 
 		# Make sure fstab notes livecd is mounted ro.  Makes system skip remount which fails on aufs dirs.
 		# TODO: remounting all tmpfs as RO seems weird, can we be more specific?
-		sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' /${UNION}/etc/fstab > /${UNION}/etc/fstab.new
-		mv /${UNION}/etc/fstab.new /${UNION}/etc/fstab
+		#sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' /${UNION}/etc/fstab > /${UNION}/etc/fstab.new
+		#mv /${UNION}/etc/fstab.new /${UNION}/etc/fstab
 
                 # RC_NO_UMOUNTS variable for a clean shutdown/reboot
-                test ! $(grep 'RC_NO_UMOUNTS="/newroot|/newroot/mnt/aufs|\
-/newroot/mnt/changesdev|/mnt/livecd|/mnt/cdrom|/.unions/\
-memory|/.unions/memory/xino"' "${UNION}"/etc/rc.conf) &&
-                        echo "RC_NO_UMOUNTS=\"/newroot|/newroot/mnt/aufs|"\
-"/newroot/mnt/changesdev|/mnt/livecd|/mnt/cdrom|"\
-"/.unions/memory|/.unions/memory/xino\"">> "${UNION}"/etc/rc.conf
+                RC_MOUNTS=$(grep 'RC_NO_UMOUNTS' "${CHROOT}"/etc/rc.conf)
+                RESULTS=false
+
+                # Iterate through ${RC_MOUNTS} to find our duplicate(s) and or remove obsolete lines when ever
+                # our RC_NO_UMOUNTS variable changes.
+                printf '%s\n' ${RC_MOUNTS} | while read -r mount; do
+                        if [[ "${mount}" = "RC_NO_UMOUNTS=\"${RC_NO_UMOUNTS}\"" ]]; then
+                                RESULTS=true
+                        else
+                                # Escape characters in ${mounts} for use in sed 
+                                mount_re=$(echo ${mount} | sed -e 's/\//\\\//g' -e 's/\&/\\\&/g')
+
+                                # Remove non matching pattern
+                                sed -i "/${mount_re}/d" "${CHROOT}"/etc/rc.conf
+                        fi
+                done
+
+                if ! ${RESULTS}; then
+                        echo 'RC_NO_UMOUNTS="/newroot|/newroot/mnt/changesdev|/mnt/overlay|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino"'>> "${CHROOT}"/etc/rc.conf
+                fi
 
                 # Fstab change for aufs
-                test ! $(grep aufs "${UNION}"/etc/fstab) &&
-                        echo "aufs / aufs defaults 0 0" > "${UNION}"/etc/fstab
+                test ! $(grep -o ^aufs "${CHROOT}"/etc/fstab) &&
+                        echo "aufs / aufs defaults 0 0" > "${CHROOT}"/etc/fstab
 
 		warn_msg "Adding all modules in $MODULESD/modules/"
 		if [ -z "${MODULESD}" ]
@@ -834,9 +848,12 @@ memory|/.unions/memory/xino"' "${UNION}"/etc/rc.conf) &&
 			union_insert_modules ${NEW_ROOT}/mnt/modulesd
 		fi
 
-                mkdir -p "${UNION}"/newroot/mnt/aufs
-                test ${AUFS_CHANGES} && test ! -d "${UNION}"/newroot/mnt/changesdev &&
-                        mkdir "${UNION}"/newroot/mnt/changesdev
+                # Create the directories for our new union mounts
+                test ! -d "${CHROOT}${NEW_ROOT}" && mkdir -p "${CHROOT}${NEW_ROOT}"
+
+                if ${AUFS_CHANGES} && [ ! -d "${CHROOT}${NEW_ROOT}/mnt/changesdev" ]; then
+                        mkdir -p "${CHROOT}${NEW_ROOT}/mnt/changesdev"
+                fi
 	fi
 
 	# Unpacking additional packages from NFS mount
