@@ -302,115 +302,110 @@ create_changefs() {
 }
 
 setup_aufs() {
-	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
+        # Directory used for rw changes in union mount filesystem
+	UNION=/union
+	MEMORY=/memory
+	# Mountpoint for the changesdev
+	CHANGESMNT=${NEW_ROOT}/mnt/changesdev
+	if [ -z "$UID" ]
 	then
-		# Directory used for rw changes in union mount filesystem
-		UNION=/union
-		MEMORY=/memory
-		# Mountpoint for the changesdev
-		CHANGESMNT=${NEW_ROOT}/mnt/changesdev
-		if [ -z "$UID" ]
+		CHANGES=${MEMORY}/aufs_changes/default
+	else
+		CHANGES=${MEMORY}/aufs_changes/${UID}
+	fi
+
+	mkdir -p ${MEMORY}
+	mkdir -p ${UNION}
+	mkdir -p ${CHANGESMNT}
+	for i in dev mnt ${CDROOT_PATH} mnt/livecd mnt/key tmp tmp/.initrd mnt/gentoo sys
+	do
+		mkdir -p "${NEW_ROOT}/${i}"
+		chmod 755 "${NEW_ROOT}/${i}"
+	done
+	[ ! -e "${NEW_ROOT}/dev/null" ] && mknod "${NEW_ROOT}"/dev/null c 1 3
+	[ ! -e "${NEW_ROOT}/dev/console" ] && mknod "${NEW_ROOT}"/dev/console c 5 1
+
+	bootstrapCD
+	if [ -n "${AUFS}" ]
+	then
+		if [ "${AUFS}" = "detect" ]
 		then
-			CHANGES=${MEMORY}/aufs_changes/default
+			CHANGESMNT="${NEW_ROOT}${CDROOT_PATH}"
+			CHANGESDEV=${REAL_ROOT}
 		else
-			CHANGES=${MEMORY}/aufs_changes/${UID}
-		fi
-
-		mkdir -p ${MEMORY}
-		mkdir -p ${UNION}
-		mkdir -p ${CHANGESMNT}
-		for i in dev mnt ${CDROOT_PATH} mnt/livecd mnt/key tmp tmp/.initrd mnt/gentoo sys
-		do
-			mkdir -p "${NEW_ROOT}/${i}"
-			chmod 755 "${NEW_ROOT}/${i}"
-		done
-		[ ! -e "${NEW_ROOT}/dev/null" ] && mknod "${NEW_ROOT}"/dev/null c 1 3
-		[ ! -e "${NEW_ROOT}/dev/console" ] && mknod "${NEW_ROOT}"/dev/console c 5 1
-
-		bootstrapCD
-		if [ -n "${AUFS}" ]
-		then
-			if [ "${AUFS}" = "detect" ]
+			CHANGESDEV=${AUFS}
+			good_msg "mounting ${CHANGESDEV} to ${MEMORY} for aufs support"
+			mount -t auto ${CHANGESDEV} ${CHANGESMNT}
+			ret=$?
+			if [ "${ret}" -ne 0 ]
 			then
-				CHANGESMNT="${NEW_ROOT}${CDROOT_PATH}"
-				CHANGESDEV=${REAL_ROOT}
-			else
-				CHANGESDEV=${AUFS}
-				good_msg "mounting ${CHANGESDEV} to ${MEMORY} for aufs support"
-				mount -t auto ${CHANGESDEV} ${CHANGESMNT}
+				bad_msg "mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
+				unset AUFS
+			fi
+		fi
+		# Check and attempt to create the changesfile
+		if [ ! -e ${CHANGESMNT}/${AUFS_CHANGESFILE} ] && [ -n "${AUFS}" ]
+		then
+			create_changefs
+			mount -t auto ${CHANGESMNT}/${AUFS_CHANGESFILE} ${MEMORY}
+		elif [ -n "${AUFS}" ]
+		then
+			local nbpass=0
+			while [ 1 ]
+			do
+				mount -t auto ${CHANGESMNT}/${AUFS_CHANGESFILE} ${MEMORY}
 				ret=$?
 				if [ "${ret}" -ne 0 ]
 				then
-					bad_msg "mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
-					unset AUFS
-				fi
-			fi
-			# Check and attempt to create the changesfile
-			if [ ! -e ${CHANGESMNT}/${AUFS_CHANGESFILE} ] && [ -n "${AUFS}" ]
-			then
-				create_changefs
-				mount -t auto ${CHANGESMNT}/${AUFS_CHANGESFILE} ${MEMORY}
-			elif [ -n "${AUFS}" ]
-			then
-				local nbpass=0
-				while [ 1 ]
-				do
-					mount -t auto ${CHANGESMNT}/${AUFS_CHANGESFILE} ${MEMORY}
-					ret=$?
-					if [ "${ret}" -ne 0 ]
+					if [ ${nbpass} -eq 0 ]
 					then
-						if [ ${nbpass} -eq 0 ]
-						then
-							bad_msg "mounting of changes file failed, Running e2fsck"
-							e2fsck ${CHANGESMNT}/${AUFS_CHANGESFILE}
-							nbpass=$((${nbpass} + 1))
-						else
-							bad_msg "mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
-							bad_msg "your ${AUFS_CHANGESFILE} might be messed up, and I couldn't fix it"
-							bad_msg "moving ${AUFS_CHANGESFILE} to ${AUFS_CHANGESFILE}.bad"
-							mv ${CHANGESMNT}/${AUFS_CHANGESFILE} ${CHANGESMNT}/${AUFS_CHANGESFILE}.bad
-							bad_msg "try to fix it yourself with e2fsck later on, sorry for disturbing"
-							break
-						fi
+						bad_msg "mounting of changes file failed, Running e2fsck"
+						e2fsck ${CHANGESMNT}/${AUFS_CHANGESFILE}
+						nbpass=$((${nbpass} + 1))
 					else
-						if [ ${nbpass} -eq 1 ]
-						then
-							good_msg "e2fsck ran successfully. Please check your files after bootup"
-						fi
+						bad_msg "mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
+						bad_msg "your ${AUFS_CHANGESFILE} might be messed up, and I couldn't fix it"
+						bad_msg "moving ${AUFS_CHANGESFILE} to ${AUFS_CHANGESFILE}.bad"
+						mv ${CHANGESMNT}/${AUFS_CHANGESFILE} ${CHANGESMNT}/${AUFS_CHANGESFILE}.bad
+						bad_msg "try to fix it yourself with e2fsck later on, sorry for disturbing"
 						break
 					fi
-				done
-			fi
-			# mount tmpfs only in the case when changes= boot parameter was
-			# empty or we were not able to mount the storage device
-			if [ "${CDROOT}" -eq '1' -a ! -f ${CHANGESMNT}/${AUFS_CHANGESFILE}  ]
-			then
-				umount ${MEMORY}
-				bad_msg "failed to find ${AUFS_CHANGESFILE} file on ${CHANGESDEV}"
-				bad_msg "create an ext2 ${AUFS_CHANGESFILE} file on this device if you wish to use it for aufs"
-				bad_msg "falling back to ramdisk based aufs for safety"
-				mount -t tmpfs tmpfs ${MEMORY}
-				XINO=${MEMORY}
-			else
-				XINO=${MEMORY}/xino
-				mkdir -p ${XINO}
-				mount -t tmpfs tmpfs ${XINO}
-			fi
-		else
-			good_msg "Mounting ramdisk to $MEMORY for aufs support..."
+				else
+					if [ ${nbpass} -eq 1 ]
+					then
+						good_msg "e2fsck ran successfully. Please check your files after bootup"
+					fi
+					break
+				fi
+			done
+		fi
+		# mount tmpfs only in the case when changes= boot parameter was
+		# empty or we were not able to mount the storage device
+		if [ "${CDROOT}" -eq '1' -a ! -f ${CHANGESMNT}/${AUFS_CHANGESFILE}  ]
+		then
+			umount ${MEMORY}
+			bad_msg "failed to find ${AUFS_CHANGESFILE} file on ${CHANGESDEV}"
+			bad_msg "create an ext2 ${AUFS_CHANGESFILE} file on this device if you wish to use it for aufs"
+			bad_msg "falling back to ramdisk based aufs for safety"
 			mount -t tmpfs tmpfs ${MEMORY}
 			XINO=${MEMORY}
-		fi
-
-		mkdir -p ${CHANGES}
-		mount -t aufs -n -o nowarn_perm,udba=none,xino=${XINO}/.aufs.xino,br:${CHANGES}=rw aufs ${UNION}
-		ret=$?
-		if [ "${ret}" -ne 0 ]
-		then
-			bad_msg "Can't setup union ${UNION} in directory!"
-			USE_AUFS_NORMAL=0
+		else
+			XINO=${MEMORY}/xino
+			mkdir -p ${XINO}
+			mount -t tmpfs tmpfs ${XINO}
 		fi
 	else
+		good_msg "Mounting ramdisk to $MEMORY for aufs support..."
+		mount -t tmpfs tmpfs ${MEMORY}
+		XINO=${MEMORY}
+	fi
+
+	mkdir -p ${CHANGES}
+	mount -t aufs -n -o nowarn_perm,udba=none,xino=${XINO}/.aufs.xino,br:${CHANGES}=rw aufs ${UNION}
+	ret=$?
+	if [ "${ret}" -ne 0 ]
+	then
+		bad_msg "Can't setup union ${UNION} in directory!"
 		USE_AUFS_NORMAL=0
 	fi
 }
