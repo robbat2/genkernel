@@ -758,9 +758,10 @@ then
 					do_rundebugshell
 				}
 			else
-				good_msg 'Mounting squashfs & aufs filesystems'
+				good_msg 'Mounting squashfs filesystem'
+
 				setup_squashfs_aufs
-				test_success 'Mount filesystem'
+				test_success 'Mount aufs filesystem'
 			fi
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'gcloop' ]
@@ -1027,7 +1028,7 @@ then
 		str="${str} ${i}"
 	done
 	warn_msg "${str}are mounted in ram"
-	warn_msg "consider saving important files elsewhere..."
+	warn_msg "consider saving important files elsewhere"
 	read -t 3 UNUSEDVAL
         for i in ${CDROOT_PATH} ${overlay} ${static}; do
                 mount --move ${NEW_ROOT}${i} ${CHROOT}${i}

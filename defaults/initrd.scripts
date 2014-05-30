@@ -334,12 +334,12 @@ setup_aufs() {
 			CHANGESDEV=${REAL_ROOT}
 		else
 			CHANGESDEV=${AUFS}
-			good_msg "mounting ${CHANGESDEV} to ${MEMORY} for aufs support"
+			good_msg "Mounting ${CHANGESDEV} to ${MEMORY} for aufs support"
 			mount -t auto ${CHANGESDEV} ${CHANGESMNT} &>/dev/null
 			ret=$?
 			if [ "${ret}" -ne 0 ]
 			then
-				bad_msg "mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
+				bad_msg "Mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
 				unset AUFS
 			fi
 		fi
@@ -359,15 +359,15 @@ setup_aufs() {
 				then
 					if [ ${nbpass} -eq 0 ]
 					then
-						bad_msg "mounting of changes file failed, Running e2fsck"
+						bad_msg "Mounting of changes file failed, Running e2fsck"
 						e2fsck ${CHANGESMNT}/${AUFS_CHANGESFILE}
 						nbpass=$((${nbpass} + 1))
 					else
-						bad_msg "mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
+						bad_msg "Mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
 						bad_msg "your ${AUFS_CHANGESFILE} might be messed up, and I couldn't fix it"
 						bad_msg "moving ${AUFS_CHANGESFILE} to ${AUFS_CHANGESFILE}.bad"
 						mv ${CHANGESMNT}/${AUFS_CHANGESFILE} ${CHANGESMNT}/${AUFS_CHANGESFILE}.bad
-						bad_msg "try to fix it yourself with e2fsck later on, sorry for disturbing"
+						bad_msg "Try to fix it yourself with e2fsck"
 						break
 					fi
 				else
@@ -383,19 +383,20 @@ setup_aufs() {
 		# empty or we were not able to mount the storage device
 		if [ "${CDROOT}" -eq '1' -a ! -f ${CHANGESMNT}/${AUFS_CHANGESFILE}  ]
 		then
+                        XINO=${MEMORY}
 			umount ${MEMORY} &>/dev/null
-			bad_msg "failed to find ${AUFS_CHANGESFILE} file on ${CHANGESDEV}"
-			bad_msg "create an ext2 ${AUFS_CHANGESFILE} file on this device if you wish to use it for aufs"
-			bad_msg "falling back to ramdisk based aufs for safety"
+			bad_msg "Failed to find ${AUFS_CHANGESFILE} file on ${CHANGESDEV}"
+			bad_msg "Create an ext2 ${AUFS_CHANGESFILE} file on this device if you wish to use it for aufs"
+			bad_msg "Falling back to ramdisk based aufs for safety"
+                        good_msg "Mounting ramdisk to $MEMORY for aufs support"
 			mount -t tmpfs tmpfs ${MEMORY}
-			XINO=${MEMORY}
 		else
 			XINO=${MEMORY}/xino
 			mkdir -p ${XINO}
 			mount -t tmpfs tmpfs ${XINO}
 		fi
 	else
-		good_msg "Mounting ramdisk to $MEMORY for aufs support..."
+		good_msg "Mounting ramdisk to $MEMORY for aufs support"
 		mount -t tmpfs tmpfs ${MEMORY}
 		XINO=${MEMORY}
 	fi
