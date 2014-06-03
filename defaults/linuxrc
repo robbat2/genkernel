@@ -868,6 +868,12 @@ then
                         fi
                 fi
 
+                # Copy user keymap file
+                if [ -e /etc/sysconfig/keyboard ]; then
+                        [ ! -d ${CHROOT}/etc/sysconfig ] && mkdir -p ${CHROOT}/etc/sysconfig
+                        cp /etc/sysconfig/keyboard ${CHROOT}/etc/sysconfig/
+                fi
+
                 # Create the directories for our new union mounts
                 test ! -d "${CHROOT}${NEW_ROOT}" && mkdir -p "${CHROOT}${NEW_ROOT}"
 
