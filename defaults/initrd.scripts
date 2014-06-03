@@ -310,6 +310,42 @@ union_insert_modules() {
 	done
 }
 
+# Implements RC_NO_UMOUNTS variable into ${CHROOT}/etc/rc.conf for a cleaner shutdown process
+# This should really go into /etc/init.d/localmounts but until then we manually set this here
+conf_rc_no_umounts() {
+        local conf nomount fnd
+        conf="${CHROOT}/etc/rc.conf"
+        fnd=0
+
+        if nomount=$(grep -n '^[[:blank:]]*RC_NO_UMOUNTS=' $conf); then
+                local i n data cmd IFS
+                IFS='
+'
+                set -- $nomount
+                unset IFS
+
+                for i; do
+                        n=${i%%:*}; i=${i#"$n"}
+                        data=${i#*=}
+
+                        case $data in
+                                "\"$RC_NO_UMOUNTS\""|"'$RC_NO_UMOUNTS'") fnd=1;;
+                                *) cmd="$cmd$n d;"
+                        esac
+                done
+
+                if [ -n "$cmd" ]; then
+                        sed -i "${cmd%;}" $conf
+                        test_success "Unable to edit rc.conf"
+                fi
+        fi
+
+        if [ 0 -eq "$fnd" ]; then
+                printf 'RC_NO_UMOUNTS="%s"\n' "$RC_NO_UMOUNTS" >> $conf
+                test_success "Unable to write to rc.conf"
+        fi
+}
+
 # Function to create an ext2 fs on $CHANGESDEV, $CHANGESMNT mountpoint
 create_changefs() {
 	local size
