@@ -791,42 +791,8 @@ then
 		#sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' /${UNION}/etc/fstab > /${UNION}/etc/fstab.new
 		#mv /${UNION}/etc/fstab.new /${UNION}/etc/fstab
 
-                # RC_NO_UMOUNTS variable for a clean shutdown/reboot
-                RC_MOUNTS=$(grep 'RC_NO_UMOUNTS' "${CHROOT}"/etc/rc.conf)
-
-                # Iterate through ${RC_MOUNTS} to find our duplicate(s) and or remove obsolete lines when ever
-                # our RC_NO_UMOUNTS variable changes.
-                if [ -n "${RC_MOUNTS}" ]; then
-                        printf '%s\n' ${RC_MOUNTS} |
-                                {
-                                        while read -r mount; do
-                                                # Remove double quotes from ${mount}
-                                                new_mount=$(echo ${mount} | sed 's/"//g')
-
-                                                if [[ "${new_mount}" = "RC_NO_UMOUNTS="${RC_NO_UMOUNTS}"" ]]; then
-                                                        RESULTS=false
-                                                else
-                                                        # Escape characters in ${mounts} for use in sed
-                                                        mount_re=$(echo ${mount} | sed -e 's/\//\\\//g' -e 's/\&/\\\&/g')
-
-                                                        # Remove non matching pattern
-                                                        sed -i "/${mount_re}/d" "${CHROOT}"/etc/rc.conf
-
-                                                        RESULTS=true
-                                                fi
-                                        done
-
-                                        # no RC_NO_UMOUNTS match found
-                                        if ${RESULTS}; then return 1;fi
-                                }
-                else
-                        echo "RC_NO_UMOUNTS=\"${RC_NO_UMOUNTS}\"">> "${CHROOT}"/etc/rc.conf
-                fi
-
-                # An RC_NO_UMOUNTS was not found that matches our current one
-                if [ $? -eq 1 ]; then
-                        echo "RC_NO_UMOUNTS=\"${RC_NO_UMOUNTS}\"">> "${CHROOT}"/etc/rc.conf
-                fi
+                # Function to handle the RC_NO_UMOUNTS variable in ${CHROOT}/etc/rc.conf
+                conf_rc_no_umounts
 
                 # Fstab change for aufs
                 test ! $(grep -o ^aufs "${CHROOT}"/etc/fstab) &&
