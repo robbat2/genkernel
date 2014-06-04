@@ -794,9 +794,19 @@ then
                 # Function to handle the RC_NO_UMOUNTS variable in ${CHROOT}/etc/rc.conf
                 conf_rc_no_umounts
 
-                # Fstab change for aufs
-                test ! $(grep -o ^aufs "${CHROOT}"/etc/fstab) &&
-                        echo "aufs / aufs defaults 0 0" > "${CHROOT}"/etc/fstab
+                # Fstab changes for aufs
+                if ! grep -q '^aufs' "${CHROOT}"/etc/fstab 2>/dev/null; then
+                        for i in /var/tmp /tmp /usr/portage/distfiles; do
+                                [ ! -d "${CHROOT}${i}" ] && mkdir -p "${CHROOT}${i}"
+                        done
+
+                        cat > "${CHROOT}"/etc/fstab << FSTAB
+aufs            /                               aufs    defaults        0 0
+vartmp          /var/tmp                        tmpfs   defaults        0 0
+tmp             /tmp                            tmpfs   defaults        0 0
+distfiles       /usr/portage/distfiles          tmpfs   defaults        0 0
+FSTAB
+                fi
 
                 if ${AUFS_MODULES}; then
                         warn_msg "Adding all modules in $MODULESD/modules/"
@@ -989,22 +999,6 @@ then
 		mkdir -p "${CHROOT}${i}"
 		chmod 755 "${CHROOT}${i}"
 	done
-
-	# This will prevent from putting junk on the CHANGESDEV
-	str=""
-	for i in /tmp /var/tmp /usr/portage/distfiles
-	do
-		mkdir -p "${CHROOT}${i}"
-		chmod 755 "${CHROOT}${i}"
-
-		mount -t tmpfs tmpfs "${CHROOT}${i}"
-		str="${i} ${str}"
-	done
-
-	warn_msg "${str}are mounted in ram"
-	warn_msg "consider saving important files elsewhere"
-
-        sleep 2
 
         for i in ${CDROOT_PATH} ${overlay} ${static}; do
                 mount --move ${NEW_ROOT}${i} ${CHROOT}${i}
