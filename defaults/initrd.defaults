@@ -68,6 +68,7 @@ CDROOT_PATH='/mnt/cdrom'
 CDROOT_MARKER='/livecd'
 
 # AUFS variables
+USE_AUFS_NORMAL=0
 AUFS_MODULES=false
 AUFS_CHANGES=false
 AUFS_CHANGESFILE=livecd.aufs
