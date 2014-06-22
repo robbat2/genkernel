@@ -21,11 +21,11 @@ gen_minkernpackage() {
 			gen_die "Cannot locate kernel binary"
 		fi
 		cd "${KERNEL_OUTPUTDIR}"
-		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${KV}" || gen_die 'Could not the copy kernel for the min kernel package!'
+		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the min kernel package!'
 		cp ".config" "${TEMP}/minkernpackage/config-${ARCH}-${KV}" || gen_die 'Could not the copy kernel config for the min kernel package!'
 		if isTrue "${GENZIMAGE}"
 		then
-			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${KV}" || gen_die "Could not copy the kernelz for the min kernel package"
+			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the min kernel package"
 		fi
 	fi
 
