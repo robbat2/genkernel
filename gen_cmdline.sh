@@ -77,7 +77,7 @@ longusage() {
   echo "				autodetect."
   echo "	--makeopts=<makeopts>	Make options such as -j2, etc..."
   echo "	--mountboot		Mount BOOTDIR automatically if mountable"
-  echo "	--no-mountboot		Don't mount BOOTDIR automatically"  
+  echo "	--no-mountboot		Don't mount BOOTDIR automatically"
   echo "	--bootdir=<dir>		Set the location of the boot-directory, default is /boot"
   echo "	--modprobedir=<dir>	Set the location of the modprobe.d-directory, default is /etc/modprobe.d"
   echo "  Initialization"

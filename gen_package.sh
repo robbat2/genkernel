@@ -55,7 +55,7 @@ gen_modulespackage() {
 	then
 	    mkdir -p ${TEMP}/modulespackage/lib/modules
 	    cp -r "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
-	    cd "${TEMP}/modulespackage" 
+	    cd "${TEMP}/modulespackage"
 	    /bin/tar -jcpf ${MODULESPACKAGE} * || gen_die 'Could not compress the modules package!'
 	else
 	    print_info 1 "Could not create a modules package ${INSTALL_MOD_PATH}/lib/modules/${KV} was not found"

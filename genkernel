@@ -156,7 +156,7 @@ then
 	isTrue ${MOUNTBOOT} && print_info 2 'Skipping automatic mount of boot'
 else
 	[[ -d ${BOOTDIR} ]] || gen_die "${BOOTDIR} is not a directory"
-	
+
 	if ! egrep -q "[[:space:]]${BOOTDIR}[[:space:]]" /proc/mounts
 	then
 		if egrep -q "^[^#].+[[:space:]]${BOOTDIR}[[:space:]]" /etc/fstab
@@ -215,7 +215,7 @@ fi
 #fi
 
 KERNCACHE_IS_VALID=0
-if [ "${KERNCACHE}" != "" ] 
+if [ "${KERNCACHE}" != "" ]
 then
     gen_kerncache_is_valid
 fi
@@ -224,13 +224,13 @@ if [ ${BUILD_KERNEL} = '1' -a "${KERNCACHE_IS_VALID}" = '0' ]
 then
 	# Configure kernel
 	config_kernel
-	
+
 	# Make prepare
 	if [ "${ARCH_HAVENOPREPARE}" = '' ]
 	then
 		compile_generic prepare kernel
 	fi
-	
+
 	# KV may have changed due to the configuration
 	get_KV
 
@@ -254,13 +254,13 @@ fi
 
 if isTrue "${CMD_INSTALL}"
 then
-	if [ "${KERNCACHE}" != "" -a "${KERNCACHE_IS_VALID}" != "0" ] 
+	if [ "${KERNCACHE}" != "" -a "${KERNCACHE_IS_VALID}" != "0" ]
 	then
 		gen_kerncache_extract_kernel
 	fi
 fi
 
-if [ "${KERNCACHE}" != "" -a "${KERNCACHE_IS_VALID}" != "0" ] 
+if [ "${KERNCACHE}" != "" -a "${KERNCACHE_IS_VALID}" != "0" ]
 then
 	[ "${BUILD_STATIC}" = '0' ] && gen_kerncache_extract_modules
 	gen_kerncache_extract_config

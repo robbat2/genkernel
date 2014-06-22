@@ -15,7 +15,7 @@ CPIO_ARGS="--quiet -o -H newc --owner root:root --force-local"
 #                  CC0 are compatible with the GNU GPL."
 #                 (from https://www.gnu.org/licenses/license-list.html#CC0)
 #
-# Written by: 
+# Written by:
 # - Sebastian Pipping <sebastian@pipping.org> (error checking)
 # - Robin H. Johnson <robbat2@gentoo.org> (complete rewrite)
 # - Richard Yao <ryao@cs.stonybrook.edu> (original concept)
@@ -942,7 +942,7 @@ create_initramfs() {
 				gzip) compress_ext='.gz' compress_cmd="${cmd_gzip} -f -9" ;;
 				lzop) compress_ext='.lzo' compress_cmd="${cmd_lzop} -f -9" ;;
 			esac
-	
+
 			if [ -n "${compression}" ]; then
 				print_info 1 "        >> Compressing cpio data (${compress_ext})..."
 				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
