@@ -345,6 +345,18 @@ conf_rc_no_umounts() {
         fi
 }
 
+# is_int "$A" ["$B"..]
+# NOTE we consider a leading 0 false as it would be interpreted as octal
+is_int(){
+        local i
+        for i; do
+                case $i in
+                        ''|*[!0-9]*|0?*) return 1 ;;
+                        *) :
+                esac
+        done
+}
+
 # Function to create an ext2 fs on $CHANGESDEV, $CHANGESMNT mountpoint
 create_changefs() {
 	local size
@@ -352,11 +364,12 @@ create_changefs() {
 	while :; do
 		read -p '<< Size of file (Press Enter for default 256 Mb): ' size
 
-                [ -n "$size" ] || size=256
+                size=${size:-256}
 
-                size=$size
-
-                if [ 15 -ge "$size" ]; then
+                if ! is_int $size; then
+                        bad_msg "Non numeric value given for size, try again"
+                        continue
+                elif [ 15 -ge "$size" ]; then
                         bad_msg "Please give a size of at least 16 Megabytes"
 		else
 			if dd if=/dev/zero "of=$CHANGESMNT$AUFS_CHANGESFILE" bs=1M count="$size" &>/dev/null; then
