@@ -43,6 +43,7 @@ gen_minkernpackage() {
 
 	cd "${TEMP}/minkernpackage"
 	/bin/tar -jcpf ${MINKERNPACKAGE} * || gen_die 'Could not compress the kernel package!'
+	print_info 3 "Created minimal kernel package: ${MINKERNPACKAGE}"
 	cd "${TEMP}" && rm -rf "${TEMP}/minkernpackage" > /dev/null 2>&1
 }
 
@@ -60,6 +61,7 @@ gen_modulespackage() {
 	else
 	    print_info 1 "Could not create a modules package ${INSTALL_MOD_PATH}/lib/modules/${KV} was not found"
 	fi
+	print_info 3 "Created modules package: ${MODULESPACKAGE}"
 	cd "${TEMP}" && rm -rf "${TEMP}/modulespackage" > /dev/null 2>&1
 }
 gen_kerncache()
@@ -105,6 +107,7 @@ gen_kerncache()
 
 	cd "${TEMP}/kerncache"
 	/bin/tar -jcpf ${KERNCACHE} * || gen_die 'Could not compress the kernel package!'
+	print_info 3 "Created kernel cache: ${KERNCACHE}"
 	cd "${TEMP}" && rm -rf "${TEMP}/kerncache" > /dev/null 2>&1
 }
 
