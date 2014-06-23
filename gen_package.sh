@@ -8,10 +8,18 @@ gen_minkernpackage() {
 	if [ "${KERNCACHE}" != "" ]
 	then
 		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernel-${ARCH}-${KV}
+		mv minkernpackage/{kernel-${ARCH}-${KV},kernel-${KNAME}-${ARCH}-${KV}}
 		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} config-${ARCH}-${KV}
+		mv minkernpackage/{config-${ARCH}-${KV},config-${KNAME}-${ARCH}-${KV}}
 		if isTrue "${GENZIMAGE}"
 		then
 			/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernelz-${ARCH}-${KV}
+			mv minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}}
+		fi
+		if [ ! -f minkernpackage/kernel-${KNAME}-${ARCH}-${KV} \
+		  -o ! -f minkernpackage/config-${KNAME}-${ARCH}-${KV} ];
+		then
+			gen_die "Cannot locate kernel binary"
 		fi
 	else
 		local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
@@ -21,24 +29,29 @@ gen_minkernpackage() {
 			gen_die "Cannot locate kernel binary"
 		fi
 		cd "${KERNEL_OUTPUTDIR}"
-		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the min kernel package!'
-		cp ".config" "${TEMP}/minkernpackage/config-${ARCH}-${KV}" || gen_die 'Could not the copy kernel config for the min kernel package!'
+		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the min kernel package!'
+		cp ".config" "${TEMP}/minkernpackage/config-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not the copy kernel config for the min kernel package!'
 		if isTrue "${GENZIMAGE}"
 		then
-			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the min kernel package"
+			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${KNAME}-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the min kernel package"
 		fi
 	fi
 
 	if ! isTrue "${INTEGRATED_INITRAMFS}"
 	then
-		[ "${BUILD_RAMDISK}" != '0' ] && { cp "${TMPDIR}/initramfs-${KV}" "${TEMP}/minkernpackage/initramfs-${ARCH}-${KV}" || gen_die 'Could not copy the initramfs for the kernel package!'; }
+		[ "${BUILD_RAMDISK}" != '0' ] && { cp "${TMPDIR}/initramfs-${KV}" "${TEMP}/minkernpackage/initramfs-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not copy the initramfs for the kernel package!'; }
 	fi
 
 	if [ "${KERNCACHE}" != "" ]
 	then
 		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} System.map-${ARCH}-${KV}
+		mv minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}}
+		if [ ! -f System.map-${KNAME}-${ARCH}-${KV} ]
+		then
+			gen_die 'Could not copy System.map from kerncache for the kernel package!'
+		fi
 	else
-		cp "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/minkernpackage/System.map-${ARCH}-${KV}" || gen_die 'Could not copy System.map for the kernel package!';
+		cp "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/minkernpackage/System.map-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not copy System.map for the kernel package!';
 	fi
 
 	cd "${TEMP}/minkernpackage"
