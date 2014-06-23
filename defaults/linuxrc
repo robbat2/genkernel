@@ -255,31 +255,17 @@ do
 		;;
 		aufs\=*)
 			USE_AUFS_NORMAL=1
-			echo ${x#*=} | grep , &>/dev/null
 
-			if [ "$?" -eq '0' ]
-			then
+			if echo "${x#*=}" | grep , &>/dev/null; then
 				UID=${x#*,}
 				AUFS=${x%,*}
 			else
 				AUFS=${x#*=}
 			fi
 		;;
-		aufs.changes\=*)
-                        USE_AUFS_NORMAL=1
-                        echo ${x#*=} | grep , &>/dev/null
-
-                        if [ "$?" -eq '0' ]
-                        then
-                                UID=${x#*,}
-                                AUFS=${x%,*}
-                        else
-                                AUFS=${x#*=}
-                        fi
-                ;;
 		aufs.persistent)
 			USE_AUFS_NORMAL=1
-			AUFS="detect"
+			AUFS=detect
 		;;
 		# Allow user to specify the modules location
 		aufs.modules\=*)
@@ -461,16 +447,14 @@ then
         # Setup the root filesystem
         bootstrapFS
 
-	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
-	then
+	if [ 1 = "$USE_AUFS_NORMAL" ]; then
                 setup_aufs
-		CHROOT=${UNION}
+		CHROOT=$UNION
 	else
 		CHROOT=${NEW_ROOT}
 	fi
 
-	if [ "${REAL_ROOT}" != "/dev/nfs" ] && [ "${LOOPTYPE}" != "sgimips" ] && [ "${USE_AUFS_NORMAL}" != '1' ]
-	then
+	if [ /dev/nfs != "$REAL_ROOT" ] && [ sgimips != "$LOOPTYPE" ] && [ 1 != "$USE_AUFS_NORMAL" ]; then
 		bootstrapCD
 	fi
 
@@ -502,7 +486,7 @@ then
 fi
 
 # Determine root device
-good_msg 'Determining root device...'
+good_msg 'Determining root device ...'
 while true
 do
 	while [ "${got_good_root}" != '1' ]
@@ -720,7 +704,7 @@ then
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'squashfs' ]
 		then
-			if [ "${USE_AUFS_NORMAL}" != '1' ]; then
+			if [ 1 != "$USE_AUFS_NORMAL" ]; then
 				good_msg 'Mounting squashfs filesystem'
 				_CACHED_SQUASHFS_PATH="${NEW_ROOT}/mnt/${LOOP}"
 				_squashfs_path="${CDROOT_PATH}/${LOOPEXT}${LOOP}"  # Default to uncached
@@ -782,25 +766,23 @@ then
 		fi
 	fi # if [ -n "${CRYPT_ROOT}" ]
 
-	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
-	then
-		union_insert_dir ${CHROOT} ${NEW_ROOT}/${FS_LOCATION}
-
-		# Make sure fstab notes livecd is mounted ro.  Makes system skip remount which fails on aufs dirs.
-		# TODO: remounting all tmpfs as RO seems weird, can we be more specific?
-		#sed -e 's|\(.*\s/\s*tmpfs\s*\)defaults\(.*\)|\1defaults,ro\2|' /${UNION}/etc/fstab > /${UNION}/etc/fstab.new
-		#mv /${UNION}/etc/fstab.new /${UNION}/etc/fstab
+	if [ 1 = "$USE_AUFS_NORMAL" ]; then
+		union_insert_dir "$CHROOT" "$NEW_ROOT/$FS_LOCATION"
 
                 # Function to handle the RC_NO_UMOUNTS variable in ${CHROOT}/etc/rc.conf
                 conf_rc_no_umounts
 
                 # Fstab changes for aufs
-                if ! grep -q '^aufs' "${CHROOT}"/etc/fstab 2>/dev/null; then
-                        for i in /var/tmp /tmp /usr/portage/distfiles; do
-                                [ ! -d "${CHROOT}${i}" ] && mkdir -p "${CHROOT}${i}"
+                if ! grep -q '^aufs' "$CHROOT/etc/fstab" 2>/dev/null; then
+                        for dir in /var/tmp /tmp /usr/portage/distfiles; do
+                                [ ! -d $CHROOT$dir ] && mkdir -p "$CHROOT$dir"
                         done
 
-                        cat > "${CHROOT}"/etc/fstab << FSTAB
+                        cat > "$CHROOT/etc/fstab" << FSTAB
+####################################################
+## ATTENTION: THIS IS THE FSTAB ON THE LIVECD   ##
+## PLEASE EDIT THE FSTAB at /mnt/gentoo/etc/fstab ##
+####################################################
 aufs            /                               aufs    defaults        0 0
 vartmp          /var/tmp                        tmpfs   defaults        0 0
 tmp             /tmp                            tmpfs   defaults        0 0
@@ -808,30 +790,29 @@ distfiles       /usr/portage/distfiles          tmpfs   defaults        0 0
 FSTAB
                 fi
 
-                if ${AUFS_MODULES}; then
+                if $AUFS_MODULES; then
                         warn_msg "Adding all modules in $MODULESD/modules/"
 
-                        if [ -z "${MODULESD}" ]
-                        then
-		                union_insert_modules ${CDROOT_PATH}
+                        if [ -z "$MODULESD" ]; then
+		                union_insert_modules "$CDROOT_PATH"
 		        else
-			        mkdir ${NEW_ROOT}/mnt/modulesd
-			        mount "${MODULESD}" ${NEW_ROOT}/mnt/modulesd
-			        union_insert_modules ${NEW_ROOT}/mnt/modulesd
+			        mkdir "$NEW_ROOT/mnt/modulesd"
+			        mount "$MODULESD" "$NEW_ROOT/mnt/modulesd"
+			        union_insert_modules "$NEW_ROOT/mnt/modulesd"
                         fi
                 fi
 
                 # Copy user keymap file
                 if [ -e /etc/sysconfig/keyboard ]; then
-                        [ ! -d ${CHROOT}/etc/sysconfig ] && mkdir -p ${CHROOT}/etc/sysconfig
-                        cp /etc/sysconfig/keyboard ${CHROOT}/etc/sysconfig/
+                        [ ! -d $CHROOT/etc/sysconfig ] && mkdir -p "$CHROOT/etc/sysconfig"
+                        cp /etc/sysconfig/keyboard "$CHROOT/etc/sysconfig/"
                 fi
 
                 # Create the directories for our new union mounts
-                test ! -d "${CHROOT}${NEW_ROOT}" && mkdir -p "${CHROOT}${NEW_ROOT}"
+                [ ! -d $CHROOT$NEW_ROOT ] && mkdir -p "$CHROOT$NEW_ROOT"
 
-                if ${AUFS_CHANGES} && [ ! -d "${CHROOT}${NEW_ROOT}/mnt/changesdev" ]; then
-                        mkdir -p "${CHROOT}${NEW_ROOT}/mnt/changesdev"
+                if $AUFS_CHANGES && [ ! -d $CHROOT$NEW_ROOT/mnt/changesdev ]; then
+                        mkdir -p "$CHROOT$NEW_ROOT/mnt/changesdev"
                 fi
 	fi
 
@@ -856,67 +837,67 @@ FSTAB
 	then
 		setup_unionfs ${NEW_ROOT} /${FS_LOCATION}
 		CHROOT=/union
-	else
-		#XXX Note to potential reviewers. diff formats this section very very oddly. Be sure to review this hunk after applied, do NOT simply read the diff
-		if [ ! "${USE_AUFS_NORMAL}" -eq '1' ]
-		then
-			good_msg "Copying read-write image contents to tmpfs"
-			# Copy over stuff that should be writable
-			(cd "${NEW_ROOT}/${FS_LOCATION}"; cp -a ${ROOT_TREES} "${NEW_ROOT}") || {
-				bad_msg "Copying failed, dropping into a shell."
-				do_rundebugshell
-			}
+        else
+                #XXX Note to potential reviewers. diff formats this section very very oddly. Be sure to review this hunk after applied, do NOT simply read the diff
+                if [ ! "${USE_AUFS_NORMAL}" -eq '1' ]
+                then
+                        good_msg "Copying read-write image contents to tmpfs"
+                        # Copy over stuff that should be writable
+                        (cd "${NEW_ROOT}/${FS_LOCATION}"; cp -a ${ROOT_TREES} "${NEW_ROOT}") || {
+                                bad_msg "Copying failed, dropping into a shell."
+                                do_rundebugshell
+                        }
 
-			# Now we do the links.
-			for x in ${ROOT_LINKS}
-			do
-				if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ]
-				then
-					ln -s "$(readlink ${NEW_ROOT}/${FS_LOCATION}/${x})" "${x}" 2>/dev/null
-				else
-					# List all subdirectories of x
-					find "${NEW_ROOT}/${FS_LOCATION}/${x}" -type d 2>/dev/null | while read directory
-					do
-						# Strip the prefix of the FS_LOCATION
-						directory="${directory#${NEW_ROOT}/${FS_LOCATION}/}"
+                        # Now we do the links.
+                        for x in ${ROOT_LINKS}
+                        do
+                                if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ]
+                                then
+                                        ln -s "$(readlink ${NEW_ROOT}/${FS_LOCATION}/${x})" "${x}" 2>/dev/null
+                                else
+                                        # List all subdirectories of x
+                                        find "${NEW_ROOT}/${FS_LOCATION}/${x}" -type d 2>/dev/null | while read directory
+                                        do
+                                                # Strip the prefix of the FS_LOCATION
+                                                directory="${directory#${NEW_ROOT}/${FS_LOCATION}/}"
 
-						# Skip this directory if we already linked a parent directory
-						if [ "${current_parent}" != '' ]; then
-							var=$(echo "${directory}" | grep "^${current_parent}")
-							if [ "${var}" != '' ]; then
-								continue
-							fi
-						fi
-						# Test if the directory exists already
-						if [ -e "/${NEW_ROOT}/${directory}" ]
-						then
-							# It does exist, link all the individual files
-							for file in $(ls /${NEW_ROOT}/${FS_LOCATION}/${directory})
-							do
-								if [ ! -d "/${NEW_ROOT}/${FS_LOCATION}/${directory}/${file}" ] && [ ! -e "${NEW_ROOT}/${directory}/${file}" ]; then
-									ln -s "/${FS_LOCATION}/${directory}/${file}" "${directory}/${file}" 2> /dev/null
-								fi
-							done
-						else
-							# It does not exist, make a link to the livecd
-							ln -s "/${FS_LOCATION}/${directory}" "${directory}" 2>/dev/null
-							current_parent="${directory}"
-						fi # if [ -e "/${NEW_ROOT}/${directory}" ] ... else
-					done # while read directory
-				fi # if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ] ... else
-			done # for x in ${ROOT_LINKS}
-			mkdir -p initramfs proc tmp run sys 2>/dev/null
-			chmod 1777 tmp
+                                                # Skip this directory if we already linked a parent directory
+                                                if [ "${current_parent}" != '' ]; then
+                                                        var=$(echo "${directory}" | grep "^${current_parent}")
+                                                        if [ "${var}" != '' ]; then
+                                                                continue
+                                                        fi
+                                                fi
+                                                # Test if the directory exists already
+                                                if [ -e "/${NEW_ROOT}/${directory}" ]
+                                                then
+                                                        # It does exist, link all the individual files
+                                                        for file in $(ls /${NEW_ROOT}/${FS_LOCATION}/${directory})
+                                                        do
+                                                                if [ ! -d "/${NEW_ROOT}/${FS_LOCATION}/${directory}/${file}" ] && [ ! -e "${NEW_ROOT}/${directory}/${file}" ]; then
+                                                                        ln -s "/${FS_LOCATION}/${directory}/${file}" "${directory}/${file}" 2> /dev/null
+                                                                fi
+                                                        done
+                                                else
+                                                        # It does not exist, make a link to the livecd
+                                                        ln -s "/${FS_LOCATION}/${directory}" "${directory}" 2>/dev/null
+                                                        current_parent="${directory}"
+                                                fi # if [ -e "/${NEW_ROOT}/${directory}" ] ... else
+                                        done # while read directory
+                                fi # if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ] ... else
+                        done # for x in ${ROOT_LINKS}
+                        mkdir -p initramfs proc tmp run sys 2>/dev/null
+                        chmod 1777 tmp
 
-		fi # if [ ! "${USE_AUFS_NORMAL}" -eq '1' ]
-		#XXX: end extremely confusing hunk
+                fi # if [ ! "${USE_AUFS_NORMAL}" -eq '1' ]
+                #XXX: end extremely confusing hunk
 
-		# have handy /mnt/cdrom (CDROOT_PATH) as well
-		_new_cdroot="${NEW_ROOT}${CDROOT_PATH}"
-		[ ! -d "${_new_cdroot}" ] && mkdir -p "${_new_cdroot}"
-		mount --bind "${CDROOT_PATH}" "${_new_cdroot}"
+                # have handy /mnt/cdrom (CDROOT_PATH) as well
+                _new_cdroot="${NEW_ROOT}${CDROOT_PATH}"
+                [ ! -d "${_new_cdroot}" ] && mkdir -p "${_new_cdroot}"
+                mount --bind "${CDROOT_PATH}" "${_new_cdroot}"
 
-	fi # if [ "${USE_UNIONFS_NORMAL}" = '1' ] ... else
+        fi # if [ "${USE_UNIONFS_NORMAL}" = '1' ] ... else
 
 	#UML=$(cat /proc/cpuinfo|grep UML|sed -e 's|model name.*: ||')
 	#if [ "${UML}" = 'UML' ]
@@ -928,18 +909,16 @@ FSTAB
 	# Let Init scripts know that we booted from CD
 	export CDBOOT
 	CDBOOT=1
-else # if [ "${CDROOT}" = '1' ]
+else
 	if [ "${USE_UNIONFS_NORMAL}" = '1' ]
 	then
 		mkdir /union_changes
 		mount -t tmpfs tmpfs /union_changes
 		setup_unionfs /union_changes ${NEW_ROOT}
 		mkdir -p ${UNION}/tmp/.initrd
-	fi
-	if [ "${USE_AUFS_NORMAL}" -eq '1' ]
-	then
-		union_insert_dir ${UNION} ${NEW_ROOT}
-		mkdir -p ${UNION}/tmp/.initrd
+	elif [ 1 = "$USE_AUFS_NORMAL" ]; then
+		union_insert_dir "$UNION" "$NEW_ROOT"
+		mkdir -p "$UNION/tmp/.initrd"
 	fi
 
 fi # if [ "${CDROOT}" = '1' ]
@@ -986,22 +965,20 @@ fi
 
 verbose_kmsg
 
-if [ "${USE_AUFS_NORMAL}" -eq '1' ]
-then
-        UNION_MEMORY=${CHROOT}/.unions/memory
+if [ 1 = "$USE_AUFS_NORMAL" ]; then
+        UNION_MEMORY=$CHROOT/.unions/memory
 
-	mkdir -p "${UNION_MEMORY}"
-	mount --move "${MEMORY}" "${UNION_MEMORY}"
+	mkdir -p "$UNION_MEMORY"
+	mount --move "$MEMORY" "$UNION_MEMORY"
         test_success "Failed to move aufs /memory into the system root"
 
-        for i in /mnt/gentoo /mnt/livecd /mnt/overlay ${CDROOT_PATH}
-	do
-		mkdir -p "${CHROOT}${i}"
-		chmod 755 "${CHROOT}${i}"
+        for dir in /mnt/gentoo $rw_branch $ro_branch $CDROOT_PATH; do
+		mkdir -p "$CHROOT$dir"
+		chmod 755 "$CHROOT$dir"
 	done
 
-        for i in ${CDROOT_PATH} ${overlay} ${static}; do
-                mount --move ${NEW_ROOT}${i} ${CHROOT}${i}
+        for dir in $CDROOT_PATH $rw_branch $ro_branch; do
+                mount --move "$NEW_ROOT$dir" "$CHROOT$dir"
         done
 fi
 
