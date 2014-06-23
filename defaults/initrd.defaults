@@ -58,7 +58,7 @@ KSUFF='.ko'
 REAL_ROOT=''
 CONSOLE='/dev/console'
 NEW_ROOT='/newroot'
-RC_NO_UMOUNTS="/newroot|/newroot/mnt/changesdev|/mnt/overlay|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino"
+RC_NO_UMOUNTS="/newroot|/newroot/mnt/changesdev|/mnt/rw_branch|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino"
 CDROOT='0'
 CDROOT_DEV=''
 CDROOT_TYPE='auto'
@@ -71,7 +71,7 @@ CDROOT_MARKER='/livecd'
 USE_AUFS_NORMAL=0
 AUFS_MODULES=false
 AUFS_CHANGES=false
-AUFS_CHANGESFILE=livecd.aufs
+AUFS_CHANGESFILE=/livecd.aufs
 
 LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
 

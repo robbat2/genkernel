@@ -314,8 +314,7 @@ union_insert_modules() {
 # This should really go into /etc/init.d/localmounts but until then we manually set this here
 conf_rc_no_umounts() {
         local conf nomount fnd
-        conf="${CHROOT}/etc/rc.conf"
-        fnd=0
+        conf=$CHROOT/etc/rc.conf fnd=0
 
         if nomount=$(grep -n '^[[:blank:]]*RC_NO_UMOUNTS=' $conf); then
                 local i n data cmd IFS
@@ -350,33 +349,28 @@ conf_rc_no_umounts() {
 create_changefs() {
 	local size
 
-	while [ 1 ]
-	do
+	while :; do
 		read -p '<< Size of file (Press Enter for default 256 Mb): ' size
-		if [ -z "${size}" ]; then
-		        size=256
-		fi
-		size="${size}"
 
-                if [ ${size} -lt 16 ]
-		then
-			bad_msg "Please give a size of at least 16 Mb"
+                [ -n "$size" ] || size=256
+
+                size=$size
+
+                if [ 15 -ge "$size" ]; then
+                        bad_msg "Please give a size of at least 16 Megabytes"
 		else
-			dd if=/dev/zero of=${CHANGESMNT}/${AUFS_CHANGESFILE} bs=1M count=${size} &>/dev/null
-			if [ $? = '0' ]
-			then
-				good_msg "Creation of ${AUFS_CHANGESFILE}, ${size} Mb on ${CHANGESDEV} successful, formatting it ext2"
-				mke2fs -F ${CHANGESMNT}/${AUFS_CHANGESFILE} &>/dev/null
+			if dd if=/dev/zero "of=$CHANGESMNT$AUFS_CHANGESFILE" bs=1M count="$size" &>/dev/null; then
+				good_msg "Creation of $AUFS_CHANGESFILE, ${size}Mb on $CHANGESDEV successful, formatting it ext2"
+				mke2fs -F "$CHANGESMNT$AUFS_CHANGESFILE" >/dev/null
                                 AUFS_CHANGES=true
 				break
 			else
-				rm -f ${CHANGESMNT}/${AUFS_CHANGESFILE}
-				bad_msg "Unable to create ${AUFS_CHANGESFILE} on ${CHANGESDEV} of ${size} Mb"
+				rm -f "$CHANGESMNT$AUFS_CHANGESFILE"
+				bad_msg "Unable to create ${AUFS_CHANGESFILE#*/} on $CHANGESDEV of ${size}Mb"
 				bad_msg "Ensure your disk is not full or read-only"
+
 				read -p '<< Type "a" to abort, anything else to continue : ' doabort
-				if [ "${doabort}" = "a" ]; then
-					return 1
-				fi
+				if [ a = "$doabort" ]; then return 1; fi
 			fi
 		fi
 	done
@@ -386,87 +380,80 @@ create_changefs() {
 setup_aufs() {
 	bootstrapCD
 
-	if [ -n "${AUFS}" ]
-	then
-		if [ "${AUFS}" = "detect" ]
-		then
-			CHANGESMNT="${NEW_ROOT}${CDROOT_PATH}"
-			CHANGESDEV=${REAL_ROOT}
+	if [ -n "$AUFS" ]; then
+		if [ detect = "$AUFS" ]; then
+			CHANGESMNT=$NEW_ROOT$CDROOT_PATH
+			CHANGESDEV=$REAL_ROOT
 		else
-			CHANGESDEV=${AUFS}
-			good_msg "Mounting ${CHANGESDEV} to ${MEMORY} for aufs support"
-			mount -t auto ${CHANGESDEV} ${CHANGESMNT} &>/dev/null
-			ret=$?
-			if [ "${ret}" -ne 0 ]
-			then
-				bad_msg "Mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
+			CHANGESDEV=$AUFS
+			good_msg "Mounting $CHANGESDEV to $MEMORY for aufs support"
+
+			if ! mount -t auto "$CHANGESDEV" "$CHANGESMNT" &>/dev/null; then
+				bad_msg "Mount of $CHANGESDEV failed, falling back to ramdisk based aufs"
 				unset AUFS
 			fi
 		fi
+
 		# Check and attempt to create the changesfile
-		if [ ! -e ${CHANGESMNT}/${AUFS_CHANGESFILE} ] && [ -n "${AUFS}" ]
-		then
+		if [ ! -e $CHANGESMNT$AUFS_CHANGESFILE ] && [ -n "$AUFS" ]; then
 			create_changefs
-			mount -t auto ${CHANGESMNT}/${AUFS_CHANGESFILE} ${MEMORY}
-		elif [ -n "${AUFS}" ]
-		then
-			local nbpass=0
-			while [ 1 ]
-			do
-				mount -t auto ${CHANGESMNT}/${AUFS_CHANGESFILE} ${MEMORY}
-				ret=$?
-				if [ "${ret}" -ne 0 ]
-				then
-					if [ ${nbpass} -eq 0 ]
-					then
-						bad_msg "Mounting of changes file failed, Running e2fsck"
-						e2fsck ${CHANGESMNT}/${AUFS_CHANGESFILE}
-						nbpass=$((${nbpass} + 1))
-					else
-						bad_msg "Mount of ${CHANGESDEV} failed, falling back to ramdisk based aufs"
-						bad_msg "your ${AUFS_CHANGESFILE} might be messed up, and I couldn't fix it"
-						bad_msg "moving ${AUFS_CHANGESFILE} to ${AUFS_CHANGESFILE}.bad"
-						mv ${CHANGESMNT}/${AUFS_CHANGESFILE} ${CHANGESMNT}/${AUFS_CHANGESFILE}.bad
-						bad_msg "Try to fix it yourself with e2fsck"
+			mount -t auto "$CHANGESMNT$AUFS_CHANGESFILE" "$MEMORY"
+		elif [ -n "$AUFS" ]; then
+			while :; do
+                                if mount -t auto "$CHANGESMNT$AUFS_CHANGESFILE" "$MEMORY" &>/dev/null; then
+                                        break
+                                else
+                                        bad_msg "Mounting of changes file failed, Running e2fsck"
+
+                                        if ! hash e2fsck &>/dev/null; then
+                                                bad_msg "/sbin/e2fsck not found! aborting filesystem check"
+                                                bad_msg "Moving ${AUFS_CHANGESFILE#*/} to ${AUFS_CHANGESFILE#*/}.bad"
+
+                                                mv "$CHANGESMNT$AUFS_CHANGESFILE" "$CHANGESMNT$AUFS_CHANGESFILE.bad"
+                                                break
+
+                                        fi
+
+                                        if e2fsck "$CHANGESMNT$AUFS_CHANGESFILE" &>/dev/null; then
+                                                good_msg "e2fsck ran successfully. Please verify data after bootup"
+                                        else
+						bad_msg "Your ${AUFS_CHANGESFILE#*/} image might be corrupted"
+						bad_msg "moving ${AUFS_CHANGESFILE#*/} to ${AUFS_CHANGESFILE#*/}.bad"
+
+                                                mv "$CHANGESMNT$AUFS_CHANGESFILE" "$CHANGESMNT$AUFS_CHANGESFILE.bad"
 						break
 					fi
-				else
-					if [ ${nbpass} -eq 1 ]
-					then
-						good_msg "e2fsck ran successfully. Please check your files after bootup"
-					fi
-					break
 				fi
 			done
 		fi
 		# mount tmpfs only in the case when changes= boot parameter was
 		# empty or we were not able to mount the storage device
-		if [ "${CDROOT}" -eq '1' -a ! -f ${CHANGESMNT}/${AUFS_CHANGESFILE}  ]
-		then
-                        XINO=${MEMORY}
-			umount ${MEMORY} &>/dev/null
-			bad_msg "Failed to find ${AUFS_CHANGESFILE} file on ${CHANGESDEV}"
-			bad_msg "Create an ext2 ${AUFS_CHANGESFILE} file on this device if you wish to use it for aufs"
-			bad_msg "Falling back to ramdisk based aufs for safety"
+		if [ 1 = "$CDROOT" ] && [ ! -f "$CHANGESMNT$AUFS_CHANGESFILE" ]; then
+                        XINO=$MEMORY
+			umount "$MEMORY" &>/dev/null
+
+			bad_msg "Create an extfs ${AUFS_CHANGESFILE#*/} file on this device"
+                        bad_msg "if you wish to have aufs data persistency on reboots"
+			bad_msg "Falling back to ramdisk based aufs"
                         good_msg "Mounting ramdisk to $MEMORY for aufs support"
-			mount -t tmpfs tmpfs ${MEMORY}
+
+                        mount -t tmpfs tmpfs "$MEMORY"
 		else
-			XINO=${MEMORY}/xino
-			mkdir -p ${XINO}
-			mount -t tmpfs tmpfs ${XINO}
+			XINO=$MEMORY/xino
+
+                        mkdir -p "$XINO"
+			mount -t tmpfs aufs-xino "$XINO"
 		fi
 	else
-		good_msg "Mounting ramdisk to $MEMORY for aufs support"
-		mount -t tmpfs tmpfs ${MEMORY}
-		XINO=${MEMORY}
+                XINO=$MEMORY
+
+                good_msg "Mounting ramdisk to $MEMORY for aufs support"
+		mount -t tmpfs tmpfs "$MEMORY"
 	fi
 
-	mkdir -p ${CHANGES}
-	mount -t aufs -n -o nowarn_perm,udba=none,xino=${XINO}/.aufs.xino,br:${CHANGES}=rw aufs ${UNION}
-	ret=$?
-	if [ "${ret}" -ne 0 ]
-	then
-		bad_msg "Can't setup union ${UNION} in directory!"
+	mkdir -p "$CHANGES"
+        if ! mount -t aufs -n -o "nowarn_perm,udba=none,xino=$XINO/.aufs.xino,br:$CHANGES=rw" aufs "$UNION"; then
+		bad_msg "Can't setup union $UNION in directory!"
 		USE_AUFS_NORMAL=0
 	fi
 }
@@ -1420,22 +1407,24 @@ getdvhoff() {
 
 setup_squashfs_aufs() {
 	# Setup aufs directories and vars
-	overlay=/mnt/overlay
-	static=/mnt/livecd
+	rw_branch=/mnt/rw_branch ro_branch=/mnt/livecd
 
-	for i in "${overlay}" "${static}"; do
-		[ ! -d "${i}" ] && mkdir -p "${i}"
+	for dir in $rw_branch $ro_branch; do
+		[ ! -d $dir ] && mkdir -p "$dir"
 	done
-	good_msg "Loading aufs"
-	modprobe aufs > /dev/null 2>&1
 
-	mount -t squashfs -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${static}"
-	mount -t tmpfs none "${overlay}"
-	mount -t aufs -o br:${overlay}:${static} aufs "${NEW_ROOT}"
+	good_msg "Loading aufs module ..."
+	modprobe aufs &>/dev/null
 
-	[ ! -d "${NEW_ROOT}${overlay}" ] && mkdir -p "${NEW_ROOT}${overlay}"
-	[ ! -d "${NEW_ROOT}${static}" ] && mkdir -p "${NEW_ROOT}${static}"
-	for i in "${overlay}" "${static}"; do mount --move "${i}" "${NEW_ROOT}${i}"; done
+	mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "$ro_branch"
+	mount -t tmpfs none "$rw_branch"
+	mount -t aufs -o "br:$rw_branch:$ro_branch" aufs "$NEW_ROOT"
+
+	[ ! -d $NEW_ROOT$rw_branch ] && mkdir -p "$NEW_ROOT$rw_branch"
+	[ ! -d $NEW_ROOT$ro_branch ] && mkdir -p "$NEW_ROOT$ro_branch"
+	for mount in $rw_branch $ro_branch; do
+                mount --move "$mount" "$NEW_ROOT$mount"
+        done
 }
 
 setup_unionfs() {
