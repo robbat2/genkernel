@@ -77,7 +77,7 @@ longusage() {
   echo "				autodetect."
   echo "	--makeopts=<makeopts>	Make options such as -j2, etc..."
   echo "	--mountboot		Mount BOOTDIR automatically if mountable"
-  echo "	--no-mountboot		Don't mount BOOTDIR automatically"  
+  echo "	--no-mountboot		Don't mount BOOTDIR automatically"
   echo "	--bootdir=<dir>		Set the location of the boot-directory, default is /boot"
   echo "	--modprobedir=<dir>	Set the location of the modprobe.d-directory, default is /etc/modprobe.d"
   echo "  Initialization"
@@ -501,14 +501,17 @@ parse_cmdline() {
 			;;
 		--minkernpackage=*)
 			CMD_MINKERNPACKAGE=`parse_opt "$*"`
+			[ ${CMD_MINKERNPACKAGE:0:1} != / ] && CMD_MINKERNPACKAGE=$PWD/$CMD_MINKERNPACKAGE
 			print_info 2 "MINKERNPACKAGE: ${CMD_MINKERNPACKAGE}"
 			;;
 		--modulespackage=*)
 			CMD_MODULESPACKAGE=`parse_opt "$*"`
+			[ ${CMD_MODULESPACKAGE:0:1} != / ] && CMD_MODULESPACKAGE=$PWD/$CMD_MODULESPACKAGE
 			print_info 2 "MODULESPACKAGE: ${CMD_MODULESPACKAGE}"
 			;;
 		--kerncache=*)
 			CMD_KERNCACHE=`parse_opt "$*"`
+			[ ${CMD_KERNCACHE:0:1} != / ] && CMD_KERNCACHE=$PWD/$CMD_KERNCACHE
 			print_info 2 "KERNCACHE: ${CMD_KERNCACHE}"
 			;;
 		--kernname=*)

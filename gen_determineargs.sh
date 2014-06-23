@@ -4,7 +4,7 @@
 get_KV() {
 	if [ "${KERNEL_SOURCES}" = '0' -a -e "${KERNCACHE}" ]
 	then
-		/bin/tar -xj -C ${TEMP} -f ${KERNCACHE} kerncache.config 
+		/bin/tar -xj -C ${TEMP} -f ${KERNCACHE} kerncache.config
 		if [ -e ${TEMP}/kerncache.config ]
 		then
 			VER=`grep ^VERSION\ \= ${TEMP}/kerncache.config | awk '{ print $3 };'`
