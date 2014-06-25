@@ -12,6 +12,8 @@ BAD="\033[31;1m"
 BOLD="\033[1m"
 GOOD="\033[32;1m"
 
+# Sets the default collation order
+LC_COLLATE=C
 # From KNOPPIX LINUXRC
 # Reset fb color mode
 RESET="]R"
@@ -58,7 +60,7 @@ KSUFF='.ko'
 REAL_ROOT=''
 CONSOLE='/dev/console'
 NEW_ROOT='/newroot'
-RC_NO_UMOUNTS="/newroot|/newroot/mnt/changesdev|/mnt/rw_branch|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino"
+RC_NO_UMOUNTS='/newroot|/mnt/aufs-dev|/mnt/aufs-rw-branch|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino'
 CDROOT='0'
 CDROOT_DEV=''
 CDROOT_TYPE='auto'
@@ -68,10 +70,8 @@ CDROOT_PATH='/mnt/cdrom'
 CDROOT_MARKER='/livecd'
 
 # AUFS variables
-USE_AUFS_NORMAL=0
-AUFS_MODULES=false
-AUFS_CHANGES=false
-AUFS_CHANGESFILE=/livecd.aufs
+aufs=0
+aufs_union_file=/livecd.aufs
 
 LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
 
