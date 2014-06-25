@@ -12,6 +12,8 @@ BAD="\033[31;1m"
 BOLD="\033[1m"
 GOOD="\033[32;1m"
 
+# Sets the default collation order
+LC_COLLATE=C
 # From KNOPPIX LINUXRC
 # Reset fb color mode
 RESET="]R"

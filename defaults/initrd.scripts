@@ -287,27 +287,41 @@ mount_sysfs() {
 #
 union_insert_dir() {
 	# Always mount it over the precedent (add:1:)
-	mount -n -o remount,add:1:${2}=rr aufs ${1}
-	if [ $? = '0' ]
-	then
-		good_msg "Addition of ${2} to ${1} successful"
+	if mount -n -o "remount,add:1:$2=rr" aufs "$1"; then
+                good_msg "Addition of $2 to $1 successful"
 	fi
 }
 
 # Insert all modules found in $1, usually ${CDROOT_PATH}
 # added to allow users to add their own apps.
 union_insert_modules() {
-	for module in $(ls ${NEW_ROOT}/${1}/modules/*.mo 2>/dev/null| sort)
-	do
-		mkdir -p ${MEMORY}/modules/$(basename ${module} .mo)
-		union_insert_dir $UNION ${MEMORY}/modules/$(basename ${module} .mo)
-	done
-	for module in $(ls ${NEW_ROOT}/${1}/modules/*.lzm 2>/dev/null| sort)
-	do
-		mkdir -p ${MEMORY}/modules/$(basename ${module} .lzm)
-		mount -o loop,ro ${module} ${MEMORY}/modules/$(basename ${module} .lzm)
-		union_insert_dir $UNION ${MEMORY}/modules/$(basename ${module} .lzm)
-	done
+        local module
+
+        for module in "$NEW_ROOT/$1/modules/"*.mo; do
+                union_mod "$module" || bad_msg "Unable to load module: '$module'"
+        done
+
+        for module in "$NEW_ROOT/$1/modules/"*.lzm; do
+                union_mod "$module" lzm || bad_msg "Unable to load module: '$module'"
+        done
+}
+
+# Helper function for union_insert_modules()
+union_mod() {
+        [ -e "$1" ] || return 0
+
+        local mod
+
+        mod=${1##*/}
+        mod=${mod%.*}
+
+        mkdir -p "$MEMORY/modules/$mod" || return
+
+        if [ lzm = "$2" ]; then
+                 mount -o loop,ro "$1" "$MEMORY/modules/$mod"
+        fi
+
+        union_insert_dir "$UNION" "$MEMORY/modules/$mod"
 }
 
 # Implements RC_NO_UMOUNTS variable into ${CHROOT}/etc/rc.conf for a cleaner shutdown process
