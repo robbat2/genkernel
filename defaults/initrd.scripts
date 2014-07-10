@@ -376,7 +376,7 @@ create_changefs() {
 	local size
 
 	while :; do
-		read -p '<< Size of file (Press Enter for default 256 Mb): ' size
+		read -p '<< Size of file (Press Enter for default 256 MB): ' size
 
                 size=${size:-256}
 
@@ -386,13 +386,13 @@ create_changefs() {
                 elif [ 15 -ge "$size" ]; then
                         bad_msg "Please give a size of at least 16 Megabytes"
 		else
-			if dd if=/dev/zero "of=$aufs_dev_mnt$aufs_union_file" bs=1M count="$size" &>/dev/null; then
-				good_msg "Creation of $aufs_union_file, ${size}Mb on $aufs_dev successful, formatting it ext2"
+			if dd if=/dev/zero "of=$aufs_dev_mnt$aufs_union_file" bs=1 seek="$size"M count=0 &>/dev/null; then
+				good_msg "Creation of $aufs_union_file, ${size}MB on $aufs_dev successful, formatting it ext2"
 				mke2fs -F "$aufs_dev_mnt$aufs_union_file" &>/dev/null
 				break
 			else
 				rm "$aufs_dev_mnt$aufs_union_file"
-				bad_msg "Unable to create ${aufs_union_file#*/} on $aufs_dev of ${size}Mb"
+				bad_msg "Unable to create ${aufs_union_file#*/} on $aufs_dev of ${size}MB"
 				bad_msg "Ensure your disk is not full or read-only"
 
 				read -p '<< Type "a" to abort, anything else to continue : ' doabort
@@ -410,13 +410,19 @@ create_changefs() {
 setup_aufs() {
 	bootstrapCD
 
-	if [ -n "$aufs_dev" ]; then
-                good_msg "Mounting $aufs_dev to $aufs_memory for aufs support"
+        if [ -n "$aufs_dev" ]; then
+                if [ ! -b $aufs_dev ]; then
+                        bad_msg "$aufs_dev is not a valid block device"
+                        local invalidblk=1
+                        unset aufs_dev
+                else
+                        good_msg "Mounting $aufs_dev to $aufs_memory for aufs support"
 
-		if ! mount -t auto "$aufs_dev" "$aufs_dev_mnt" &>/dev/null; then
-			bad_msg "Mount of $aufs_dev failed, falling back to ramdisk based aufs"
-			unset aufs_dev
-		fi
+                        if ! mount -t auto "$aufs_dev" "$aufs_dev_mnt" &>/dev/null; then
+                                bad_msg "Mount of $aufs_dev failed, falling back to ramdisk based aufs"
+                                unset aufs_dev
+		        fi
+                fi
 
                 # Check and attempt to create the AUFS union file
 	        if [ ! -e $aufs_dev_mnt$aufs_union_file ] && [ -n "$aufs_dev" ]; then
@@ -455,7 +461,12 @@ setup_aufs() {
                         aufs_xino=$aufs_memory
                         umount "$aufs_memory" &>/dev/null
 
-                        bad_msg "Create an extfs ${aufs_union_file#*/} file on this device"
+                        if [ 1 = "$invalidblk" ]; then
+                                bad_msg "Verify that you've entered a valid device path"
+                        else
+                                bad_msg "Create an extfs ${aufs_union_file#*/} file on this device"
+                        fi
+
                         bad_msg "if you wish to have aufs data persistency on reboots"
                         bad_msg "Falling back to ramdisk based aufs"
                         good_msg "Mounting ramdisk to $aufs_memory for aufs support"
