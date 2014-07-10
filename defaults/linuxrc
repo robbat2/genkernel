@@ -786,6 +786,7 @@ distfiles       /usr/portage/distfiles          tmpfs   defaults        0 0
 FSTAB
                 fi
 
+                # When aufs.modules= is used
                 if [ 1 = "$aufs_modules" ]; then
                         warn_msg "Adding all modules in $aufs_modules_dev/modules/"
 
@@ -804,7 +805,7 @@ FSTAB
                         cp /etc/sysconfig/keyboard "$CHROOT/etc/sysconfig/"
                 fi
 
-                # Create the diuectories for our new union mounts
+                # Create the directories for our new union mounts
                 [ ! -d $CHROOT$NEW_ROOT ] && mkdir -p "$CHROOT$NEW_ROOT"
 
                 # Check to see if we successfully mounted $aufs_dev
