@@ -257,6 +257,13 @@ append_multipath(){
 		/sbin/{multipath,kpartx,mpath_prio_*,devmap_name,dmsetup} \
 		/{lib,lib64}/{udev/scsi_id,multipath/*so} 
 
+	# Support multipath-tools-0.4.8 and previous
+	if [ -x /sbin/mpath_prio_* ]
+	then
+		copy_binaries "${TEMP}/initramfs-multipath-temp" \
+			/sbin/mpath_prio_*
+	fi
+
 	if [ -x /sbin/multipath ]
 	then
 		cp /etc/multipath.conf "${TEMP}/initramfs-multipath-temp/etc/" || gen_die 'could not copy /etc/multipath.conf please check this'
