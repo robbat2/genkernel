@@ -254,7 +254,7 @@ append_multipath(){
 	# Copy files
 	copy_binaries "${TEMP}/initramfs-multipath-temp" \
 		/bin/mountpoint \
-		/sbin/{multipath,kpartx,mpath_prio_*,devmap_name,dmsetup} \
+		/sbin/{multipath,kpartx,dmsetup} \
 		/{lib,lib64}/{udev/scsi_id,multipath/*so} 
 
 	# Support multipath-tools-0.4.8 and previous
