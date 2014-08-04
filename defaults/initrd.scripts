@@ -297,12 +297,12 @@ union_insert_dir() {
 union_insert_modules() {
         local module
 
-        for module in "$NEW_ROOT/$1/modules/"*.mo; do
-                union_mod "$module" || bad_msg "Unable to load module: '$module'"
+        for module in "$1/modules/"*.mo; do
+                union_mod "$module" || bad_msg "Unable to insert module: '$module'"
         done
 
-        for module in "$NEW_ROOT/$1/modules/"*.lzm; do
-                union_mod "$module" lzm || bad_msg "Unable to load module: '$module'"
+        for module in "$1/modules/"*.lzm; do
+                union_mod "$module" || bad_msg "Unable to insert module: '$module'"
         done
 }
 
@@ -315,13 +315,12 @@ union_mod() {
         mod=${1##*/}
         mod=${mod%.*}
 
-        mkdir -p "$aufs_memory/modules/$mod" || return
-
-        if [ lzm = "$2" ]; then
-                 mount -o loop,ro "$1" "$aufs_memory/modules/$mod"
+        if [ ! -d "$aufs_union"/mnt/"$mod" ]; then
+                mkdir -p "$aufs_union"/mnt/modules/"$mod" || return
         fi
 
-        union_insert_dir "$aufs_union" "$aufs_memory/modules/$mod"
+        mount -o loop,ro "$1" "$aufs_union"/mnt/modules/"$mod"
+        union_insert_dir "$aufs_union" "$aufs_union"/mnt/modules/"$mod"
 }
 
 # Implements RC_NO_UMOUNTS variable into $CHROOT/etc/rc.conf for a cleaner shutdown process
