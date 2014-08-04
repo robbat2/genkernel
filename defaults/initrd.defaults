@@ -72,6 +72,7 @@ CDROOT_MARKER='/livecd'
 # AUFS variables
 aufs=0
 aufs_union_file=/livecd.aufs
+aufs_modules_dir=mnt/cdrom
 
 LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
 

@@ -265,7 +265,7 @@ do
 		;;
 		# Allow user to specify the modules location
 		aufs.modules\=*)
-			aufs_modules_dev=${x#*=}
+			aufs_modules_dir=${x#*=}
                         aufs_modules=1
 		;;
 		unionfs)
@@ -786,16 +786,20 @@ distfiles       /usr/portage/distfiles          tmpfs   defaults        0 0
 FSTAB
                 fi
 
-                # When aufs.modules= is used
-                if [ 1 = "$aufs_modules" ]; then
-                        warn_msg "Adding all modules in $aufs_modules_dev/modules/"
+                # When aufs.modules= is used or $CDROOT_PATH/modules
+                # directory is available
+                if [[ 1 = "$aufs_modules" || -d $CDROOT_PATH/modules ]]; then
+                        warn_msg "Adding all modules in $aufs_modules_dir/modules/"
 
-                        if [ -z "$aufs_modules_dev" ]; then
+                        if [ mnt/cdrom = "$aufs_modules_dir" ]; then
 		                union_insert_modules "$CDROOT_PATH"
-		        else
-			        mkdir "$NEW_ROOT/mnt/modulesd"
-			        mount "$aufs_modules_dev" "$NEW_ROOT/mnt/modulesd"
-			        union_insert_modules "$NEW_ROOT/mnt/modulesd"
+                        elif [ ! -b "$aufs_modules_dir" ]; then
+                                bad_msg "$aufs_modules_dir is not a valid block device"
+                                bad_msg "aborting modules insert into $aufs_union"
+                        else
+                                mkdir /mnt/modules
+			        mount "$aufs_modules_dir" /mnt/modules
+			        union_insert_modules /mnt/modules
                         fi
                 fi
 
