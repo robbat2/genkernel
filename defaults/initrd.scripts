@@ -323,13 +323,12 @@ union_mod() {
         union_insert_dir "$aufs_union" "$aufs_union"/mnt/modules/"$mod"
 }
 
-# Implements RC_NO_UMOUNTS variable into $CHROOT/etc/rc.conf for a cleaner shutdown process
-# This should really go into /etc/init.d/localmounts but until then we manually set this here
+# Implements no_umounts variable into $CHROOT/etc/conf.d/localmount for a cleaner shutdown process
 conf_rc_no_umounts() {
         local conf nomount fnd
-        conf=$CHROOT/etc/rc.conf fnd=0
+        conf=$CHROOT/etc/conf.d/localmount fnd=0
 
-        if nomount=$(grep -n '^[[:blank:]]*RC_NO_UMOUNTS=' $conf); then
+        if nomount=$(grep -n '^[[:blank:]]*no_umounts=' $conf); then
                 local i n data cmd IFS
                 IFS='
 '
@@ -341,20 +340,20 @@ conf_rc_no_umounts() {
                         data=${i#*=}
 
                         case $data in
-                                "\"$RC_NO_UMOUNTS\""|"'$RC_NO_UMOUNTS'") fnd=1;;
+                                "\"$no_umounts\""|"'$no_umounts'") fnd=1;;
                                 *) cmd="$cmd$n d;"
                         esac
                 done
 
                 if [ -n "$cmd" ]; then
                         sed -i "${cmd%;}" $conf
-                        test_success "Unable to edit rc.conf"
+                        test_success "Unable to edit /etc/conf.d/localmount"
                 fi
         fi
 
         if [ 0 -eq "$fnd" ]; then
-                printf 'RC_NO_UMOUNTS="%s"\n' "$RC_NO_UMOUNTS" >> $conf
-                test_success "Unable to write to rc.conf"
+                printf 'no_umounts="%s"\n' "$no_umounts" >> $conf
+                test_success "Unable to write to /etc/conf.d/localmount"
         fi
 }
 
