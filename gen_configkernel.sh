@@ -20,7 +20,7 @@ determine_config_file() {
 		KERNEL_CONFIG="${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}"
 	elif [ -f "${GK_SHARE}/arch/${ARCH}/kernel-config" ]
 	then
-		KERNEL_CONFIG="${GK_SHARE}/arch/${ARCH}/kernel-config"
+		KERNEL_CONFIG="${GK_SHARE}/arch/${ARCH}/generated-config"
 	else
 		gen_die 'Error: No kernel .config specified, or file not found!'
 	fi
