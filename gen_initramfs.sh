@@ -731,7 +731,7 @@ create_initramfs() {
 
 	append_data 'modprobed'
 
-	if isTrue "${FIRMWARE}" && [ -n "${FIRMWARE_DIR}" ]
+	if isTrue "${FIRMWARE}" && [ -n "${FIRMWARE_SRC}" ]
 	then
 		append_data 'firmware'
 	fi
