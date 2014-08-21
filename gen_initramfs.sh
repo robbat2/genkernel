@@ -435,6 +435,77 @@ append_luks() {
 	rm -r "${TEMP}/initramfs-luks-temp/"
 }
 
+append_dropbear(){
+	if [ -d "${TEMP}"/initramfs-dropbear-temp ]
+	then
+		rm -r "${TEMP}"/initramfs-dropbear-temp
+	fi
+
+	if [ ! -d /etc/dropbear ]
+	then
+		mkdir /etc/dropbear
+	fi
+	if [ ! -e /etc/dropbear/dropbear_rsa_host_key ]
+	then
+		if [ -e /usr/bin/dropbearconvert -a /etc/ssh/ssh_host_rsa_key ]
+		then
+			/usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear/dropbear_rsa_host_key
+		else
+			/usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key -s 4096 > /dev/null
+		fi
+	fi
+	
+	if [ ! -e /etc/dropbear/dropbear_dss_host_key ]
+	then
+		/usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null
+	fi
+
+	cd "${TEMP}" \
+                || gen_die "cd '${TEMP}' failed"
+	mkdir -p ${TEMP}/initramfs-dropbear-temp/var/run
+	mkdir -p ${TEMP}/initramfs-dropbear-temp/var/log
+	mkdir -p ${TEMP}/initramfs-dropbear-temp/etc/dropbear
+	mkdir -p ${TEMP}/initramfs-dropbear-temp/bin
+	mkdir -p ${TEMP}/initramfs-dropbear-temp/root/.ssh
+
+	cp -L ${GK_SHARE}/defaults/login-remote.sh ${TEMP}/initramfs-dropbear-temp/bin/
+	cp -L /etc/dropbear/{dropbear_rsa_host_key,dropbear_dss_host_key} ${TEMP}/initramfs-dropbear-temp/etc/dropbear/
+	cp -L /etc/dropbear/authorized_keys ${TEMP}/initramfs-dropbear-temp/root/.ssh
+	cp -L /etc/localtime ${TEMP}/initramfs-dropbear-temp/etc/
+	if [ ${ARCH} = "x86_64" ]
+	then
+		mkdir -p ${TEMP}/initramfs-dropbear-temp/lib64
+		cp -L /lib64/libnss_files.so.2 ${TEMP}/initramfs-dropbear-temp/lib64/
+	else
+		mkdir -p ${TEMP}/initramfs-dropbear-temp/lib
+		cp -L /lib/libnss_files.so.2 ${TEMP}/initramfs-dropbear-temp/lib/
+	fi
+	
+	sed "s/compat/files/g" /etc/nsswitch.conf > ${TEMP}/initramfs-dropbear-temp/etc/nsswitch.conf
+	echo "root:x:0:0:root:/root:/bin/login-remote.sh" > ${TEMP}/initramfs-dropbear-temp/etc/passwd
+	echo "/bin/login-remote.sh" > ${TEMP}/initramfs-dropbear-temp/etc/shells
+	echo "root:!:0:0:99999:7:::" > ${TEMP}/initramfs-dropbear-temp/etc/shadow
+	echo "root:x:0:root" > ${TEMP}/initramfs-dropbear-temp/etc/group
+	echo "" > ${TEMP}/initramfs-dropbear-temp/var/log/lastlog
+
+	chmod 0755 ${TEMP}/initramfs-dropbear-temp/bin/login-remote.sh
+	chmod 0700 ${TEMP}/initramfs-dropbear-temp/root/.ssh
+	chmod 0640 ${TEMP}/initramfs-dropbear-temp/etc/shadow
+	chmod 0644 ${TEMP}/initramfs-dropbear-temp/etc/passwd
+	chmod 0644 ${TEMP}/initramfs-dropbear-temp/etc/group
+	mkfifo ${TEMP}/initramfs-dropbear-temp/etc/dropbear/fifo_root
+	mkfifo ${TEMP}/initramfs-dropbear-temp/etc/dropbear/fifo_swap
+	
+	copy_binaries "${TEMP}"/initramfs-dropbear-temp/ /usr/sbin/dropbear \
+		/bin/login /usr/bin/passwd
+	
+	log_future_cpio_content
+	cd "${TEMP}"/initramfs-dropbear-temp \
+		|| gen_die "cd '${TEMP}/initramfs-dropbear-temp' failed"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}"
+	rm -rf "${TEMP}"/initramfs-dropbear-temp > /dev/null
+}
+
 append_firmware() {
 	if [ -z "${FIRMWARE_FILES}" -a ! -d "${FIRMWARE_SRC}" ]
 	then
@@ -711,6 +782,7 @@ create_initramfs() {
 	append_data 'iscsi' "${ISCSI}"
 	append_data 'mdadm' "${MDADM}"
 	append_data 'luks' "${LUKS}"
+	append_data 'dropbear' "${SSH}"
 	append_data 'multipath' "${MULTIPATH}"
 	append_data 'gpg' "${GPG}"
 

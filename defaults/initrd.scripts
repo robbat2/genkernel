@@ -402,7 +402,7 @@ prompt_user(){
 	bad_msg "Could not find the ${2} in ${oldvalue}${explnt}"
 	echo '   Please specify another value or: press Enter for the same, type "shell" for a shell, or "q" to skip...'
 	echo -n "${2}(${oldvalue}) :: "
-	read ${1}
+	read -t 10 ${1}
 	case `eval echo '$'${1}` in
 		'q')
 			eval ${1}'='${oldvalue}
@@ -786,7 +786,7 @@ openLUKS() {
 
 	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="$1" LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"' LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"' LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
-	local mntkey="/mnt/key/" cryptsetup_options=''
+	local mntkey="/mnt/key/" cryptsetup_options='' flag_opened="/${TYPE}.decrypted"
 
 	[ ! -e /sbin/cryptsetup ] && bad_msg "The ramdisk does not support LUKS" && exit 1
 	while [ 1 ]
@@ -808,6 +808,10 @@ openLUKS() {
 		then
 			prompt_user "LUKS_KEYDEV" "${LUKS_NAME} key device"
 			KEYDEV_ERROR=0
+		elif [ -e ${flag_opened} ]
+		then
+			good_msg "The LUKS device ${LUKS_DEVICE} meanwhile was opened by someone else."
+			break
 		else
 			case "${LUKS_DEVICE}" in
 				UUID\=*|LABEL\=*)
@@ -922,6 +926,8 @@ openLUKS() {
 				crypt_filter "${gpg_cmd}cryptsetup ${cryptsetup_options} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
 				crypt_filter_ret=$?
 
+				touch ${flag_opened}
+
 				[ -e /dev/tty.org ] \
 					&& rm -f /dev/tty \
 					&& mv /dev/tty.org /dev/tty
@@ -945,8 +951,13 @@ openLUKS() {
 
 startLUKS() {
 
-	# if key is set but key device isn't, find it
+	# if key is set but neither ssh enabled or key device is given, find
+	# the key device
 	
+	if [ -e "/usr/sbin/dropbear" ]; then
+		startdropbear
+	fi
+
 	[ -n "${CRYPT_ROOT_KEY}" ] && [ -z "${CRYPT_ROOT_KEYDEV}" ] \
 		&& sleep 6 && bootstrapKey "ROOT"
 
@@ -973,6 +984,31 @@ startLUKS() {
 			REAL_RESUME="/dev/mapper/swap"
 		fi
 	fi
+
+	if [ -e "/usr/sbin/dropbear" ]; then
+		/bin/kill $(cat /var/run/dropbear.pid)
+		/sbin/ifconfig $(echo "${IP}" | awk -F":" '{print $6}' ) 0.0.0.0
+	fi
+
+	if [ -e /root.decrypted ]; then
+		rm /root.decrypted
+	fi
+
+	if [ -e /swap.decrypted ]; then
+		rm /swap.decrypted
+	fi
+}
+
+startdropbear() {
+	if [ "${IP}" == '' ] ; then
+		busybox udhcpc -n -T 15 -q
+	fi
+
+	# setup environment variables for the ssh login shell
+	echo "CRYPT_ROOT=${CRYPT_ROOT}" >  /etc/login-remote.conf
+	echo "CRYPT_SWAP=${CRYPT_SWAP}" >> /etc/login-remote.conf
+	touch /var/log/lastlog
+	/usr/sbin/dropbear
 }
 
 sdelay() {
