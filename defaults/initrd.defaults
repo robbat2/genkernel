@@ -12,6 +12,8 @@ BAD="\033[31;1m"
 BOLD="\033[1m"
 GOOD="\033[32;1m"
 
+# Sets the default collation order
+LC_COLLATE=C
 # From KNOPPIX LINUXRC
 # Reset fb color mode
 RESET="]R"
@@ -58,6 +60,7 @@ KSUFF='.ko'
 REAL_ROOT=''
 CONSOLE='/dev/console'
 NEW_ROOT='/newroot'
+no_umounts='/newroot|/mnt/aufs-dev|/mnt/aufs-rw-branch|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino'
 CDROOT='0'
 CDROOT_DEV=''
 CDROOT_TYPE='auto'
@@ -65,6 +68,11 @@ CDROOT_PATH='/mnt/cdrom'
 # This is the file that the cdroot will be checked for as a
 # marker. It must exist RELATIVE to the cdroot.
 CDROOT_MARKER='/livecd'
+
+# AUFS variables
+aufs=0
+aufs_union_file=/livecd.aufs
+aufs_modules_dir=mnt/cdrom
 
 LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
 
