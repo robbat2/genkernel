@@ -186,9 +186,9 @@ bootstrapFS() {
                 aufs_dev_mnt=/mnt/aufs-dev
 
                 if [ -z "$aufs_dev_uid" ]; then
-                        aufs_branch=$aufs_memory/aufs-branch/default
+                        aufs_branch=$aufs_memory/aufs-rw-branch/default
                 else
-                        aufs_branch=$aufs_memory/aufs-branch/$aufs_dev_uid
+                        aufs_branch=$aufs_memory/aufs-rw-branch/$aufs_dev_uid
                 fi
 
                 mkdir -p $aufs_memory $aufs_union $aufs_dev_mnt
