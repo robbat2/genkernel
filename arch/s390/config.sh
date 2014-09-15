@@ -4,7 +4,7 @@
 #
 KERNEL_MAKE_DIRECTIVE=""
 KERNEL_MAKE_DIRECTIVE_2=""
-KERNEL_BINARY="arch/s390/boot/vmlinux.gz"
+KERNEL_BINARY="arch/s390/boot/bzImage"
 
 #
 # Arch-specific defaults that can be overridden in the config file or on the
