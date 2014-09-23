@@ -123,7 +123,7 @@ findmediamount() {
 				fi
 				good_msg "Attempting to mount media: ${x}" ${CRYPT_SILENT}
 
-				mount -r -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
+				mount -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
 				if [ "$?" = '0' ]
 				then
 					if [ -n "${ISOBOOT}" ]; then
@@ -408,12 +408,29 @@ create_changefs() {
 setup_aufs() {
 	bootstrapCD
 
+        if [ "$aufs_dev" = "search" ]; then
+                findmediamount "aufs-dev" "$aufs_union_file" \
+                        "aufs_dev" "$aufs_dev_mnt" $(devicelist)
+                aufs_mounted="1"
+        elif [ -z $aufs_dev ] && [ -w "$CDROOT_PATH/$aufs_union_file" ]; then
+                aufs_dev="$REAL_ROOT"
+                aufs_dev_mnt="$CDROOT_PATH"
+                aufs_mounted="1"
+        fi
+        if [ -z $aufs_dev ] && [ -w "$CDROOT_PATH/casper-rw" ]; then
+                aufs_dev="$REAL_ROOT"
+                aufs_dev_mnt="$CDROOT_PATH"
+                aufs_union_file="/casper-rw"
+                aufs_mounted="1"
+        fi
+
         if [ -n "$aufs_dev" ]; then
                 if [ ! -b $aufs_dev ]; then
                         bad_msg "$aufs_dev is not a valid block device"
                         local invalidblk=1
                         unset aufs_dev
-                else
+		#skip this block when aufs_dev_mnt is already mounted
+                elif [ "$aufs_mounted" != "1" ]; then
                         good_msg "Mounting $aufs_dev to $aufs_memory for aufs support"
 
                         if ! mount -t auto "$aufs_dev" "$aufs_dev_mnt" &>/dev/null; then
@@ -428,6 +445,9 @@ setup_aufs() {
                 elif [ -n "$aufs_dev" ]; then
                         while :; do
                                 if mount -t auto "$aufs_dev_mnt$aufs_union_file" "$aufs_memory" &>/dev/null; then
+                                        if [ "$aufs_union_file" = "/casper-rw" ];then
+                                                bad_msg "Use of livecd.aufs preferred to casper-rw for changes saving, please rename the file."
+                                        fi
                                         break
                                 else
                                         bad_msg "Mounting of changes file failed, Running e2fsck"
