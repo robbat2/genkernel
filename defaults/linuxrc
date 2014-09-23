@@ -770,7 +770,7 @@ then
 
                 # Fstab changes for aufs
                 if ! grep -q '^aufs' "$CHROOT/etc/fstab" 2>/dev/null; then
-                        for dir in /var/tmp /tmp /usr/portage/distfiles; do
+                        for dir in /var/tmp /tmp; do
                                 [ ! -d $CHROOT$dir ] && mkdir -p "$CHROOT$dir"
                         done
 
@@ -782,7 +782,6 @@ then
 aufs            /                               aufs    defaults        0 0
 vartmp          /var/tmp                        tmpfs   defaults        0 0
 tmp             /tmp                            tmpfs   defaults        0 0
-distfiles       /usr/portage/distfiles          tmpfs   defaults        0 0
 FSTAB
                 fi
 
