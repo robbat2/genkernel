@@ -278,7 +278,7 @@ compile_generic() {
 		RET=${PIPESTATUS[0]}
 	else
 		# Output to logfile only
-		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS} ${ARGS} ${1} $*" 1 0 1
+		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
 		eval ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> ${LOGFILE} 2>&1
 		RET=$?
 	fi
