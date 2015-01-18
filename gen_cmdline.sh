@@ -158,6 +158,8 @@ longusage() {
   echo "	--integrated-initramfs, --no-integrated-initramfs"
   echo "				Include/exclude the generated initramfs in the kernel"
   echo "				instead of keeping it as a separate file"
+  echo "	--wrap-initrd, --no-wrap-initrd"
+  echo "				Wrap initramfs using mkimage for u-boot boots"
   echo "	--compress-initramfs, --no-compress-initramfs,"
   echo "	--compress-initrd, --no-compress-initrd"
   echo "				Compress or do not compress the generated initramfs"
@@ -574,6 +576,10 @@ parse_cmdline() {
 		--integrated-initramfs|--no-integrated-initramfs)
 			CMD_INTEGRATED_INITRAMFS=`parse_optbool "$*"`
 			print_info 2 "CMD_INTEGRATED_INITRAMFS=${CMD_INTEGRATED_INITRAMFS}"
+			;;
+		--wrap-initrd|--no-wrap-initrd)
+			CMD_WRAP_INITRD=`parse_optbool "$*"`
+			print_info 2 "CMD_WRAP_INITRD=${CMD_WRAP_INITRD}"
 			;;
 		--compress-initramfs|--no-compress-initramfs|--compress-initrd|--no-compress-initrd)
 			CMD_COMPRESS_INITRD=`parse_optbool "$*"`

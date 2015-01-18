@@ -958,6 +958,16 @@ create_initramfs() {
 				print_info 1 "        >> Not compressing cpio data ..."
 			fi
 		fi
+		if isTrue "${WRAP_INITRD}"
+		then
+			local mkimage_cmd=$(type -p mkimage)
+			[[ -z ${mkimage_cmd} ]] && gen_die "mkimage is not available. Please install package 'dev-embedded/u-boot-tools'."
+			local mkimage_args="-A ${ARCH} -O linux -T ramdisk -C ${compression:-none} -a 0x00000000 -e 0x00000000"
+			print_info 1 "        >> Wrapping initramfs using mkimage..."
+			print_info 2 "${mkimage_cmd} ${mkimage_args} -n initramfs-${KV} -d ${CPIO} ${CPIO}.uboot" 
+			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KV}" -d "${CPIO}" "${CPIO}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
+			mv -f "${CPIO}.uboot" "${CPIO}" || gen_die "Rename failed"
+		fi
 	fi
 
 	if isTrue "${CMD_INSTALL}"
