@@ -7,12 +7,14 @@ backup() {
 }
 
 modules_load() {
+	fn=$1
+	shift
 	for module in $*
 	do
-		echo ${module} >> /etc/modules/extra_load
+		echo ${module} >> /etc/modules/$fn
 	done
 
-	modules_scan extra_load
+	modules_scan $fn
 }
 
 modules_scan() {
@@ -28,6 +30,10 @@ modules_scan() {
 			echo -e "${BOLD}   ::${NORMAL} Skipping ${x}..."
 		elif [ "${MLOAD}" = "${MLIST}" ] # == No change == No specified no-load
 		then
+			if [ "${ROOTFSTYPE}" != 'auto' ] && [ -b "${REAL_ROOT}" ]; then
+				echo "Root block device found, continuing..."
+				break
+			fi
 			[ -n "${DEBUG}" ] && echo -ne "${BOLD}   ::${NORMAL} Checking for ${x}..."
 			# find -name does not work since the return status is always zero
 			if find /lib/modules/${KV} | grep /"${x}${KSUFF}" >/dev/null 2>&1
