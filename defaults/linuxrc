@@ -222,7 +222,6 @@ do
 		;;
 		rootfstype=*)
 			ROOTFSTYPE=${x#*=}
-			MY_HWOPTS="${MY_HWOPTS}"
 		;;
 		keymap=*)
 			keymap=${x#*=}
@@ -327,7 +326,7 @@ then
 	then
 		for modules in ${MY_HWOPTS}
 		do
-			if [ -b "$REAL_ROOT" ]; then
+			if [ "$ROOTFSTYPE" != "auto" ] && [ -b "$REAL_ROOT" ]; then
 				echo "${BOLD}Root filesystem $REAL_ROOT exists, continuing..."
 				break
 			fi
