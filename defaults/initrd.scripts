@@ -19,12 +19,14 @@ call_func_timeout()
 }
 
 modules_load() {
+	fn=$1
+	shift
 	for module in $*
 	do
-		echo ${module} >> /etc/modules/extra_load
+		echo ${module} >> /etc/modules/$fn
 	done
 
-	modules_scan extra_load
+	modules_scan $fn
 }
 
 modules_scan() {
@@ -44,6 +46,10 @@ modules_scan() {
 				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x}..."
 		elif [ "${MLOAD}" = "${MLIST}" ]
 		then
+			if [ "${ROOTFSTYPE}" != 'auto' ] && [ -b "${REAL_ROOT}" ]; then
+				echo "Root block device found, continuing..."
+				break
+			fi
 			if [ -n "${DEBUG}" ]; then
 				printf "%b" "${BOLD}   ::${NORMAL} "
 				printf "%b" "Scanning for ${x}..."

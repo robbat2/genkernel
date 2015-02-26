@@ -139,6 +139,10 @@ do
 		rootdelay|rootwait)
 			ROOTDELAY=5
 		;;
+		firstmods=*)
+			FIRSTMODS=${x#*=}
+			FIRSTMODS=$(echo ${MDOLIST} | sed -e 's/,/ /g')
+			;;
 		# Module no-loads
 		doload=*)
 			MDOLIST=${x#*=}
@@ -363,6 +367,10 @@ then
 elif [ -d "/lib/modules/${KV}" ]
 then
 	good_msg 'Loading modules'
+	if [ -n "$FIRSTMODS" ]; then
+		# try these modules first -- detected modules for root device:
+		modules_load firstmods ${FIRSTMODS}
+	fi
 	# Load appropriate kernel modules
 	if [ "${NODETECT}" != '1' ]
 	then
@@ -372,7 +380,7 @@ then
 		done
 	fi
 	# Always eval doload=...
-	modules_load ${MDOLIST}
+	modules_load extra_load ${MDOLIST}
 else
 	good_msg 'Skipping module load; no modules in the ramdisk!'
 fi
