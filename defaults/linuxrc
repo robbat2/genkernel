@@ -317,10 +317,20 @@ elif [ -d "/lib/modules/${KV}" ]
 then
 	good_msg 'Loading modules'
 	# Load appropriate kernel modules
+	if [ ! -b "${REAL_ROOT}" ] && [ "${ROOTFSTYPE}" != "auto" ]; then
+		# if the root filesystem type was specified, then try to load the corresponding FS module first:
+		if find /lib/modules/${KV} | grep /"${ROOTFSTYPE}${KSUFF}" > /dev/null 2>&1; then
+			modprobe $ROOTFSTYPE -n
+		fi
+	fi
 	if [ "${NODETECT}" != '1' ]
 	then
 		for modules in ${MY_HWOPTS}
 		do
+			if [ -b "$REAL_ROOT" ]; then
+				echo "${BOLD}Root filesystem $REAL_ROOT exists, continuing..."
+				break
+			fi
 			modules_scan ${modules}
 		done
 	fi

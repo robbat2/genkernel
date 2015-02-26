@@ -30,10 +30,6 @@ modules_scan() {
 		then
 			[ -n "${DEBUG}" ] && echo -ne "${BOLD}   ::${NORMAL} Checking for ${x}..."
 			# find -name does not work since the return status is always zero
-			if [ -b "$REAL_ROOT" ]; then
-				echo "${BOLD}Root filesystem $REAL_ROOT exists, continuing..."
-				break
-			fi
 			if find /lib/modules/${KV} | grep /"${x}${KSUFF}" >/dev/null 2>&1
 			then
 				echo -ne "${BOLD}   ::${NORMAL} Scanning for ${x}..."
