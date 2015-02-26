@@ -222,6 +222,7 @@ do
 		;;
 		rootfstype=*)
 			ROOTFSTYPE=${x#*=}
+			MY_HWOPTS="${MY_HWOPTS} $ROOTFSTYPE"
 		;;
 		keymap=*)
 			keymap=${x#*=}
