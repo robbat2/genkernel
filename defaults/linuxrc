@@ -323,6 +323,9 @@ then
 		# try these modules first -- detected modules for root device:
 		modules_load firstmods ${FIRSTMODS}
 	fi
+
+	mdev -s || bad_msg "mdev -s failed"
+
 	# Load appropriate kernel modules
 	if [ ! -b "${REAL_ROOT}" ] && [ "${ROOTFSTYPE}" != "auto" ]; then
 		# if the root filesystem type was specified, then try to load the corresponding FS module first:
@@ -330,6 +333,9 @@ then
 			modprobe $ROOTFSTYPE -n
 		fi
 	fi
+
+	mdev -s || bad_msg "mdev -s failed"
+
 	if [ "${NODETECT}" != '1' ]
 	then
 		for modules in ${MY_HWOPTS}
@@ -339,6 +345,7 @@ then
 				break
 			fi
 			modules_scan ${modules}
+			mdev -s || bad_msg "mdev -s failed"
 		done
 	fi
 	# Always eval doload=...
@@ -347,11 +354,7 @@ else
 	good_msg 'Skipping module load; no modules in the ramdisk!'
 fi
 
-# Ensure that device nodes are properly configured
-if [ "${KV_2_6_OR_GREATER}" ]
-then
-	mdev -s || bad_msg "mdev -s failed"
-fi
+mdev -s || bad_msg "mdev -s failed"
 
 # Apply scan delay if specified
 sdelay
