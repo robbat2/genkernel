@@ -826,7 +826,7 @@ startiscsi() {
 
 
 # Open a LUKS device
-# It is either the root or a swap, other devices are supported in the scripts provided with sys-fs/cryptsetup-luks
+# It is either the root or a swap, other devices are supported in the scripts provided with sys-fs/cryptsetup
 # $1 - root/swap
 openLUKS() {
 	# please use 'tr' and this line, or remove it

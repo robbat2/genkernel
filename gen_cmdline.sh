@@ -110,7 +110,7 @@ longusage() {
   echo "	--disklabel		Include disk label and uuid support in your ramdisk"
   echo "	--no-disklabel	Exclude disk label and uuid support in your ramdisk"
   echo "	--luks			Include LUKS support"
-  echo "				--> 'emerge cryptsetup-luks' with USE=-dynamic"
+  echo "				--> 'emerge cryptsetup' with USE=static"
   echo "	--no-luks		Exclude LUKS support"
   echo "	--gpg			Include GPG-armored LUKS key support"
   echo "	--no-gpg		Exclude GPG-armored LUKS key support"
