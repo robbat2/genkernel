@@ -67,7 +67,9 @@ CDROOT_PATH='/mnt/cdrom'
 CDROOT_MARKER='/livecd'
 
 LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
-
+# On Debian-like systems, set this to "/host"
+HOSTPART='/hostpart'
+LOOPDEV_HOSTPART_FLAGS='noatime'
 DEFAULT_NFSOPTIONS="ro,nolock,rsize=1024,wsize=1024"
 
 # This should list all possible hwopts that take do/no prefixes

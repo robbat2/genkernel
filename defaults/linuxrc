@@ -39,6 +39,8 @@ CMDLINE=$(cat /proc/cmdline)
 FAKE_ROOT=''
 FAKE_INIT=''
 FAKE_ROOTFLAGS=''
+REAL_ROOTFLAGS=''
+HOSTDEVFSTYPE='auto'
 INIT_OPTS=''
 ROOTFSTYPE='auto'
 CRYPT_SILENT=0
@@ -89,6 +91,13 @@ do
 		;;
 		isoboot=*)
 			ISOBOOT=${x#*=}
+		;;
+		# Use partition image file as real_root
+		loopdev_hostpart=*)
+			LOOPDEV_HOSTPART=${x#*=}
+		;;
+		loopdev_hostpart_flags=*)
+			LOOPDEV_HOSTPART_FLAGS=${x#*=}
 		;;
 		# Start Volume manager options
 		dolvm)
@@ -286,7 +295,8 @@ then
 	fi
 fi
 
-# Set variables based on the value of REAL_ROOT
+# Set variables based on the value of
+# REAL_ROOT and LOOPDEV_HOSTPART
 case "${REAL_ROOT}" in
 	ZFS=*)
 		ZFS_POOL=${REAL_ROOT#*=}
@@ -298,8 +308,22 @@ case "${REAL_ROOT}" in
 	;;
 esac
 
+if [ -n "${LOOPDEV_HOSTPART}" ]
+then
+	case "${LOOPDEV_HOSTPART}" in
+		ZFS=*)
+			ZFS_POOL=${LOOPDEV_HOSTPART#*=}
+			ZFS_POOL=${ZFS_POOL%%/*}
+			USE_ZFS=1
+		;;
+		ZFS)
+			USE_ZFS=1
+		;;
+	esac
+fi
+
 # Verify that it is safe to use ZFS
-if [ "USE_ZFS" = "1" ]
+if [ "$USE_ZFS" = "1" ]
 then
 	for i in /sbin/zfs /sbin/zpool
 	do
@@ -485,11 +509,197 @@ then
 fi
 
 # Determine root device
+
 good_msg 'Determining root device...'
+got_good_root=0
+got_good_host_dev=0
 while true
 do
-	while [ "${got_good_root}" != '1' ]
+	while [ $got_good_root -eq 0 ]
 	do
+
+		if [ -n "$LOOPDEV_HOSTPART" ]
+		# can be a local partition, a zfs device or a nfs export
+		then
+			good_msg 'Mounting host partition of raw disk image loop root device...'
+			while [ $got_good_host_dev -eq 0 ]
+			do
+				case "${LOOPDEV_HOSTPART}" in
+					LABEL=*|UUID=*)
+
+						HOST_DEV=""
+						retval=1
+
+						if [ ${retval} -ne 0 ]
+						then
+							HOST_DEV=$(findfs "${LOOPDEV_HOSTPART}" 2>/dev/null)
+							retval=$?
+						fi
+
+						if [ ${retval} -ne 0 ]
+						then
+							HOST_DEV=$(busybox findfs "${LOOPDEV_HOSTPART}" 2>/dev/null)
+							retval=$?
+						fi
+
+						if [ ${retval} -ne 0 ]
+						then
+							HOST_DEV=$(blkid -o device -l -t "${LOOPDEV_HOSTPART}")
+							retval=$?
+						fi
+
+						if [ ${retval} -eq 0 ] && [ -n "${HOST_DEV}" ]
+						then
+							good_msg "Detected loopdev_hostpart=${HOST_DEV}"
+							LOOPDEV_HOSTPART="${HOST_DEV}"
+							got_good_host_dev=1
+						else
+							prompt_user "LOOPDEV_HOSTPART" "host block device"
+							got_good_host_dev=0
+							continue
+						fi
+					;;
+
+					ZFS*)
+
+						if [ ${USE_ZFS} -eq 0 ]
+						then
+							prompt_user "LOOPDEV_HOSTPART" "host block device"
+							continue
+						fi
+
+						HOST_DEV="${LOOPDEV_HOSTPART#*=}"
+						if [ "${HOST_DEV}" != 'ZFS' ] 
+						then
+							if [ "$(zfs get type -o value -H ${HOST_DEV})" = 'filesystem' ]
+							then
+								got_good_host_dev=1
+								LOOPDEV_HOSTPART="${HOST_DEV}"
+								HOSTDEVFSTYPE='zfs'
+								USE_ZFS=0
+							else
+								bad_msg "${HOST_DEV} is not a filesystem"
+								got_good_host_dev=0
+							fi
+						else
+							BOOTFS=$(/sbin/zpool list -H -o bootfs)
+							if [ "${BOOTFS}" != '-' ]
+							then
+								for i in ${BOOTFS}
+								do
+									zfs get type ${i} > /dev/null
+									retval=$?
+									if [ ${retval} -eq 0 ]
+									then
+										got_good_host_dev=1
+										LOOPDEV_HOSTPART=${i}
+										HOSTDEVFSTYPE='zfs'
+										USE_ZFS=0
+									fi
+								done
+							else
+								prompt_user "LOOPDEV_HOSTPART" "host block device"
+								got_good_host_dev=0
+								continue
+							fi
+						fi
+
+						if [ ${got_good_host_dev} -ne 1 ]
+						then
+
+							prompt_user "LOOPDEV_HOSTPART" "host block device"
+							got_good_host_dev=0
+							continue
+						fi
+
+					;;
+				esac
+
+				# Mount host partition
+				good_msg "Mounting $LOOPDEV_HOSTPART as host partition..."
+
+				MOUNT_STATE='rw'
+				if [ "${HOSTDEVFSTYPE}" = 'zfs' ]
+				then
+					if [ "zfs get -H -o value mountpoint ${LOOPDEV_HOSTPART}" != 'legacy' ]
+					then
+						MOUNT_STATE='rw,zfsutil'
+					fi
+				fi
+
+				# Try to mount the device as $HOSTPART
+				# Debian mounts it as /host
+				mkdir -p $HOSTPART
+				if [ "${LOOPDEV_HOSTPART}" = '/dev/nfs' ]
+				then
+					findnfsmount '$HOSTPART'
+					XS=$?
+				else
+					# If $LOOPDEV_HOSTPART is a symlink
+					# Resolve it like util-linux mount does
+					[ -L ${LOOPDEV_HOSTPART} ] && LOOPDEV_HOSTPART=$( readlink ${LOOPDEV_HOSTPART} )
+
+					[ ! -z "${LOOPDEV_HOSTPART_FLAGS}" ] && MOUNT_STATE="${MOUNT_STATE},${LOOPDEV_HOSTPART_FLAGS}"
+					good_msg "Using mount -t ${HOSTDEVFSTYPE} -o ${MOUNT_STATE}"
+					mount -t ${HOSTDEVFSTYPE} -o ${MOUNT_STATE} ${LOOPDEV_HOSTPART} $HOSTPART
+					XS=$?
+				fi
+				unset MOUNT_STATE
+
+				# If mount is successful break out of the loop
+				# else not a good host device and start over.
+				if [ $XS -eq 0 ]
+				then
+					if [ -f $HOSTPART/${REAL_ROOT} ]
+					then
+						# Checking if we are to revert to the previous system image:
+						if [ -f $HOSTPART/system-revert ]
+						then
+							if [ -f $HOSTPART/${REAL_ROOT//\.img/-old.img} ]
+							then
+								mv $HOSTPART/${REAL_ROOT} $HOSTPART/${REAL_ROOT//\.img/-broken.img}
+								mv $HOSTPART/${REAL_ROOT//\.img/-old.img} $HOSTPART/${REAL_ROOT}
+								rm -f $HOSTPART/system-revert
+								good_msg "System reverted to previous state."
+							fi
+						fi
+						# Checking if we should upgrade the system image:
+						if [ -f $HOSTPART/${REAL_ROOT//\.img/-new.img} ]
+						then
+							mv $HOSTPART/${REAL_ROOT} $HOSTPART/${REAL_ROOT//\.img/-old.img}
+							mv $HOSTPART/${REAL_ROOT//\.img/-new.img} $HOSTPART/${REAL_ROOT}
+							good_msg "System image upgraded successfully."
+						fi
+						# setting REAL_ROOT to a loop block device
+						# so that next sections work correctly
+						IMG_FILE="$HOSTPART/${REAL_ROOT}"
+						REAL_ROOT="$( losetup -f )"
+						losetup ${REAL_ROOT} ${IMG_FILE}
+						if [ $? -eq 0 ]
+						then
+							good_msg "Root loop device successfully set up as ${REAL_ROOT}!"
+							break
+						else
+							bad_msg "Could not setup a loop device for root filesystem in ${IMG_FILE}, try again"
+							bad_msg "Possible reasons: missing support for storage loopback devices, damaged ${IMG_FILE} file."
+							got_good_host_dev=0
+							LOOPDEV_HOSTPART=''
+							REAL_ROOT="${IMG_FILE}"
+							continue
+						fi
+					else
+						bad_msg "The filesystem mounted at $HOSTPART does not appear to contain the root partition image file ${REAL_ROOT}, try again"
+						got_good_host_dev=0
+						LOOPDEV_HOSTPART=''
+					fi
+				else
+					bad_msg "Could not mount specified HOST DEVICE, try again"
+					got_good_host_dev=0
+					LOOPDEV_HOSTPART=''
+				fi
+			done
+		fi
+
 		case "${REAL_ROOT}" in
 			LABEL=*|UUID=*)
 
@@ -556,9 +766,8 @@ do
 								REAL_ROOT=${i}
 								ROOTFSTYPE=zfs
 								break
-							fi	
-						
-						done;
+							fi
+						done
 
 					else
 						got_good_root=0
