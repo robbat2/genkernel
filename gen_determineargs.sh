@@ -131,6 +131,7 @@ determine_real_args() {
 	set_config_with_override STRING FIRMWARE_DIR         CMD_FIRMWARE_DIR         "/lib/firmware"
 	set_config_with_override STRING FIRMWARE_FILES       CMD_FIRMWARE_FILES
 	set_config_with_override BOOL   INTEGRATED_INITRAMFS CMD_INTEGRATED_INITRAMFS
+	set_config_with_override BOOL   WRAP_INITRD          CMD_WRAP_INITRD
 	set_config_with_override BOOL   GENZIMAGE            CMD_GENZIMAGE
 	set_config_with_override BOOL   KEYMAP               CMD_KEYMAP               "yes"
 	set_config_with_override BOOL   DOKEYMAPAUTO         CMD_DOKEYMAPAUTO

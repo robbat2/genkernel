@@ -2,8 +2,9 @@
 #
 # Arch-specific options that normally shouldn't be changed.
 #
-KERNEL_MAKE_DIRECTIVE="vmlinux"
-KERNEL_BINARY="vmlinux"
+KERNEL_MAKE_DIRECTIVE=""
+KERNEL_MAKE_DIRECTIVE_2=""
+KERNEL_BINARY="arch/s390/boot/bzImage"
 
 #
 # Arch-specific defaults that can be overridden in the config file or on the

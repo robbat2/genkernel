@@ -376,6 +376,11 @@ OUTPUT SETTINGS
 	Builds or does not build the generated initramfs into the kernel instead
 	of keeping it as a separate file.
 
+*--*[*no-*]*wrap-initrd*::
+  	Wrap initramfs using mkimage for u-boot boots. Please note that only 
+	certain compression types are supported by mkimage (see manpage).
+
+
 *--*[*no-*]*compress-initramfs*, *--*[*no-*]*compress-initrd*::
 	Compresses or does not compress the generated initramfs.
 

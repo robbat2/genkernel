@@ -1,3 +1,4 @@
+#This file does not actually appear to be run at all anymore, and is kept as an example for new arches.
 # $Id$
 #
 # Arch-specific options that normally shouldn't be changed.
@@ -19,7 +20,8 @@ DEFAULT_COMPRESS_INITRD_TYPE=best
 # Arch-specific defaults that can be overridden in the config file or on the
 # command line.
 #
-DEFAULT_MAKEOPTS="-j2"
+PORTAGE_MAKEOPTS="$(portageq envvar MAKEOPTS)"
+DEFAULT_MAKEOPTS="${PORTAGE_MAKEOPTS:- -j2}"
 
 DEFAULT_KERNEL_MAKE=make
 DEFAULT_UTILS_MAKE=make
