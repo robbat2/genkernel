@@ -3,6 +3,7 @@
 - Need configs for other currently-unsupported arches
 - Make configs stackable
 - Move modules_load to /etc/genkernel
+- Refactor modules_load to not ship 12 identical arch configs
 - Move main config to /etc/genkernel
 - Refactor code to be more simple and extendable
 - Fix all TODO sections in the code
