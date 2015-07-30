@@ -19,12 +19,12 @@ check-git-repository:
 	git diff --cached --quiet || { echo 'STOP, you have uncommitted changes in the index' ; false ; }
 
 dist: check-git-repository $(EXTRA_DIST)
-	rm -Rf "$(distdir)" "$(distdir)".tar "$(distdir)".tar.bz2
+	rm -Rf "$(distdir)" "$(distdir)".tar "$(distdir)".tar.xz
 	mkdir "$(distdir)"
 	git ls-files -z | xargs -0 cp --no-dereference --parents --target-directory="$(distdir)" \
 		$(EXTRA_DIST)
 	tar cf "$(distdir)".tar "$(distdir)"
-	bzip2 -9v "$(distdir)".tar
+	xz -v "$(distdir)".tar
 	rm -Rf "$(distdir)"
 
 .PHONY: clean check-git-repository dist
