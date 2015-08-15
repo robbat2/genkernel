@@ -102,6 +102,10 @@ append_base_layout() {
 
 	printf "$(hostid | sed 's/\([0-9A-F]\{2\}\)/\\x\1/gI')" > ${TEMP}/initramfs-base-temp/etc/hostid
 
+	mkdir -p "${TEMP}/initramfs-base-temp/etc/mdev/helpers"
+	install -m 644 -t "${TEMP}/initramfs-base-temp/etc" /usr/share/genkernel/mdev/mdev.conf
+	install -m 755 -t "${TEMP}/initramfs-base-temp/etc/mdev/helpers" /usr/share/genkernel/mdev/helpers/storage-device
+
 	cd "${TEMP}/initramfs-base-temp/"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
