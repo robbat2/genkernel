@@ -293,11 +293,12 @@ append_dmraid(){
 	/bin/tar -jxpf "${DMRAID_BINCACHE}" -C "${TEMP}/initramfs-dmraid-temp" ||
 		gen_die "Could not extract dmraid binary cache!";
 	cd "${TEMP}/initramfs-dmraid-temp/"
-	RAID456=`find . -type f -name raid456.ko`
+	module_ext=$(modules_kext)
+	RAID456=`find . -type f -name raid456${module_ext}`
 	if [ -n "${RAID456}" ]
 	then
-		cd "${RAID456/raid456.ko/}"
-		ln -sf raid456.kp raid45.ko
+		cd "${RAID456/raid456${module_ext}/}"
+		ln -sf raid456.kp $(basename ${RAID456})
 		cd "${TEMP}/initramfs-dmraid-temp/"
 	fi
 	log_future_cpio_content
@@ -614,7 +615,7 @@ print_list()
 append_modules() {
 	local group
 	local group_modules
-	local MOD_EXT=".ko"
+	local MOD_EXT="$(modules_kext)"
 
 	print_info 2 "initramfs: >> Searching for modules..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
