@@ -55,7 +55,6 @@ MISCOPTS='debug detect'
 QUIET='1'
 ROOT_LINKS='bin sbin lib lib32 lib64 boot usr opt emul'
 ROOT_TREES='etc root home var'
-KSUFF='.ko'
 
 REAL_ROOT=''
 CONSOLE='/dev/console'
