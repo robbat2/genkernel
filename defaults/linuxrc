@@ -120,6 +120,9 @@ do
 				ZPOOL_FORCE=-f
 			fi
 		;;
+		dobtrfs*)
+			USE_BTRFS=1
+		;;
 		quiet)
 			QUIET=1
 		;;

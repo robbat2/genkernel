@@ -462,6 +462,25 @@ append_zfs(){
 	rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
 }
 
+append_btrfs() {
+	if [ -d "${TEMP}/initramfs-btrfs-temp" ]
+	then
+		rm -r "${TEMP}/initramfs-btrfs-temp"
+	fi
+
+	mkdir -p "${TEMP}/initramfs-btrfs-temp"
+
+	# Copy binaries
+	copy_binaries "${TEMP}/initramfs-btrfs-temp" /sbin/btrfs
+
+	cd "${TEMP}/initramfs-btrfs-temp/"
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+			|| gen_die "compressing btrfs cpio"
+	cd "${TEMP}"
+	rm -rf "${TEMP}/initramfs-btrfs-temp" > /dev/null
+}
+
 append_linker() {
 	if [ -d "${TEMP}/initramfs-linker-temp" ]
 	then
@@ -816,6 +835,8 @@ create_initramfs() {
 	fi
 
 	append_data 'zfs' "${ZFS}"
+
+	append_data 'btrfs' "${BTRFS}"
 
 	append_data 'blkid' "${DISKLABEL}"
 
