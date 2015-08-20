@@ -39,7 +39,6 @@ CMDLINE=$(cat /proc/cmdline)
 FAKE_ROOT=''
 FAKE_INIT=''
 FAKE_ROOTFLAGS=''
-INIT_OPTS=''
 ROOTFSTYPE='auto'
 CRYPT_SILENT=0
 QUIET=''
@@ -62,9 +61,6 @@ do
 		;;
 		init=*)
 			FAKE_INIT=${x#*=}
-		;;
-		init_opts=*)
-			INIT_OPTS=${x#*=}
 		;;
 		# Livecd options
 		cdroot)
@@ -1020,7 +1016,8 @@ fi
 # Run debug shell if requested
 rundebugshell "before entering switch_root"
 
-exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${REAL_INIT:-/sbin/init}" "${INIT_OPTS}"
+# init_opts is set in the environment by the kernel when it parses the command line
+exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${REAL_INIT:-/sbin/init}" ${init_opts}
 
 # If we get here, something bad has happened
 splash 'verbose'
