@@ -283,6 +283,9 @@ do
 		nounionfs)
 			USE_UNIONFS_NORMAL=0
 			;;
+		verify)
+			VERIFY=1
+		;;
 	esac
 done
 

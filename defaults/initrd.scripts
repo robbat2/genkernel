@@ -233,6 +233,22 @@ bootstrapCD() {
 
 	findmediamount "cdrom" "${SUBDIR}/${CDROOT_MARKER}" \
 		"REAL_ROOT" "${CDROOT_PATH}" ${DEVICES}
+	if [ $VERIFY = 1 ]; then
+		cd "${CDROOT_PATH}"
+		if [ -f isoroot_checksums ]; then
+			good_msg "Verifying checksums, this may take some time..."
+			if ! busybox sha512sum -c isoroot_checksums; then
+				bad_msg "Some checksums failed, press any key to poweroff..."
+				read -n1 -s
+				busybox poweroff -f
+			else
+				good_msg "Checksums all valid, continuing boot..."
+			fi
+			cd $OLDPWD
+		else
+			bad_msg "Verify enabled but no checksums file exists, skipping"
+		fi
+	fi
 }
 
 bootstrapKey() {
