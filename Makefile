@@ -24,7 +24,7 @@ check-git-repository:
 	git diff --quiet || { echo 'STOP, you have uncommitted changes in the working directory' ; false ; }
 	git diff --cached --quiet || { echo 'STOP, you have uncommitted changes in the index' ; false ; }
 
-dist: check-git-repository $(EXTRA_DIST) distclean
+dist: check-git-repository distclean $(EXTRA_DIST)
 	mkdir "$(distdir)"
 	git ls-files -z | xargs -0 cp --no-dereference --parents --target-directory="$(distdir)" \
 		$(EXTRA_DIST)
