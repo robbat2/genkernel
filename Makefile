@@ -24,8 +24,7 @@ check-git-repository:
 	git diff --quiet || { echo 'STOP, you have uncommitted changes in the working directory' ; false ; }
 	git diff --cached --quiet || { echo 'STOP, you have uncommitted changes in the index' ; false ; }
 
-dist: check-git-repository $(EXTRA_DIST)
-	rm -Rf "$(distdir)" "$(distdir)".tar "$(distdir)".tar.xz
+dist: check-git-repository $(EXTRA_DIST) distclean
 	mkdir "$(distdir)"
 	git ls-files -z | xargs -0 cp --no-dereference --parents --target-directory="$(distdir)" \
 		$(EXTRA_DIST)
@@ -33,4 +32,7 @@ dist: check-git-repository $(EXTRA_DIST)
 	xz -v "$(distdir)".tar
 	rm -Rf "$(distdir)"
 
-.PHONY: clean check-git-repository dist
+distclean: clean
+	rm -Rf "$(distdir)" "$(distdir)".tar "$(distdir)".tar.xz
+
+.PHONY: clean check-git-repository dist distclean
