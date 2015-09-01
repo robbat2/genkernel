@@ -120,7 +120,7 @@ append_busybox() {
 		rm -rf "${TEMP}/initramfs-busybox-temp" > /dev/null
 	fi
 
-	mkdir -p "${TEMP}/initramfs-busybox-temp/bin/" 
+	mkdir -p "${TEMP}/initramfs-busybox-temp/bin/"
 	tar -xjf "${BUSYBOX_BINCACHE}" -C "${TEMP}/initramfs-busybox-temp/bin" busybox ||
 		gen_die 'Could not extract busybox bincache!'
 	chmod +x "${TEMP}/initramfs-busybox-temp/bin/busybox"
@@ -259,7 +259,7 @@ append_multipath(){
 	copy_binaries "${TEMP}/initramfs-multipath-temp" \
 		/bin/mountpoint \
 		/sbin/{multipath,kpartx,dmsetup} \
-		/{lib,lib64}/{udev/scsi_id,multipath/*so} 
+		/{lib,lib64}/{udev/scsi_id,multipath/*so}
 
 	# Support multipath-tools-0.4.8 and previous
 	if [ -x /sbin/mpath_prio_* ]
@@ -678,7 +678,7 @@ append_modules() {
 	find . | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
 			|| gen_die "compressing modules cpio"
 	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-modules-${KV}-temp/"	
+	rm -r "${TEMP}/initramfs-modules-${KV}-temp/"
 }
 
 append_modprobed() {
