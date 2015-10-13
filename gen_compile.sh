@@ -463,6 +463,7 @@ compile_lvm() {
 		print_info 1 'lvm: >> Configuring...'
 			CFLAGS="-fPIC" \
 			./configure --enable-static_link --prefix=/ \
+				--enable-dmeventd --enable-cmdlib \
 				--with-lvm1=internal --with-clvmd=none --with-cluster=none \
 				--disable-readline --disable-selinux --with-mirrors=internal \
 				--with-snapshots=internal --with-pool=internal \
@@ -555,9 +556,12 @@ compile_dmraid() {
 
 		LDFLAGS="-L${TEMP}/lvm/lib" \
 		CFLAGS="-I${TEMP}/lvm/include" \
+		DEVMAPPEREVENT_CFLAGS="-I${TEMP}/lvm/include" \
 		CPPFLAGS="-I${TEMP}/lvm/include" \
 		LIBS="-ldevmapper" \
-		./configure --enable-static_link --prefix=${TEMP}/dmraid >> ${LOGFILE} 2>&1 ||
+		./configure --enable-static_link \
+			--with-devmapper-prefix="${TEMP}/lvm" \
+			--prefix=${TEMP}/dmraid >> ${LOGFILE} 2>&1 ||
 			gen_die 'Configure of dmraid failed!'
 
 		# We dont necessarily have selinux installed yet... look into
