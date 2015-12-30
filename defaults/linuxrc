@@ -434,9 +434,6 @@ then
 	fi
 fi
 
-#scan for volumes again in case of lvm inside luks
-startVolumes
-
 mkdir -p "${NEW_ROOT}"
 CHROOT="${NEW_ROOT}"
 
