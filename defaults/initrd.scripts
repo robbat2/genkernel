@@ -961,12 +961,28 @@ startVolumes() {
 
 	if [ "${USE_MULTIPATH_NORMAL}" = '1' ] 
 	then 
-		good_msg "Scanning for multipath devices" 
-		/sbin/multipath -v 0
-		sleep 2
-		good_msg "Activating multipath devices" 
-		/sbin/dmsetup ls --target multipath --exec "/sbin/kpartx -a -v" 
-		#for MULTIPATH_VOLUMES in /dev/mapper/*; do kpartx -a $MULTIPATH_VOLUMES; done
+		for multipath_path in /sbin/multipath /bin/multipath MISSING ; do
+			[ -x "$multipath_path " ] && break
+		fi
+		for dmsetup_path in /sbin/dmsetup /bin/dmsetup MISSING ; do
+			[ -x "$dmsetup_path " ] && break
+		fi
+		for kpartx_path in /sbin/kpartx /bin/kpartx MISSING ; do
+			[ -x "$kpartx_path " ] && break
+		fi
+		fail=0
+		["${multipath_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but multipath binary missing! Skipping multipath"
+		["${dmsetup_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but dmsetup binary missing! Skipping multipath"
+		["${kpartx_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but kpartx binary missing! Skipping multipath"
+		if [ "$fail" = "0" ]
+		then
+			good_msg "Scanning for multipath devices"
+			$multipath_path  -v 0
+			sleep 2
+			good_msg "Activating multipath devices"
+			$dmsetup_path ls --target multipath --exec "$kpartx_path -a -v"
+			#for MULTIPATH_VOLUMES in /dev/mapper/*; do $kpartx_path -a $MULTIPATH_VOLUMES; done
+		fi
 	fi 
 
 	if [ "${USE_DMRAID_NORMAL}" = '1' ]

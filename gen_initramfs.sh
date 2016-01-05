@@ -374,8 +374,8 @@ append_lvm(){
 		# Now move the static binaries into good places.
 		mv ${TEMP}/initramfs-lvm-temp/sbin/lvm.static ${TEMP}/initramfs-lvm-temp/sbin/lvm ||
 			gen_die 'LVM error: Could not move lvm.static to lvm!'
-		# See bug 382555
-		mv ${TEMP}/initramfs-lvm-temp/sbin/dmsetup.static ${TEMP}/initramfs-lvm-temp/bin/dmsetup ||
+		# See bug 382555; use /sbin/dmsetup to match multipath code
+		mv ${TEMP}/initramfs-lvm-temp/sbin/dmsetup.static ${TEMP}/initramfs-lvm-temp/sbin/dmsetup ||
 			gen_die 'LVM error: Could not move dmsetup.static to dmsetup!'
 		# Clean up other stuff we don't need
 		rm -rf ${TEMP}/initramfs-lvm-temp/{lib*,share,man,include,sbin/dmeventd.static}
