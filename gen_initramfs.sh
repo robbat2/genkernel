@@ -366,13 +366,24 @@ append_lvm(){
 		compile_lvm || gen_die "Could not compile LVM"
 		/bin/tar -jxpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
 			gen_die "Could not extract lvm binary cache!";
+		# Remove any dynamic binaries that exist, so the rest of the code will
+		# fail better if something is missing
+		for f in ${TEMP}/initramfs-lvm-temp/{bin,sbin}/* ; do
+			[ -x "$f" ] && LC_ALL="C" ldd $f | grep -sq '(' && rm -f "$f"
+		done
+		# Now move the static binaries into good places.
 		mv ${TEMP}/initramfs-lvm-temp/sbin/lvm.static ${TEMP}/initramfs-lvm-temp/sbin/lvm ||
 			gen_die 'LVM error: Could not move lvm.static to lvm!'
 		# See bug 382555
 		mv ${TEMP}/initramfs-lvm-temp/sbin/dmsetup.static ${TEMP}/initramfs-lvm-temp/bin/dmsetup ||
 			gen_die 'LVM error: Could not move dmsetup.static to dmsetup!'
-		rm -rf ${TEMP}/initramfs-lvm-temp/{lib,share,man,include,sbin/{lvm,dmsetup}}
+		# Clean up other stuff we don't need
+		rm -rf ${TEMP}/initramfs-lvm-temp/{lib*,share,man,include,sbin/dmeventd.static}
 	fi
+	# Include a symlink in the old location, for people with other appended
+	# scripts that might look for it in the old location.
+	ln -s ../sbin/lvm "${TEMP}/initramfs-lvm-temp/bin/lvm"
+	# Include the LVM config now
 	if [ -x /sbin/lvm -o -x /bin/lvm ]
 	then
 #		lvm dumpconfig 2>&1 > /dev/null || gen_die 'Could not copy over lvm.conf!'
