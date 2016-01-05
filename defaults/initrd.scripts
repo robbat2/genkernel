@@ -963,13 +963,13 @@ startVolumes() {
 	then
 		for multipath_path in /sbin/multipath /bin/multipath MISSING ; do
 			[ -x "$multipath_path " ] && break
-		fi
+		done
 		for dmsetup_path in /sbin/dmsetup /bin/dmsetup MISSING ; do
 			[ -x "$dmsetup_path " ] && break
-		fi
+		done
 		for kpartx_path in /sbin/kpartx /bin/kpartx MISSING ; do
 			[ -x "$kpartx_path " ] && break
-		fi
+		done
 		fail=0
 		["${multipath_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but multipath binary missing! Skipping multipath"
 		["${dmsetup_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but dmsetup binary missing! Skipping multipath"
@@ -1003,7 +1003,7 @@ startVolumes() {
 	then
 		for lvm_path in /sbin/lvm /bin/lvm MISSING ; do
 			[ -x "$lvm_path" ] && break
-		fi
+		done
 		if [ "${lvm_path}" = "MISSING" ]
 		then
 			bad_msg "dolvm invoked, but LVM binary not available! skipping LVM volume group activation!"
