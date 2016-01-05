@@ -341,6 +341,7 @@ append_lvm(){
 	mkdir -p "${TEMP}/initramfs-lvm-temp/bin/"
 	mkdir -p "${TEMP}/initramfs-lvm-temp/sbin/"
 	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/"
+	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/cache"
 	if false && [ -e '/sbin/lvm.static' ]
 	then
 		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm.static)...'
