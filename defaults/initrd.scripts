@@ -78,7 +78,7 @@ findmediamount() {
 	# $2 = recognition file
 	# $3 = variable to have the device path
 	# $4 = actual mount dir path (full path)
-	# args remaining are possible devices 
+	# args remaining are possible devices
 
 	local media=$1 recon=$2 vrbl=$3 mntdir=$4
 	shift 4
@@ -534,7 +534,7 @@ findnfsmount() {
 
 		if [ "${NFSROOT}" = '' ]
 		then
-			# Obtain NFSIP	
+			# Obtain NFSIP
 			OPTIONS=`busybox dmesg | grep rootserver | sed -e "s/,/ /g"`
 			for OPTION in $OPTIONS
 			do
@@ -543,9 +543,9 @@ findnfsmount() {
 					NFSIP=`echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 2`
 				fi 
 			done
-			
+
 			# Obtain NFSPATH
-			OPTIONS=`busybox dmesg | grep rootpath | sed -e "s/,/ /g"`	
+			OPTIONS=`busybox dmesg | grep rootpath | sed -e "s/,/ /g"`
 			for OPTION in $OPTIONS
 			do
 				if [ `echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 1` = 'rootpath' ]
@@ -585,7 +585,7 @@ findnfsmount() {
 				else
 					bad_msg "NFS Mounting failed. Is the path corrent ?"
 				fi
-			else	
+			else
 				good_msg "Attempting to mount NFS root on ${NFSROOT} with options ${NFSOPTIONS}"
 				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}
 				if [ "$?" = '0' ]
@@ -635,11 +635,11 @@ find_real_device() {
 check_loop() {
 	if [ "${LOOP}" = '' -o ! -e "${CDROOT_PATH}/${LOOP}" ]
 	then
-	
+
 		bad_msg "Invalid loop location: ${LOOP}"
 		bad_msg 'Please export LOOP with a valid location, or reboot and pass a proper loop=...'
 		bad_msg 'kernel command line!'
-	
+
 		run_shell
 	fi
 }
@@ -676,7 +676,7 @@ mount_devfs () {
 
 test_success() {
 	retcode=$?
-	# If last command failed send error message and fall back to a shell	
+	# If last command failed send error message and fall back to a shell
 	if [ "$retcode" != '0' ]
 	then
 		error_string=$1
@@ -707,7 +707,7 @@ bad_msg() {
 		splash 'verbose' > /dev/null &
 		echo -e "${BAD}!!${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 	fi
-} 
+}
 
 warn_msg() {
 	msg_string=$1
@@ -792,18 +792,18 @@ cmdline_hwopts() {
 			fi
 		done
 	done
-   
+
 	# Shouldnt need to sort this as the following loop should figure out the
 	# duplicates and strip them out
 	#MY_HWOPTS=`echo ${MY_HWOPTS}|  sort`
-	
+
 	for x in ${MY_HWOPTS}
 	do
 		FOUND=0
 		for y in ${TMP_HWOPTS}
 		do
 			if [ "${y}" = "${x}" ]
-			then 
+			then
 				continue 2
 			fi
 		done
@@ -843,7 +843,7 @@ setup_keymap() {
 		[ -f /lib/keymaps/keymapList ] && chooseKeymap
 
 		[ "${DEVBIND}" = '1' ] && umount /dev
-		
+
 		if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" = '1' ]
 		then
 			mkdir -p ${NEW_ROOT}/etc/sysconfig/
@@ -948,7 +948,7 @@ startVolumes() {
 		mkdir -p /dev/mapper
 		ln -sf /dev/device-mapper /dev/mapper/control
 	fi
-	
+
 	if [ "${USE_MDADM}" = '1' ]
 	then
 		if [ -x '/sbin/mdadm' ]
@@ -959,8 +959,8 @@ startVolumes() {
 		fi
 	fi
 
-	if [ "${USE_MULTIPATH_NORMAL}" = '1' ] 
-	then 
+	if [ "${USE_MULTIPATH_NORMAL}" = '1' ]
+	then
 		for multipath_path in /sbin/multipath /bin/multipath MISSING ; do
 			[ -x "$multipath_path " ] && break
 		fi
@@ -983,7 +983,7 @@ startVolumes() {
 			$dmsetup_path ls --target multipath --exec "$kpartx_path -a -v"
 			#for MULTIPATH_VOLUMES in /dev/mapper/*; do $kpartx_path -a $MULTIPATH_VOLUMES; done
 		fi
-	fi 
+	fi
 
 	if [ "${USE_DMRAID_NORMAL}" = '1' ]
 	then
@@ -1021,7 +1021,7 @@ startVolumes() {
 
 			# To activate volumegroups on all devices in the cache
 			lvm_commands="${lvm_commands} \nvgchange -ay --sysinit"
-			
+
 			# To create symlinks so users can use real_root=/dev/vg/root
 			# This needs to run after vgchange, using vgchange --mknodes is too
 			# early.
@@ -1042,7 +1042,7 @@ startVolumes() {
 			bad_msg "btrfs not found: skipping btrfs device scanning!"
 		fi
 	fi
-	
+
 	if [ "${USE_ZFS}" = '1' ]
 	then
 
@@ -1091,7 +1091,7 @@ startVolumes() {
 }
 
 startiscsi() {
-	
+
 	if [ ! -n "${ISCSI_NOIBFT}" ]
 	then
 		good_msg "Activating iSCSI via iBFT"
@@ -1108,7 +1108,7 @@ startiscsi() {
 		else
 			ADDITIONAL="${ADDITIONAL} -g 1"
 		fi
-		
+
 		if [ "${ISCSI_PORT}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -p ${ISCSI_PORT}"
@@ -1205,10 +1205,10 @@ openLUKS() {
 					cryptsetup_options="${cryptsetup_options} --allow-discards"
 				fi
 
-				if [ -n "${LUKS_KEY}" ] 
+				if [ -n "${LUKS_KEY}" ]
 				then
 					local REAL_LUKS_KEYDEV="${LUKS_KEYDEV}"
-					if [ ! -e "${mntkey}${LUKS_KEY}" ] 
+					if [ ! -e "${mntkey}${LUKS_KEY}" ]
 					then
 						REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
 						if [ -b "${REAL_LUKS_KEYDEV}" ]
@@ -1218,7 +1218,7 @@ openLUKS() {
 							# abort after 10 secs
 							local count=10
 							while [ ${count} -gt 0 ]
-							do 
+							do
 								count=$((count-1))
 								sleep 1
 								REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
@@ -1304,7 +1304,7 @@ openLUKS() {
 startLUKS() {
 
 	# if key is set but key device isn't, find it
-	
+
 	[ -n "${CRYPT_ROOT_KEY}" ] && [ -z "${CRYPT_ROOT_KEYDEV}" ] \
 		&& sleep 6 && bootstrapKey "ROOT"
 
@@ -1537,32 +1537,32 @@ setup_unionfs() {
 		mkdir -p ${UNION}
 		good_msg "Loading fuse module"
 		modprobe fuse > /dev/null 2>&1
-#                 if [ -n "${UNIONFS}" ] 	 
-#                 then 	 
-#                         CHANGESDEV=${UNIONFS} 	 
-#                         good_msg "mounting $CHANGESDEV to $MEMORY for unionfs support" 	 
-#                         mount -t auto $CHANGESDEV $MEMORY 	 
-#                         # mount tmpfs only in the case when changes= boot parameter was 	 
-#                         # empty or we were not able to mount the storage device 	 
-#                         ret=$? 	 
+#                 if [ -n "${UNIONFS}" ]
+#                 then
+#                         CHANGESDEV=${UNIONFS}
+#                         good_msg "mounting $CHANGESDEV to $MEMORY for unionfs support"
+#                         mount -t auto $CHANGESDEV $MEMORY
+#                         # mount tmpfs only in the case when changes= boot parameter was
+#                         # empty or we were not able to mount the storage device
+#                         ret=$?
 #                         if [ ${ret} -ne 0 ]
-#                         then 	 
-#                                 bad_msg "mount of $CHANGESDEV failed falling back to ramdisk based unionfs" 	 
-#                                 mount -t tmpfs tmpfs $MEMORY 	 
-#                         fi 	 
-#                         if [ "${CDROOT}" -eq '1' -a ! -f ${MEMORY}/livecd.unionfs  ] 	 
-#                         then 	 
-#                                 umount $MEMORY 	 
-#                                 bad_msg "failed to find livecd.unionfs file on $CHANGESDEV" 	 
-#                                 bad_msg "create a livecd.unionfs file on this device if you wish to use it for unionfs" 	 
-#                                 bad_msg "falling back to ramdisk based unionfs for safety" 	 
-#                                 mount -t tmpfs tmpfs $MEMORY 	 
-#                         fi 	 
-#                 else 	 
-#                         good_msg "Mounting ramdisk to $MEMORY for unionfs support..." 	 
-#                         mount -t tmpfs tmpfs $MEMORY 	 
-#                 fi 	 
-  	 
+#                         then
+#                                 bad_msg "mount of $CHANGESDEV failed falling back to ramdisk based unionfs"
+#                                 mount -t tmpfs tmpfs $MEMORY
+#                         fi
+#                         if [ "${CDROOT}" -eq '1' -a ! -f ${MEMORY}/livecd.unionfs  ]
+#                         then
+#                                 umount $MEMORY
+#                                 bad_msg "failed to find livecd.unionfs file on $CHANGESDEV"
+#                                 bad_msg "create a livecd.unionfs file on this device if you wish to use it for unionfs"
+#                                 bad_msg "falling back to ramdisk based unionfs for safety"
+#                                 mount -t tmpfs tmpfs $MEMORY
+#                         fi
+#                 else
+#                         good_msg "Mounting ramdisk to $MEMORY for unionfs support..."
+#                         mount -t tmpfs tmpfs $MEMORY
+#                 fi
+
 		mkdir /tmp
 		mkdir -p ${UNION}
 #		mkdir -p $CHANGES
