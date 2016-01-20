@@ -997,7 +997,7 @@ for fs in /dev /sys /proc
 do
 	if grep -qs "$fs" /proc/mounts
 	then
-		if ! mount --move $fs "${CHROOT}"$fs
+		if ! mount -o move $fs "${CHROOT}"$fs
 		then
 			umount $fs || \
 			bad_msg "Failed to move and unmount the ramdisk $fs!"
