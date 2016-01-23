@@ -3,28 +3,33 @@
 
 # Fills variable KERNEL_CONFIG
 determine_config_file() {
-	if [ "${CMD_KERNEL_CONFIG}" != "" ]
+	for f in \
+		"${CMD_KERNEL_CONFIG}" \
+		"/etc/kernels/kernel-config-${ARCH}-${KV}" \
+		"${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" \
+		"${DEFAULT_KERNEL_CONFIG}" \
+		"${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" \
+		"${GK_SHARE}/arch/${ARCH}/generated-config" \
+		"${GK_SHARE}/arch/${ARCH}/kernel-config" \
+		; do
+		if [ -n "${f}" -a -f "${f}" ]
+		then
+			if ! grep -sq THIS_CONFIG_IS_BROKEN "$f"
+			then
+				KERNEL_CONFIG="$f" && break
+			fi
+		fi
+	done
+	if [ -z "${KERNEL_CONFIG}" ]
 	then
-		KERNEL_CONFIG="${CMD_KERNEL_CONFIG}"
-	elif [ -f "/etc/kernels/kernel-config-${ARCH}-${KV}" ]
-	then
-		KERNEL_CONFIG="/etc/kernels/kernel-config-${ARCH}-${KV}"
-	elif [ -f "${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" ]
-	then
-		KERNEL_CONFIG="${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}"
-	elif [ "${DEFAULT_KERNEL_CONFIG}" != "" -a -f "${DEFAULT_KERNEL_CONFIG}" ]
-	then
-		KERNEL_CONFIG="${DEFAULT_KERNEL_CONFIG}"
-	elif [ -f "${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" ]
-	then
-		KERNEL_CONFIG="${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}"
-	elif [ -f "${GK_SHARE}/arch/${ARCH}/kernel-config" ]
-	then
-		KERNEL_CONFIG="${GK_SHARE}/arch/${ARCH}/generated-config"
-	else
 		gen_die 'Error: No kernel .config specified, or file not found!'
 	fi
     KERNEL_CONFIG="$(readlink -f "${KERNEL_CONFIG}")"
+	# Validate the symlink result if any
+	if [ ! -f "${KERNEL_CONFIG}" ]
+	then
+		gen_die "Error: No kernel .config: symlinked file not found! ($KERNEL_CONFIG)"
+	fi
 }
 
 config_kernel() {
