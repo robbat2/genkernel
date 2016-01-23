@@ -77,7 +77,6 @@ CONFIG_BLK_DEV_RSXX=m
 # CONFIG_CPU_SUP_CENTAUR is not set
 # CONFIG_X86_CPU_DEBUG is not set
 # CONFIG_CAPI_EICON is not set
-# CONFIG_SECCOMP is not set
 # CONFIG_I2O is not set
 # CONFIG_I2O_BLOCK is not set
 # CONFIG_I2O_SCSI is not set
