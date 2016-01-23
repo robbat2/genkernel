@@ -9,7 +9,7 @@ PART="$(echo ${MDEV} | sed 's/\(.*[a-z]\)\(.*\)/\2/')"
 
 [ -f "/sys/class/block/${DEV}/device/vpd_pg83" ] || exit 6
 
-cat "/sys/class/block/${DEV}/device/vpd_pg83" 2>&1 >/dev/null || exit 15
+cat "/sys/class/block/${DEV}/device/vpd_pg83" >/dev/null 2>&1 || exit 15
 
 case $DEV in
 vd*)
