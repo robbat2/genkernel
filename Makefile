@@ -45,7 +45,7 @@ distclean: clean
 
 # Generic rules
 %/generated-config: %/arch-config $(BASE_KCONF) merge.pl Makefile
-	perl merge.pl $^ $(BASE_KCONF) > $@
+	grep -sq THIS_CONFIG_IS_BROKEN $< && cat $< >$@ || grep -sq perl merge.pl $< $(BASE_KCONF) > $@
 
 %.8: doc/%.8.txt doc/asciidoc.conf Makefile genkernel
 	a2x --conf-file=doc/asciidoc.conf --attribute="genkernelversion=$(PACKAGE_VERSION)" \
