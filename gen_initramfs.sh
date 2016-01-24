@@ -906,6 +906,7 @@ create_initramfs() {
 			lzma) compress_config='INITRAMFS_COMPRESSION_LZMA' ;;
 			xz) compress_config='INITRAMFS_COMPRESSION_XZ' ;;
 			lzo) compress_config='INITRAMFS_COMPRESSION_LZO' ;;
+			lz4) compress_config='INITRAMFS_COMPRESSION_LZ4' ;;
 			*) compress_config='INITRAMFS_COMPRESSION_NONE' ;;
 		esac
 		# All N default except XZ, so there it gets used if the kernel does
@@ -920,6 +921,7 @@ create_initramfs() {
 		CONFIG_INITRAMFS_COMPRESSION_LZMA=n
 		CONFIG_INITRAMFS_COMPRESSION_XZ=y
 		CONFIG_INITRAMFS_COMPRESSION_LZO=n
+		CONFIG_INITRAMFS_COMPRESSION_LZ4=n
 		CONFIG_${compress_config}=y
 		EOF
 	else
@@ -945,14 +947,16 @@ create_initramfs() {
 			cmd_bzip2=$(type -p bzip2)
 			cmd_gzip=$(type -p gzip)
 			cmd_lzop=$(type -p lzop)
+			cmd_lz4=$(type -p lz4)
 			pkg_xz='app-arch/xz-utils'
 			pkg_lzma='app-arch/xz-utils'
 			pkg_bzip2='app-arch/bzip2'
 			pkg_gzip='app-arch/gzip'
 			pkg_lzop='app-arch/lzop'
+			pkg_lz4='app-arch/lz4'
 			local compression
 			case ${COMPRESS_INITRD_TYPE} in
-				xz|lzma|bzip2|gzip|lzop) compression=${COMPRESS_INITRD_TYPE} ;;
+				xz|lzma|bzip2|gzip|lzop|lz4) compression=${COMPRESS_INITRD_TYPE} ;;
 				lzo) compression=lzop ;;
 				best|fastest)
 					for tuple in \
@@ -960,7 +964,9 @@ create_initramfs() {
 							'CONFIG_RD_LZMA  cmd_lzma  lzma' \
 							'CONFIG_RD_BZIP2 cmd_bzip2 bzip2' \
 							'CONFIG_RD_GZIP  cmd_gzip  gzip' \
-							'CONFIG_RD_LZO   cmd_lzop  lzop'; do
+							'CONFIG_RD_LZO   cmd_lzop  lzop' \
+							'CONFIG_RD_LZ4   cmd_lz4  lz4' \
+							; do
 						set -- ${tuple}
 						kernel_option=$1
 						cmd_variable_name=$2
@@ -987,6 +993,7 @@ create_initramfs() {
 				bzip2) compress_ext='.bz2' compress_cmd="${cmd_bzip2} -z -f -9" ;;
 				gzip) compress_ext='.gz' compress_cmd="${cmd_gzip} -f -9" ;;
 				lzop) compress_ext='.lzo' compress_cmd="${cmd_lzop} -f -9" ;;
+				lz4) compress_ext='.lz4' compress_cmd="${cmd_lz4} -f -9" ;;
 			esac
 
 			if [ -n "${compression}" ]; then
