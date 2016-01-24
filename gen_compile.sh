@@ -261,25 +261,32 @@ compile_generic() {
 	esac
 	shift 2
 
+	if [ ${NICE} -ne 0 ]
+	then
+		NICEOPTS="nice -n${NICE} "
+	else
+		NICEOPTS=""
+	fi
+
 	# the eval usage is needed in the next set of code
 	# as ARGS can contain spaces and quotes, eg:
 	# ARGS='CC="ccache gcc"'
 	if [ "${argstype}" == 'kernelruntask' ]
 	then
 		# Silent operation, forced -j1
-		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
-		eval ${MAKE} -s ${MAKEOPTS} -j1 "${ARGS}" ${target} $*
+		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
+		eval ${NICEOPTS}${MAKE} -s ${MAKEOPTS} -j1 "${ARGS}" ${target} $*
 		RET=$?
 	elif [ "${LOGLEVEL}" -gt "1" ]
 	then
 		# Output to stdout and logfile
-		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
-		eval ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* 2>&1 | tee -a ${LOGFILE}
+		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
+		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* 2>&1 | tee -a ${LOGFILE}
 		RET=${PIPESTATUS[0]}
 	else
 		# Output to logfile only
-		print_info 2 "COMMAND: ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
-		eval ${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> ${LOGFILE} 2>&1
+		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
+		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> ${LOGFILE} 2>&1
 		RET=$?
 	fi
 	[ ${RET} -ne 0 ] &&

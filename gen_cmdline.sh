@@ -80,6 +80,9 @@ longusage() {
   echo "	--no-mountboot		Don't mount BOOTDIR automatically"
   echo "	--bootdir=<dir>		Set the location of the boot-directory, default is /boot"
   echo "	--modprobedir=<dir>	Set the location of the modprobe.d-directory, default is /etc/modprobe.d"
+  echo "	--nice			Run the kernel make at the default nice level (10)."
+  echo "	--nice=<0-19>		Run the kernel make at the selected nice level."
+  echo "	--no-nice		Don't be nice while running the kernel make."
   echo "  Initialization"
   echo "	--splash=<theme>	Enable framebuffer splash using <theme>"
   echo "	--splash-res=<res>	Select splash theme resolutions to install"
@@ -597,6 +600,23 @@ parse_cmdline() {
 			;;
 		--config=*)
 			print_info 2 "CMD_GK_CONFIG: `parse_opt "$*"`"
+			;;
+		--nice)
+			CMD_NICE=10
+			print_info 2 "CMD_NICE: ${CMD_NICE}"
+			;;
+		--nice=*)
+			CMD_NICE=`parse_opt "$*"`
+			if [ ${CMD_NICE} -lt 0 -o ${CMD_NICE} -gt 19 ]
+			then
+				echo "Error:  Illegal value specified for --nice= parameter."
+				exit 1
+			fi
+			print_info 2 "CMD_NICE: ${CMD_NICE}"
+			;;
+		--no-nice)
+			CMD_NICE=0
+			print_info 2 "CMD_NICE: ${CMD_NICE}"
 			;;
 		all)
 			BUILD_KERNEL=1
