@@ -374,9 +374,6 @@ fi
 # Ensure that device nodes are properly configured
 mdev -s || bad_msg "mdev -s failed"
 
-# Apply scan delay if specified
-sdelay
-
 cd /
 
 # Start iSCSI
@@ -384,6 +381,9 @@ if [ -e /bin/iscsistart ]
 then
 	startiscsi
 fi
+
+# Apply scan delay if specified
+sdelay
 
 # Setup btrfs, see bug 303529
 setup_btrfsctl
