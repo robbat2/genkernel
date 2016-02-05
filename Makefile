@@ -30,7 +30,7 @@ check-git-repository:
 	git diff --quiet || { echo 'STOP, you have uncommitted changes in the working directory' ; false ; }
 	git diff --cached --quiet || { echo 'STOP, you have uncommitted changes in the index' ; false ; }
 
-dist: check-git-repository distclean $(EXTRA_DIST)
+dist: verify-doc check-git-repository distclean $(EXTRA_DIST)
 	mkdir "$(distdir)"
 	git ls-files -z | xargs -0 cp --no-dereference --parents --target-directory="$(distdir)" \
 		$(EXTRA_DIST)
@@ -41,7 +41,7 @@ dist: check-git-repository distclean $(EXTRA_DIST)
 distclean: clean
 	rm -Rf "$(distdir)" "$(distdir)".tar "$(distdir)".tar.xz
 
-.PHONY: clean check-git-repository dist distclean kconfig
+.PHONY: clean check-git-repository dist distclean kconfig verify-doc
 
 # Generic rules
 %/generated-config: %/arch-config $(BASE_KCONF) merge.pl Makefile
@@ -54,3 +54,30 @@ distclean: clean
 %.8: doc/%.8.txt doc/asciidoc.conf Makefile genkernel
 	a2x --conf-file=doc/asciidoc.conf --attribute="genkernelversion=$(PACKAGE_VERSION)" \
 		 --format=manpage -D . "$<"
+
+verify-doc: doc/genkernel.8.txt
+	@rm -f faildoc ; \
+	GK_SHARE=. ./genkernel --help | \
+		sed 's,-->, ,g' | \
+		fmt -1 | \
+		grep -e '--' | \
+		tr -s '[:space:].,' ' ' | \
+		sed -r \
+			-e 's,=<[^>]+>,,g' | \
+		tr -s ' ' '\n' | \
+		sed -r \
+			-e 's,[[:space:]]*--(no-)?,,g' \
+			-e '/bootloader/s,=grub,,g' | \
+		while read opt ; do \
+			regex="^*--(...no-...)?$$opt" ; \
+			if ! egrep -e "$$regex" $< -sq ; then \
+				touch faildoc ; \
+				echo "Undocumented option: $$opt" ; \
+			fi ; \
+		done ; \
+	if test -e faildoc ; then \
+		echo "Refusing to build!" ; \
+		rm -f faildoc ; \
+		exit 1 ; \
+	fi ; \
+	rm -f faildoc
