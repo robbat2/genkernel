@@ -203,6 +203,12 @@ LOW-LEVEL COMPILATION OPTIONS
 *--kernel-binary*=<path>::
     Override default kernel binary path (arch/foo/boot/bar)
 
+*--kernel-outputdir=<path>::
+	Save output files outside the source tree. This should be used rather than
+	KBUILD_OUTPUT when you wish to place kernel objects outside of the source
+	tree (eg because cannot write to that directory as the user genkernel is
+	running as).
+
 *--utils-cc*=<compiler>::
     Compiler to use for utilities.
 
