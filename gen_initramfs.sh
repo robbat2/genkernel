@@ -60,6 +60,25 @@ log_future_cpio_content() {
 	fi
 }
 
+append_devices() {
+	# WARNING, does NOT support appending to cpio!
+	cat >"${TEMP}/initramfs-base-temp.devices" <<-EOF
+	dir /dev 0755 0 0
+	nod /dev/console 660 0 0 c 5 1
+	nod /dev/null 660 0 0 c 1 3
+	nod /dev/zero 660 0 0 c 1 5
+	nod /dev/tty0 600 0 0 c 4 0
+	nod /dev/tty1 600 0 0 c 4 1
+	nod /dev/ttyS0 600 0 0 c 4 64
+	EOF
+	if [[ "${LOGLEVEL}" -gt 1 ]]; then
+		echo "Adding devices to cpio:"
+		cat "${TEMP}/initramfs-base-temp.devices"
+	fi
+	${KERNEL_OUTPUTDIR}/usr/gen_init_cpio "${TEMP}/initramfs-base-temp.devices" >"${CPIO}" \
+			|| gen_die "Failed to add devices to cpio"
+}
+
 append_base_layout() {
 	if [ -d "${TEMP}/initramfs-base-temp" ]
 	then
@@ -87,15 +106,6 @@ append_base_layout() {
 
 	echo "/dev/ram0     /           ext2    defaults	0 0" > ${TEMP}/initramfs-base-temp/etc/fstab
 	echo "proc          /proc       proc    defaults    0 0" >> ${TEMP}/initramfs-base-temp/etc/fstab
-
-	cd ${TEMP}/initramfs-base-temp/dev
-	# TODO: this will fail as non-root
-	mknod -m 660 console c 5 1 || gen_die "failed to mknod"
-	mknod -m 660 null c 1 3 || gen_die "failed to mknod"
-	mknod -m 660 zero c 1 5 || gen_die "failed to mknod"
-	mknod -m 600 tty0 c 4 0 || gen_die "failed to mknod"
-	mknod -m 600 tty1 c 4 1 || gen_die "failed to mknod"
-	mknod -m 600 ttyS0 c 4 64 || gen_die "failed to mknod"
 
 	date -u '+%Y%m%d-%H%M%S' > ${TEMP}/initramfs-base-temp/etc/build_date
 	echo "Genkernel $GK_V" > ${TEMP}/initramfs-base-temp/etc/build_id
@@ -829,9 +839,7 @@ create_initramfs() {
 
 	# Create empty cpio
 	CPIO="${TMPDIR}/initramfs-${KV}"
-	echo | cpio ${CPIO_ARGS} -F "${CPIO}" 2>/dev/null \
-		|| gen_die "Could not create empty cpio at ${CPIO}"
-
+	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
 	append_data 'busybox' "${BUSYBOX}"
@@ -880,18 +888,26 @@ create_initramfs() {
 	fi
 
 	# Finalize cpio by removing duplicate files
-	print_info 1 "        >> Finalizing cpio..."
-	local TDIR="${TEMP}/initramfs-final"
-	mkdir -p "${TDIR}"
-	cd "${TDIR}"
+	# TODO: maybe replace this with:
+	# http://search.cpan.org/~pixel/Archive-Cpio-0.07/lib/Archive/Cpio.pm
+	# as then we can dedupe ourselves...
+	if [[ $UID -eq 0 ]]; then
+		print_info 1 "        >> Deduping cpio..."
+		local TDIR="${TEMP}/initramfs-final"
+		mkdir -p "${TDIR}"
+		cd "${TDIR}"
 
-	cpio --quiet -i -F "${CPIO}" 2> /dev/null \
-		|| gen_die "extracting cpio for finalization"
-	find . -print | cpio ${CPIO_ARGS} -F "${CPIO}" 2>/dev/null \
-		|| gen_die "recompressing cpio"
+		cpio --quiet -i -F "${CPIO}" 2> /dev/null \
+			|| gen_die "extracting cpio for dedupe"
+		find . -print | cpio ${CPIO_ARGS} -F "${CPIO}" 2>/dev/null \
+			|| gen_die "rebuilding cpio for dedupe"
+		cd "${TEMP}"
+		rm -rf "${TDIR}"
+	else
+		print_info 1 "        >> Cannot deduping cpio contents without root; skipping"
+	fi
 
 	cd "${TEMP}"
-	rm -r "${TDIR}"
 
 	if isTrue "${INTEGRATED_INITRAMFS}"
 	then
@@ -998,6 +1014,7 @@ create_initramfs() {
 
 			if [ -n "${compression}" ]; then
 				print_info 1 "        >> Compressing cpio data (${compress_ext})..."
+				print_info 5 "        >> Compression command (${compress_cmd} $CPIO)..."
 				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
 				mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
 			else
