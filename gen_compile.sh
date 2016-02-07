@@ -697,7 +697,7 @@ compile_iscsi() {
 		KEXT=$(modules_kext)
 		for modname in iscsi_tcp libiscsi scsi_transport_iscsi
 		do
-			module=${CMD_KERNEL_DIR}/drivers/scsi/${modname}${KEXT}
+			module=${KERNEL_OUTPUTDIR}/drivers/scsi/${modname}${KEXT}
 			if [ -e "${module}" ]
 			then
 				cp $module "${TEMP}/initramfs-iscsi-temp/lib/modules/${KV}/kernel/drivers/scsi/"

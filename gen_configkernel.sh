@@ -32,6 +32,15 @@ determine_config_file() {
 	fi
 }
 
+function kconfig_set_opt() {
+	kconfig="$1"
+	optname="$2"
+	optval="$3"
+	sed -i "${kconfig}" \
+		-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
+	gen_die "Failed to set ${optname}=${optval} in $kconfig"
+}
+
 config_kernel() {
 	determine_config_file
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'
@@ -110,30 +119,29 @@ config_kernel() {
 	if isTrue ${CMD_GENZIMAGE}
 	then
 		# Make sure Ext2 support is on...
-		sed -e 's/#\? \?CONFIG_EXT2_FS[ =].*/CONFIG_EXT2_FS=y/g' \
-			-i ${KERNEL_OUTPUTDIR}/.config
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
 	fi
 
 	# Make sure lvm modules are on if --lvm
 	if isTrue ${CMD_LVM}
 	then
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/#\? \?CONFIG_BLK_DEV_DM is.*/CONFIG_BLK_DEV_DM=m/g'
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/#\? \?CONFIG_DM_SNAPSHOT is.*/CONFIG_DM_SNAPSHOT=m/g'
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/#\? \?CONFIG_DM_MIRROR is.*/CONFIG_DM_MIRROR=m/g'
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "m"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT" "m"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR" "m"
 	fi
 
 	# Multipath
 	if isTrue ${CMD_MULTIPATH}
 	then
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_BLK_DEV_DM is.*/CONFIG_BLK_DEV_DM=m/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_DM_MULTIPATH is.*/CONFIG_DM_MULTIPATH=m/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_DM_MULTIPATH_RDAC is.*/CONFIG_DM_MULTIPATH_RDAC=m/g'
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "m"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "m"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH_RDAC" "m"
 	fi
 
 	# Make sure dmraid modules are on if --dmraid
 	if isTrue ${CMD_DMRAID}
 	then
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/#\? \?CONFIG_BLK_DEV_DM is.*/CONFIG_BLK_DEV_DM=m/g'
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "m"
 	fi
 
 	# Make sure iSCSI modules are enabled in the kernel, if --iscsi
@@ -141,28 +149,23 @@ config_kernel() {
 	# CONFIG_ISCSI_TCP
 	if isTrue ${CMD_ISCSI}
 	then
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/\# CONFIG_ISCSI_TCP is not set/CONFIG_ISCSI_TCP=m/g'
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/\# CONFIG_SCSI_ISCSI_ATTRS is not set/CONFIG_SCSI_ISCSI_ATTRS=m/g'
-
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/CONFIG_ISCSI_TCP=y/CONFIG_ISCSI_TCP=m/g'
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/CONFIG_SCSI_ISCSI_ATTRS=y/CONFIG_SCSI_ISCSI_ATTRS=m/g'
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "m"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "m"
 	fi
 
 	if isTrue ${SPLASH}
 	then
-		sed -i ${KERNEL_OUTPUTDIR}/.config -e 's/#\? \?CONFIG_FB_SPLASH is.*/CONFIG_FB_SPLASH=y/g'
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_SPLASH" "y"
 	fi
 
 	# VirtIO
 	if isTrue ${CMD_VIRTIO}
 	then
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_PARAVIRT_GUEST.*/CONFIG_PARAVIRT_GUEST=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_VIRTIO_PCI.*/CONFIG_VIRTIO_PCI=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_VIRTIO_BALLOON.*/CONFIG_VIRTIO_BALLOON=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_VIRTIO_MMIO.*/CONFIG_VIRTIO_MMIO=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_VIRTIO_BLK.*/CONFIG_VIRTIO_BLK=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_SCSI_VIRTIO.*/CONFIG_SCSI_VIRTIO=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_VIRTIO_NET.*/CONFIG_VIRTIO_NET=y/g'
-		sed -i ${KERNEL_DIR}/.config -e 's/#\? \?CONFIG_VHOST_NET.*/CONFIG_VHOST_NET=y/g'
+		for k in \
+			CONFIG_PARAVIRT_GUEST CONFIG_VIRTIO_PCI CONFIG_VIRTIO_BALLOON \
+			CONFIG_VIRTIO_MMIO CONFIG_VIRTIO_BLK CONFIG_SCSI_VIRTIO \
+			CONFIG_VIRTIO_NET CONFIG_VHOST_NET ; do
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_SPLASH" "y"
+		done
 	fi
 }
