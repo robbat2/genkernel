@@ -38,7 +38,7 @@ function kconfig_set_opt() {
 	optval="$3"
 	sed -i "${kconfig}" \
 		-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
-	gen_die "Failed to set ${optname}=${optval} in $kconfig"
+	|| gen_die "Failed to set ${optname}=${optval} in $kconfig"
 }
 
 config_kernel() {
