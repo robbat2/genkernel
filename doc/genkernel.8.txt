@@ -278,6 +278,9 @@ INITIALIZATION
 *--*[*no-*]*zfs*::
     Includes or excludes ZFS support.
 
+*--*[*no-*]*btrfs*::
+    Includes or excludes Btrfs support.
+
 *--*[*no-*]*multipath*::
     Includes or excludes Multipath support
 
@@ -483,6 +486,9 @@ which the ramdisk scripts would recognize.
 *dozfs*[=force]::
     Scan for bootable ZFS pools on bootup. Optionally force import if
     necessary.
+
+*dobtrfs*::
+    Scan for attached Btrfs devices on bootup.	
 
 *doscsi*::
     Activate SCSI devices on bootup, necessary when SCSI support is

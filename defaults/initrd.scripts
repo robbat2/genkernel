@@ -674,6 +674,16 @@ startVolumes() {
 			bad_msg "vgscan or vgchange not found: skipping LVM volume group activation!"
 		fi
 	fi
+
+	if [ "${USE_BTRFS}" = '1' ]
+	then
+	    if [ -x '/sbin/btrfs' ]
+	    then
+		/sbin/btrfs device scan
+	    else
+		bad_msg "btrfs not found: skipping btrfs device scanning!"
+	    fi	
+	fi	
 	
 	if [ "${USE_ZFS}" = '1' ]
 	then
