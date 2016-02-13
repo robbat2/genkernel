@@ -104,12 +104,11 @@ do
 			then
 				ZPOOL_FORCE=-f
 			fi
-
+		;;	
 		dobtrfs*)
 			 USE_BTRFS=1
 		;;	 
-				 
-		;;
+		
 		# Debug Options
 		debug)
 			DEBUG='yes'
