@@ -1,5 +1,6 @@
 # $Id$
 #
+# This file is sourced AFTER defaults/config.sh; generic options should be set there.
 # Arch-specific options that normally shouldn't be changed.
 #
 KERNEL_MAKE_DIRECTIVE="vmlinux"
@@ -16,18 +17,3 @@ DISKLABEL=0
 # genkernel on mips is only used for LiveCDs && netboots.  Catalyst
 # will know where to get the kernels at.
 CMD_INSTALL=0
-
-#
-# Arch-specific defaults that can be overridden in the config file or on the
-# command line.
-#
-DEFAULT_COMPRESS_INITRD=yes
-DEFAULT_COMPRESS_INITRD_TYPE=best
-PORTAGE_MAKEOPTS="$(portageq envvar MAKEOPTS)"
-DEFAULT_MAKEOPTS="${PORTAGE_MAKEOPTS:- -j2}"
-DEFAULT_KERNEL_MAKE=make
-DEFAULT_UTILS_MAKE=make
-DEFAULT_UTILS_CC=gcc
-DEFAULT_UTILS_AS=as
-DEFAULT_UTILS_LD=ld
-

@@ -1,25 +1,29 @@
-#This file does not actually appear to be run at all anymore, and is kept as an example for new arches.
+# This file is sourced before the arch-specific configs.
 # $Id$
 #
-# Arch-specific options that normally shouldn't be changed.
+# Arch-specific options that normally shouldn't be changed (and should be set in the arch-specific configs)
 #
-KERNEL_MAKE_DIRECTIVE="bzImage"
+KERNEL_MAKE_DIRECTIVE="--INVALID--"
 # since "" is allowed (this will translate in `make `, which is nice
 # for xen-based kernels, the default value of
 # KERNEL_MAKE_DIRECTIVE_OVERRIDE cannot be ""
 DEFAULT_KERNEL_MAKE_DIRECTIVE_OVERRIDE="--INVALID--"
 KERNEL_MAKE_DIRECTIVE_OVERRIDE="${DEFAULT_KERNEL_MAKE_DIRECTIVE_OVERRIDE}"
 KERNEL_MAKE_DIRECTIVE_2=""
-KERNEL_BINARY="arch/i386/boot/bzImage"
+KERNEL_BINARY="--INVALID--"
 KERNEL_BINARY_OVERRIDE=""
 
-DEFAULT_COMPRESS_INITRD=yes
-DEFAULT_COMPRESS_INITRD_TYPE=best
+# At a bare minimum, every arch MUST override these two options:
+# KERNEL_MAKE_DIRECTIVE
+# KERNEL_BINARY
 
 #
 # Arch-specific defaults that can be overridden in the config file or on the
 # command line.
 #
+DEFAULT_COMPRESS_INITRD=yes
+DEFAULT_COMPRESS_INITRD_TYPE=best
+
 PORTAGE_MAKEOPTS="$(portageq envvar MAKEOPTS)"
 DEFAULT_MAKEOPTS="${PORTAGE_MAKEOPTS:- -j2}"
 

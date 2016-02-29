@@ -41,6 +41,7 @@ LOGLEVEL=${LOGLEVEL:-1}
 
 # Start sourcing other scripts
 source ${GK_SHARE}/defaults/software.sh || small_die "Could not read ${GK_SHARE}/defaults/software.sh"
+source ${GK_SHARE}/defaults/config.sh || small_die "Could not read ${GK_SHARE}/defaults/config.sh"
 source ${GK_SHARE}/gen_funcs.sh || small_die "Could not read ${GK_SHARE}/gen_funcs.sh"
 source ${GK_SHARE}/gen_cmdline.sh || gen_die "Could not read ${GK_SHARE}/gen_cmdline.sh"
 source ${GK_SHARE}/gen_arch.sh || gen_die "Could not read ${GK_SHARE}/gen_arch.sh"
