@@ -498,7 +498,9 @@ set_config_with_override() {
 rootfs_type_is() {
 	local fstype=$1
 
-	if $(df -t ${fstype} / 2>/dev/null 1>/dev/null)
+	# It is possible that the awk will return MULTIPLE lines, depending on your
+	# initramfs setup (one of the entries will be 'rootfs').
+	if awk '($2=="/"){print $3}' /proc/mounts | grep -sq --line-regexp "$fstype" ;
 	then
 		echo yes
 	else
