@@ -45,11 +45,8 @@ gen_minkernpackage() {
 	if [ "${KERNCACHE}" != "" ]
 	then
 		/bin/tar -xj -C ${TEMP}/minkernpackage -f ${KERNCACHE} System.map-${ARCH}-${KV}
-		mv minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}}
-		if [ ! -f System.map-${KNAME}-${ARCH}-${KV} ]
-		then
+		mv minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}} ||
 			gen_die 'Could not copy System.map from kerncache for the kernel package!'
-		fi
 	else
 		cp "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/minkernpackage/System.map-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not copy System.map for the kernel package!';
 	fi
