@@ -297,6 +297,12 @@ parse_cmdline() {
 		--mdadm|--no-mdadm)
 			CMD_MDADM=`parse_optbool "$*"`
 			print_info 2 "CMD_MDADM: $CMD_MDADM"
+			if [ "$CMD_MDADM" = "1" -a ! -e /sbin/mdadm ]
+			then
+				echo 'Error: --multipath requires sys-fs/mdadm'
+				echo '		 to be installed on the host system.'
+				exit 1
+			fi
 			;;
 		--mdadm-config=*)
 			CMD_MDADM_CONFIG=`parse_opt "$*"`
@@ -320,10 +326,16 @@ parse_cmdline() {
 			;;
 		--dmraid|--no-dmraid)
 			CMD_DMRAID=`parse_optbool "$*"`
+			if [ "$CMD_DMRAID" = "1" -a ! -e /usr/sbin/dmraid ]
+			then
+				echo 'Error: --dmraid requires sys-fs/dmraid'
+				echo '		 to be installed on the host system.'
+				exit 1
+			fi
 			if [ "$CMD_DMRAID" = "1" -a ! -e /usr/include/libdevmapper.h ]
 			then
-				echo 'Error: --dmraid requires LVM2 to be installed'
-				echo '		 on the host system; try "emerge lvm2".'
+				echo 'Error: --dmraid requires sys-fs/lvm2'
+				echo '		 to be installed on the host system.'
 				exit 1
 			fi
 			print_info 2 "CMD_DMRAID: ${CMD_DMRAID}"
@@ -346,10 +358,16 @@ parse_cmdline() {
 			;;
 		--multipath|--no-multipath)
 			CMD_MULTIPATH=`parse_optbool "$*"`
+			if [ "$CMD_MULTIPATH" = "1" -a ! -e /sbin/multipath ]
+			then
+				echo 'Error: --multipath requires sys-fs/multipath-tools'
+				echo '		 to be installed on the host system.'
+				exit 1
+			fi
 			if [ "$CMD_MULTIPATH" = "1" -a ! -e /usr/include/libdevmapper.h ]
 			then
-				echo 'Error: --multipath requires LVM2 to be installed'
-				echo '		 on the host;system; try "emerge lvm2".'
+				echo 'Error: --multipath requires sys-fs/lvm2'
+				echo '		 to be installed on the host system.'
 				exit 1
 			fi
 			print_info 2 "CMD_MULTIPATH: ${CMD_MULTIPATH}"
