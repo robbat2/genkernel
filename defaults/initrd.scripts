@@ -1627,5 +1627,7 @@ get_mount_device()
 # trailing or duplicate commas.
 strip_mount_options()
 {
-	sed -r 's/(,|^)(no)?auto(,|$)/,/g'
+	sed -r \
+		-e 's/(,|^)(no)?auto(,|$)/,/g' \
+		-e 's/(,|^)iversion(,|$)/,/g'
 }
