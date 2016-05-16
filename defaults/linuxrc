@@ -133,6 +133,12 @@ do
 		scandelay)
 			SDELAY=3
 		;;
+		rootdelay=*|rootwait=*)
+			ROOTDELAY=${x#*=}
+		;;
+		rootdelay|rootwait)
+			ROOTDELAY=5
+		;;
 		# Module no-loads
 		doload=*)
 			MDOLIST=${x#*=}
@@ -485,10 +491,14 @@ fi
 
 # Determine root device
 good_msg 'Determining root device ...'
+ROOTDELAY_100MSEC=1
+[ -n "${ROOTDELAY}" ] && ROOTDELAY_100MSEC=$(($ROOTDELAY * 10))
 while true
 do
 	while [ "${got_good_root}" != '1' ]
 	do
+		# Start of sleep loop waiting on root
+		while [ ${ROOTDELAY_100MSEC} -ge 0 -a "${got_good_root}" != '1' ] ; do
 		case "${REAL_ROOT}" in
 			LABEL=*|UUID=*)
 
@@ -574,6 +584,11 @@ do
 				;;
 		esac
 
+		if [ "${got_good_root}" != '1' ] ; then
+		  let ROOTDELAY_100MSEC=${ROOTDELAY_100MSEC}-1
+		  usleep 100
+		fi
+		done  # End of sleep loop waiting on root
 		if [ "${REAL_ROOT}" = '' ]
 		then
 			# No REAL_ROOT determined/specified. Prompt user for root block device.

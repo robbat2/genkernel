@@ -464,6 +464,11 @@ which the ramdisk & initramfs scripts would recognize.
     Pauses for 10 seconds before running devfsd if no argument is
     specified; otherwise pauses for the number of specified seconds.
 
+*rootdelay*[=<...>]::
+*rootwait*[=<...>]::
+	Pauses for up to 3 seconds (or specified number of seconds) while
+	waiting for root device to appear during initramfs root scanning.
+
 *ip*=<...>::
     Normally used to tell the kernel that it should start a network
     interface. If present, the initrd will try to mount a  livecd
