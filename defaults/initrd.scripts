@@ -977,6 +977,12 @@ startVolumes() {
 		if [ "$fail" = "0" ]
 		then
 			good_msg "Scanning for multipath devices"
+			good_msg ":: Populating scsi_id info for libudev queries"
+			mkdir -p /run/udev/data
+			for ech in /sys/block/* ; do
+				local tgtfile=b$(cat ${ech}/dev)
+				/lib/udev/scsi_id -g -x /dev/${ech##*/} |sed -e 's/^/E:/' >/run/udev/data/${tgtfile}
+			done
 			$multipath_path  -v 0
 			sleep 2
 			good_msg "Activating multipath devices"
