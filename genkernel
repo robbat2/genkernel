@@ -11,8 +11,8 @@ TMPDIR='/var/tmp/genkernel'
 TODEBUGCACHE=1 # Until an error occurs or LOGFILE is fully qualified.
 
 small_die() {
-  echo $1
-  exit 1
+	echo "ERROR: $*" >&2
+	exit 1
 }
 
 parse_opt() {
