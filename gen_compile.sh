@@ -29,7 +29,7 @@ compile_kernel_args() {
 	then
 		ARGS="${ARGS} O=\"${KERNEL_OUTPUTDIR}\""
 	fi
-	echo -n "${ARGS}"
+	printf "%s" "${ARGS}"
 }
 
 compile_utils_args()
@@ -61,7 +61,7 @@ compile_utils_args()
 		ARGS="${ARGS} AS=\"${UTILS_AS}\""
 	fi
 
-	echo -n "${ARGS}"
+	printf "%s" "${ARGS}"
 }
 
 export_utils_args()

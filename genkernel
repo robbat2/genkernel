@@ -192,7 +192,7 @@ fi
 #	print_warning 1 "${BOLD}WARNING${NORMAL}: Another Genkernel instance is running under"
 #	print_warning 1 "         process ID${EX} " 0
 #	GENPIDS=`ps -C genkernel --no-headers -o pid`
-#	echo -n "${GENPIDS}" | sed -e "s/$$//; s/ /, /g"
+#	printf "%s" "${GENPIDS}" | sed -e "s/$$//; s/ /, /g"
 #	echo 'halting...'
 #	echo
 #	print_warning 1 'Running multiple genkernels on the same source tree will cause data loss!'
@@ -270,7 +270,7 @@ then
 	trap "CALLBACK_ESCAPE=1" TERM KILL INT QUIT ABRT
 	while [[ "${CALLBACK_ESCAPE}" = '0' && ${CALLBACK_COUNT} -lt 5 ]]
 	do
-		sleep 1; echo -n '.';
+		sleep 1; printf '.';
 		let CALLBACK_COUNT=${CALLBACK_COUNT}+1
 	done
 

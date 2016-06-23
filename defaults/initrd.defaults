@@ -44,7 +44,7 @@ WHITE="[1;37m"
 # echo "$CLEAR$RESET"
 # echo "$CLEAR"
 # Just go to the top of the screen
-# echo -n "[H[J"
+# printf "[H[J"
 
 KV=`uname -r`
 KMAJOR=`echo $KV | cut -f1 -d.`

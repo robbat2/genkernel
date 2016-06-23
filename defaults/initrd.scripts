@@ -33,7 +33,7 @@ modules_scan() {
 
 	MODS=$(cat /etc/modules/${1} 2>/dev/null)
 	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && \
-		echo -ne "${BOLD}   ::${NORMAL} Loading from ${1}: "
+		printf "%b" "${BOLD}   ::${NORMAL} Loading from ${1}: "
 
 	for x in ${MODS}
 	do
@@ -41,12 +41,12 @@ modules_scan() {
 		if [ "${MLOAD}" = "${x}" ] # Only module to no-load
 		then
 			[ -z "${QUIET}" ] && \
-				echo -e "${BOLD}   ::${NORMAL} Skipping ${x}..."
+				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x}..."
 		elif [ "${MLOAD}" = "${MLIST}" ]
 		then
 			if [ -n "${DEBUG}" ]; then
-				echo -ne "${BOLD}   ::${NORMAL} "
-				echo -ne "Scanning for ${x}..."
+				printf "%b" "${BOLD}   ::${NORMAL} "
+				printf "%b" "Scanning for ${x}..."
 			fi
 			modprobe ${x} > /dev/null 2>&1
 			loaded=${?}
@@ -58,10 +58,10 @@ modules_scan() {
 
 			[ -z "${DEBUG}" -a "${loaded}" = "0" ] && \
 				[ -z "${QUIET}" ] && \
-				echo -en "${x} "
+				printf "%b" "${x} "
 		else
 			[ -z "${QUIET}" ] && \
-				echo -e "${BOLD}   ::${NORMAL} Skipping ${x}..."
+				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x}..."
 		fi
 	done
 	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && echo
@@ -629,7 +629,7 @@ find_real_device() {
 			fi
 		;;
 	esac
-	echo -n "${DEVICE}"
+	printf "%s" "${DEVICE}"
 }
 
 check_loop() {
@@ -696,7 +696,7 @@ good_msg() {
 
 	msg_string=$1
 	msg_string="${msg_string:-...}"
-	[ "$2" != 1 ] && echo -e "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+	[ "$2" != 1 ] && printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 bad_msg() {
@@ -705,14 +705,14 @@ bad_msg() {
 	if [ "$2" != 1 ]
 	then
 		splash 'verbose' > /dev/null &
-		echo -e "${BAD}!!${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+		printf "%b\n" "${BAD}!!${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 	fi
 }
 
 warn_msg() {
 	msg_string=$1
 	msg_string="${msg_string:-...}"
-	[ "$2" != 1 ] && echo -e "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+	[ "$2" != 1 ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 crypt_filter() {
@@ -751,7 +751,7 @@ prompt_user(){
 	bad_msg "- press Enter for the same"
 	bad_msg '- type "shell" for a shell'
 	bad_msg '- type "q" to skip...'
-	echo -n "${2}(${oldvalue}) :: "
+	printf "%s" "${2}(${oldvalue}) :: "
 	read ${1}
 	case `eval echo '$'${1}` in
 		'q')

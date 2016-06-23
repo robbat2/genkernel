@@ -10,8 +10,7 @@ MYGW=""
 # void einfo(char* message)
 # show an informative message (with a newline)
 einfo() {
-        echo -e " * ${*}"
-        return 0
+	printf " * %b\n" "$*"
 }
 
 #//--------------------------------------------------------------------------------
@@ -30,9 +29,9 @@ SetupNetwork() {
 
 		#// Check second param
 		if [ -z "${2}" ]; then
-			echo -e ""
+			echo
 			einfo "Please specify a gateway address."
-			echo -e ""
+			echo
 			exit
 		fi
 
@@ -63,11 +62,11 @@ SetupNetwork() {
 
 #// Check first param
 if [ -z "${1}" ]; then
-	echo -e ""
+	echo
 	einfo "Please specify \"dhcp\" for setting up networking via dhcp or"
 	einfo "specify an IP Address and gateway address to configure static"
 	einfo "networking."
-	echo -e ""
+	echo
 	exit 0
 fi
 
@@ -78,15 +77,15 @@ SetupNetwork ${1} ${2} ${3}
 
 #// Was the network setup?
 if [ ! -z "$(ifconfig | grep "eth0")" ]; then
-	echo -e ""
+	echo
 	einfo "Network interface eth0 has been started:"
 	einfo "  IP Address: ${MYIP}"
 	einfo "  Gateway:    ${MYGW}"
-	echo -e ""
+	echo
 	einfo "An sshd server is available on port 22.  Please set a root"
 	einfo "password via \"passwd\" before using."
-	echo -e ""
-	echo -e ""
+	echo
+	echo
 fi
 
 #//--------------------------------------------------------------------------------

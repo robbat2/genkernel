@@ -100,14 +100,14 @@ StartUp() {
 		if [ -n "`which dropbear 2>/dev/null`" ]
 		then
 			# Setup dropbear (sshd)
-			echo -e ""
+			echo
 			mkdir /etc/dropbear
-			echo -e ">>> Generating RSA hostkey ..."
+			echo ">>> Generating RSA hostkey ..."
 			dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-			echo -e ""
-			echo -e ">>> Generating DSS hostkey ..."
+			echo
+			echo ">>> Generating DSS hostkey ..."
 			dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
-			echo -e ""
+			echo
 			dropbear
 		fi
 
@@ -126,8 +126,7 @@ StartUp() {
 
 #// show an informative message (with a newline)
 einfo() {
-	echo -e " * ${*}"
-	return 0
+	printf " * %b\n" "$*"
 }
 
 #//--------------------------------------------------------------------------------
@@ -266,35 +265,41 @@ SubGenius() {
 #//--------------------------------------------------------------------------------
 
 GenMotd() {
-	echo -e ""										> /etc/motd
-	echo -e ""										>> /etc/motd
-	echo -e "Gentoo Linux; http://www.gentoo.org/"						>> /etc/motd
-	echo -e " Copyright 2001-${CPYYEAR} Gentoo Foundation; Distributed under the GPL"	>> /etc/motd
-	echo -e ""										>> /etc/motd
-	echo -e " Gentoo/${MYARCH} Netboot for ${MACHTYPE} Systems"				>> /etc/motd
-	echo -e " ${BUILDDATE}"									>> /etc/motd
-	echo -e ""										>> /etc/motd
+	cat <<-EOF >/etc/motd
+
+
+	Gentoo Linux; http://www.gentoo.org/
+	 Copyright 2001-${CPYYEAR} Gentoo Foundation; Distributed under the GPL
+
+	 Gentoo/${MYARCH} Netboot for ${MACHTYPE} Systems
+	 ${BUILDDATE}
+
+EOF
 
 	#// If this is the initial startup, then display some messages, otherwise just execute a shell for the user
 	if [ ! -f "/tmp/.startup" ]; then
 		if [ -z "${MYIP}" ]; then
-			einfo "To configure networking (eth0), do the following:"		> /etc/motd2
-			echo -e ""								>> /etc/motd2
-			einfo "For Static IP:"							>> /etc/motd2
-			einfo "/bin/net-setup <IP Address> <Gateway Address>"			>> /etc/motd2
-			echo -e ""								>> /etc/motd2
-			einfo "For Dynamic IP:"							>> /etc/motd2
-			einfo "/bin/net-setup dhcp"						>> /etc/motd2
-			echo -e ""								>> /etc/motd2
+			(
+			einfo "To configure networking (eth0), do the following:"
+			echo
+			einfo "For Static IP:"
+			einfo "/bin/net-setup <IP Address> <Gateway Address>"
+			echo
+			einfo "For Dynamic IP:"
+			einfo "/bin/net-setup dhcp"
+			echo
+			) > /etc/motd2
 		else
-			echo -e ""								> /etc/motd2
-			einfo "Network interface eth0 has been started:"			>> /etc/motd2
-			einfo "  IP Address: ${MYIP}"						>> /etc/motd2
-			einfo "  Gateway:    ${MYGW}"						>> /etc/motd2
-			echo -e ""								>> /etc/motd2
-			einfo "An sshd server is available on port 22.  Please set a root"	>> /etc/motd2
-			einfo "password via \"passwd\" before using."				>> /etc/motd2
-			echo -e ""								>> /etc/motd2
+			(
+			echo
+			einfo "Network interface eth0 has been started:"
+			einfo "  IP Address: ${MYIP}"
+			einfo "  Gateway:    ${MYGW}"
+			echo
+			einfo "An sshd server is available on port 22.  Please set a root"
+			einfo "password via \"passwd\" before using."
+			echo
+			) > /etc/motd2
 		fi
 	fi
 }

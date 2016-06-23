@@ -782,10 +782,10 @@ append_auxilary() {
 		sed -i "s:^REAL_ROOT=.*$:REAL_ROOT='${REAL_ROOT}':" "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 	fi
 
-	echo -n 'HWOPTS="$HWOPTS ' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+	printf "%s" 'HWOPTS="$HWOPTS ' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 	for group_modules in ${!MODULES_*}; do
 		group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
-		echo -n "${group} " >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+		printf "%s" "${group} " >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 	done
 	echo '"' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 

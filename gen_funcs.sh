@@ -115,11 +115,9 @@ print_info() {
 			STR="${2}"
 		fi
 
-		if [ "${NEWLINE}" = '0' ]
-		then
-			echo -ne "${STR}"
-		else
-			echo "${STR}"
+		printf "%b" "${STR}"
+		if [ "${NEWLINE}" != '0' ]; then
+			echo
 		fi
 	fi
 
@@ -138,18 +136,17 @@ print_info() {
 			STR="${STRR}"
 		fi
 
-		if [ "${NEWLINE}" = '0' ]
-		then
-			if [ "${TODEBUGCACHE}" = '1' ]; then
-				DEBUGCACHE="${DEBUGCACHE}${STR}"
-			else
-				echo -ne "${STR}" >> ${LOGFILE}
-			fi
+		if [ "${TODEBUGCACHE}" = '1' ]; then
+			DEBUGCACHE="${DEBUGCACHE}${STR}"
 		else
+			printf "%b" "${STR}" >> ${LOGFILE}
+		fi
+
+		if [ "${NEWLINE}" != '0' ]; then
 			if [ "${TODEBUGCACHE}" = '1' ]; then
-				DEBUGCACHE="${DEBUGCACHE}${STR}"$'\n'
+				DEBUGCACHE="${DEBUGCACHE}"$'\n'
 			else
-				echo "${STR}" >> ${LOGFILE}
+				echo >> ${LOGFILE}
 			fi
 		fi
 	fi
