@@ -496,8 +496,8 @@ set_config_with_override() {
 
 rootfs_type_is() {
     local fstype=$1
-    
-    if $(df -t ${fstype} / 2>/dev/null 1>/dev/null)
+    # Check what rootfs type is. This should fix false detection of btrfs, when it's not explicitly enabled/disabed. #FL-3223.
+    if awk '($2=="/"){print $3}' /proc/mounts | grep -sq --line-regexp "$fstype" ;
     then
 	echo yes
     else
