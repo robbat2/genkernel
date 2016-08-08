@@ -1345,7 +1345,7 @@ sdelay() {
 		sleep ${SDELAY}
 	elif [ "${CDROOT}" = '1' ]
 	then
-		good_msg 'Hint: Use scandelay[=seconds] if your live medium is slowand boot fails'
+		good_msg 'Hint: Use scandelay[=seconds] if your live medium is slow and boot fails'
 	fi
 }
 
