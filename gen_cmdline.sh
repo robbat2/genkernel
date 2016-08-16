@@ -202,65 +202,65 @@ parse_optbool() {
 parse_cmdline() {
 	case "$*" in
 		--kernel-cc=*)
-			CMD_KERNEL_CC=`parse_opt "$*"`
+			CMD_KERNEL_CC="${*#*=}"
 			print_info 2 "CMD_KERNEL_CC: ${CMD_KERNEL_CC}"
 			;;
 		--kernel-ld=*)
-			CMD_KERNEL_LD=`parse_opt "$*"`
+			CMD_KERNEL_LD="${*#*=}"
 			print_info 2 "CMD_KERNEL_LD: ${CMD_KERNEL_LD}"
 			;;
 		--kernel-as=*)
-			CMD_KERNEL_AS=`parse_opt "$*"`
+			CMD_KERNEL_AS="${*#*=}"
 			print_info 2 "CMD_KERNEL_AS: ${CMD_KERNEL_AS}"
 			;;
 		--kernel-make=*)
-			CMD_KERNEL_MAKE=`parse_opt "$*"`
+			CMD_KERNEL_MAKE="${*#*=}"
 			print_info 2 "CMD_KERNEL_MAKE: ${CMD_KERNEL_MAKE}"
 			;;
 		--kernel-target=*)
-			KERNEL_MAKE_DIRECTIVE_OVERRIDE=`parse_opt "$*"`
+			KERNEL_MAKE_DIRECTIVE_OVERRIDE="${*#*=}"
 			print_info 2 "KERNEL_MAKE_DIRECTIVE_OVERRIDE: ${KERNEL_MAKE_DIRECTIVE_OVERRIDE}"
 			;;
 		--kernel-binary=*)
-			KERNEL_BINARY_OVERRIDE=`parse_opt "$*"`
+			KERNEL_BINARY_OVERRIDE="${*#*=}"
 			print_info 2 "KERNEL_BINARY_OVERRIDE: ${KERNEL_BINARY_OVERRIDE}"
 			;;
 		--kernel-cross-compile=*)
-			CMD_KERNEL_CROSS_COMPILE=`parse_opt "$*"`
+			CMD_KERNEL_CROSS_COMPILE="${*#*=}"
 			CMD_KERNEL_CROSS_COMPILE=$(echo ${CMD_KERNEL_CROSS_COMPILE}|sed -e 's/.*[^-]$/&-/g')
 			print_info 2 "CMD_KERNEL_CROSS_COMPILE: ${CMD_KERNEL_CROSS_COMPILE}"
 			;;
 		--kernel-outputdir=*)
-			CMD_KERNEL_OUTPUTDIR=`parse_opt "$*"`
+			CMD_KERNEL_OUTPUTDIR="${*#*=}"
 			print_info 2 "CMD_KERNEL_OUTPUTDIR: ${CMD_KERNEL_OUTPUTDIR}"
 			;;
 		--utils-cc=*)
-			CMD_UTILS_CC=`parse_opt "$*"`
+			CMD_UTILS_CC="${*#*=}"
 			print_info 2 "CMD_UTILS_CC: ${CMD_UTILS_CC}"
 			;;
 		--utils-ld=*)
-			CMD_UTILS_LD=`parse_opt "$*"`
+			CMD_UTILS_LD="${*#*=}"
 			print_info 2 "CMD_UTILS_LD: ${CMD_UTILS_LD}"
 			;;
 		--utils-as=*)
-			CMD_UTILS_AS=`parse_opt "$*"`
+			CMD_UTILS_AS="${*#*=}"
 			print_info 2 "CMD_UTILS_AS: ${CMD_UTILS_AS}"
 			;;
 		--utils-make=*)
-			CMD_UTILS_MAKE=`parse_opt "$*"`
+			CMD_UTILS_MAKE="${*#*=}"
 			print_info 2 "CMD_UTILS_MAKE: ${CMD_UTILS_MAKE}"
 			;;
 		--utils-cross-compile=*)
-			CMD_UTILS_CROSS_COMPILE=`parse_opt "$*"`
+			CMD_UTILS_CROSS_COMPILE="${*#*=}"
 			CMD_UTILS_CROSS_COMPILE=$(echo ${CMD_UTILS_CROSS_COMPILE}|sed -e 's/.*[^-]$/&-/g')
 			print_info 2 "CMD_UTILS_CROSS_COMPILE: ${CMD_UTILS_CROSS_COMPILE}"
 			;;
 		--utils-arch=*)
-			CMD_UTILS_ARCH=`parse_opt "$*"`
+			CMD_UTILS_ARCH="${*#*=}"
 			print_info 2 "CMD_UTILS_ARCH: ${CMD_ARCHOVERRIDE}"
 			;;
 		--makeopts=*)
-			CMD_MAKEOPTS=`parse_opt "$*"`
+			CMD_MAKEOPTS="${*#*=}"
 			print_info 2 "CMD_MAKEOPTS: ${CMD_MAKEOPTS}"
 			;;
 		--mountboot|--no-mountboot)
@@ -268,11 +268,11 @@ parse_cmdline() {
 			print_info 2 "CMD_MOUNTBOOT: ${CMD_MOUNTBOOT}"
 			;;
 		--bootdir=*)
-			CMD_BOOTDIR=`parse_opt "$*"`
+			CMD_BOOTDIR="${*#*=}"
 			print_info 2 "CMD_BOOTDIR: ${CMD_BOOTDIR}"
 			;;
 		--modprobedir=*)
-			CMD_MODPROBEDIR=`parse_opt "$*"`
+			CMD_MODPROBEDIR="${*#*=}"
 			print_info 2 "CMD_MODPROBEDIR: ${CMD_MODPROBEDIR}"
 			;;
 		--do-keymap-auto)
@@ -305,7 +305,7 @@ parse_cmdline() {
 			fi
 			;;
 		--mdadm-config=*)
-			CMD_MDADM_CONFIG=`parse_opt "$*"`
+			CMD_MDADM_CONFIG="${*#*=}"
 			print_info 2 "CMD_MDADM_CONFIG: $CMD_MDADM_CONFIG"
 			;;
 		--busybox|--no-busybox)
@@ -321,7 +321,7 @@ parse_cmdline() {
 			print_info 2 "CMD_NETBOOT: ${CMD_NETBOOT}"
 			;;
 		--real-root=*)
-			CMD_REAL_ROOT=`parse_opt "$*"`
+			CMD_REAL_ROOT="${*#*=}"
 			print_info 2 "CMD_REAL_ROOT: ${CMD_REAL_ROOT}"
 			;;
 		--dmraid|--no-dmraid)
@@ -373,7 +373,7 @@ parse_cmdline() {
 			print_info 2 "CMD_MULTIPATH: ${CMD_MULTIPATH}"
 			;;
 		--bootloader=*)
-			CMD_BOOTLOADER=`parse_opt "$*"`
+			CMD_BOOTLOADER="${*#*=}"
 			print_info 2 "CMD_BOOTLOADER: ${CMD_BOOTLOADER}"
 			;;
 		--iscsi|--no-iscsi)
@@ -381,7 +381,7 @@ parse_cmdline() {
 			print_info 2 "CMD_ISCSI: ${CMD_ISCSI}"
 			;;
 		--loglevel=*)
-			CMD_LOGLEVEL=`parse_opt "$*"`
+			CMD_LOGLEVEL="${*#*=}"
 			LOGLEVEL="${CMD_LOGLEVEL}"
 			print_info 2 "CMD_LOGLEVEL: ${CMD_LOGLEVEL}"
 			;;
@@ -429,7 +429,7 @@ parse_cmdline() {
 			;;
 		--gensplash=*)
 			CMD_SPLASH=1
-			SPLASH_THEME=`parse_opt "$*"`
+			SPLASH_THEME="${*#*=}"
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			print_info 2 "SPLASH_THEME: ${SPLASH_THEME}"
 			echo
@@ -444,7 +444,7 @@ parse_cmdline() {
 			;;
 		--splash=*)
 			CMD_SPLASH=1
-			SPLASH_THEME=`parse_opt "$*"`
+			SPLASH_THEME="${*#*=}"
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			print_info 2 "SPLASH_THEME: ${SPLASH_THEME}"
 			;;
@@ -454,13 +454,13 @@ parse_cmdline() {
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			;;
 		--gensplash-res=*)
-			SPLASH_RES=`parse_opt "$*"`
+			SPLASH_RES="${*#*=}"
 			print_info 2 "SPLASH_RES: ${SPLASH_RES}"
 			echo
 			print_warning 1 "Please use --splash-res, as --gensplash-res is deprecated."
 			;;
 		--splash-res=*)
-			SPLASH_RES=`parse_opt "$*"`
+			SPLASH_RES="${*#*=}"
 			print_info 2 "SPLASH_RES: ${SPLASH_RES}"
 			;;
 		--install|--no-install)
@@ -476,7 +476,7 @@ parse_cmdline() {
 			print_info 2 "CMD_ALLRAMDISKMODULES: ${CMD_ALLRAMDISKMODULES}"
 			;;
 		--callback=*)
-			CMD_CALLBACK=`parse_opt "$*"`
+			CMD_CALLBACK="${*#*=}"
 			print_info 2 "CMD_CALLBACK: ${CMD_CALLBACK}/$*"
 			;;
 		--static|--no-static)
@@ -484,7 +484,7 @@ parse_cmdline() {
 			print_info 2 "CMD_STATIC: ${CMD_STATIC}"
 			;;
 		--tempdir=*)
-			TMPDIR=`parse_opt "$*"`
+			TMPDIR="${*#*=}"
 			TEMP=${TMPDIR}/$RANDOM.$RANDOM.$RANDOM.$$
 			print_info 2 "TMPDIR: ${TMPDIR}"
 			print_info 2 "TEMP: ${TEMP}"
@@ -494,7 +494,7 @@ parse_cmdline() {
 			print_info 2 "CMD_POSTCLEAR: ${CMD_POSTCLEAR}"
 			;;
 		--arch-override=*)
-			CMD_ARCHOVERRIDE=`parse_opt "$*"`
+			CMD_ARCHOVERRIDE="${*#*=}"
 			print_info 2 "CMD_ARCHOVERRIDE: ${CMD_ARCHOVERRIDE}"
 			;;
 		--color|--no-color)
@@ -507,44 +507,44 @@ parse_cmdline() {
 			print_info 2 "DEBUGCLEANUP: ${DEBUGCLEANUP}"
 			;;
 		--logfile=*)
-			CMD_LOGFILE=`parse_opt "$*"`
-			LOGFILE=`parse_opt "$*"`
+			CMD_LOGFILE="${*#*=}"
+			LOGFILE="${*#*=}"
 			print_info 2 "CMD_LOGFILE: ${CMD_LOGFILE}"
 			print_info 2 "LOGFILE: ${CMD_LOGFILE}"
 			;;
 		--kerneldir=*)
-			CMD_KERNEL_DIR=`parse_opt "$*"`
+			CMD_KERNEL_DIR="${*#*=}"
 			print_info 2 "CMD_KERNEL_DIR: ${CMD_KERNEL_DIR}"
 			;;
 		--kernel-config=*)
-			CMD_KERNEL_CONFIG=`parse_opt "$*"`
+			CMD_KERNEL_CONFIG="${*#*=}"
 			print_info 2 "CMD_KERNEL_CONFIG: ${CMD_KERNEL_CONFIG}"
 			;;
 		--module-prefix=*)
-			CMD_INSTALL_MOD_PATH=`parse_opt "$*"`
+			CMD_INSTALL_MOD_PATH="${*#*=}"
 			print_info 2 "CMD_INSTALL_MOD_PATH: ${CMD_INSTALL_MOD_PATH}"
 			;;
 		--cachedir=*)
-			CACHE_DIR=`parse_opt "$*"`
+			CACHE_DIR="${*#*=}"
 			print_info 2 "CACHE_DIR: ${CACHE_DIR}"
 			;;
 		--minkernpackage=*)
-			CMD_MINKERNPACKAGE=`parse_opt "$*"`
+			CMD_MINKERNPACKAGE="${*#*=}"
 			[ ${CMD_MINKERNPACKAGE:0:1} != / ] && CMD_MINKERNPACKAGE=$PWD/$CMD_MINKERNPACKAGE
 			print_info 2 "MINKERNPACKAGE: ${CMD_MINKERNPACKAGE}"
 			;;
 		--modulespackage=*)
-			CMD_MODULESPACKAGE=`parse_opt "$*"`
+			CMD_MODULESPACKAGE="${*#*=}"
 			[ ${CMD_MODULESPACKAGE:0:1} != / ] && CMD_MODULESPACKAGE=$PWD/$CMD_MODULESPACKAGE
 			print_info 2 "MODULESPACKAGE: ${CMD_MODULESPACKAGE}"
 			;;
 		--kerncache=*)
-			CMD_KERNCACHE=`parse_opt "$*"`
+			CMD_KERNCACHE="${*#*=}"
 			[ ${CMD_KERNCACHE:0:1} != / ] && CMD_KERNCACHE=$PWD/$CMD_KERNCACHE
 			print_info 2 "KERNCACHE: ${CMD_KERNCACHE}"
 			;;
 		--kernname=*)
-			CMD_KERNNAME=`parse_opt "$*"`
+			CMD_KERNNAME="${*#*=}"
 			print_info 2 "KERNNAME: ${CMD_KERNNAME}"
 			;;
 		--symlink|--no-symlink)
@@ -556,15 +556,15 @@ parse_cmdline() {
 			print_info 2 "CMD_KERNEL_SOURCES: ${CMD_KERNEL_SOURCES}"
 			;;
 		--initramfs-overlay=*)
-			CMD_INITRAMFS_OVERLAY=`parse_opt "$*"`
+			CMD_INITRAMFS_OVERLAY="${*#*=}"
 			print_info 2 "CMD_INITRAMFS_OVERLAY: ${CMD_INITRAMFS_OVERLAY}"
 			;;
 		--linuxrc=*)
-			CMD_LINUXRC=`parse_opt "$*"`
+			CMD_LINUXRC="${*#*=}"
 			print_info 2 "CMD_LINUXRC: ${CMD_LINUXRC}"
 			;;
 		--busybox-config=*)
-			CMD_BUSYBOX_CONFIG=`parse_opt "$*"`
+			CMD_BUSYBOX_CONFIG="${*#*=}"
 			print_info 2 "CMD_BUSYBOX_CONFIG: ${CMD_BUSYBOX_CONFIG}"
 			;;
 		--genzimage)
@@ -591,12 +591,12 @@ parse_cmdline() {
 			print_info 2 "CMD_FIRMWARE: ${CMD_FIRMWARE}"
 			;;
 		--firmware-dir=*)
-			CMD_FIRMWARE_DIR=`parse_opt "$*"`
+			CMD_FIRMWARE_DIR="${*#*=}"
 			CMD_FIRMWARE=1
 			print_info 2 "CMD_FIRMWARE_DIR: ${CMD_FIRMWARE_DIR}"
 			;;
 		--firmware-files=*)
-			CMD_FIRMWARE_FILES=`parse_opt "$*"`
+			CMD_FIRMWARE_FILES="${*#*=}"
 			CMD_FIRMWARE=1
 			print_info 2 "CMD_FIRMWARE_FILES: ${CMD_FIRMWARE_FILES}"
 			;;
@@ -613,18 +613,18 @@ parse_cmdline() {
 			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
 			;;
 		--compress-initramfs-type=*|--compress-initrd-type=*)
-			COMPRESS_INITRD_TYPE=`parse_opt "$*"`
+			COMPRESS_INITRD_TYPE="${*#*=}"
 			print_info 2 "CMD_COMPRESS_INITRD_TYPE: ${CMD_LINUXRC}"
 			;;
 		--config=*)
-			print_info 2 "CMD_GK_CONFIG: `parse_opt "$*"`"
+			print_info 2 "CMD_GK_CONFIG: "${*#*=}""
 			;;
 		--nice)
 			CMD_NICE=10
 			print_info 2 "CMD_NICE: ${CMD_NICE}"
 			;;
 		--nice=*)
-			CMD_NICE=`parse_opt "$*"`
+			CMD_NICE="${*#*=}"
 			if [ ${CMD_NICE} -lt 0 -o ${CMD_NICE} -gt 19 ]
 			then
 				echo "Error:  Illegal value specified for --nice= parameter."
