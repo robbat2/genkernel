@@ -160,6 +160,8 @@ longusage() {
   echo "				Specifies specific firmware files to copy. This"
   echo "				overrides --firmware-dir. For multiple files,"
   echo "				separate the filenames with a comma"
+  echo "	--firmware-install"
+  echo "				Enable installation firmware onto root filesystem."
   echo "	--integrated-initramfs, --no-integrated-initramfs"
   echo "				Include/exclude the generated initramfs in the kernel"
   echo "				instead of keeping it as a separate file"
@@ -599,6 +601,10 @@ parse_cmdline() {
 			CMD_FIRMWARE_FILES="${*#*=}"
 			CMD_FIRMWARE=1
 			print_info 2 "CMD_FIRMWARE_FILES: ${CMD_FIRMWARE_FILES}"
+			;;
+		--firmware-install|--no-firmware-install)
+			CMD_FIRMWARE_INSTALL=`parse_optbool "$*"`
+			print_info 2 "CMD_FIRMWARE_INSTALL: ${CMD_FIRMWARE_INSTALL}"
 			;;
 		--integrated-initramfs|--no-integrated-initramfs)
 			CMD_INTEGRATED_INITRAMFS=`parse_optbool "$*"`
