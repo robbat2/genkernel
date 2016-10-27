@@ -262,7 +262,7 @@ then
 	for i in ${TMPDIR_CONTENTS}
 	do
 		print_info 1 "	 >> removing ${i}"
-		rm ${TMPDIR}/${i}
+		rm -r ${TMPDIR}/${i}
 	done
 fi
 }

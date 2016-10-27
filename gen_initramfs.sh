@@ -1040,6 +1040,40 @@ create_initramfs() {
 				print_info 1 "        >> Not compressing cpio data ..."
 			fi
 		fi
+		## To early load microcode we need to follow some pretty specific steps
+		## mostly laid out in linux/Documentation/x86/early-microcode.txt
+		#if CONFIG_MICROCODE=y; then
+			print_info 1 "early-microcode: >> Preparing..."
+			UCODEDIR="${TMPDIR}/ucode_tmp/kernel/x86/microcode/"
+			mkdir -p "${UCODEDIR}"
+			#if CONFIG_MICROCODE_INTEL=y; then
+				if [ "$(ls -A /lib/firmware/intel-ucode)" ]; then
+					print_info 1 "                 >> adding GenuineIntel.bin"
+					cat /lib/firmware/intel-ucode/* > "${UCODEDIR}/GenuineIntel.bin" || gen_die "Failed to concat intel cpu ucode"
+				#else
+					#print_info 1 "CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
+				fi
+			#fi
+			#if CONFIG_MICROCODE_AMD=y; then
+				if [ "$(ls -A /lib/firmware/amd-ucode)" ]; then
+					print_info 1 "                 >> adding AuthenticAMD.bin"
+					cat /lib/firmware/amd-ucode/*.bin > "${UCODEDIR}/AuthenticAMD.bin" || gen_dir "Failed to concat amd cpu ucode"
+				#else
+					#print_info 1 "CONFIG_MICROCODE_AMD=y set but no ucode available.  Please install sys-firmware/linux-firmware"
+				fi
+			#fi
+			if [ "$(ls -A ${UCODE})" ]; then
+				print_info 1 "early-microcode: >> Creating cpio..."
+				pushd "${TMPDIR}/ucode_tmp" > /dev/null
+				find . | cpio -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
+				popd > /dev/null
+				print_info 1 "early-microcode: >> Prepending early-microcode to initramfs"
+				cat "${TMPDIR}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
+				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
+			#else
+				#print_info 1 "CONFIG_MICROCODE=y is set but no microcode found"
+			fi
+		#fi
 		if isTrue "${WRAP_INITRD}"
 		then
 			local mkimage_cmd=$(type -p mkimage)
