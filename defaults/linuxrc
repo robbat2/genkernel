@@ -596,7 +596,7 @@ do
 			got_good_root=0
 
 		# Check for a block device or /dev/nfs
-		elif [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ]
+		elif [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ]
 		then
 			got_good_root=1
 
