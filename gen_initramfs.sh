@@ -339,31 +339,41 @@ append_mdadm(){
         rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
 }
 
-
 append_zfs(){
-	if [ -d "${TEMP}/initramfs-zfs-temp" ]
-	then
-		rm -r "${TEMP}/initramfs-zfs-temp"
-	fi
+    if [ -d "${TEMP}/initramfs-zfs-temp" ]
+    then
+        rm -r "${TEMP}/initramfs-zfs-temp"
+    fi
 
-	mkdir -p "${TEMP}/initramfs-zfs-temp/etc/zfs/"
+    mkdir -p "${TEMP}/initramfs-zfs-temp/etc/zfs"
 
-	# Copy files to /etc/zfs
-	for i in /etc/zfs/{zdev.conf,zpool.cache}
-	do
-                cp -a "${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" 2> /dev/null \
-			|| print_warning 1 "Could not copy file ${i} for ZFS"
-	done
+    # Copy files to /etc/zfs
+    for i in zdev.conf zpool.cache
+    do
+        if [ -f /etc/zfs/${i} ]
+        then
+            print_info 1 "        >> Including ${i}"
+            cp -a "/etc/zfs/${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" 2> /dev/null \
+                || gen_die "Could not copy file ${i} for ZFS"
+        fi
+    done
 
-	# Copy binaries
-	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zfs,zpool}
+    # Copy binaries
+    # Include libgcc_s.so.1 to workaround zfsonlinux/zfs#4749
+    if type gcc-config 2>&1 1>/dev/null; then
+        copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool} \
+                      "/usr/lib/gcc/$(s=$(gcc-config -c); echo ${s%-*}/${s##*-})/libgcc_s.so.1"
+    else
+        copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool} \
+                      /usr/lib/gcc/*/*/libgcc_s.so.1
+    fi
 
-	cd "${TEMP}/initramfs-zfs-temp/"
-	log_future_cpio_content
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing zfs cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
+    cd "${TEMP}/initramfs-zfs-temp/"
+    log_future_cpio_content
+    find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+        || gen_die "compressing zfs cpio"
+    cd "${TEMP}"
+    rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
 }
 
 append_btrfs() {
