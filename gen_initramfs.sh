@@ -533,13 +533,24 @@ append_linker() {
 		rm -r "${TEMP}/initramfs-linker-temp"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-linker-temp/etc/ld.so.conf.d"
+	mkdir -p "${TEMP}/initramfs-linker-temp/etc"
 
-	cp "/etc/ld.so."{cache,conf} "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
-		|| gen_die "Could not copy ld.so.{cache,conf}"
-
-	cp -r "/etc/ld.so.conf.d" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
-		|| gen_die "Could not copy ld.so.conf.d"
+	if [ -e "/etc/ld.so.conf" ]
+	then
+		cp "/etc/ld.so.conf" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
+			|| gen_die "Could not copy ld.so.conf"
+	fi
+	if [ -e "/etc/ld.so.cache" ]
+	then
+		cp "/etc/ld.so.cache" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
+			|| gen_die "Could not copy ld.so.cache"
+	fi
+	if [ -d "/etc/ld.so.conf.d" ]
+	then
+		mkdir -p "${TEMP}/initramfs-linker-temp/etc/ld.so.conf.d"
+		cp -r "/etc/ld.so.conf.d" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
+			|| gen_die "Could not copy ld.so.conf.d"
+	fi
 
 	cd "${TEMP}/initramfs-linker-temp/"
 	log_future_cpio_content
