@@ -318,6 +318,9 @@ append_dmraid(){
 	mkdir -p "${TEMP}/initramfs-dmraid-temp/"
 	/bin/tar -jxpf "${DMRAID_BINCACHE}" -C "${TEMP}/initramfs-dmraid-temp" ||
 		gen_die "Could not extract dmraid binary cache!";
+	[ -x /sbin/dmsetup -a -x /sbin/kpartx ] && copy_binaries \
+		"${TEMP}/initramfs-dmraid-temp/" \
+		/sbin/{kpartx,dmsetup}
 	cd "${TEMP}/initramfs-dmraid-temp/"
 	module_ext=$(modules_kext)
 	RAID456=`find . -type f -name raid456${module_ext}`

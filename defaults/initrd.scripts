@@ -1002,6 +1002,7 @@ startVolumes() {
 			else
 				/sbin/dmraid -ay ${DMRAID_OPTS}
 			fi
+			[ -x '/sbin/kpartx' ] && /sbin/dmsetup ls --exec '/sbin/kpartx -a -s'
 		fi
 	fi
 
