@@ -113,26 +113,53 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
 	fi
 
+	# If the user has configured DM as built-in, we need to respect that.
+	cfg_CONFIG_BLK_DEV_DM=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM")
+	case "$cfg_CONFIG_BLK_DEV_DM" in
+		y|m) ;; # Do nothing
+		*) cfg_CONFIG_BLK_DEV_DM='m'
+	esac
+
 	# Make sure lvm modules are on if --lvm
 	if isTrue ${CMD_LVM}
 	then
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "m"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT" "m"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR" "m"
+		cfg_CONFIG_DM_SNAPSHOT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT")
+		case "$cfg_CONFIG_DM_SNAPSHOT" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_DM_SNAPSHOT='m'
+		esac
+		cfg_CONFIG_DM_MIRROR=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR")
+		case "$cfg_CONFIG_DM_MIRROR" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_DM_MIRROR='m'
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT" "${cfg_CONFIG_DM_SNAPSHOT}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR" "${cfg_CONFIG_DM_MIRROR}"
 	fi
 
 	# Multipath
 	if isTrue ${CMD_MULTIPATH}
 	then
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "m"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "m"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH_RDAC" "m"
+		cfg_CONFIG_DM_MULTIPATH=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH")
+		case "$cfg_CONFIG_DM_MULTIPATH" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_DM_MULTIPATH='m'
+		esac
+		cfg_CONFIG_DM_MULTIPATH_RDAC=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH_RDAC")
+		case "$cfg_CONFIG_DM_MULTIPATH_RDAC" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_DM_MULTIPATH_RDAC='m'
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "${cfg_CONFIG_DM_MULTIPATH}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH_RDAC" "${cfg_CONFIG_DM_MULTIPATH_RDAC}"
 	fi
 
 	# Make sure dmraid modules are on if --dmraid
 	if isTrue ${CMD_DMRAID}
 	then
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "m"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 	fi
 
 	# Make sure iSCSI modules are enabled in the kernel, if --iscsi
@@ -140,8 +167,18 @@ config_kernel() {
 	# CONFIG_ISCSI_TCP
 	if isTrue ${CMD_ISCSI}
 	then
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "m"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "m"
+		cfg_CONFIG_ISCSI_TCP=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP")
+		case "$cfg_CONFIG_ISCSI_TCP" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_ISCSI_TCP='m'
+		esac
+		cfg_CONFIG_SCSI_ISCSI_ATTRS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS")
+		case "$cfg_CONFIG_SCSI_ISCSI_ATTRS" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_SCSI_ISCSI_ATTRS='m'
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "${cfg_CONFIG_ISCSI_TCP}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "${cfg_CONFIG_SCSI_ISCSI_ATTRS}"
 	fi
 
 	if isTrue ${SPLASH}
@@ -167,7 +204,12 @@ config_kernel() {
 			CONFIG_SCSI_VIRTIO \
 			CONFIG_VHOST_NET \
 			; do
-			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "y"
+			cfg___virtio_opt=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
+			case "$cfg___virtio_opt" in
+				y|m) ;; # Do nothing
+				*) cfg___virtio_opt='y'
+			esac
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg___virtio_opt}"
 		done
 	fi
 }
