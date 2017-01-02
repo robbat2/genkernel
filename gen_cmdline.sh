@@ -27,6 +27,8 @@ longusage() {
   echo "  Kernel Configuration settings"
   echo "	--menuconfig		Run menuconfig after oldconfig"
   echo "	--no-menuconfig		Do not run menuconfig after oldconfig"
+  echo "	--nconfig		Run nconfig after oldconfig"
+  echo "	--no-nconfig		Do not run nconfig after oldconfig"
   echo "	--gconfig			Run gconfig after oldconfig"
   echo "	--no-gconfig		Don't run gconfig after oldconfig"
   echo "	--xconfig			Run xconfig after oldconfig"
@@ -185,6 +187,7 @@ usage() {
   echo
   echo 'Some useful options:'
   echo '	--menuconfig		Run menuconfig after oldconfig'
+  echo '	--nconfig		Run nconfig after oldconfig (requires ncurses)'
   echo '	--no-clean		Do not run make clean before compilation'
   echo '	--no-mrproper		Do not run make mrproper before compilation,'
   echo '				this is implied by --no-clean.'
@@ -410,6 +413,22 @@ parse_cmdline() {
 		--no-menuconfig)
 			CMD_MENUCONFIG=0
 			print_info 2 "CMD_MENUCONFIG: ${CMD_MENUCONFIG}"
+			;;
+		--nconfig)
+			TERM_LINES=`stty -a | head -n 1 | cut -d\  -f5 | cut -d\; -f1`
+			TERM_COLUMNS=`stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1`
+			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
+			then
+				echo "Error: You need a terminal with at least 80 columns"
+				echo "		 and 19 lines for --nconfig; try --no-nconfig..."
+				exit 1
+			fi
+			CMD_NCONFIG=1
+			print_info 2 "CMD_NCONFIG: ${CMD_NCONFIG}"
+			;;
+		--no-nconfig)
+			CMD_NCONFIG=0
+			print_info 2 "CMD_NCONFIG: ${CMD_NCONFIG}"
 			;;
 		--gconfig|--no-gconfig)
 			CMD_GCONFIG=`parse_optbool "$*"`
