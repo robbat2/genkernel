@@ -433,6 +433,10 @@ compile_busybox() {
 			gen_die "Busybox directory ${BUSYBOX_DIR} is invalid!"
 		cp "${BUSYBOX_CONFIG}" "${BUSYBOX_DIR}/.config"
 		cp "${BUSYBOX_CONFIG}" "${BUSYBOX_DIR}/.config.gk_orig"
+		if isTrue "${NFS}"
+		then
+			sed -i 's/.*CONFIG_FEATURE_MOUNT_NFS.*/CONFIG_FEATURE_MOUNT_NFS=y/' "${BUSYBOX_DIR}/.config"
+		fi
 		cd "${BUSYBOX_DIR}"
 		apply_patches busybox ${BUSYBOX_VER}
 		print_info 1 'busybox: >> Configuring...'

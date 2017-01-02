@@ -314,6 +314,10 @@ parse_cmdline() {
 			CMD_BUSYBOX=`parse_optbool "$*"`
 			print_info 2 "CMD_BUSYBOX: ${CMD_BUSYBOX}"
 			;;
+		--nfs|--no-nfs)
+			CMD_NFS=`parse_optbool "$*"`
+			print_info 2 "CMD_NFS: ${CMD_NFS}"
+			;;
 		--unionfs|--no-unionfs)
 			CMD_UNIONFS=`parse_optbool "$*"`
 			print_info 2 "CMD_UNIONFS: ${CMD_UNIONFS}"
