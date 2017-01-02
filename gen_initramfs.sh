@@ -1053,27 +1053,32 @@ create_initramfs() {
 		fi
 		## To early load microcode we need to follow some pretty specific steps
 		## mostly laid out in linux/Documentation/x86/early-microcode.txt
-		if grep -sq '^CONFIG_MICROCODE=y' "${KERNEL_OUTPUTDIR}"/.config; then
+		## It only loads monolithic ucode from an uncompressed cpio, which MUST
+		## be before the other cpio archives in the stream.
+		cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
+		if [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
+			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
+			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
 			print_info 1 "early-microcode: >> Preparing..."
 			UCODEDIR="${TMPDIR}/ucode_tmp/kernel/x86/microcode/"
 			mkdir -p "${UCODEDIR}"
-			if grep -sq '^CONFIG_MICROCODE_INTEL=y' "${KERNEL_OUTPUTDIR}"/.config; then
-				if [ "$(ls -A /lib/firmware/intel-ucode)" ]; then
+			if [  "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]; then
+				if [ -d /lib/firmware/intel-ucode ]; then
 					print_info 1 "                 >> adding GenuineIntel.bin"
 					cat /lib/firmware/intel-ucode/* > "${UCODEDIR}/GenuineIntel.bin" || gen_die "Failed to concat intel cpu ucode"
 				else
 					print_info 1 "CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
 				fi
 			fi
-			if grep -sq '^CONFIG_MICROCODE_AMD=y' "${KERNEL_OUTPUTDIR}"/.config; then
-				if [ "$(ls -A /lib/firmware/amd-ucode)" ]; then
+			if [  "${cfg_CONFIG_MICROCODE_AMD}" == "y" ]; then
+				if [ -d /lib/firmware/amd-ucode ]; then
 					print_info 1 "                 >> adding AuthenticAMD.bin"
 					cat /lib/firmware/amd-ucode/*.bin > "${UCODEDIR}/AuthenticAMD.bin" || gen_dir "Failed to concat amd cpu ucode"
 				else
 					print_info 1 "CONFIG_MICROCODE_AMD=y set but no ucode available.  Please install sys-firmware/linux-firmware"
 				fi
 			fi
-			if [ "$(ls -A ${UCODE})" ]; then
+			if [ -f "${UCODEDIR}/AuthenticAMD.bin" -o -f "${UCODEDIR}/GenuineIntel.bin" ]; then
 				print_info 1 "early-microcode: >> Creating cpio..."
 				pushd "${TMPDIR}/ucode_tmp" > /dev/null
 				find . | cpio -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
