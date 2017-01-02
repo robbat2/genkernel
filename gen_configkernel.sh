@@ -218,4 +218,26 @@ config_kernel() {
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg___virtio_opt}"
 		done
 	fi
+
+	# Microcode setting, intended for early microcode loading
+	# needs to be compiled in.
+	if isTrue ${MICROCODE}
+	then
+		for k in \
+			CONFIG_MICROCODE \
+			CONFIG_MICROCODE_INTEL \
+			CONFIG_MICROCODE_AMD \
+			CONFIG_MICROCODE_OLD_INTERFACE \
+			CONFIG_MICROCODE_INTEL_EARLY \
+			CONFIG_MICROCODE_AMD_EARLY \
+			CONFIG_MICROCODE_EARLY \
+			; do
+			cfg=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
+			case "$cfg" in
+				y) ;; # Do nothing
+				*) cfg='y'
+			esac
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg}"
+		done
+	fi
 }

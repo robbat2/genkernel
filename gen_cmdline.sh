@@ -314,6 +314,10 @@ parse_cmdline() {
 			CMD_BUSYBOX=`parse_optbool "$*"`
 			print_info 2 "CMD_BUSYBOX: ${CMD_BUSYBOX}"
 			;;
+		--microcode|--no-microcode)
+			CMD_MICROCODE=`parse_optbool "$*"`
+			print_info 2 "CMD_MICROCODE: ${CMD_MICROCODE}"
+			;;
 		--nfs|--no-nfs)
 			CMD_NFS=`parse_optbool "$*"`
 			print_info 2 "CMD_NFS: ${CMD_NFS}"

@@ -117,6 +117,7 @@ determine_real_args() {
 	set_config_with_override BOOL   ISCSI                CMD_ISCSI
 	set_config_with_override BOOL   BUSYBOX              CMD_BUSYBOX              "yes"
 	set_config_with_override BOOL   NFS                  CMD_NFS                  "yes"
+	set_config_with_override BOOL   MICROCODE            CMD_MICROCODE
 	set_config_with_override BOOL   UNIONFS              CMD_UNIONFS
 	set_config_with_override BOOL   NETBOOT              CMD_NETBOOT
 	set_config_with_override STRING REAL_ROOT            CMD_REAL_ROOT

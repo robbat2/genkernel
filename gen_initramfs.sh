@@ -1056,7 +1056,7 @@ create_initramfs() {
 		## It only loads monolithic ucode from an uncompressed cpio, which MUST
 		## be before the other cpio archives in the stream.
 		cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
-		if [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
+		if isTrue "${MICROCODE}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
 			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
 			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
 			print_info 1 "early-microcode: >> Preparing..."
