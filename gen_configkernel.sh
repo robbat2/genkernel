@@ -167,6 +167,11 @@ config_kernel() {
 	# CONFIG_ISCSI_TCP
 	if isTrue ${CMD_ISCSI}
 	then
+		cfg_CONFIG_ISCSI_BOOT_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS")
+		case "$cfg_CONFIG_ISCSI_BOOT_SYSFS" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_ISCSI_BOOT_SYSFS='m'
+		esac
 		cfg_CONFIG_ISCSI_TCP=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP")
 		case "$cfg_CONFIG_ISCSI_TCP" in
 			y|m) ;; # Do nothing
@@ -177,6 +182,7 @@ config_kernel() {
 			y|m) ;; # Do nothing
 			*) cfg_CONFIG_SCSI_ISCSI_ATTRS='m'
 		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS" "${cfg_CONFIG_ISCSI_BOOT_SYSFS}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "${cfg_CONFIG_ISCSI_TCP}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "${cfg_CONFIG_SCSI_ISCSI_ATTRS}"
 	fi
