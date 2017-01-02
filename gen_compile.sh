@@ -412,11 +412,23 @@ compile_busybox() {
 		gen_die "Could not find a busybox config file"
 	fi
 
+	# Apply config-based tweaks to the busybox config.
+	# This needs to be done before cache validation.
+	cp "${BUSYBOX_CONFIG}" "${TEMP}/busybox-config"
+	if isTrue "${NFS}"
+	then
+		sed -i \
+			-e 's/.*CONFIG_FEATURE_MOUNT_NFS.*/CONFIG_FEATURE_MOUNT_NFS=y/' \
+			"${TEMP}/busybox-config"
+	fi
+
 	# Delete cache if stored config's MD5 does not match one to be used
+	# This exactly just the .config.gk_orig file, and compares it again the
+	# current .config.
 	if [ -f "${BUSYBOX_BINCACHE}" ]
 	then
-		oldconfig_md5=$(tar -xjf "${BUSYBOX_BINCACHE}" -O .config.gk_orig 2>/dev/null | md5sum)
-		newconfig_md5=$(md5sum < "${BUSYBOX_CONFIG}")
+		oldconfig_md5="$(tar -xjf "${BUSYBOX_BINCACHE}" -O .config.gk_orig 2>/dev/null | md5sum)"
+		newconfig_md5="$(md5sum < "${TEMP}/busybox-config")"
 		if [ "${oldconfig_md5}" != "${newconfig_md5}" ]
 		then
 			print_info 1 "busybox: >> Removing stale cache..."
@@ -426,6 +438,9 @@ compile_busybox() {
 		fi
 	fi
 
+	# If the busybox bincache does NOT exist, create it; this cannot be merged
+	# with the above statement, because that statement might remove the
+	# bincache.
 	if [ ! -f "${BUSYBOX_BINCACHE}" ]
 	then
 		cd "${TEMP}"
@@ -434,19 +449,20 @@ compile_busybox() {
 			gen_die 'Could not extract busybox source tarball!'
 		[ -d "${BUSYBOX_DIR}" ] ||
 			gen_die "Busybox directory ${BUSYBOX_DIR} is invalid!"
-		cp "${BUSYBOX_CONFIG}" "${BUSYBOX_DIR}/.config"
-		cp "${BUSYBOX_CONFIG}" "${BUSYBOX_DIR}/.config.gk_orig"
-		if isTrue "${NFS}"
-		then
-			sed -i 's/.*CONFIG_FEATURE_MOUNT_NFS.*/CONFIG_FEATURE_MOUNT_NFS=y/' "${BUSYBOX_DIR}/.config"
-		fi
+
+		cp "${TEMP}/busybox-config" "${BUSYBOX_DIR}/.config"
+		cp "${BUSYBOX_DIR}/.config" "${BUSYBOX_DIR}/.config.gk_orig" # used for the bincache compare
+
 		cd "${BUSYBOX_DIR}"
 		apply_patches busybox ${BUSYBOX_VER}
+
+		# This has the side-effect of changing the .config
 		print_info 1 'busybox: >> Configuring...'
 		yes '' 2>/dev/null | compile_generic oldconfig utils
 
 		print_info 1 'busybox: >> Compiling...'
 		compile_generic all utils V=1
+
 		print_info 1 'busybox: >> Copying to cache...'
 		[ -f "${TEMP}/${BUSYBOX_DIR}/busybox" ] ||
 			gen_die 'Busybox executable does not exist!'
