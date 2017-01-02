@@ -417,9 +417,7 @@ compile_busybox() {
 	cp "${BUSYBOX_CONFIG}" "${TEMP}/busybox-config"
 	if isTrue "${NFS}"
 	then
-		sed -i \
-			-e 's/.*CONFIG_FEATURE_MOUNT_NFS.*/CONFIG_FEATURE_MOUNT_NFS=y/' \
-			"${TEMP}/busybox-config"
+		kconfig_set_opt "${TEMP}/busybox-config" CONFIG_FEATURE_MOUNT_NFS y
 	fi
 
 	# Delete cache if stored config's MD5 does not match one to be used
