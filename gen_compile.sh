@@ -424,7 +424,10 @@ compile_busybox() {
 		else
 			print_info 1 "busybox: >> Using cache"
 		fi
-	else
+	fi
+
+	if [ ! -f "${BUSYBOX_BINCACHE}" ]
+	then
 		cd "${TEMP}"
 		rm -rf "${BUSYBOX_DIR}" > /dev/null
 		/bin/tar -jxpf ${BUSYBOX_SRCTAR} ||
