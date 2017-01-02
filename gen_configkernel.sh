@@ -32,22 +32,6 @@ determine_config_file() {
 	fi
 }
 
-function kconfig_get_opt() {
-	kconfig="$1"
-	optname="$2"
-	sed -n "${kconfig}" \
-		-e "/^#\? \?${optname}[ =].*/{ s/.*${optname}[ =]//g; s/is not set//g; p; q }"
-}
-
-function kconfig_set_opt() {
-	kconfig="$1"
-	optname="$2"
-	optval="$3"
-	sed -i "${kconfig}" \
-		-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
-	|| gen_die "Failed to set ${optname}=${optval} in $kconfig"
-}
-
 config_kernel() {
 	determine_config_file
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'

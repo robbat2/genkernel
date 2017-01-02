@@ -535,3 +535,19 @@ find_kernel_binary() {
 	cd "${curdir}"
 	echo "${tmp_kernel_binary}"
 }
+
+function kconfig_get_opt() {
+	kconfig="$1"
+	optname="$2"
+	sed -n "${kconfig}" \
+		-e "/^#\? \?${optname}[ =].*/{ s/.*${optname}[ =]//g; s/is not set//g; p; q }"
+}
+
+function kconfig_set_opt() {
+	kconfig="$1"
+	optname="$2"
+	optval="$3"
+	sed -i "${kconfig}" \
+		-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
+	|| gen_die "Failed to set ${optname}=${optval} in $kconfig"
+}
