@@ -63,6 +63,7 @@ set_bootloader_grub() {
 
 	if [ ! -e ${GRUB_CONF} ]
 	then
+		print_warning 1 "No ${GRUB_CONF} found, generating!"
 		local GRUB_BOOTFS
 		if [ -n "${BOOTFS}" ]
 		then
