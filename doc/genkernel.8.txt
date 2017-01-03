@@ -144,7 +144,8 @@ KERNEL COMPILATION
     *--install* is also specified.
 
 *--oldconfig*::
-    Implies *--no-clean*, and thus *--no-mrproper*, running a "make oldconfig".
+    Implies *--no-clean*, and thus *--no-mrproper*, running a
+    "make oldconfig".
 
 *--*[*no-*]*splash*::
     Installs, or not, framebuffer splash support into initramfs.
@@ -160,8 +161,8 @@ KERNEL COMPILATION
     kernel and modules have been compiled.
 
 *--*[*no-*]*static*::
-	Builds, or does not build a monolithic kernel without any modules on any
-	initial ramdisks.
+    Builds, or does not build a monolithic kernel without any modules on
+    any initial ramdisks.
 
 
 KERNEL LOCATIONS
@@ -206,11 +207,11 @@ LOW-LEVEL COMPILATION OPTIONS
 *--kernel-binary*=<path>::
     Override default kernel binary path (arch/foo/boot/bar)
 
-*--kernel-outputdir=<path>::
-	Save output files outside the source tree. This should be used rather than
-	KBUILD_OUTPUT when you wish to place kernel objects outside of the source
-	tree (eg because cannot write to that directory as the user genkernel is
-	running as).
+*--kernel-outputdir*=<path>::
+    Save output files outside the source tree. This should be used rather than
+    KBUILD_OUTPUT when you wish to place kernel objects outside of the source
+    tree (eg because cannot write to that directory as the user genkernel is
+    running as).
 
 *--utils-cc*=<compiler>::
     Compiler to use for utilities.
@@ -243,8 +244,8 @@ LOW-LEVEL COMPILATION OPTIONS
     GNU Make options such as -j2, etc.
 
 *--*[*no-*]*nice*[=<niceness>]::
-	Runs the kernel make at the default niceness (reduction in priority) of
-	10, or in the case of --no-nice, runs the kernel make at normal priority.
+    Runs the kernel make at the default niceness (reduction in priority) of
+    10, or in the case of --no-nice, runs the kernel make at normal priority.
 
 INITIALIZATION
 ~~~~~~~~~~~~~~
@@ -266,8 +267,8 @@ INITIALIZATION
     Enables or disables keymap selection at boot.
 
 *--*[*no-*]*lvm*::
-	Adds or skips in LVM support from static binaries if they exist on the
-	system,  or compile static LVM binaries if static ones do not exist.
+    Adds or skips in LVM support from static binaries if they exist on the
+    system,  or compile static LVM binaries if static ones do not exist.
 
 *--*[*no-*]*mdadm*::
     Includes or excludes mdadm/mdmon support.
@@ -312,18 +313,18 @@ INITIALIZATION
     Specifies a user created busybox config.
 
 *--genzimage*::
-	Make and install kernelz image from 'arch/powerpc/boot/zImage.initrd'.
+    Make and install kernelz image from 'arch/powerpc/boot/zImage.initrd'.
 
 *--*[*no-*]*disklabel*::
     Includes or excludes disk label and uuid support in your initrd.
 
 *--*[*no-*]*luks*::
-	Includes or excludes Luks support from static binaries if they exist on
-	the system.
+    Includes or excludes Luks support from static binaries if they exist on
+    the system.
 
 *--*[*no-*]*gpg*::
-	Includes or excludes support for GnuPG 1.x, the portable standalone branch
-	of GnuPG. A key can be made from
+    Includes or excludes support for GnuPG 1.x, the portable standalone branch
+    of GnuPG. A key can be made from
     `gpg --symmetric -o /path/to/LUKS-key.gpg /path/to/LUKS-key` .
     After that, re-point the *root_key* argument to the new .gpg file.
 
@@ -353,7 +354,7 @@ INTERNALS
     Sets genkernel's temporary working directory to <dir>.
 
 *--*[*no-*]*postclear*::
-	Clears or skips clearing all tmp files and caches after genkernel has run.
+    Clears or skips clearing all tmp files and caches after genkernel has run.
 
 
 OUTPUT SETTINGS
@@ -395,30 +396,36 @@ OUTPUT SETTINGS
 
 *--*[*no-*]*firmware-install*::
     Enable or disables installation of firmware onto root filesystem.
-	Installing sys-kernel/linux-firmware should be preferred instead.
+    Please note this is deprecated, and installing
+    *sys-kernel/linux-firmware* should be preferred instead.
 
 *--*[*no-*]*integrated-initramfs*::
-	Builds or does not build the generated initramfs into the kernel instead
-	of keeping it as a separate file.
+    Builds or does not build the generated initramfs into the kernel instead
+    of keeping it as a separate file.
 
 *--*[*no-*]*wrap-initrd*::
-  	Wrap initramfs using mkimage for u-boot boots. Please note that only 
-	certain compression types are supported by mkimage (see manpage).
-
+    Wrap initramfs using mkimage for u-boot boots. Please note that only
+    certain compression types are supported by mkimage (see manpage).
 
 *--*[*no-*]*compress-initramfs*, *--*[*no-*]*compress-initrd*::
-	Compresses or does not compress the generated initramfs.
+    Compresses or does not compress the generated initramfs.
 
 *--compress-initramfs-type*=<arg>::
-	Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop).
-	"Best" causes selection of the best available algorithm that is selected
-	in your kernel configuration.
+    Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop).
+    "Best" causes selection of the best available algorithm that is selected
+    in your kernel configuration.
 
 
 RAMDISK/INITRAMFS OPTIONS
 -------------------------
-The following options can be passed as kernel parameters from the bootloader,
-which the ramdisk & initramfs scripts would recognize.
+The following options are some of those available to be passed as kernel
+parameters from the bootloader. Genkernel will not handle this
+operation, please refer to your bootloader documentation for a more
+complete description of each.
+
+This listing is intended to cover most of the options recognized by the
+ramdisk/initramfs scripts, as well as some of the common options
+recognized by the kernel itself.
 
 *root*=<...>::
     Specifies the device node of the root filesystem to mount.
@@ -479,8 +486,8 @@ which the ramdisk & initramfs scripts would recognize.
 
 *rootdelay*[=<...>]::
 *rootwait*[=<...>]::
-	Pauses for up to 3 seconds (or specified number of seconds) while
-	waiting for root device to appear during initramfs root scanning.
+    Pauses for up to 3 seconds (or specified number of seconds) while
+    waiting for root device to appear during initramfs root scanning.
 
 *ip*=<...>::
     Normally used to tell the kernel that it should start a network
@@ -565,8 +572,8 @@ which the ramdisk & initramfs scripts would recognize.
 
 *part*[=<0,1>]::
 *partitionable*::
-	Enable/Disable partitionable RAIDs (metadata 0.x) during auto-run.
-	Standalone *part* and *partitionable* keywords for kernel compatability.
+    Enable/Disable partitionable RAIDs (metadata 0.x) during auto-run.
+    Standalone *part* and *partitionable* keywords for kernel compatability.
 
 *iscsi_initiatorname*=<...>::
 *iscsi_target*=<...>::
@@ -630,8 +637,8 @@ NETBOOTING
 ----------
 The initrd scripts have limited support for network booting.   This is
 activated if the *ip*=<...> kernel parameter was given. Please refer to
-the genkernel guide at 'http://www.gentoo.org/doc/en/genkernel.xml' for
-more information.
+the genkernel guide at 'https://wiki.gentoo.org/wiki/Genkernel' for more
+information.
 
 The initrd scripts will extract any *.tar.gz files found in the '/add'
 directory of the livecd into the root filesystem during boot. This way
@@ -650,14 +657,15 @@ If you're somewhat unsure if you hit a bug or not, file a bug an we'll find out 
 For general questions the is the gentoo-genkernel mailing list.  You can join the list
 by sending empty mail to 'gentoo-genkernel+subscribe@lists.gentoo.org'.
 
-We cannot assist you with
-kernel compilation failures unless they are caused by a genkernel bug.
+We cannot assist you with kernel compilation failures unless they are
+caused by a genkernel bug.
 
 Kernel issues for Gentoo-supported kernels, including compilation failures
 should go to 'https://bugs.gentoo.org/' and should be assigned to 'kernel@gentoo.org'.
-Please check if an existing bug documents the same
-issue before opening a new bug. Issues for kernel sources not supported
-by Gentoo should go to their relevant authors.
+
+Please check if an existing bug documents the same issue before opening
+a new bug. Issues for kernel sources not supported by Gentoo should go
+to their relevant authors.
 
 
 AUTHORS
@@ -666,6 +674,7 @@ AUTHORS
 - Eric Edgar <rocket@gentoo.org>
 - Chris Gianelloni <wolf31o2@gentoo.org>
 - Sebastian Pipping <sebastian@pipping.org>
+- Robin H. Johnson <robbat2@gentoo.org>
 - NFS Support by Thomas Seiler <thseiler@gmail.com>
 - GnuPG 1.x integration by dacook <schism@subverted.org>
 - MDADM integration by Matthias Dahl <ua_bugz_gentoo@mortal-soul.de>
@@ -675,3 +684,5 @@ AUTHORS
 SEE ALSO
 --------
 /etc/genkernel.conf - genkernel configuration file
+
+// vim: ft=asciidoc et tw=72 sts=4 ts=4 :
