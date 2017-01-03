@@ -306,6 +306,14 @@ compile_modules() {
 	compile_generic modules kernel
 	export UNAME_MACHINE="${ARCH}"
 	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
+	if [ "${CMD_STRIP_TYPE}" == "all" -o "${CMD_STRIP_TYPE}" == "modules" ]
+	then
+		print_info 1 "        >> Installing ${KV} modules (and stripping)"
+		INSTALL_MOD_STRIP=1
+		export INSTALL_MOD_STRIP
+	else
+		print_info 1 "        >> Installing ${KV} modules"
+	fi
 	MAKEOPTS="${MAKEOPTS} -j1" compile_generic "modules_install" kernel
 	print_info 1 "        >> Generating module dependency data..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
@@ -315,6 +323,7 @@ compile_modules() {
 		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV}
 	fi
 	unset UNAME_MACHINE
+	unset INSTALL_MOD_STRIP
 }
 
 compile_kernel() {

@@ -388,6 +388,12 @@ copy_image_with_preserve() {
 	cp "${newSrceImage}" "${BOOTDIR}/${currDestImage}" ||
 	    gen_die "Could not copy the ${symlinkName} image to ${BOOTDIR}!"
 
+	if [ "${CMD_STRIP_TYPE}" = "all" -o "${CMD_STRIP_TYPE}" = "kernel" ]
+	then
+		print_info 5 "  Stripping ${BOOTDIR}/${currDestImage}"
+		strip --strip-debug "${BOOTDIR}/${currDestImage}" >/dev/null 2>&1
+	fi
+
 	if [ "${SYMLINK}" = '1' ]
 	then
 		print_info 5 "  Make new symlink(s) (from ${BOOTDIR}):"

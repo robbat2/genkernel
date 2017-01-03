@@ -174,6 +174,11 @@ longusage() {
   echo "				Compress or do not compress the generated initramfs"
   echo "	--compress-initramfs-type=<arg>"
   echo "				Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop)"
+  echo "	--strip=(all|kernel|modules|none)"
+  echo "				Strip debug symbols from the installed kernel, modules,"
+  echo "				all (default) or none"
+  echo "	--no-strip"
+  echo "				Don't strip installed kernel or modules (alias for --strip=none)"
   echo
   echo "For a detailed list of supported initramfs options and flags; issue:"
   echo "	man 8 genkernel"
@@ -668,6 +673,14 @@ parse_cmdline() {
 		--no-nice)
 			CMD_NICE=0
 			print_info 2 "CMD_NICE: ${CMD_NICE}"
+			;;
+		--strip=*)
+			CMD_STRIP_TYPE=`parse_opt "$*"`
+			print_info 2 "CMD_STRIP_TYPE: ${CMD_STRIP_TYPE}"
+			;;
+		--no-strip)
+			CMD_STRIP_TYPE=none
+			print_info 2 "CMD_STRIP_TYPE: ${CMD_STRIP_TYPE}"
 			;;
 		all)
 			BUILD_KERNEL=1

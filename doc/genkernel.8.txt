@@ -384,6 +384,13 @@ OUTPUT SETTINGS
     Directory structure to include in the initramfs, only available
     on >=2.6 kernels
 
+*--strip*=<all|kernel|modules|none>::
+    Strip debug symbols from the installed kernel, modules, all
+    (default) or none.
+
+*--no-strip*::
+    Alias for *--strip=none*.
+
 *--*[*no-*]*firmware*::
     Enable or disables copying of firmware into initramfs.
 
