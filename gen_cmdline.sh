@@ -178,7 +178,7 @@ longusage() {
   echo "				Strip debug symbols from the installed kernel, modules,"
   echo "				all (default) or none"
   echo "	--no-strip"
-  echo "				Don't strip installed kernel or modules (alias for --strip=none)"
+  echo "				Don't strip installed kernel or modules, alias for --strip=none"
   echo
   echo "For a detailed list of supported initramfs options and flags; issue:"
   echo "	man 8 genkernel"
