@@ -105,16 +105,30 @@ echo
 # Set ${ARCH}
 get_official_arch
 
-# Read arch-specific config
 print_info 1 "Using genkernel.conf from ${_GENKERNEL_CONF}"
+# Save any customizations of MODULES_* first.
+override_module_vars="$(compgen -A variable |grep '^MODULES_')"
+for v in $override_module_vars ; do
+	print_info 1 "Saving $v to override defaults"
+	newvar=override_$v
+	eval "${newvar}='${!v}'"
+done
+
+# Read arch-specific config
 print_info 1 "Sourcing arch-specific config.sh from ${ARCH_CONFIG} .."
 source ${ARCH_CONFIG} || gen_die "Could not read ${ARCH_CONFIG}"
 _MODULES_LOAD=${GK_SHARE}/arch/${ARCH}/modules_load
 print_info 1 "Sourcing arch-specific modules_load from ${_MODULES_LOAD} .."
 source "${_MODULES_LOAD}" || gen_die "Could not read ${_MODULES_LOAD}"
-echo
 
-# Merge modules_load from config
+# Now apply customizations of MODULES_*
+for v in $override_module_vars; do
+	newvar=override_$v
+	print_info 1 "Override $v, default (${!v}), new value (${!newvar})"
+	eval "${v}='${!newvar}'"
+done
+
+# Merge additional modules_load from config
 for group_modules in ${!AMODULES_*}; do
 	group="$(echo $group_modules | cut -d_ -f2)"
 	eval cmodules="\$$group_modules"
