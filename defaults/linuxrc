@@ -119,7 +119,7 @@ do
 		dobtrfs*)
 			USE_BTRFS=1
 		;;
-		quiet)
+		quiet|quiet_genkernel)
 			QUIET=1
 		;;
 		# Debug Options

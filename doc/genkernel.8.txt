@@ -551,9 +551,13 @@ recognized by the kernel itself.
     switch_root into "<CHROOT>/<SUBDIR>" instead of "<CHROOT>/".
     <CHROOT> is "/newroot" (or "/union") usually.
 
-*quiet*::
+*quiet_genkernel*::
     Do not print anything but error and warning messages during
     the execution of the initramfs init scripts.
+
+*quiet*::
+    Implies *quiet_genkernel*, but also recognized by the kernel to
+    suppress kernel messages.
 
 *debug*::
     Drop into a debug shell early in the process.
