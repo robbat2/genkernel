@@ -114,6 +114,8 @@ longusage() {
   echo "	--no-multipath	Exclude Multipath support"
   echo "	--iscsi			Include iSCSI support"
   echo "	--no-iscsi		Exclude iSCSI support"
+  echo "	--ssh           Include SSH (dropbear) support"
+  echo "	--no-ssh 		Exclude SSH (dropbear) support"
   echo "	--bootloader=grub	Add new kernel to GRUB configuration"
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
   echo "	--busybox-config=<file>	Specifies a user created busybox config"
