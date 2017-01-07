@@ -1,4 +1,5 @@
-PACKAGE_VERSION = `/bin/fgrep GK_V= genkernel | sed "s/.*GK_V='\([^']\+\)'/\1/"`
+#PACKAGE_VERSION = `/bin/fgrep GK_V= genkernel | sed "s/.*GK_V='\([^']\+\)'/\1/"`
+PACKAGE_VERSION = `git describe --tags`
 distdir = genkernel-$(PACKAGE_VERSION)
 MANPAGE = genkernel.8
 # Add off-Git/generated files here that need to be shipped with releases
