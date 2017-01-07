@@ -79,10 +79,17 @@ LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
 
 DEFAULT_NFSOPTIONS="ro,nolock,rsize=1024,wsize=1024"
 
-# This should list all possible hwopts that take do/no prefixes
-# this is part of the load order too fyi
-HWOPTS='keymap cache modules nvme pata sata scsi usb firewire waitscan lvm dmraid multipath mdadm zfs fs net'
+# HWOPTS is the list of ALL options that take do/no prefixes, almost all of
+# which match a MODULES_* variable; it is ALSO the order of evaluation.
+#
+# The following entries are special behavior, rather than module loading
+# - keymap
+# - cache
+# - modules
+HWOPTS_BLK='nvme pata sata scsi usb firewire waitscan'
+HWOPTS_OBSOLETE='pcmcia ataraid' # Obsolete stuff that might be useful on old hardware, do$X only.
+HWOPTS="keymap cache modules ${HWOPTS_BLK} lvm dmraid multipath mdadm zfs fs net iscsi crypto"
 
-# Only sections that are in by default or those that
-# are not module groups need to be defined here...
-MY_HWOPTS='modules pata nvme sata scsi usb firewire waitscan dmraid mdadm fs net iscsi crypto'
+# This is the set of default HWOPTS, in the order that they are loaded.
+# This is whitespace aligned with HWOPTS above.
+MY_HWOPTS="          modules ${HWOPT_BLK}      dmraid           mdadm     fs net       crypto"
