@@ -141,7 +141,7 @@ do
 		;;
 		firstmods=*)
 			FIRSTMODS=${x#*=}
-			FIRSTMODS=$(echo ${MDOLIST} | sed -e 's/,/ /g')
+			FIRSTMODS=$(echo ${FIRSTMODS} | sed -e 's/,/ /g')
 			;;
 		# Module no-loads
 		doload=*)
