@@ -7,10 +7,10 @@ determine_config_file() {
 		"${CMD_KERNEL_CONFIG}" \
 		"/etc/kernels/kernel-config-${ARCH}-${KV}" \
 		"${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" \
-		"${DEFAULT_KERNEL_CONFIG}" \
 		"${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" \
 		"${GK_SHARE}/arch/${ARCH}/generated-config" \
 		"${GK_SHARE}/arch/${ARCH}/kernel-config" \
+		"${DEFAULT_KERNEL_CONFIG}" \
 		; do
 		if [ -n "${f}" -a -f "${f}" ]
 		then
@@ -36,24 +36,30 @@ config_kernel() {
 	determine_config_file
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'
 
-	# Backup current kernel .config
-	if isTrue "${MRPROPER}" || [ ! -f "${KERNEL_OUTPUTDIR}/.config" ]
-	then
-		print_info 1 "kernel: Using config from ${KERNEL_CONFIG}"
-		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
-		then
-			NOW=`date +--%Y-%m-%d--%H-%M-%S`
-			cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
-					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
-			print_info 1 "        Previous config backed up to .config${NOW}.bak"
-		fi
-	fi
-
 	if isTrue ${MRPROPER}
 	then
+		# Backup current kernel .config
+		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
+		then
+			# Current .config is different then one we are going to use
+			if ! diff -q "${KERNEL_OUTPUTDIR}"/.config ${KERNEL_CONFIG}
+			then
+				NOW=`date +--%Y-%m-%d--%H-%M-%S`
+				cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
+					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
+				print_info 1 "        Previous config backed up to .config${NOW}.bak"
+			fi
+		fi
+		print_info 1 "kernel: Using config from ${KERNEL_CONFIG}"
 		print_info 1 'kernel: >> Running mrproper...'
 		compile_generic mrproper kernel
 	else
+		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
+		then
+			print_info 1 "kernel: Using config from ${KERNEL_OUTPUTDIR}/.config"
+		else
+			print_info 1 "kernel: Using config from ${KERNEL_CONFIG}"
+		fi
 		print_info 1 "kernel: --mrproper is disabled; not running 'make mrproper'."
 	fi
 
