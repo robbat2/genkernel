@@ -404,6 +404,10 @@ parse_cmdline() {
 			CMD_ISCSI=`parse_optbool "$*"`
 			print_info 2 "CMD_ISCSI: ${CMD_ISCSI}"
 			;;
+		--ssh|--no-ssh)
+			CMD_SSH=`parse_optbool "$*"`
+			print_info 2 "CMD_SSH: ${CMD_SSH}"
+			;;
 		--loglevel=*)
 			CMD_LOGLEVEL="${*#*=}"
 			LOGLEVEL="${CMD_LOGLEVEL}"
