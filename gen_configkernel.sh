@@ -107,6 +107,7 @@ config_kernel() {
 	fi
 
 	if [ x"${add_config}" != x"" ]
+	then
 		print_info 1 "kernel: >> Invoking ${add_config}..."
 		compile_generic $add_config kernelruntask
 		[ "$?" ] || gen_die "Error: ${add_config} failed!"
