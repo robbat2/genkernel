@@ -29,3 +29,6 @@ MODULES_FS="ext2 ext3 ext4 btrfs reiserfs jfs nfs xfs zfs fuse"
 
 # Crypto
 MODULES_CRYPTO="sha256_generic cbc aes_generic aes_586 aesni-intel xts"
+
+# Virtio Support
+MODULES_VIRTIO="virtio virtio_balloon virtio_console virtio_net virtio_blk virtio_scsi virtio_pci virtio_ring"
