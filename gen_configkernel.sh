@@ -217,6 +217,8 @@ config_kernel() {
 			CONFIG_PARAVIRT_GUEST \
 			CONFIG_SCSI_VIRTIO \
 			CONFIG_VHOST_NET \
+			\
+			CONFIG_FW_CFG_SYSFS \
 			; do
 			cfg___virtio_opt=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
 			case "$cfg___virtio_opt" in
