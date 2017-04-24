@@ -1,5 +1,8 @@
 # Module groups for genkernel initramfs auto-loading
 
+# CORE
+MODULES_AA_HYPERV="pata_acpi ata_generic ata_piix hv_storvsc"
+
 # RAID
 MODULES_ATARAID="ataraid pdcraid hptraid"
 MODULES_DMRAID="dm-mod dm-mirror dm-crypt"
