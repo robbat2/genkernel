@@ -629,7 +629,7 @@ append_modules() {
 
 	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/etc/modules"
 	for group_modules in ${!MODULES_*}; do
-		group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
+		group="$(echo $group_modules | cut -d_ -f2- | tr "[:upper:]" "[:lower:]")"
 		print_list ${!group_modules} > "${TEMP}/initramfs-modules-${KV}-temp/etc/modules/${group}"
 	done
 	cd "${TEMP}/initramfs-modules-${KV}-temp/"
