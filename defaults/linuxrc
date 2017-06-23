@@ -640,6 +640,7 @@ do
 		# Try to mount the device as ${NEW_ROOT}
 		if [ "${REAL_ROOT}" = '/dev/nfs' ]; then
 			findnfsmount
+			mountret=$?
 		else
 			# If $REAL_ROOT is a symlink
 			# Resolve it like util-linux mount does
@@ -648,15 +649,17 @@ do
 			if [ "${REAL_ROOTFLAGS}" = '' ]; then
 				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}"
 				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}
+				mountret=$?
 			else
 				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}"
 				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
+				mountret=$?
 			fi
 		fi
 
 		# If mount is successful break out of the loop
 		# else not a good root and start over.
-		if [ "$?" = '0' ]
+		if [ "$mountret" = '0' ]
 		then
 			if [ -d ${NEW_ROOT}/dev -a -x "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ]
 			then
@@ -1037,12 +1040,22 @@ fi
 rundebugshell "before entering switch_root"
 
 # init_opts is set in the environment by the kernel when it parses the command line
-exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${REAL_INIT:-/sbin/init}" ${init_opts}
+init=${REAL_INIT:-/sbin/init}
+if ! mountpoint "${CHROOT}"; then
+	bad_msg "$CHROOT was not a mountpoint"
+elif [ ! -x ${CHROOT}/${init} ]; then
+	bad_msg "init=${init} does not exist in the rootfs!"
+elif [ $$ != 1 ]; then
+	bad_msg "PID was not 1! switch_root would fail"
+else
+	good_msg "Switching to real root: /sbin/switch_root -c /dev/console ${CHROOT} ${init} ${init_opts}"
+	exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${init}" ${init_opts}
+fi
 
 # If we get here, something bad has happened
 splash 'verbose'
 
-bad_msg "A fatal error has occured since ${REAL_INIT:-/sbin/init} did not"
+bad_msg "A fatal error has occured since ${init} did not"
 bad_msg "boot correctly. Trying to open a shell..."
 
 exec /bin/bash
