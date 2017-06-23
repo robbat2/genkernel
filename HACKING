@@ -17,15 +17,16 @@ Testing things:
 
 Rolling a release:
 - Bump the version in the main genkernel file.
+- make dist # verify it can build.
 - git commit -s -a -m "Bump version to ${PV}"
-- make dist
 - git tag -s -a -m "Tag release v${PV}" v${PV}
+- make dist # Real tarball
 - git push ${REMOTE} master --tags
-- upload genkernel-${PV}.tar.bz2 to the hosting:
-    scp genkernel-${PV}.tar.bz2 ${USER}@dev.gentoo.org:/space/distfiles-local/
+- upload genkernel-${PV}.tar.xz to the hosting:
+    scp genkernel-${PV}.tar.xz ${USER}@dev.gentoo.org:/space/distfiles-local/
 - copy to portage's DISTDIR so you can bump the ebuild
   before the tarball hits distfile mirrors
-  - cp genkernel-${PV}.tar.bz2 /usr/portage/distfiles/
+  - cp genkernel-${PV}.tar.xz /usr/portage/distfiles/
 - Bump the ebuild
 - Propagate ebuild changes to the live ebuild
     diff genkernel-${OLD_PV}.ebuild genkernel-${NEW_PV}.ebuild | patch genkernel-9999.ebuild
