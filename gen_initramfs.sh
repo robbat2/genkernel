@@ -1114,7 +1114,7 @@ create_initramfs() {
 				bzip2) compress_ext='.bz2' compress_cmd="${cmd_bzip2} -z -f -9" ;;
 				gzip) compress_ext='.gz' compress_cmd="${cmd_gzip} -f -9" ;;
 				lzop) compress_ext='.lzo' compress_cmd="${cmd_lzop} -f -9" ;;
-				lz4) compress_ext='.lz4' compress_cmd="${cmd_lz4} -f -9" ;;
+				lz4) compress_ext='.lz4' compress_cmd="${cmd_lz4} -f -9 -l -q" ;;
 			esac
 
 			if [ -n "${compression}" ]; then
