@@ -181,8 +181,8 @@ longusage() {
   echo "	--compress-initramfs-type=<arg>"
   echo "				Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop)"
   echo "	--strip=(all|kernel|modules|none)"
-  echo "				Strip debug symbols from the installed kernel, modules,"
-  echo "				all (default) or none"
+  echo "				Strip debug symbols from none, all, installed kernel (obsolete) or"
+  echo "				modules (default)."
   echo "	--no-strip"
   echo "				Don't strip installed kernel or modules, alias for --strip=none"
   echo

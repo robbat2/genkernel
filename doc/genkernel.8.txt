@@ -388,8 +388,8 @@ OUTPUT SETTINGS
     on >=2.6 kernels
 
 *--strip*=<all|kernel|modules|none>::
-    Strip debug symbols from the installed kernel, modules, all
-    (default) or none.
+    Strip debug symbols from none, all, installed kernel (obsolete) or
+    modules (default).
 
 *--no-strip*::
     Alias for *--strip=none*.
