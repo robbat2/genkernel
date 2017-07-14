@@ -28,8 +28,12 @@ clean:
 	rm -f $(EXTRA_DIST)
 
 check-git-repository:
+ifneq ($(UNCLEAN),1)
 	git diff --quiet || { echo 'STOP, you have uncommitted changes in the working directory' ; false ; }
 	git diff --cached --quiet || { echo 'STOP, you have uncommitted changes in the index' ; false ; }
+else
+	@true
+endif
 
 dist: verify-doc check-git-repository distclean $(EXTRA_DIST)
 	mkdir "$(distdir)"

@@ -16,8 +16,10 @@ Testing things:
   $ sudo GK_SHARE="$PWD" ./genkernel initramfs --no-install --no-postclear --loglevel=2
 
 Rolling a release:
-- Bump the version in the main genkernel file.
-- make dist # verify it can build.
+- export PV="NEWVER"
+- Bump the version in the main genkernel file:
+- sed -i "/^GK_V=/s/='.*'$/='$PV'/" genkernel
+- make dist UNCLEAN=1 # verify it can build.
 - git commit -s -a -m "Bump version to ${PV}"
 - git tag -s -a -m "Tag release v${PV}" v${PV}
 - make dist # Real tarball
