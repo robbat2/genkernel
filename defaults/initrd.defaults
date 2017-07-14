@@ -92,4 +92,4 @@ HWOPTS="keymap cache modules ${HWOPTS_BLK} lvm dmraid multipath mdadm zfs fs net
 
 # This is the set of default HWOPTS, in the order that they are loaded.
 # This is whitespace aligned with HWOPTS above.
-MY_HWOPTS="          modules ${HWOPT_BLK}      dmraid           mdadm     fs net       crypto"
+MY_HWOPTS="          modules ${HWOPTS_BLK}      dmraid           mdadm     fs net       crypto"
