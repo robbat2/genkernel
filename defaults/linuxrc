@@ -385,7 +385,10 @@ good_msg 'Activating mdev'
 touch /dev/mdev.seq
 
 # Setup hotplugging for firmware loading
-echo /sbin/mdev > /proc/sys/kernel/hotplug
+if [ -f "/proc/sys/kernel/hotplug" ];
+then
+  echo /sbin/mdev > /proc/sys/kernel/hotplug
+fi
 
 # Load modules listed in MY_HWOPTS if /lib/modules exists for the running kernel
 if [ -z "${DO_modules}" ]
