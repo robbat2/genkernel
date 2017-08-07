@@ -261,18 +261,11 @@ do
     ;;
     aufs)
       aufs=1
-      if [ -f /proc/config.gz ]; then
-        if zcat /proc/config.gz | grep -E 'CONFIG_AUFS_FS=(m|y)' 1>/dev/null;
-        then
-          aufs_detected=1
-        fi
-      fi
-      if [ "1" != "$aufs_detected" ]; then
-        warn_msg "No CONFIG_IKCONFIG support"
-        warn_msg "AUFS is not guarantee to work on this medium"
-      fi
+      checkzconfig AUFS_FS
     ;;
 		aufs\=*)
+      aufs=1
+      checkzconfig AUFS_FS
 			if echo "${x#*=}" | grep , &>/dev/null; then
 				aufs_dev_uid=${x#*,}
 				aufs_dev=${x%,*}
@@ -287,18 +280,11 @@ do
 		;;
     overlayfs)
       overlayfs=1
-      if [ -f /proc/config.gz ]; then
-        if zcat /proc/config.gz | grep -E 'CONFIG_OVERLAY_FS=(m|y)' 1>/dev/null;
-        then
-          overlayfs_detected=1
-        fi
-      fi
-      if [ "1" != "$overlayfs_detected" ]; then
-        warn_msg "No CONFIG_IKCONFIG support"
-        warn_msg "OVERLAYFS is not guarantee to work on this medium"
-      fi
+      checkzconfig OVERLAY_FS
     ;;
   overlayfs\=*)
+    overlayfs=1
+    checkzconfig OVERLAY_FS
     if echo "${x#*=}" | grep , &>/dev/null; then
       overlayfs_dev_uid=${x#*,}
       overlayfs_dev=${x%,*}

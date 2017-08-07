@@ -72,13 +72,11 @@ VERIFY=0
 
 # AUFS variables
 aufs=0
-aufs_detected=0
 aufs_union_file=/livecd.aufs
 aufs_modules_dir=mnt/cdrom
 
 # Overlayfs variables
 overlayfs=0
-overlayfs_detected=0
 overlayfs_modules_dir=mnt/cdrom
 
 LOOPS='/livecd.loop /zisofs /livecd.squashfs /image.squashfs /livecd.gcloop'
