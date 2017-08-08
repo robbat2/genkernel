@@ -594,6 +594,7 @@ setup_overlayfs() {
         local workdir="${overlay}/.work"
         local static=/mnt/livecd
 
+        rundebugshell overlayfs
         for i in "${overlay}" "${static}"; do
                 [ ! -d "${i}" ] && mkdir -p "${i}"
         done
