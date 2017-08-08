@@ -1785,7 +1785,7 @@ strip_mount_options()
 
 checkzconfig() {
   if [ -r "/proc/config.gz" ]; then
-    if zcat /proc/config.gz | grep -E 'CONFIG_${1}=(m|y)' 1>/dev/null;
+    if zcat /proc/config.gz | grep -E "CONFIG_${1}=(m|y)" 1>/dev/null;
     then
      return 0
     fi
