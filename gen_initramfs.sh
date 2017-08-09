@@ -360,13 +360,17 @@ append_zfs(){
 
     # Copy binaries
     # Include libgcc_s.so.1 to workaround zfsonlinux/zfs#4749
+	local libgccpath
     if type gcc-config 2>&1 1>/dev/null; then
-        copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool} \
-                      "/usr/lib/gcc/$(s=$(gcc-config -c); echo ${s%-*}/${s##*-})/libgcc_s.so.1"
-    else
-        copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool} \
-                      /usr/lib/gcc/*/*/libgcc_s.so.1
+		libgccpath="/usr/lib/gcc/$(s=$(gcc-config -c); echo ${s%-*}/${s##*-})/libgcc_s.so.1"
     fi
+	if [[ ! -f ${libgccpath} ]]; then
+		libgccpath="/usr/lib/gcc/*/*/libgcc_s.so.1"
+	fi
+
+	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool} ${libgccpath}
+	cd "${TEMP}/initramfs-zfs-temp/lib64"
+	ln -s "..${libgccpath}"
 
     cd "${TEMP}/initramfs-zfs-temp/"
     log_future_cpio_content
