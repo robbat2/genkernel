@@ -359,7 +359,11 @@ union_insert_modules() {
 
         for module in "$1/"*.lzm; do
                 if [ 1 = "$overlayfs" ];then
-                        union_mod overlayfs "$module" || bad_msg "Unable to insert module: '$module'"
+                        if union_mod overlayfs "$module";then
+                          good_msg "Addition of '$module' to overlay successful"
+                        else
+                          bad_msg "Unable to insert module: '$module'"
+                        fi
 
                         # Used in setup_overlayfs()
                         mod_path="$mod_path:$mod_dir/.$mod"
