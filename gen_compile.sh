@@ -505,6 +505,8 @@ compile_lvm() {
 			--prefix=/
 			--enable-dmeventd
 			--enable-cmdlib
+			--enable-lib
+			--enable-lvmetad
 			--with-lvm1=internal
 			--with-clvmd=none
 			--with-cluster=none
@@ -513,6 +515,9 @@ compile_lvm() {
 			--with-mirrors=internal
 			--with-snapshots=internal
 			--with-pool=internal
+			--with-thin=internal
+			--with-cache=internal
+			--with-raid=internal
 		)
 		CFLAGS="-fPIC" \
 		./configure "${LVM_CONF[@]}" \
