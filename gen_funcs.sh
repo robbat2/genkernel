@@ -239,7 +239,7 @@ isBootRO()
 setup_cache_dir()
 {
 
-[ ! -d "${CACHE_DIR}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
+[ ! -d "${CACHE_DIR}/${GK_V}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
 
 if [ "${CLEAR_CACHE_DIR}" == 'yes' ]
 then
