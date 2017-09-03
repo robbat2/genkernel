@@ -152,28 +152,21 @@ determine_real_args() {
 	BOOTDIR=${BOOTDIR%/}    # Remove any trailing slash
 	MODPROBEDIR=${MODPROBEDIR%/}    # Remove any trailing slash
 
-	CACHE_DIR=`arch_replace "${CACHE_DIR}"`
-	BUSYBOX_BINCACHE=`cache_replace "${BUSYBOX_BINCACHE}"`
-	LVM_BINCACHE=`cache_replace "${LVM_BINCACHE}"`
-	MDADM_BINCACHE=`cache_replace "${MDADM_BINCACHE}"`
-	DMRAID_BINCACHE=`cache_replace "${DMRAID_BINCACHE}"`
-	ISCSI_BINCACHE=`cache_replace "${ISCSI_BINCACHE}"`
-	BLKID_BINCACHE=`cache_replace "${BLKID_BINCACHE}"`
-	FUSE_BINCACHE=`cache_replace "${FUSE_BINCACHE}"`
-	UNIONFS_FUSE_BINCACHE=`cache_replace "${UNIONFS_FUSE_BINCACHE}"`
-	GPG_BINCACHE=`cache_replace "${GPG_BINCACHE}"`
-
-	DEFAULT_KERNEL_CONFIG=`arch_replace "${DEFAULT_KERNEL_CONFIG}"`
-	BUSYBOX_CONFIG=`arch_replace "${BUSYBOX_CONFIG}"`
-	BUSYBOX_BINCACHE=`arch_replace "${BUSYBOX_BINCACHE}"`
-	LVM_BINCACHE=`arch_replace "${LVM_BINCACHE}"`
-	MDADM_BINCACHE=`arch_replace "${MDADM_BINCACHE}"`
-	DMRAID_BINCACHE=`arch_replace "${DMRAID_BINCACHE}"`
-	ISCSI_BINCACHE=`arch_replace "${ISCSI_BINCACHE}"`
-	BLKID_BINCACHE=`arch_replace "${BLKID_BINCACHE}"`
-	FUSE_BINCACHE=`arch_replace "${FUSE_BINCACHE}"`
-	UNIONFS_FUSE_BINCACHE=`arch_replace "${UNIONFS_FUSE_BINCACHE}"`
-	GPG_BINCACHE=`arch_replace "${GPG_BINCACHE}"`
+	__VARS_BINCACHE=(
+		BLKID_BINCACHE
+		BUSYBOX_BINCACHE
+		DMRAID_BINCACHE
+		FUSE_BINCACHE
+		GPG_BINCACHE
+		ISCSI_BINCACHE
+		LVM_BINCACHE
+		MDADM_BINCACHE
+		UNIONFS_FUSE_BINCACHE
+	)
+	for v in CACHE_DIR BUSYBOX_CONFIG DEFAULT_KERNEL_CONFIG "${__VARS_BINCACHE[@]}"; do
+		eval "$v='$(arch_replace "${!v}")'"
+		eval "$v='$(cache_replace "${!v}")'"
+	done
 
 	if [ -n "${CMD_BOOTLOADER}" ]
 	then

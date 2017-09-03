@@ -184,7 +184,7 @@ arch_replace() {
 }
 
 cache_replace() {
-  var_replace "CACHE" "${CACHE_DIR}" "${1}"
+  var_replace "CACHE" "${CACHE_DIR}/${GK_V}" "${1}"
 }
 
 clear_log() {
@@ -239,7 +239,7 @@ isBootRO()
 setup_cache_dir()
 {
 
-[ ! -d "${CACHE_DIR}" ] && mkdir -p "${CACHE_DIR}"
+[ ! -d "${CACHE_DIR}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
 
 if [ "${CLEAR_CACHE_DIR}" == 'yes' ]
 then
@@ -248,7 +248,7 @@ then
 	do
 		print_info 1 "	 >> removing ${i}"
 		rm "${i}"
-	done < <(find "${CACHE_DIR}" -maxdepth 1 -type f -name '*.tar.*' -o -name '*.bz2')
+	done < <(find "${CACHE_DIR}" -maxdepth 2 -type f -name '*.tar.*' -o -name '*.bz2')
 fi
 
 }
