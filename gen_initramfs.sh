@@ -416,11 +416,22 @@ append_lvm(){
 #		ret=$?
 #		if [ ${ret} != 0 ]
 #		then
-			cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" ||
+			cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" || \
 				gen_die 'Could not copy over lvm.conf!'
 #		else
 #			gen_die 'Could not copy over lvm.conf!'
 #		fi
+
+		# Some LVM config options need changing, because the functionality is
+		# not compiled in:
+		sed -r -i \
+			-e '/^[[:space:]]*obtain_device_list_from_udev/s,=.*,= 0,g' \
+			-e '/^[[:space:]]*use_lvmetad/s,=.*,= 0,g' \
+			-e '/^[[:space:]]*monitoring/s,=.*,= 0,g' \
+			-e '/^[[:space:]]*external_device_info_source/s,=.*,= "none",g' \
+			-e '/^[[:space:]]*units/s,=.*"r",= "h",g' \
+			"${TEMP}/initramfs-lvm-temp/etc/lvm/lvm.conf" || \
+				gen_die 'Could not sed lvm.conf!'
 	fi
 	cd "${TEMP}/initramfs-lvm-temp/"
 	log_future_cpio_content
