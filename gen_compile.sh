@@ -208,17 +208,19 @@ reset_args()
 apply_patches() {
 	util=$1
 	version=$2
+	patchdir=${GK_SHARE}/patches/${util}/${version}
 
-	if [ -d "${GK_SHARE}/patches/${util}/${version}" ]
+	if [ -d "${patchdir}" ]
 	then
 		print_info 1 "${util}: >> Applying patches..."
-		for i in ${GK_SHARE}/patches/${util}/${version}/*{diff,patch}
+		for i in ${patchdir}/*{diff,patch}
 		do
 			[ -f "${i}" ] || continue
 			patch_success=0
 			for j in `seq 0 5`
 			do
-				patch -p${j} --backup-if-mismatch -f < "${i}" >/dev/null
+				patch -p${j} --backup-if-mismatch -f < "${i}" --dry-run >/dev/null && \
+					patch -p${j} --backup-if-mismatch -f < "${i}"
 				if [ $? = 0 ]
 				then
 					patch_success=1
@@ -232,6 +234,8 @@ apply_patches() {
 				gen_die "could not apply patch ${i} for ${util}-${version}"
 			fi
 		done
+	else
+		print_info 1 "${util}: >> No patches found in $patchdir ..."
 	fi
 }
 
