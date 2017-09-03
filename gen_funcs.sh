@@ -227,7 +227,7 @@ gen_die() {
 	print_error 1 ''
 
 	# Cleanup temp dirs and caches if requested
-	cleanup
+	isTrue "${CMD_DEBUGCLEANUP}"  && cleanup
   	exit 1
 }
 
