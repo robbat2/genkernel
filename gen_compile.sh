@@ -502,15 +502,20 @@ compile_lvm() {
 		[ -d "${LVM_DIR}" ] ||
 			gen_die "LVM directory ${LVM_DIR} is invalid!"
 		cd "${LVM_DIR}"
+		print_info 1 'lvm: >> Patching ...'
 		apply_patches lvm ${LVM_VER}
+		# we currently have a patch that changes configure.ac
+		# once given patch is dropped, drop autoconf too
+		print_info 1 'lvm: >> Autoconf ...'
+		autoconf || gen_die 'Autoconf failed for LVM2'
 		print_info 1 'lvm: >> Configuring...'
 		LVM_CONF=(
 			--enable-static_link
 			--prefix=/
-			--enable-dmeventd
+			--disable-dmeventd # Fails to build libdm-string.c:(.text+0x1481): undefined reference to `nearbyintl'
 			--enable-cmdlib
-			--enable-lib
-			--enable-lvmetad
+			--enable-applib
+			--disable-lvmetad
 			--with-lvm1=internal
 			--with-clvmd=none
 			--with-cluster=none
@@ -524,12 +529,16 @@ compile_lvm() {
 			--with-raid=internal
 		)
 		CFLAGS="-fPIC" \
+		LIBS='-luuid -lrt -lpthread -lm' \
+		LDFLAGS='-Wl,--no-as-needed' \
 		./configure "${LVM_CONF[@]}" \
 			>> ${LOGFILE} 2>&1 || \
 			gen_die 'Configure of lvm failed!'
 		print_info 1 'lvm: >> Compiling...'
 		compile_generic '' utils || gen_die "failed to build LVM"
+
 		mkdir -p "${TEMP}/lvm/sbin"
+		print_info 1 'lvm: >> Installing to DESTDIR...'
 		compile_generic "install DESTDIR=${TEMP}/lvm/" utils || gen_die "failed to install LVM"
 		# Upstream does u-w on files, and this breaks stuff.
 		chmod -R u+w "${TEMP}/lvm/"
