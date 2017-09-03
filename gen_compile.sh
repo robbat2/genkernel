@@ -500,14 +500,24 @@ compile_lvm() {
 		cd "${LVM_DIR}"
 		apply_patches lvm ${LVM_VER}
 		print_info 1 'lvm: >> Configuring...'
-			CFLAGS="-fPIC" \
-			./configure --enable-static_link --prefix=/ \
-				--enable-dmeventd --enable-cmdlib \
-				--with-lvm1=internal --with-clvmd=none --with-cluster=none \
-				--disable-readline --disable-selinux --with-mirrors=internal \
-				--with-snapshots=internal --with-pool=internal \
-				>> ${LOGFILE} 2>&1 || \
-				gen_die 'Configure of lvm failed!'
+		LVM_CONF=(
+			--enable-static_link
+			--prefix=/
+			--enable-dmeventd
+			--enable-cmdlib
+			--with-lvm1=internal
+			--with-clvmd=none
+			--with-cluster=none
+			--disable-readline
+			--disable-selinux
+			--with-mirrors=internal
+			--with-snapshots=internal
+			--with-pool=internal
+		)
+		CFLAGS="-fPIC" \
+		./configure "${LVM_CONF[@]}" \
+			>> ${LOGFILE} 2>&1 || \
+			gen_die 'Configure of lvm failed!'
 		print_info 1 'lvm: >> Compiling...'
 		compile_generic '' utils || gen_die "failed to build LVM"
 		mkdir -p "${TEMP}/lvm/sbin"
