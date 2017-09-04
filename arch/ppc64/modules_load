@@ -3,8 +3,8 @@
 # RAID
 MODULES_ATARAID="ataraid pdcraid hptraid"
 MODULES_DMRAID="dm-mod dm-mirror dm-crypt"
-MODULES_LVM="dm-mod dm-snapshot dm-mirror dm-bbr dm-bufio dm-crypt dm-delay dm-flakey dm-log dm-log-userspace dm-multipath dm-queue-length dm-raid dm-region-hash dm-round-robin dm-service-time dm-thin-pool dm-persistent-data libcrc32c dm-zero"
-MODULES_MDADM="dm-mod dm-snapshot dm-mirror dm-bbr dm-raid dm-crypt raid0 raid1 raid456 raid5 raid6 raid10 linear multipath"
+MODULES_MDADM="md-mod dm-mod dm-snapshot dm-mirror dm-bbr dm-raid dm-crypt raid0 raid1 raid456 raid5 raid6 raid10 linear multipath async_raid6_recov async_pq libcrc32c raid6_pq async_tx async_memcpy async_xor"
+MODULES_LVM="dm-mod dm-bio-prison dm-bufio dm-cache dm-cache-smq dm-crypt dm-delay dm-era dm-flakey dm-integrity dm-log dm-log-userspace dm-log-writes dm-mirror dm-raid dm-region-hash dm-snapshot dm-switch dm-thin-pool dm-verity dm-zero dm-persistent-data ${MODULES_MDADM}"
 MODULES_MULTIPATH="dm-mod dm-multipath dm-round-robin dm-rdac dm-queue-length dm-service-time"
 
 # Hardware (IDE/SCSI/SATA/NVMe)
