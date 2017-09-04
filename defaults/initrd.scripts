@@ -1410,10 +1410,14 @@ verbose_kmsg() {
 cdupdate() {
 	if [ "${CDROOT}" = '1' ]
 	then
-		if [ -x /${CDROOT_PATH}/cdupdate.sh ]
+		cdupdate_path=''
+		for p in /${NEW_ROOT}/${CDROOT_PATH}/ /${CDROOT_PATH}/ ; do
+			[ -x "${p}/cdupdate.sh" ] && cdupdate_path="${p}/cdupdate.sh" && break
+		done
+		if [ -n "${cdupdate_path}" ]
 		then
-			good_msg "Running cdupdate.sh"
-			${CDROOT_PATH}/cdupdate.sh
+			good_msg "Running cdupdate.sh ($cdupdate_path)"
+			${cdupdate_path}
 			if [ "$?" != '0' ]
 			then
 				bad_msg "Executing cdupdate.sh failed!"
