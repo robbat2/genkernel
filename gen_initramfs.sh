@@ -39,11 +39,13 @@ copy_binaries() {
 	# lddtree does not have the -V (version) nor the -l (list) options prior to version 1.18
 	(
 	if lddtree -V > /dev/null 2>&1 ; then
-		lddtree -l "$@"
+		lddtree -l "$@" \
+			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
 	else
 		lddtree "$@" \
 			| tr ')(' '\n' \
-			| awk  '/=>/{ if($3 ~ /^\//){print $3}}'
+			| awk  '/=>/{ if($3 ~ /^\//){print $3}}' \
+			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
 	fi ) \
 			| sort \
 			| uniq \
