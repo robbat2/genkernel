@@ -15,7 +15,7 @@ MODULES_SCSI="sd_mod sg sr_mod aic79xx aic7xxx aic7xxx_old arcmsr BusLogic ncr53
 MODULES_WAITSCAN="scsi_wait_scan"
 
 # Hardware (Network)
-MODULES_NET="e1000 tg3"
+MODULES_NET="e1000 tg3 virtio_net"
 
 # iSCSI support
 MODULES_ISCSI="scsi_transport_iscsi libiscsi iscsi_tcp"
@@ -30,3 +30,6 @@ MODULES_FS="ext2 ext3 ext4 btrfs reiserfs jfs nfs xfs zfs fuse loop squashfs auf
 
 # Crypto
 MODULES_CRYPTO="sha256_generic cbc aes_generic xts"
+
+# Virtio
+MODULES_VIRTIO="virtio_scsi virtio_blk virtio_console virtio-rng virtio virtio_balloon virtio_input virtio_ring virtio_pci virtio_mmio virtio_crypto virtio_net"
