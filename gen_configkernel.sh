@@ -120,11 +120,21 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
 	fi
 
+	# Do we support modules at all?
+	cfg_CONFIG_MODULES=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MODULES")
+	if isTrue "$cfg_CONFIG_MODULES" ; then
+		# yes, we support modules, set 'm' for new stuff.
+		newcfg_setting='m'
+	else
+		# no, we support modules, set 'y' for new stuff.
+		newcfg_setting='y'
+	fi
+
 	# If the user has configured DM as built-in, we need to respect that.
 	cfg_CONFIG_BLK_DEV_DM=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM")
 	case "$cfg_CONFIG_BLK_DEV_DM" in
 		y|m) ;; # Do nothing
-		*) cfg_CONFIG_BLK_DEV_DM='m'
+		*) cfg_CONFIG_BLK_DEV_DM=${newcfg_setting}
 	esac
 
 	# Make sure lvm modules are on if --lvm
@@ -133,12 +143,12 @@ config_kernel() {
 		cfg_CONFIG_DM_SNAPSHOT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT")
 		case "$cfg_CONFIG_DM_SNAPSHOT" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_DM_SNAPSHOT='m'
+			*) cfg_CONFIG_DM_SNAPSHOT=${newcfg_setting}
 		esac
 		cfg_CONFIG_DM_MIRROR=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR")
 		case "$cfg_CONFIG_DM_MIRROR" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_DM_MIRROR='m'
+			*) cfg_CONFIG_DM_MIRROR=${newcfg_setting}
 		esac
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT" "${cfg_CONFIG_DM_SNAPSHOT}"
@@ -151,12 +161,12 @@ config_kernel() {
 		cfg_CONFIG_DM_MULTIPATH=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH")
 		case "$cfg_CONFIG_DM_MULTIPATH" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_DM_MULTIPATH='m'
+			*) cfg_CONFIG_DM_MULTIPATH=${newcfg_setting}
 		esac
 		cfg_CONFIG_DM_MULTIPATH_RDAC=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH_RDAC")
 		case "$cfg_CONFIG_DM_MULTIPATH_RDAC" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_DM_MULTIPATH_RDAC='m'
+			*) cfg_CONFIG_DM_MULTIPATH_RDAC=${newcfg_setting}
 		esac
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "${cfg_CONFIG_DM_MULTIPATH}"
@@ -177,17 +187,17 @@ config_kernel() {
 		cfg_CONFIG_ISCSI_BOOT_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS")
 		case "$cfg_CONFIG_ISCSI_BOOT_SYSFS" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_ISCSI_BOOT_SYSFS='m'
+			*) cfg_CONFIG_ISCSI_BOOT_SYSFS=${newcfg_setting}
 		esac
 		cfg_CONFIG_ISCSI_TCP=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP")
 		case "$cfg_CONFIG_ISCSI_TCP" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_ISCSI_TCP='m'
+			*) cfg_CONFIG_ISCSI_TCP=${newcfg_setting}
 		esac
 		cfg_CONFIG_SCSI_ISCSI_ATTRS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS")
 		case "$cfg_CONFIG_SCSI_ISCSI_ATTRS" in
 			y|m) ;; # Do nothing
-			*) cfg_CONFIG_SCSI_ISCSI_ATTRS='m'
+			*) cfg_CONFIG_SCSI_ISCSI_ATTRS=${newcfg_setting}
 		esac
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS" "${cfg_CONFIG_ISCSI_BOOT_SYSFS}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "${cfg_CONFIG_ISCSI_TCP}"
