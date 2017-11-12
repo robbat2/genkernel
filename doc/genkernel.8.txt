@@ -303,6 +303,9 @@ INITIALIZATION
 *--*[*no-*]*iscsi*::
     Includes or excludes iSCSI support
 
+*--*[*no-*]*hyperv*::
+    Includes or excludes Microsoft Hyper-V support
+
 *--*[*no-*]*ssh*::
     Includes or excludes SSH (dropbear) support for remote LUKS keys.
 

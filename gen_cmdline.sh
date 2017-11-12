@@ -114,7 +114,9 @@ longusage() {
   echo "	--no-multipath	Exclude Multipath support"
   echo "	--iscsi			Include iSCSI support"
   echo "	--no-iscsi		Exclude iSCSI support"
-  echo "	--ssh           Include SSH (dropbear) support"
+  echo "	--hyperv		Include Microsoft Hyper-V support"
+  echo "	--no-hyperv		Exclude Microsoft Hyper-V support"
+  echo "	--ssh			Include SSH (dropbear) support"
   echo "	--no-ssh 		Exclude SSH (dropbear) support"
   echo "	--bootloader=grub	Add new kernel to GRUB configuration"
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
@@ -403,6 +405,10 @@ parse_cmdline() {
 		--iscsi|--no-iscsi)
 			CMD_ISCSI=`parse_optbool "$*"`
 			print_info 2 "CMD_ISCSI: ${CMD_ISCSI}"
+			;;
+		--hyperv|--no-hyperv)
+			CMD_ISCSI=`parse_optbool "$*"`
+			print_info 2 "CMD_HYPERV: ${CMD_HYPERV}"
 			;;
 		--ssh|--no-ssh)
 			CMD_SSH=`parse_optbool "$*"`
