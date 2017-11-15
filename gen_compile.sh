@@ -428,10 +428,11 @@ compile_busybox() {
 	# Apply config-based tweaks to the busybox config.
 	# This needs to be done before cache validation.
 	cp "${BUSYBOX_CONFIG}" "${TEMP}/busybox-config"
-	if isTrue "${NFS}"
-	then
-		kconfig_set_opt "${TEMP}/busybox-config" CONFIG_FEATURE_MOUNT_NFS y
-	fi
+
+	# If you want mount.nfs to work on older than 2.6.something, you might need to turn this on.
+	#isTrue "${NFS}" && nfs_opt='y'
+	nfs_opt='n'
+	kconfig_set_opt "${TEMP}/busybox-config" CONFIG_FEATURE_MOUNT_NFS $nfs_opt
 
 	# Delete cache if stored config's MD5 does not match one to be used
 	# This exactly just the .config.gk_orig file, and compares it again the
