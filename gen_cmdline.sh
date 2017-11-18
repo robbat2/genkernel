@@ -318,9 +318,7 @@ parse_cmdline() {
 			print_info 2 "CMD_MDADM: $CMD_MDADM"
 			if [ "$CMD_MDADM" = "1" -a ! -e /sbin/mdadm ]
 			then
-				echo 'Error: --multipath requires sys-fs/mdadm'
-				echo '		 to be installed on the host system.'
-				exit 1
+				print_warning 'Warning: --mdadm generally requires sys-fs/mdadm present on the host system'
 			fi
 			;;
 		--mdadm-config=*)
