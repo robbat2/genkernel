@@ -293,6 +293,10 @@ then
 		bad_msg 'Aborting use of zfs!'
 	fi
 fi
+# Hack for f2fs, which uses crc32 but does not depend on it (in many kernels at least):
+if [ "${ROOTFSTYPE}" = "f2fs" ]; then
+	FIRSTMODS="${FIRSTMODS} crc32_generic"
+fi
 
 splash 'init'
 
