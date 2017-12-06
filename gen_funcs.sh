@@ -535,3 +535,11 @@ find_kernel_binary() {
 	cd "${curdir}"
 	echo "${tmp_kernel_binary}"
 }
+
+
+config_get_opt() {
+	kconfig="$1"
+	optname="$2"
+	sed -n "${kconfig}" \
+		-e "/^#\? \?${optname}[ =].*/{ s/.*${optname}[ =]//g; s/is not set\| +//g; p; q }"
+}

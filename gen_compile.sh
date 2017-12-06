@@ -323,26 +323,22 @@ compile_kernel() {
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
-	local ext_fw_build="yes"
-
-	local fw_makefile='fgrep firmware_install "${BUILD_SRC}"/Makefile'
-	if [ -z "${fw_makefile}" ]
-	then
-		print_info 1 "        >> Disabling firmware build due to firmware_install target not being available..."
-		ext_fw_build="no"
-	else
-		local firmware_in_kernel_line=`fgrep CONFIG_FIRMWARE_IN_KERNEL "${BUILD_DST}"/.config`
-		if [ -n "${firmware_in_kernel_line}" -a "${firmware_in_kernel_line}" == CONFIG_FIRMWARE_IN_KERNEL=y ]
-		then
-			ext_fw_build="no"
+	if isTrue "${FIRMWARE}" && [ ! -e "${BUILD_SRC}/ihex2fw.c" ] ; then
+	# Kernel v4.14 removed firmware from the kernel sources, including the
+		# ihex2fw.c tool source. Try and detect the tool to see if we are in >=v4.14
+		print_warning 1 "        >> Linux v4.14 removed in-kernel firmware, you MUST install the sys-kernel/linux-firmware package!"
+	elif isTrue "${FIRMWARE_INSTALL}" ; then
+		local cfg_CONFIG_FIRMWARE_IN_KERNEL=$(kconfig_get_opt "${BUILD_DST}/.config" CONFIG_FIRMWARE_IN_KERNEL)
+		if isTrue "$cfg_CONFIG_FIRMWARE_IN_KERNEL"; then
 			print_info 1 "        >> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y)..."
-		fi
-	fi
-
-	if [ "$ext_fw_build" == "yes" ]
-	then
-			print_info 1 "        >> Installing firmware ('make firmware_install')..."
+		else
+			print_info 1 "        >> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
+			[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
+			[ "${INSTALL_FW_PATH}" != '' ] && export INSTALL_FW_PATH
 			MAKEOPTS="${MAKEOPTS} -j1" compile_generic "firmware_install" kernel
+		fi
+	else
+		print_info 1 "        >> Not installing firmware as requested by configuration FIRMWARE_INSTALL=no..."
 	fi
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})
