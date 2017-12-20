@@ -632,7 +632,8 @@ compile_dmraid() {
 		CFLAGS="-I${TEMP}/lvm/include" \
 		DEVMAPPEREVENT_CFLAGS="-I${TEMP}/lvm/include" \
 		CPPFLAGS="-I${TEMP}/lvm/include" \
-		LIBS="-ldevmapper" \
+		LIBS="-ldevmapper -lm -lrt -lpthread" \
+		LDFLAGS='-Wl,--no-as-needed' \
 		./configure --enable-static_link \
 			--with-devmapper-prefix="${TEMP}/lvm" \
 			--prefix=${TEMP}/dmraid >> ${LOGFILE} 2>&1 ||
