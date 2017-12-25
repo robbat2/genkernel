@@ -1048,7 +1048,7 @@ rundebugshell "before entering switch_root"
 init=${REAL_INIT:-/sbin/init}
 if ! mountpoint "${CHROOT}"; then
 	bad_msg "$CHROOT was not a mountpoint"
-elif [ ! -x ${CHROOT}/${init} ]; then
+elif chroot "${CHROOT}" /usr/bin/test ! -x /${init} ; then
 	bad_msg "init=${init} does not exist in the rootfs!"
 elif [ $$ != 1 ]; then
 	bad_msg "PID was not 1! switch_root would fail"
