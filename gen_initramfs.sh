@@ -495,15 +495,26 @@ append_zfs(){
 
 	mkdir -p "${TEMP}/initramfs-zfs-temp/etc/zfs"
 
-	# Copy files to /etc/zfs
-	for i in zdev.conf zpool.cache
+	# Copy cachefiles for each pool, if they exist
+	for pool in $(zpool list -H|cut -f1)
 	do
-		if [ -f /etc/zfs/${i} ]
+		# determine cachefile
+		pool_cachefile=$(zpool get -H cachefile ${pool}|cut -f3)
+		if [ ${pool_cachefile} == "-" ]
 		then
-			print_info 1 "        >> Including ${i}"
-			cp -a "/etc/zfs/${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" 2> /dev/null \
-				|| gen_die "Could not copy file ${i} for ZFS"
-		fi
+			# no cachefile - warn about long startup delays
+			print_warning 1 "------------------------ WARNING ------------------------"
+			print_warning 1 " No cachefile set on ZFS pool '${pool}'!"
+			print_warning 1 " Startup times will be VERY SLOW as a result."
+			print_warning 1 " To set a cachefile, run a command like this:"
+			print_warning 1 "    zpool set cachefile=/etc/zfs/pool-${pool}.cache ${pool}"
+			print_warning 1 " ... then re-run genkernel."
+			print_warning 1 "---------------------------------------------------------"
+		else
+			# cachefile set, copy to normalized location
+			cp -a "${pool_cachefile}" "${TEMP}/initramfs-zfs-temp/etc/zfs/zpool-${pool}.cache" 2>/dev/null \
+				|| gen_dir "Could not copy file ${pool_cachefile} for ZFS"
+        	fi
 	done
 
 	# Copy binaries
