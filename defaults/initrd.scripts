@@ -1097,7 +1097,7 @@ startVolumes() {
 				if [ -r ${ZFS_POOL_CACHEFILE} ]
 				then
 					good_msg "Importing ZFS pool ${ZFS_POOL} using cachefile '${ZFS_POOL_CACHEFILE}'"
-					/sbin/zpool import -N 
+					/sbin/zpool import -N ${ZFS_POOL} -c ${ZFS_POOL_CACHEFILE}
 				else
 					bad_msg "Failed to locate ZFS pool cachefile at '${ZFS_POOL_CACHEFILE}'!"
 					good_msg "Importing ZFS pool ${ZFS_POOL} (this may take awhile)"
