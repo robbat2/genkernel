@@ -507,7 +507,7 @@ append_zfs(){
 			print_warning 1 " No cachefile set on ZFS pool '${pool}'!"
 			print_warning 1 " Startup times will be VERY SLOW as a result."
 			print_warning 1 " To set a cachefile, run a command like this:"
-			print_warning 1 "    zpool set cachefile=/etc/zfs/pool-${pool}.cache ${pool}"
+			print_warning 1 "    zpool set cachefile=/etc/zfs/zpool-${pool}.cache ${pool}"
 			print_warning 1 " ... then re-run genkernel."
 			print_warning 1 "---------------------------------------------------------"
 		else
