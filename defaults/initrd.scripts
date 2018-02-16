@@ -712,9 +712,16 @@ startVolumes() {
 					/sbin/zpool import -N ${ZPOOL_FORCE} "${ZFS_POOL}"
 				fi
 			else
-				good_msg "Importing ZFS pool ${ZFS_POOL}"
-
-				/sbin/zpool import -N ${ZPOOL_FORCE} "${ZFS_POOL}"
+				ZFS_POOL_CACHEFILE="/etc/zfs/zpool-${ZFS_POOL}.cache"
+				if [ -r ${ZFS_POOL_CACHEFILE} ]
+				then
+					good_msg "Importing ZFS pool '${ZFS_POOL}' using cachefile '${ZFS_POOL_CACHEFILE}'"
+					/sbin/zpool import -N ${ZFS_POOL} -c ${ZFS_POOL_CACHEFILE}
+				else
+					bad_msg "Failed to locate ZFS pool '{ZFS_POOL}' cachefile at '${ZFS_POOL_CACHEFILE}'!"
+					good_msg "Importing ZFS pool '${ZFS_POOL}' (this may take awhile)"
+					/sbin/zpool import -N ${ZPOOL_FORCE} "${ZFS_POOL}"
+				fi
 
 				if [ "$?" = '0' ]
 				then
