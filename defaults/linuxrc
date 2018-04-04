@@ -261,11 +261,9 @@ do
     ;;
     aufs)
       aufs=1
-      checkzconfig AUFS_FS
     ;;
 		aufs\=*)
       aufs=1
-      checkzconfig AUFS_FS
 			if echo "${x#*=}" | grep , &>/dev/null; then
 				aufs_dev_uid=${x#*,}
 				aufs_dev=${x%,*}
@@ -280,11 +278,9 @@ do
 		;;
     overlayfs)
       overlayfs=1
-      checkzconfig OVERLAY_FS
     ;;
   overlayfs\=*)
     overlayfs=1
-    checkzconfig OVERLAY_FS
     if echo "${x#*=}" | grep , &>/dev/null; then
       overlayfs_dev_uid=${x#*,}
       overlayfs_dev=${x%,*}

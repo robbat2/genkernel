@@ -605,6 +605,7 @@ setup_overlayfs() {
 
         good_msg "Loading overlayfs"
         modprobe overlay > /dev/null 2>&1
+	checkfs overlay
 
         mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "${static}"
         mount -t tmpfs none "${overlay}"
@@ -762,11 +763,11 @@ fs_type_in_use() {
 	cut -d ' ' -f 3 < /proc/mounts | fgrep -q "${fs_type}"
 }
 
-mount_devfs () {
+mount_devfs() {
 	# Use devtmpfs if enabled in kernel,
 	# else tmpfs. Always run mdev just in case
 	devfs=tmpfs
-	if grep -qs devtmpfs /proc/filesystems ; then
+	if checkfs devtmpfs > /dev/null ; then
 		devfs=devtmpfs
 	fi
 
@@ -1434,7 +1435,7 @@ startLUKS() {
 
 	# if key is set but neither ssh enabled or key device is given, find
 	# the key device
-	
+
 	if [ -e "/usr/sbin/dropbear" ]; then
 		startdropbear
 	fi
@@ -1671,6 +1672,7 @@ setup_squashfs_aufs() {
 
 	good_msg "Loading aufs module ..."
 	modprobe aufs &>/dev/null
+	checkfs aufs
 
         mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "$aufs_ro_branch"
 	mount -t tmpfs none "$aufs_rw_branch"
@@ -1788,16 +1790,15 @@ strip_mount_options()
                 -e 's/(,|^)iversion(,|$)/,/g'
 }
 
-checkzconfig() {
-  if [ -r "/proc/config.gz" ]; then
-    if zcat /proc/config.gz | grep -E "CONFIG_${1}=(m|y)" 1>/dev/null;
-    then
-     return 0
-    fi
-  fi
+checkfs()
+	if [ -r "/proc/filesystems" ]; then
+		if grep -qs "$1" /proc/filesystems ; then
+			return 0
+		fi
+	fi
 
-  warn_msg "No CONFIG_${1} support"
-  warn_msg "${1} is not guarantee to work on this medium"
+	warn_msg "No ${1} support listed in /proc/filesystems"
+	warn_msg "${1} is not likely to work on this medium"
 
-  return 1
+	return 1
 }
