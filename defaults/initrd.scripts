@@ -60,7 +60,7 @@ findmediamount() {
 	# $2 = recognition file
 	# $3 = variable to have the device path
 	# $4 = actual mount dir path (full path)
-	# args remaining are possible devices 
+	# args remaining are possible devices
 
 	local media=$1 recon=$2 vrbl=$3 mntdir=$4
 	shift 4
@@ -227,7 +227,7 @@ findnfsmount() {
 
 		if [ "${NFSROOT}" = '' ]
 		then
-			# Obtain NFSIP	
+			# Obtain NFSIP
 			OPTIONS=`busybox dmesg | grep rootserver | sed -e "s/,/ /g"`
 			for OPTION in $OPTIONS
 			do
@@ -236,9 +236,9 @@ findnfsmount() {
 					NFSIP=`echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 2`
 				fi 
 			done
-			
+
 			# Obtain NFSPATH
-			OPTIONS=`busybox dmesg | grep rootpath | sed -e "s/,/ /g"`	
+			OPTIONS=`busybox dmesg | grep rootpath | sed -e "s/,/ /g"`
 			for OPTION in $OPTIONS
 			do
 				if [ `echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 1` = 'rootpath' ]
@@ -278,7 +278,7 @@ findnfsmount() {
 				else
 					bad_msg "NFS Mounting failed. Is the path corrent ?"
 				fi
-			else	
+			else
 				good_msg "Attempting to mount NFS root on ${NFSROOT} with options ${NFSOPTIONS}"
 				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}
 				if [ "$?" = '0' ]
@@ -295,14 +295,44 @@ findnfsmount() {
 	fi
 }
 
+find_real_device() {
+	local DEVICE="${1}"
+	case "${DEVICE}" in
+		UUID\=*|LABEL\=*)
+			local REAL_DEVICE=""
+			local retval=1
+
+			if [ "${retval}" -ne 0 ]; then
+				REAL_DEVICE=`findfs "${DEVICE}" 2>/dev/null`
+				retval=$?
+			fi
+
+			if [ "$retval" -ne 0 ]; then
+				REAL_DEVICE=`busybox findfs "${DEVICE}" 2>/dev/null`
+				retval=$?
+			fi
+
+			if [ "${retval}" -ne 0 ]; then
+				REAL_DEVICE=`blkid -o device -l -t "${DEVICE}"`
+				retval=$?
+			fi
+
+			if [ "${retval}" -eq 0 ] && [ -n "${REAL_DEVICE}" ]; then
+				DEVICE="${REAL_DEVICE}"
+			fi
+		;;
+	esac
+	printf "%s" "${DEVICE}"
+}
+
 check_loop() {
 	if [ "${LOOP}" = '' -o ! -e "${CDROOT_PATH}/${LOOP}" ]
 	then
-	
+
 		bad_msg "Invalid loop location: ${LOOP}"
 		bad_msg 'Please export LOOP with a valid location, or reboot and pass a proper loop=...'
 		bad_msg 'kernel command line!'
-	
+
 		run_shell
 	fi
 }
@@ -339,7 +369,7 @@ mount_devfs () {
 
 test_success() {
 	retcode=$?
-	# If last command failed send error message and fall back to a shell	
+	# If last command failed send error message and fall back to a shell
 	if [ "$retcode" != '0' ]
 	then
 		error_string=$1
@@ -354,7 +384,7 @@ test_success() {
 # $1 string
 # $2 hide flag
 
-good_msg() {	
+good_msg() {
 	msg_string=$1
 	msg_string="${msg_string:-...}"
 	[ "$2" != 1 ] && echo -e "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
@@ -368,7 +398,7 @@ bad_msg() {
 		splash 'verbose' > /dev/null &
 		echo -e "${BAD}!!${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 	fi
-} 
+}
 
 warn_msg() {
 	msg_string=$1
@@ -404,7 +434,7 @@ prompt_user(){
 		bad_msg "Bad invocation of function prompt_user, please file a bug \
 		report with this message" && exit 1
 	[ -n "${3}" ] && local explnt=" or : ${3}" || local explnt="."
-	
+
 	bad_msg "Could not find the ${2} in ${oldvalue}${explnt}"
 	echo '   Please specify another value or: press Enter for the same, type "shell" for a shell, or "q" to skip...'
 	echo -n "${2}(${oldvalue}) :: "
@@ -469,11 +499,11 @@ cmdline_hwopts() {
 			fi
 		done
 	done
-   
+
 	# Shouldnt need to sort this as the following loop should figure out the
 	# duplicates and strip them out
 	#MY_HWOPTS=`echo ${MY_HWOPTS}|  sort`
-	
+
 	for x in ${MY_HWOPTS}
 	do
 		FOUND=0
@@ -520,7 +550,7 @@ setup_keymap() {
 		[ -f /lib/keymaps/keymapList ] && chooseKeymap
 
 		[ "${DEVBIND}" = '1' ] && umount /dev
-		
+
 		if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" = '1' ]
 		then
 			mkdir -p ${NEW_ROOT}/etc/sysconfig/
@@ -618,7 +648,7 @@ startVolumes() {
 		mkdir -p /dev/mapper
 		ln -sf /dev/device-mapper /dev/mapper/control
 	fi
-	
+
 	if [ "${USE_MDADM}" = '1' ]
 	then
 		if [ -e '/sbin/mdadm' ]
@@ -661,7 +691,7 @@ startVolumes() {
 
 			# To activate volumegroups on all devices in the cache
 			lvm_commands="${lvm_commands} \nvgchange -ay --sysinit"
-			
+
 			# To create symlinks so users can use real_root=/dev/vg/root
 			# This needs to run after vgchange, using vgchange --mknodes is too
 			# early.
@@ -682,9 +712,9 @@ startVolumes() {
 		/sbin/btrfs device scan
 	    else
 		bad_msg "btrfs not found: skipping btrfs device scanning!"
-	    fi	
-	fi	
-	
+	    fi
+	fi
+
 	if [ "${USE_ZFS}" = '1' ]
 	then
 		if [ -z "${ZFS_POOL}" ]
@@ -735,7 +765,7 @@ startVolumes() {
 }
 
 startiscsi() {
-	
+
 	if [ ! -n "${ISCSI_NOIBFT}" ]
 	then
 		good_msg "Activating iSCSI via iBFT"
@@ -752,7 +782,7 @@ startiscsi() {
 		else
 			ADDITIONAL="${ADDITIONAL} -g 1"
 		fi
-		
+
 		if [ "${ISCSI_PORT}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -p ${ISCSI_PORT}"
@@ -836,32 +866,7 @@ openLUKS() {
 			good_msg "The LUKS device ${LUKS_DEVICE} meanwhile was opened by someone else."
 			break
 		else
-			case "${LUKS_DEVICE}" in
-				UUID\=*|LABEL\=*)
-					local REAL_LUKS=""
-					local retval=1
-
-					if [ "${retval}" -ne 0 ]; then
-						REAL_LUKS=`findfs "${LUKS_DEVICE}" 2>/dev/null`
-						retval=$?
-					fi
-
-					if [ "$retval" -ne 0 ]; then
-						REAL_LUKS=`busybox findfs "${LUKS_DEVICE}" 2>/dev/null`
-						retval=$?
-					fi
-
-					if [ "${retval}" -ne 0 ]; then
-						REAL_LUKS=`blkid -o device -l -t "${LUKS_DEVICE}"`
-						retval=$?
-					fi
-
-					if [ "${retval}" -eq 0 ] && [ -n "${REAL_LUKS}" ]; then
-						good_msg "Detected device ${REAL_LUKS}"
-						LUKS_DEVICE="${REAL_LUKS}"
-					fi
-				;;
-			esac
+			LUKS_DEVICE=$(find_real_device "${LUKS_DEVICE}")
 
 			setup_md_device ${LUKS_DEVICE}
 			cryptsetup isLuks ${LUKS_DEVICE}
@@ -878,32 +883,36 @@ openLUKS() {
 					cryptsetup_options="${cryptsetup_options} --allow-discards"
 				fi
 
-				if [ -n "${LUKS_KEY}" ] 
+				if [ -n "${LUKS_KEY}" ]
 				then
-					if [ ! -e "${mntkey}${LUKS_KEY}" ] 
+					local REAL_LUKS_KEYDEV="${LUKS_KEYDEV}"
+					if [ ! -e "${mntkey}${LUKS_KEY}" ]
 					then
-						if [ -b "${LUKS_KEYDEV}" ]
-						then good_msg "Using key device ${LUKS_KEYDEV}." ${CRYPT_SILENT}
+						REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
+						if [ -b "${REAL_LUKS_KEYDEV}" ]
+						then good_msg "Using key device ${REAL_LUKS_KEYDEV}." ${CRYPT_SILENT}
 						else
 							good_msg "Please insert removable device ${LUKS_KEYDEV} for ${LUKS_NAME}" ${CRYPT_SILENT}
 							# abort after 10 secs
 							local count=10
 							while [ ${count} -gt 0 ]
-							do 
+							do
 								count=$((count-1))
 								sleep 1
-								if [ -b "${LUKS_KEYDEV}" ]
+								REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
+								if [ -b "${REAL_LUKS_KEYDEV}" ]
 								then
-									good_msg "Removable device ${LUKS_KEYDEV} detected." ${CRYPT_SILENT}
+									good_msg "Removable device ${REAL_LUKS_KEYDEV} detected." ${CRYPT_SILENT}
 									break
 								fi
 							done
-							if [ ! -b "${LUKS_KEYDEV}" ]
+							if [ ! -b "${REAL_LUKS_KEYDEV}" ]
 							then
 								eval CRYPT_${TYPE}_KEY=${LUKS_KEY}
 								bootstrapKey ${TYPE}
 								eval LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"'
-								if [ ! -b "${LUKS_KEYDEV}" ]; then
+								REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
+								if [ ! -b "${REAL_LUKS_KEYDEV}" ]; then
 									KEYDEV_ERROR=1
 									bad_msg "Removable device ${LUKS_KEYDEV} not found." ${CRYPT_SILENT}
 									continue
@@ -915,34 +924,34 @@ openLUKS() {
 						# At this point a device was recognized, now let's see if the key is there
 						[ ! -d "$mntkey" ] && mkdir -p ${mntkey} 2>/dev/null >/dev/null
 
-						mount -n -o ro ${LUKS_KEYDEV} ${mntkey} >/dev/null 2>/dev/null
+						mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>/dev/null
 						if [ "$?" != '0' ]
 						then
 							KEYDEV_ERROR=1
-							bad_msg "Mounting of device ${LUKS_KEYDEV} failed." ${CRYPT_SILENT}
+							bad_msg "Mounting of device ${REAL_LUKS_KEYDEV} failed." ${CRYPT_SILENT}
 							continue
 						else
-							good_msg "Removable device ${LUKS_KEYDEV} mounted." ${CRYPT_SILENT}
+							good_msg "Removable device ${REAL_LUKS_KEYDEV} mounted." ${CRYPT_SILENT}
 							sleep 2
 							# keyfile exists?
 							if [ ! -e "${mntkey}${LUKS_KEY}" ]; then
 								umount -n ${mntkey} 2>/dev/null >/dev/null
 								KEY_ERROR=1
 								KEYDEV_ERROR=1
-								bad_msg "Key {LUKS_KEY} on device ${LUKS_KEYDEV} not found." ${CRYPT_SILENT}
+								bad_msg "Key {LUKS_KEY} on device ${REAL_LUKS_KEYDEV} not found." ${CRYPT_SILENT}
 								continue
 							fi
 						fi
 					fi
 					# At this point a candidate key exists (either mounted before or not)
-					good_msg "${LUKS_KEY} on device ${LUKS_KEYDEV} found" ${CRYPT_SILENT}
-					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ] && [ -e /sbin/gpg ] ; then
+					good_msg "${LUKS_KEY} on device ${REAL_LUKS_KEYDEV} found" ${CRYPT_SILENT}
+					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ] && [ -x /sbin/gpg ] ; then
 						[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
 						mknod /dev/tty c 5 1
-						cryptsetup_options="-d -"
+						cryptsetup_options="${cryptsetup_options} -d -"
 						gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
 					else
-						cryptsetup_options="-d ${mntkey}${LUKS_KEY}"
+						cryptsetup_options="${cryptsetup_options} -d ${mntkey}${LUKS_KEY}"
 					fi
 				fi
 				# At this point, keyfile or not, we're ready!
@@ -976,7 +985,7 @@ startLUKS() {
 
 	# if key is set but neither ssh enabled or key device is given, find
 	# the key device
-	
+
 	if [ -e "/usr/sbin/dropbear" ]; then
 		startdropbear
 	fi
@@ -1255,32 +1264,32 @@ setup_unionfs() {
 		mkdir -p ${UNION}
 		good_msg "Loading fuse module"
 		modprobe fuse > /dev/null 2>&1
-#                 if [ -n "${UNIONFS}" ] 	 
-#                 then 	 
-#                         CHANGESDEV=${UNIONFS} 	 
-#                         good_msg "mounting $CHANGESDEV to $MEMORY for unionfs support" 	 
-#                         mount -t auto $CHANGESDEV $MEMORY 	 
-#                         # mount tmpfs only in the case when changes= boot parameter was 	 
-#                         # empty or we were not able to mount the storage device 	 
-#                         ret=$? 	 
+#                 if [ -n "${UNIONFS}" ]
+#                 then
+#                         CHANGESDEV=${UNIONFS}
+#                         good_msg "mounting $CHANGESDEV to $MEMORY for unionfs support"
+#                         mount -t auto $CHANGESDEV $MEMORY
+#                         # mount tmpfs only in the case when changes= boot parameter was
+#                         # empty or we were not able to mount the storage device
+#                         ret=$?
 #                         if [ ${ret} -ne 0 ]
-#                         then 	 
-#                                 bad_msg "mount of $CHANGESDEV failed falling back to ramdisk based unionfs" 	 
-#                                 mount -t tmpfs tmpfs $MEMORY 	 
-#                         fi 	 
-#                         if [ "${CDROOT}" -eq '1' -a ! -f ${MEMORY}/livecd.unionfs  ] 	 
-#                         then 	 
-#                                 umount $MEMORY 	 
-#                                 bad_msg "failed to find livecd.unionfs file on $CHANGESDEV" 	 
-#                                 bad_msg "create a livecd.unionfs file on this device if you wish to use it for unionfs" 	 
-#                                 bad_msg "falling back to ramdisk based unionfs for safety" 	 
-#                                 mount -t tmpfs tmpfs $MEMORY 	 
-#                         fi 	 
-#                 else 	 
-#                         good_msg "Mounting ramdisk to $MEMORY for unionfs support..." 	 
-#                         mount -t tmpfs tmpfs $MEMORY 	 
-#                 fi 	 
-  	 
+#                         then
+#                                 bad_msg "mount of $CHANGESDEV failed falling back to ramdisk based unionfs"
+#                                 mount -t tmpfs tmpfs $MEMORY
+#                         fi
+#                         if [ "${CDROOT}" -eq '1' -a ! -f ${MEMORY}/livecd.unionfs  ]
+#                         then
+#                                 umount $MEMORY
+#                                 bad_msg "failed to find livecd.unionfs file on $CHANGESDEV"
+#                                 bad_msg "create a livecd.unionfs file on this device if you wish to use it for unionfs"
+#                                 bad_msg "falling back to ramdisk based unionfs for safety"
+#                                 mount -t tmpfs tmpfs $MEMORY
+#                         fi
+#                 else
+#                         good_msg "Mounting ramdisk to $MEMORY for unionfs support..."
+#                         mount -t tmpfs tmpfs $MEMORY
+#                 fi
+
 		mkdir /tmp
 		mkdir -p ${UNION}
 #		mkdir -p $CHANGES
