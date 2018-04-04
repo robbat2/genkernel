@@ -610,7 +610,18 @@ recognized by the kernel itself.
     Enables/disables UnionFS.
 
 *aufs*::
-    Enables support for AUFS2 (if available in the kernel).
+    Enables support for AUFS (if available in the kernel).
+
+*aufs.modules*=<...>::
+    Use an alternate location for filesystem overlays to be added on top of
+    the livecd and below the writable tmpfs.  Default is /modules/
+
+*overlayfs*::
+    Enables support for Overlayfs (if available in the kernel).
+
+*overlayfs.modules*=<...>::
+    Use an alternate location for filesystem overlays to be added on top of
+    the livecd and below the writable tmpfs.  Default is /modules/
 
 *rootflags*=<...>::
     Additional flags to mount the real root system with.
@@ -696,6 +707,7 @@ AUTHORS
 - GnuPG 1.x integration by dacook <schism@subverted.org>
 - MDADM integration by Matthias Dahl <ua_bugz_gentoo@mortal-soul.de>
 - ZFS integration by Richard Yao <ryao@cs.stonybrook.edu>
+- AUFS/Overlayfs by Zero_Chaos <zerochaos@gentoo.org> and likewhoa
 
 
 SEE ALSO
