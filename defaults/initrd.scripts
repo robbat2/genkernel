@@ -302,12 +302,50 @@ mount_sysfs() {
 	[ ${ret} -eq 0 ] || bad_msg "Failed to mount /sys!"
 }
 
-# Insert a directory tree $2 to an union specified by $1
+# Check support for both aufs and overlayfs
+# union file system style support
+#
+is_union_modules() {
+        local mod mod_dir
+
+        case $1 in
+                aufs)
+                        mod=$aufs_modules
+                        mod_dir=$aufs_modules_dir
+                        ;;
+                overlayfs)
+                        mod=$overlayfs_modules
+                        mod_dir=$overlayfs_modules_dir
+        esac
+
+        # When {aufs,overlayfs}.modules= is used or $CDROOT_PATH/modules
+        # directory is available
+        if [[ 1 = "$mod" || -d $CDROOT_PATH/modules ]]; then
+                if [ -d $CDROOT_PATH/modules ]; then
+                        warn_msg "Adding all modules in $CDROOT_PATH/modules"
+                        union_insert_modules "$CDROOT_PATH"/modules
+                # Is it a block device?
+                elif [ ! -b "$mod_dir" ]; then
+                        bad_msg "$mod_dir is not a valid block device"
+                        bad_msg "aborting modules insert into $CHROOT"
+                else
+                        warn_msg "Adding all modules in $mod_dir"
+
+                        mkdir /mnt/modules
+                        mount "$mod_dir" /mnt/modules
+                        union_insert_modules /mnt/modules
+                fi
+        fi
+
+        return 0
+}
+
+# Insert a directory tree $2 to a aufs union specified by $1
 # Top-level read-write branch is specified by it's index 0
 # $1 = union absolute path (starting with /)
 # $2 = path to data directory
 #
-union_insert_dir() {
+aufs_insert_dir() {
 	# Always mount it over the precedent (add:1:)
 	if mount -n -o "remount,add:1:$2=rr" aufs "$1"; then
                 good_msg "Addition of $2 to $1 successful"
@@ -319,30 +357,51 @@ union_insert_dir() {
 union_insert_modules() {
         local module
 
-        for module in "$1/modules/"*.mo; do
-                union_mod "$module" || bad_msg "Unable to insert module: '$module'"
-        done
+        for module in "$1/"*.lzm; do
+                if [ 1 = "$overlayfs" ];then
+                        if union_mod overlayfs "$module";then
+                          good_msg "Addition of '$module' to overlay successful"
+                        else
+                          bad_msg "Unable to insert module: '$module'"
+                        fi
 
-        for module in "$1/modules/"*.lzm; do
-                union_mod "$module" || bad_msg "Unable to insert module: '$module'"
+                        # Used in setup_overlayfs()
+                        mod_path="$mod_path:$mod_dir/.$mod"
+
+                        # Assign variable with paths to modules mount point
+                        # TODO: Stop using eval
+                        eval $mod="$mod_dir/.$mod"
+                        mods="$mods $mod"
+                else
+                        union_mod aufs "$module" || bad_msg "Unable to insert module: '$module'"
+                fi
         done
 }
 
 # Helper function for union_insert_modules()
 union_mod() {
-        [ -e "$1" ] || return 0
+        [ -e "$2" ] || return 0
 
-        local mod
+        mod_dir=/mnt/overlay
 
-        mod=${1##*/}
+        mod=${2##*/}
+        mod=${mod//-/_}
         mod=${mod%.*}
 
-        if [ ! -d "$aufs_union"/mnt/"$mod" ]; then
-                mkdir -p "$aufs_union"/mnt/modules/"$mod" || return
-        fi
+        if [ 1 = "$aufs" ]; then
+                if [ ! -d "$aufs_union"/mnt/"$mod" ]; then
+                        mkdir -p "$aufs_union"/mnt/modules/"$mod" || return
+                fi
 
-        mount -o loop,ro "$1" "$aufs_union"/mnt/modules/"$mod"
-        union_insert_dir "$aufs_union" "$aufs_union"/mnt/modules/"$mod"
+                mount -o loop,ro "$2" "$aufs_union"/mnt/modules/"$mod"
+                aufs_insert_dir "$aufs_union" "$aufs_union"/mnt/modules/"$mod"
+        else
+                if [ ! -d "$mod_dir/.$mod" ]; then
+                        mkdir -p "$mod_dir/.$mod" || return
+                fi
+
+                mount -o loop,ro "$2" "$mod_dir/.$mod"
+        fi
 }
 
 # Implements no_umounts variable into $CHROOT/etc/conf.d/localmount for a cleaner shutdown process
@@ -532,6 +591,46 @@ setup_aufs() {
 	fi
 }
 
+setup_overlayfs() {
+        # Setup  directories and vars
+        local overlay=/mnt/overlay
+        local upperdir="${overlay}/.upper"
+        local workdir="${overlay}/.work"
+        local static=/mnt/livecd
+
+        rundebugshell overlayfs
+        for i in "${overlay}" "${static}"; do
+                [ ! -d "${i}" ] && mkdir -p "${i}"
+        done
+
+        good_msg "Loading overlayfs"
+        modprobe overlay > /dev/null 2>&1
+	checkfs overlay
+
+        mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "${static}"
+        mount -t tmpfs none "${overlay}"
+        mkdir "${upperdir}" "${workdir}"
+
+        is_union_modules overlayfs
+        mount -t overlay overlay -o lowerdir="${static}${mod_path}",upperdir="${upperdir}",workdir="${workdir}" "${NEW_ROOT}"
+
+        [ ! -d "${NEW_ROOT}${overlay}" ] && mkdir -p "${NEW_ROOT}${overlay}"
+        [ ! -d "${NEW_ROOT}${static}" ] && mkdir -p "${NEW_ROOT}${static}"
+
+        echo "overlay / overlay defaults 0 0" > "${NEW_ROOT}"/etc/fstab
+
+        for i in "${overlay}" "${static}"; do
+                mount --bind "${i}" "${NEW_ROOT}${i}"
+        done
+
+        # Did we populate the overlayfs modules path locations variable?
+        if [ -n "$mods" ]; then
+                for i in $mods; do
+                        mount --bind "${overlay}/.${i}" "${NEW_ROOT}/${overlay}/.${i}"
+                done
+        fi
+}
+
 
 findnfsmount() {
 	if [ "${IP}" != '' ] || busybox udhcpc -n -T 15 -q
@@ -664,11 +763,11 @@ fs_type_in_use() {
 	cut -d ' ' -f 3 < /proc/mounts | fgrep -q "${fs_type}"
 }
 
-mount_devfs () {
+mount_devfs() {
 	# Use devtmpfs if enabled in kernel,
 	# else tmpfs. Always run mdev just in case
 	devfs=tmpfs
-	if grep -qs devtmpfs /proc/filesystems ; then
+	if checkfs devtmpfs > /dev/null ; then
 		devfs=devtmpfs
 	fi
 
@@ -854,13 +953,13 @@ setup_keymap() {
 		[ -f /lib/keymaps/keymapList ] && chooseKeymap
 
 		[ "${DEVBIND}" = '1' ] && umount /dev
-
-		if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" = '1' ]
-		then
-			mkdir -p ${NEW_ROOT}/etc/sysconfig/
-			cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
-		fi
 	fi
+}
+
+setup_locale() {
+        if [ ! -z "${locale}" ]; then
+                echo "LANG=${locale}"  > ${NEW_ROOT}/etc/sysconfig/locale
+        fi
 }
 
 chooseKeymap() {
@@ -940,6 +1039,16 @@ chooseKeymap() {
 		unset keymap
 		chooseKeymap
 	fi
+}
+
+#
+# Copy over user selected keymap
+#
+copyKeymap() {
+        if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" = '1' ]; then
+                [ ! -d ${NEW_ROOT}/etc/sysconfig ] && mkdir -p ${NEW_ROOT}/etc/sysconfig
+                cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
+        fi
 }
 
 # This helper function is to be called using call_func_timeout.
@@ -1326,7 +1435,7 @@ startLUKS() {
 
 	# if key is set but neither ssh enabled or key device is given, find
 	# the key device
-	
+
 	if [ -e "/usr/sbin/dropbear" ]; then
 		startdropbear
 	fi
@@ -1567,6 +1676,7 @@ setup_squashfs_aufs() {
 
 	good_msg "Loading aufs module ..."
 	modprobe aufs &>/dev/null
+	checkfs aufs
 
         mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "$aufs_ro_branch"
 	mount -t tmpfs none "$aufs_rw_branch"
@@ -1681,5 +1791,18 @@ strip_mount_options()
 {
 	sed -r \
 		-e 's/(,|^)(no)?auto(,|$)/,/g' \
-		-e 's/(,|^)iversion(,|$)/,/g'
+                -e 's/(,|^)iversion(,|$)/,/g'
+}
+
+checkfs()
+	if [ -r "/proc/filesystems" ]; then
+		if grep -qs "$1" /proc/filesystems ; then
+			return 0
+		fi
+	fi
+
+	warn_msg "No ${1} support listed in /proc/filesystems"
+	warn_msg "${1} is not likely to work on this medium"
+
+	return 1
 }
