@@ -1795,6 +1795,7 @@ strip_mount_options()
 }
 
 checkfs()
+{
 	if [ -r "/proc/filesystems" ]; then
 		if grep -qs "$1" /proc/filesystems ; then
 			return 0
