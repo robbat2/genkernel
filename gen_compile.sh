@@ -308,10 +308,6 @@ compile_modules() {
 	print_info 1 "        >> Compiling ${KV} modules..."
 	cd ${KERNEL_DIR}
 	compile_generic modules kernel
-
-	# If we are not installing modules, just shortcut this now.
-	isTrue "${CMD_INSTALL}" || return 0
-
 	export UNAME_MACHINE="${ARCH}"
 	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 	if [ "${CMD_STRIP_TYPE}" == "all" -o "${CMD_STRIP_TYPE}" == "modules" ]
