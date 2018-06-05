@@ -128,6 +128,7 @@ append_base_layout() {
 
 	mkdir -p "${TEMP}/initramfs-base-temp/etc/mdev/helpers"
 	install -m 644 -t "${TEMP}/initramfs-base-temp/etc" /usr/share/genkernel/mdev/mdev.conf
+	install -m 755 -t "${TEMP}/initramfs-base-temp/etc/mdev/helpers" /usr/share/genkernel/mdev/helpers/nvme
 	install -m 755 -t "${TEMP}/initramfs-base-temp/etc/mdev/helpers" /usr/share/genkernel/mdev/helpers/storage-device
 
 	cd "${TEMP}/initramfs-base-temp/"
