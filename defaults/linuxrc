@@ -111,10 +111,21 @@ do
 		dozfs*)
 			USE_ZFS=1
 
-			if [ "${x#*=}" = 'force' ]
-			then
-				ZPOOL_FORCE=-f
-			fi
+			case "${x#*=}" in
+				*force*)
+					ZPOOL_FORCE=-f
+				;;
+			esac
+
+			case "${x#*=}" in
+				*cache*)
+					if [ -s "/etc/zfs/zpool.cache" ]; then
+						ZPOOL_CACHE="-c /etc/zfs/zpool.cache"
+					else
+						bad_msg "zpool.cache not found or empty, zpool import will be slow"
+					fi
+				;;
+			esac
 		;;
 		dobtrfs*)
 			USE_BTRFS=1
