@@ -522,9 +522,9 @@ recognized by the kernel itself.
 *domdadm*::
     Scan for RAID arrays on bootup
 
-*dozfs*[=force]::
-    Scan for bootable ZFS pools on bootup. Optionally force import if
-    necessary.
+*dozfs*[=cache,force]::
+    Scan for bootable ZFS pools on bootup. Optionally use cachefile or force import if
+    necessary or perform both actions.
 
 *dobtrfs*::
     Scan for attached Btrfs devices on bootup.
