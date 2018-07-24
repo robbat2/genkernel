@@ -70,6 +70,11 @@ CDROOT_PATH='/mnt/cdrom'
 CDROOT_MARKER='/livecd'
 VERIFY=0
 
+# Flag for if ok when using CDROOT
+got_good_root='0'
+# if LOOP found on root before mount, trigger Unpacking additional packages
+got_loop_wo_mount='0'
+
 # AUFS variables
 aufs=0
 aufs_union_file=/livecd.aufs

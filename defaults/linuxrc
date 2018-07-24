@@ -431,6 +431,15 @@ then
 	startiscsi
 fi
 
+# Loop file already exists on fs, assume no mount needed,
+# This allows for squashfs in initrd, which can be used for (i)PXE booting
+if [ -e "${LOOP}" ]
+then
+	got_good_root=1
+	got_loop_wo_mount=1
+	CDROOT_PATH=$(dirname "${LOOP}")
+fi
+
 # Apply scan delay if specified
 sdelay
 
@@ -497,16 +506,16 @@ then
 	if [ 1 = "$aufs" ]; then
                 setup_aufs
 		CHROOT=$aufs_union
-        elif [ 1 = "$overlayfs" ]; then
+        elif [ 1 = "$overlayfs" ] && [ "${got_good_root}" != '1' ]; then
                 bootstrapCD
 		CHROOT=${NEW_ROOT}
 	fi
 
-	if [ /dev/nfs != "$REAL_ROOT" ] && [ sgimips != "$LOOPTYPE" ] && [ 1 != "$aufs" ] && [ 1 != "$overlayfs" ]; then
+	if [ "${got_good_root}" != '1' ] && [ /dev/nfs != "$REAL_ROOT" ] && [ sgimips != "$LOOPTYPE" ] && [ 1 != "$aufs" ] && [ 1 != "$overlayfs" ]; then
 		bootstrapCD
 	fi
 
-	if [ "${REAL_ROOT}" = '' ]
+	if [ "${REAL_ROOT}" = '' ] && [ "${got_good_root}" != '1' ]
 	then
 		warn_msg "No bootable medium found. Waiting for new devices..."
 		COUNTER=0
@@ -518,7 +527,7 @@ then
 		bootstrapCD
 	fi
 
-	if [ "${REAL_ROOT}" = '' ]
+	if [ "${REAL_ROOT}" = '' ] && [ "${got_good_root}" != '1' ]
 	then
 		# Undo stuff
 		umount  "${NEW_ROOT}/dev" 2>/dev/null
@@ -865,10 +874,10 @@ FSTAB
                 fi
 	fi
 
-	# Unpacking additional packages from NFS mount
+	# Unpacking additional packages from NFS mount, or root (if squashfs was found there)
 	# This is useful for adding kernel modules to /lib
 	# We do this now, so that additional packages can add whereever they want.
-	if [ "${REAL_ROOT}" = '/dev/nfs' ]
+	if [ "${REAL_ROOT}" = '/dev/nfs' ] || [ "${got_loop_wo_mount}" == '1' ]
 	then
 		if [ -e "${CDROOT_PATH}/add" ]
 		then
