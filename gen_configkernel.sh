@@ -277,17 +277,15 @@ config_kernel() {
 
 	# Microcode setting, intended for early microcode loading
 	# needs to be compiled in.
-	if isTrue ${MICROCODE}
+	kconfig_microcode_intel=(CONFIG_MICROCODE_INTEL CONFIG_MICROCODE_INTEL_EARLY)
+	kconfig_microcode_amd=(CONFIG_MICROCODE_AMD CONFIG_MICROCODE_AMD_EARLY)
+	if [[ -n "${MICROCODE}" ]]
 	then
-		for k in \
-			CONFIG_MICROCODE \
-			CONFIG_MICROCODE_INTEL \
-			CONFIG_MICROCODE_AMD \
-			CONFIG_MICROCODE_OLD_INTERFACE \
-			CONFIG_MICROCODE_INTEL_EARLY \
-			CONFIG_MICROCODE_AMD_EARLY \
-			CONFIG_MICROCODE_EARLY \
-			; do
+		kconfigs=(CONFIG_MICROCODE CONFIG_MICROCODE_OLD_INTERFACE CONFIG_MICROCODE_EARLY)
+		[[ "$MICROCODE" == all ]] && kconfigs+=( ${kconfig_microcode_amd[@]} ${kconfig_microcode_intel[@]} )
+		[[ "$MICROCODE" == amd ]] && kconfigs+=( ${kconfig_microcode_amd[@]} )
+		[[ "$MICROCODE" == intel ]] && kconfigs+=( ${kconfig_microcode_intel[@]} )
+		for k in "${kconfigs[@]}" ; do
 			cfg=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
 			case "$cfg" in
 				y) ;; # Do nothing

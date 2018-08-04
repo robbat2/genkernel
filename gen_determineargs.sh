@@ -121,7 +121,8 @@ determine_real_args() {
 	set_config_with_override BOOL   HYPERV               CMD_HYPERV
 	set_config_with_override BOOL   BUSYBOX              CMD_BUSYBOX              "yes"
 	set_config_with_override BOOL   NFS                  CMD_NFS                  "yes"
-	set_config_with_override BOOL   MICROCODE            CMD_MICROCODE
+	set_config_with_override STRING MICROCODE            CMD_MICROCODE            "all"
+	set_config_with_override BOOL   MICROCODE_INITRAMFS  CMD_MICROCODE_INITRAMFS  "yes"
 	set_config_with_override BOOL   UNIONFS              CMD_UNIONFS
 	set_config_with_override BOOL   NETBOOT              CMD_NETBOOT
 	set_config_with_override STRING REAL_ROOT            CMD_REAL_ROOT
@@ -233,6 +234,14 @@ determine_real_args() {
 	then
 		INTEGRATED_INITRAMFS=0
 	fi
+
+	MICROCODE=${MICROCODE,,}
+	case ${MICROCODE} in
+		all|amd|intel) ;;
+		y|yes|1|true|t) MICROCODE='all' ;;
+		n|no|none|0|false|f) MICROCODE='' ;;
+		*) gen_die "Invalid microcode '${MICROCODE}', --microcode=<type> requires one of: no, all, intel, amd" ;;
+	esac
 
 	get_KV
 }

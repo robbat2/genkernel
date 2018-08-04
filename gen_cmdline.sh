@@ -98,8 +98,9 @@ longusage() {
   echo "	--mdadm			Include MDADM/MDMON support"
   echo "	--no-mdadm		Exclude MDADM/MDMON support"
   echo "	--mdadm-config=<file>	Use file as mdadm.conf in initramfs"
-  echo "	--microcode		Include early microcode support"
-  echo "	--no-microcode	Exclude early microcode support"
+  echo "	--microcode[=<type>]	Include early microcode support, for 'all'/'amd'/'intel' CPU types"
+  echo "	--no-microcode			Exclude early microcode support"
+  echo "	--microcode-initramfs	Include early microcode in initramfs"
   echo "	--nfs			Include NFS support"
   echo "	--no-nfs		Exclude NFS support"
   echo "	--dmraid		Include DMRAID support"
@@ -330,8 +331,19 @@ parse_cmdline() {
 			print_info 2 "CMD_BUSYBOX: ${CMD_BUSYBOX}"
 			;;
 		--microcode|--no-microcode)
-			CMD_MICROCODE=`parse_optbool "$*"`
+			case `parse_optbool "$*"` in
+				0) CMD_MICROCODE='no' ;;
+				1) CMD_MICROCODE='all' ;;
+			esac
 			print_info 2 "CMD_MICROCODE: ${CMD_MICROCODE}"
+			;;
+		--microcode=*)
+			CMD_MICROCODE="${*#*=}"
+			print_info 2 "CMD_MICROCODE: $CMD_MICROCODE"
+			;;
+		--microcode-initramfs|--no-microcode-initramfs)
+			CMD_MICROCODE_INITRAMFS=`parse_optbool "$*"`
+			print_info 2 "CMD_MICROCODE_INITRAMFS: ${CMD_MICROCODE_INITRAMFS}"
 			;;
 		--nfs|--no-nfs)
 			CMD_NFS=`parse_optbool "$*"`

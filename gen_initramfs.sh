@@ -1149,7 +1149,8 @@ create_initramfs() {
 		## It only loads monolithic ucode from an uncompressed cpio, which MUST
 		## be before the other cpio archives in the stream.
 		cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
-		if isTrue "${MICROCODE}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
+		if isTrue "${MICROCODE_INITRAMFS}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
+			print_info 1 "--microcode-initramfs is enabled by default for compatability but made obsolete by sys-boot/grub-2.02-r1"
 			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
 			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
 			print_info 1 "early-microcode: >> Preparing..."
