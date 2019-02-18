@@ -50,7 +50,7 @@ get_official_arch() {
 set_kernel_arch() {
 	KERNEL_ARCH=${ARCH}
 	case ${ARCH} in
-		ppc|ppc64)
+		ppc|ppc64*)
 			if [ "${VER}" -ge "3" ]
 			then
 					KERNEL_ARCH=powerpc
