@@ -8,10 +8,34 @@ set_bootloader() {
 		grub2)
 			set_bootloader_grub2
 			;;
+		systemd-boot)
+			set_bootloader_systemd
+			;;
 		*)
 			print_warning "Bootloader ${BOOTLOADER} is not currently supported"
 			;;
 	esac
+}
+
+set_bootloader_systemd() {
+
+	if [[ ! -x `which kernel-install` ]]; then
+		gen_die "Unable to locate kernel-install, is systemd installed?"
+	fi
+
+	# Clear out the mistakenly installed copies, since kernel-install copies its own versions over
+	# We do this first, to prevent people thinking they have enough free space but needing twice the amount
+	KERNEL_IMAGE=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})
+	rm "${BOOTDIR}/kernel-${KNAME}-${ARCH}-${KV}"
+	INITRD_FILE=""
+	if [[ -f "${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV}" ]]; then
+		rm "${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV}"
+		INITRD_FILE="${TMPDIR}/initramfs-${KV}"
+	fi
+
+	# Do the call
+	echo "Executing: kernel-install add $KV \"${KERNEL_IMAGE}\" \"${INITRD_FILE}\""
+	kernel-install add $KV "${KERNEL_IMAGE}" "${INITRD_FILE}"
 }
 
 set_bootloader_read_fstab() {
