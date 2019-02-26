@@ -639,11 +639,32 @@ do
 			prompt_user "REAL_ROOT" "root block device"
 			got_good_root=0
 
-		# Check for a block device or /dev/nfs
+		# Check for a block device or /dev/nfs or zfs encryption
 		elif [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ]
 		then
-			got_good_root=1
-
+			if [ "${ROOTFSTYPE}" = "zfs" ]; then
+				# at this point we determined dataset and are ready to mount
+				# let's check if this dataset is encrypted and ask for passphrase
+				if [ "$(zpool list -H -o feature@encryption "${REAL_ROOT%%/*}")" = 'active' ]; then
+					ZFS_KEYSTATUS="$(zfs get -H -o value keystatus "${REAL_ROOT}")"
+					ZFS_ENCRYPTIONROOT="$(zfs get -H -o value encryptionroot "${REAL_ROOT}")"
+					if ! [ "${ZFS_ENCRYPTIONROOT}" = '-' ] || [ "${ZFS_KEYSTATUS}" = 'available' ]; then
+						good_msg "Detected ZFS encryption, asking for key"
+						zfs load-key "${ZFS_ENCRYPTIONROOT}"
+						retval=$?
+						# if the key loaded fine, confirm got_good_root to exit second while loop
+						if [ ${retval} -eq 0 ];	then
+							got_good_root=1
+						else
+							bad_msg "${ROOT_DEV} is encrypted and not mountable without key"
+							prompt_user "REAL_ROOT" "root block device"
+							got_good_root=0
+						fi
+					fi
+				fi
+			else
+				got_good_root=1
+			fi
 		else
 			bad_msg "Block device ${REAL_ROOT} is not a valid root device..."
 			REAL_ROOT=""
