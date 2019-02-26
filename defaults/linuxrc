@@ -601,7 +601,7 @@ do
 						for i in ${BOOTFS}
 						do
 
-							zfs get type ${i} > /dev/null
+							zfs get type ${i} > /dev/null 2>&1
 							retval=$?
 
 							if [ ${retval} -eq 0 ];	then
