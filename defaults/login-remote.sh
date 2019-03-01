@@ -1,4 +1,5 @@
 #!/bin/sh
+# vim: set noexpandtab:
 
 . /etc/login-remote.conf
 . /etc/initrd.defaults
@@ -44,8 +45,6 @@ openLUKSremote() {
 	while [ 1 ]
 	do
 		local gpg_cmd="" crypt_filter_ret=42
-		echo $-
-		sleep 1
 
 		if [ -e ${flag_opened} ]
 		then
@@ -78,26 +77,36 @@ openLUKSremote() {
 					# 1st try: unencrypted keyfile
 					crypt_filter "cryptsetup ${cryptsetup_options} --key-file ${LUKS_KEY} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
 					crypt_filter_ret=$?
+				fi
 
-					if [ ${crypt_filter_ret} -ne 0 ]
-					then
-						# 2nd try: gpg-encrypted keyfile
-						[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
-						mknod /dev/tty c 5 1
-						gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${LUKS_KEY} |"
-						crypt_filter "${gpg_cmd}cryptsetup ${cryptsetup_options} --key-file ${LUKS_KEY} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
-						crypt_filter_ret=$?
+				if [ -f /sbin/gpg ] && [ ${crypt_filter_ret} -ne 0 ]
+				then
+					# 2nd try: gpg-encrypted keyfile
+					[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
+					mknod /dev/tty c 5 1
+					gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${LUKS_KEY} |"
+					crypt_filter "${gpg_cmd}cryptsetup ${cryptsetup_options} --key-file ${LUKS_KEY} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
+					crypt_filter_ret=$?
 
-						[ -e /dev/tty.org ] \
-							&& rm -f /dev/tty \
-							&& mv /dev/tty.org /dev/tty
-					fi
+					[ -e /dev/tty.org ] \
+						&& rm -f /dev/tty \
+						&& mv /dev/tty.org /dev/tty
+				fi
+
+				if [ ${crypt_filter_ret} -ne 0 ]
+				then
+					# 3rd try: user-submitted passphrase
+					crypt_filter "cryptsetup ${cryptsetup_options} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
+					crypt_filter_ret=$?
 				fi
 
 				if [ ${crypt_filter_ret} -eq 0 ]
 				then
 					touch ${flag_opened}
 					good_msg "LUKS device ${LUKS_DEVICE} opened" ${CRYPT_SILENT}
+					# Kill the cryptsetup process started by init
+					# so that the boot process can continue
+					killall cryptsetup
 					break
 				else
 					bad_msg "Failed to open LUKS device ${LUKS_DEVICE}" ${CRYPT_SILENT}
