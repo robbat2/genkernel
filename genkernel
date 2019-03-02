@@ -376,6 +376,8 @@ then
 	[ "${DMRAID}" = '1' ] && print_warning 1 '	or "dodmraid=<additional options>"'
 	[ "${ZFS}" = '1' ] && print_warning 1 'add "dozfs" for ZFS volume management support'
 	[ "${ZFS}" = '1' ] && print_warning 1 '	and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>" to force booting from a specific dataset'
+	[ "${ZFS}" = '1' ] && print_warning 1 'If importing ZFS pool is slow, add dozfs=cache or dozfs=force to kernel commandline.'
+	[ "${ZFS}" = '1' ] && print_warning 1 '"man genkernel" explains "dozfs" in detail.'
 	[ "${BTRFS}" = '1' ] && print_warning 1 'add "dobtrfs" for Btrfs device scanning support'
 	[ "${ISCSI}" = '1' ] && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
 
