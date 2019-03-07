@@ -17,7 +17,7 @@ MODULES_WAITSCAN="scsi_wait_scan"
 MODULES_BLOCK="sdhci_acpi sdhci_pci"
 
 # Hardware (Network)
-MODULES_NET="8139cp 8139too atl1c bnx2 e1000 igb pcnet32 r8169 sky2 tg3 virtio_net vmxnet3 virtio_net"
+MODULES_NET="8139cp 8139too atl1c bnx2 e1000 igb pcnet32 r8169 sky2 tg3 broadcom bcm_phy_lib virtio_net vmxnet3 virtio_net"
 
 # iSCSI support
 MODULES_ISCSI="scsi_transport_iscsi libiscsi iscsi_tcp"

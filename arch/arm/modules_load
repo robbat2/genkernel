@@ -16,7 +16,7 @@ MODULES_WAITSCAN="scsi_wait_scan"
 MODULES_BLOCK="sdhci_pci"
 
 # Hardware (Network)
-MODULES_NET="e1000 tg3 virtio_net"
+MODULES_NET="e1000 tg3 broadcom bcm_phy_lib virtio_net"
 
 # iSCSI support
 MODULES_ISCSI="scsi_transport_iscsi libiscsi iscsi_tcp"
