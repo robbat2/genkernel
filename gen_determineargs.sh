@@ -243,5 +243,14 @@ determine_real_args() {
 		*) gen_die "Invalid microcode '${MICROCODE}', --microcode=<type> requires one of: no, all, intel, amd" ;;
 	esac
 
+	if isTrue "${FIRMWARE}"
+	then
+		for ff in ${FIRMWARE_FILES}; do
+			[[ ${ff} = /* ]] && gen_die "FIRMWARE_FILES should list paths relative to FIRMWARE_DIR, not absolute."
+		done
+
+		[[ "${FIRMWARE_FILES}" = *,* ]] && gen_die "FIRMWARE_FILES should be a space-separated list."
+	fi
+
 	get_KV
 }

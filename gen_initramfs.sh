@@ -734,15 +734,9 @@ append_firmware() {
 	cd "${TEMP}/initramfs-firmware-temp"
 	if [ -n "${FIRMWARE_FILES}" ]
 	then
-		OLD_IFS=$IFS
-		IFS=","
 		pushd ${FIRMWARE_DIR} >/dev/null
-		for i in ${FIRMWARE_FILES}
-		do
-			cp -L --parents "${i}" ${TEMP}/initramfs-firmware-temp/lib/firmware/
-		done
+		cp -rL --parents --target-directory="${TEMP}/initramfs-firmware-temp/lib/firmware/" ${FIRMWARE_FILES}
 		popd >/dev/null
-		IFS=$OLD_IFS
 	else
 		cp -a "${FIRMWARE_DIR}"/* ${TEMP}/initramfs-firmware-temp/lib/firmware/
 	fi
