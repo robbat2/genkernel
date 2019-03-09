@@ -507,19 +507,7 @@ append_zfs(){
 		fi
 	done
 
-	# Copy binaries
-	# Include libgcc_s.so.1 to workaround zfsonlinux/zfs#4749
-	local libgccpath
-	if type gcc-config 2>&1 1>/dev/null; then
-		libgccpath="/usr/lib/gcc/$(s=$(gcc-config -c); echo ${s%-*}/${s##*-})/libgcc_s.so.1"
-	fi
-	if [[ ! -f ${libgccpath} ]]; then
-		libgccpath="/usr/lib/gcc/*/*/libgcc_s.so.1"
-	fi
-
-	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool} ${libgccpath}
-	cd "${TEMP}/initramfs-zfs-temp/lib64"
-	ln -s "..${libgccpath}"
+	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool}
 
 	cd "${TEMP}/initramfs-zfs-temp/"
 	log_future_cpio_content
@@ -546,6 +534,38 @@ append_btrfs() {
 			|| gen_die "compressing btrfs cpio"
 	cd "${TEMP}"
 	rm -rf "${TEMP}/initramfs-btrfs-temp" > /dev/null
+}
+
+append_libgcc_s() {
+	if [ -d "${TEMP}/initramfs-libgcc_s-temp" ]
+	then
+		rm -r "${TEMP}/initramfs-libgcc_s-temp"
+	fi
+
+	mkdir -p "${TEMP}/initramfs-libgcc_s-temp"
+
+	# Include libgcc_s.so.1:
+	#   - workaround for zfsonlinux/zfs#4749
+	#   - required for LUKS2 (libargon2 uses pthread_cancel)
+	local libgccpath
+	if type gcc-config 2>&1 1>/dev/null; then
+		libgccpath="/usr/lib/gcc/$(s=$(gcc-config -c); echo ${s%-*}/${s##*-})/libgcc_s.so.1"
+	fi
+	if [[ ! -f ${libgccpath} ]]; then
+		libgccpath="/usr/lib/gcc/*/*/libgcc_s.so.1"
+	fi
+
+	# Copy binaries
+	copy_binaries "${TEMP}/initramfs-libgcc_s-temp" ${libgccpath}
+	cd "${TEMP}/initramfs-libgcc_s-temp/lib64"
+	ln -s "..${libgccpath}"
+
+	cd "${TEMP}/initramfs-libgcc_s-temp/"
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+			|| gen_die "compressing libgcc_s cpio"
+	cd "${TEMP}"
+	rm -rf "${TEMP}/initramfs-libgcc_s-temp" > /dev/null
 }
 
 append_linker() {
@@ -989,6 +1009,11 @@ create_initramfs() {
 	append_data 'splash' "${SPLASH}"
 
 	append_data 'modprobed'
+
+	if isTrue "${ZFS}" || isTrue "${LUKS}"
+	then
+		append_data 'libgcc_s'
+	fi
 
 	if isTrue "${FIRMWARE}" && [ -n "${FIRMWARE_DIR}" ]
 	then
