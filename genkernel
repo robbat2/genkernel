@@ -4,7 +4,7 @@
 PATH="${PATH}:/sbin:/usr/sbin"
 GK_V='3.5.3.3'
 
-# Set the default for TMPDIR.  May be modified by genkernel.conf or the
+# Set the default for TMPDIR. May be modified by genkernel.conf or the
 # --tempdir command line option.
 TMPDIR='/var/tmp/genkernel'
 
@@ -178,7 +178,7 @@ else
 				fi
 			else
 				print_warning 1 "${BOLD}WARNING${NORMAL}: No mounted ${BOOTDIR} partition detected!"
-				print_warning 1 "         Run ``mount ${BOOTDIR}`` to mount it!"
+				print_warning 1 "$(getIndent 1)Run ``mount ${BOOTDIR}`` to mount it!"
 				echo
 			fi
 		fi
@@ -223,7 +223,7 @@ fi
 KERNCACHE_IS_VALID=0
 if [ "${KERNCACHE}" != "" ]
 then
-    gen_kerncache_is_valid
+	gen_kerncache_is_valid
 fi
 
 if [ ${BUILD_KERNEL} = '1' -a "${KERNCACHE_IS_VALID}" = '0' ]
@@ -307,17 +307,6 @@ fi
 
 if [ "${BUILD_RAMDISK}" = '1' ]
 then
-	if [ "${BUSYBOX}" = '1' ]
-	then
-		# Compile Busybox
-		compile_busybox
-	fi
-
-	if isTrue "${UNIONFS}"
-	then
-		compile_unionfs_fuse
-	fi
-
 	# Compile initramfs
 	create_initramfs
 else

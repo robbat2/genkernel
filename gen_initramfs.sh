@@ -5,7 +5,7 @@ COPY_BINARIES=false
 CPIO_ARGS="--quiet -o -H newc --owner root:root --force-local"
 
 # The copy_binaries function is explicitly released under the CC0 license to
-# encourage wide adoption and re-use.  That means:
+# encourage wide adoption and re-use. That means:
 # - You may use the code of copy_binaries() as CC0 outside of genkernel
 # - Contributions to this function are licensed under CC0 as well.
 # - If you change it outside of genkernel, please consider sending your
@@ -44,7 +44,7 @@ copy_binaries() {
 	else
 		lddtree "$@" \
 			| tr ')(' '\n' \
-			| awk  '/=>/{ if($3 ~ /^\//){print $3}}' \
+			| awk '/=>/{ if($3 ~ /^\//){print $3}}' \
 			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
 	fi ) \
 			| sort \
@@ -104,7 +104,7 @@ append_base_layout() {
 	mkdir -p ${TEMP}/initramfs-base-temp/sbin
 	mkdir -p ${TEMP}/initramfs-base-temp/usr/bin
 	mkdir -p ${TEMP}/initramfs-base-temp/usr/sbin
-	ln -s  lib  ${TEMP}/initramfs-base-temp/lib64
+	ln -s lib ${TEMP}/initramfs-base-temp/lib64
 
 	echo "/dev/ram0     /           ext2    defaults	0 0" > ${TEMP}/initramfs-base-temp/etc/fstab
 	echo "proc          /proc       proc    defaults    0 0" >> ${TEMP}/initramfs-base-temp/etc/fstab
@@ -116,7 +116,7 @@ append_base_layout() {
 	# Assume the initramfs we're building is for this system, so copy
 	# our current hostid into it.
 	# We also have to deal with binary+endianness here: glibc's gethostid
-	# expects the value to be in binary using the native endianness.  But
+	# expects the value to be in binary using the native endianness. But
 	# the coreutils hostid program doesn't show it in the right form.
 	local hostid
 	if file -L "${TEMP}/initramfs-base-temp/bin/sh" | grep -q 'MSB executable'; then
@@ -144,6 +144,8 @@ append_busybox() {
 	then
 		rm -rf "${TEMP}/initramfs-busybox-temp" > /dev/null
 	fi
+
+	compile_busybox
 
 	mkdir -p "${TEMP}/initramfs-busybox-temp/bin/"
 	tar -xf "${BUSYBOX_BINCACHE}" -C "${TEMP}/initramfs-busybox-temp/bin" busybox ||
@@ -239,6 +241,9 @@ append_unionfs_fuse() {
 	then
 		rm -r "${TEMP}/initramfs-unionfs-fuse-temp"
 	fi
+
+	compile_unionfs_fuse
+
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-unionfs-fuse-temp/sbin/"
 	bzip2 -dc "${UNIONFS_FUSE_BINCACHE}" > "${TEMP}/initramfs-unionfs-fuse-temp/sbin/unionfs" ||
@@ -257,7 +262,7 @@ append_unionfs_fuse() {
 #	then
 #		rm -r "${TEMP}/initramfs-suspend-temp/"
 #	fi
-#	print_info 1 'SUSPEND: Adding support (compiling binaries)...'
+#	print_info 1 "$(getIndent 2)SUSPEND: Adding support (compiling binaries)..."
 #	compile_suspend
 #	mkdir -p "${TEMP}/initramfs-suspend-temp/"
 #	/bin/tar -xpf "${SUSPEND_BINCACHE}" -C "${TEMP}/initramfs-suspend-temp" ||
@@ -277,7 +282,7 @@ append_multipath(){
 	then
 		rm -r "${TEMP}/initramfs-multipath-temp"
 	fi
-	print_info 1 '	Multipath support being added'
+	print_info 1 "$(getIndent 2)Multipath: Adding support (using system binaries)..."
 	mkdir -p "${TEMP}"/initramfs-multipath-temp/{bin,etc,sbin,lib}/
 
 	# Copy files
@@ -316,7 +321,7 @@ append_dmraid(){
 	then
 		rm -r "${TEMP}/initramfs-dmraid-temp/"
 	fi
-	print_info 1 'DMRAID: Adding support (compiling binaries)...'
+	print_info 1 "$(getIndent 2)DMRAID: Adding support (compiling binaries)..."
 	compile_dmraid
 	mkdir -p "${TEMP}/initramfs-dmraid-temp/"
 	/bin/tar -xpf "${DMRAID_BINCACHE}" -C "${TEMP}/initramfs-dmraid-temp" ||
@@ -345,7 +350,7 @@ append_iscsi(){
 	then
 		rm -r "${TEMP}/initramfs-iscsi-temp/"
 	fi
-	print_info 1 'iSCSI: Adding support (compiling binaries)...'
+	print_info 1 "$(getIndent 2)iSCSI: Adding support (compiling binaries)..."
 	compile_iscsi
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-iscsi-temp/bin/"
@@ -372,7 +377,7 @@ append_lvm(){
 	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/cache"
 	if false && [ -e '/sbin/lvm.static' ]
 	then
-		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm.static)...'
+		print_info 1 "$(getIndent 2)LVM: Adding support (using local static binary /sbin/lvm.static)..."
 		cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/sbin/lvm" ||
 			gen_die 'Could not copy over lvm!'
 		# See bug 382555
@@ -382,7 +387,7 @@ append_lvm(){
 		fi
 	elif false && [ -e '/sbin/lvm' ] && LC_ALL="C" ldd /sbin/lvm|grep -q 'not a dynamic executable'
 	then
-		print_info 1 '          LVM: Adding support (using local static binary /sbin/lvm)...'
+		print_info 1 "$(getIndent 2)LVM: Adding support (using local static binary /sbin/lvm)..."
 		cp /sbin/lvm "${TEMP}/initramfs-lvm-temp/sbin/lvm" ||
 			gen_die 'Could not copy over lvm!'
 		# See bug 382555
@@ -391,7 +396,7 @@ append_lvm(){
 			cp /sbin/dmsetup "${TEMP}/initramfs-lvm-temp/bin/dmsetup"
 		fi
 	else
-		print_info 1 '          LVM: Adding support (compiling binaries)...'
+		print_info 1 "$(getIndent 2)LVM: Adding support (compiling binaries)..."
 		compile_lvm || gen_die "Could not compile LVM"
 		/bin/tar -xpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
 			gen_die "Could not extract lvm binary cache!";
@@ -464,17 +469,17 @@ append_mdadm(){
 				gen_die "${MDADM_CONFIG} does not exist!"
 			fi
 		else
-			print_info 1 '		MDADM: Skipping inclusion of mdadm.conf'
+			print_info 1 "$(getIndent 2)MDADM: Skipping inclusion of mdadm.conf"
 		fi
 
 		if [ -e '/sbin/mdadm' ] && LC_ALL="C" ldd /sbin/mdadm | grep -q 'not a dynamic executable' \
 		&& [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
 		then
-			print_info 1 '		MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)...'
+			print_info 1 "$(getIndent 2)MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)..."
 			cp /sbin/mdadm /sbin/mdmon "${TEMP}/initramfs-mdadm-temp/sbin/" ||
 				gen_die 'Could not copy over mdadm!'
 		else
-			print_info 1 '		MDADM: Adding support (compiling binaries)...'
+			print_info 1 "$(getIndent 2)MDADM: Adding support (compiling binaries)..."
 			compile_mdadm
 			/bin/tar -xpf "${MDADM_BINCACHE}" -C "${TEMP}/initramfs-mdadm-temp" ||
 				gen_die "Could not extract mdadm binary cache!";
@@ -501,7 +506,7 @@ append_zfs(){
 	do
 		if [ -f /etc/zfs/${i} ]
 		then
-			print_info 1 "        >> Including ${i}"
+			print_info 1 "$(getIndent 2)zfs: >> Including ${i}"
 			cp -a "/etc/zfs/${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" 2> /dev/null \
 				|| gen_die "Could not copy file ${i} for ZFS"
 		fi
@@ -607,7 +612,7 @@ append_splash(){
 	then
 		[ -z "${SPLASH_THEME}" ] && [ -e /etc/conf.d/splash ] && source /etc/conf.d/splash
 		[ -z "${SPLASH_THEME}" ] && SPLASH_THEME=default
-		print_info 1 "  >> Installing splash [ using the ${SPLASH_THEME} theme ]..."
+		print_info 1 "$(getIndent 1)>> Installing splash [ using the ${SPLASH_THEME} theme ]..."
 		if [ -d "${TEMP}/initramfs-splash-temp" ]
 		then
 			rm -r "${TEMP}/initramfs-splash-temp/"
@@ -628,7 +633,7 @@ append_splash(){
 		cd "${TEMP}"
 		rm -r "${TEMP}/initramfs-splash-temp/"
 	else
-		print_warning 1 '               >> No splash detected; skipping!'
+		print_warning 1 "$(getIndent 1)>> No splash detected; skipping!"
 	fi
 }
 
@@ -640,7 +645,7 @@ append_overlay(){
 }
 
 append_luks() {
-	local _luks_error_format="LUKS support cannot be included: %s.  Please emerge sys-fs/cryptsetup[static]."
+	local _luks_error_format="LUKS support cannot be included: %s. Please emerge sys-fs/cryptsetup[static]."
 	local _luks_source=/sbin/cryptsetup
 	local _luks_dest=/sbin/cryptsetup
 
@@ -658,7 +663,7 @@ append_luks() {
 		[ -x "${_luks_source}" ] \
 				|| gen_die "$(printf "${_luks_error_format}" "no file ${_luks_source}")"
 
-		print_info 1 "Including LUKS support"
+		print_info 1 "$(getIndent 2)LUKS: Adding support (using system binaries)..."
 		copy_binaries "${TEMP}/initramfs-luks-temp/" /sbin/cryptsetup
 	fi
 
@@ -696,7 +701,7 @@ append_dropbear(){
 	fi
 
 	cd "${TEMP}" \
-                || gen_die "cd '${TEMP}' failed"
+		|| gen_die "cd '${TEMP}' failed"
 	mkdir -p ${TEMP}/initramfs-dropbear-temp/var/run
 	mkdir -p ${TEMP}/initramfs-dropbear-temp/var/log
 	mkdir -p ${TEMP}/initramfs-dropbear-temp/etc/dropbear
@@ -775,7 +780,7 @@ append_gpg() {
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-gpg-temp/sbin/"
 	if [ ! -e ${GPG_BINCACHE} ] ; then
-		print_info 1 '		GPG: Adding support (compiling binaries)...'
+		print_info 1 "$(getIndent 2)GPG: Adding support (compiling binaries)..."
 		compile_gpg
 	fi
 	bzip2 -dc "${GPG_BINCACHE}" > "${TEMP}/initramfs-gpg-temp/sbin/gpg" ||
@@ -804,9 +809,9 @@ append_modules() {
 	print_info 2 "initramfs: >> Searching for modules..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
 	then
-	  cd ${INSTALL_MOD_PATH}
+		cd ${INSTALL_MOD_PATH}
 	else
-	  cd /
+		cd /
 	fi
 
 	if [ -d "${TEMP}/initramfs-modules-${KV}-temp" ]
@@ -877,7 +882,7 @@ append_auxilary() {
 	if [ -f "${CMD_LINUXRC}" ]
 	then
 		cp "${CMD_LINUXRC}" "${TEMP}/initramfs-aux-temp/init"
-		print_info 2 "        >> Copying user specified linuxrc: ${CMD_LINUXRC} to init"
+		print_info 2 "$(getIndent 1)>> Copying user specified linuxrc: ${CMD_LINUXRC} to init"
 	else
 		if isTrue ${NETBOOT}
 		then
@@ -933,7 +938,7 @@ append_auxilary() {
 	fi
 	if isTrue $CMD_KEYMAP
 	then
-		print_info 1 "        >> Copying keymaps"
+		print_info 1 "$(getIndent 1)>> Copying keymaps"
 		mkdir -p "${TEMP}/initramfs-aux-temp/lib/"
 		cp -R "${GK_SHARE}/defaults/keymaps" "${TEMP}/initramfs-aux-temp/lib/" \
 				|| gen_die "Error while copying keymaps"
@@ -966,8 +971,8 @@ append_data() {
 	[ $# -eq 0 ] && gen_die "append_data() called with zero arguments"
 	if [ $# -eq 1 ] || isTrue ${var}
 	then
-	    print_info 1 "        >> Appending ${name} cpio data..."
-	    ${func} || gen_die "${func}() failed"
+		print_info 1 "$(getIndent 1)>> Appending ${name} cpio data..."
+		${func} || gen_die "${func}() failed"
 	fi
 }
 
@@ -1043,7 +1048,7 @@ create_initramfs() {
 	# http://search.cpan.org/~pixel/Archive-Cpio-0.07/lib/Archive/Cpio.pm
 	# as then we can dedupe ourselves...
 	if [[ $UID -eq 0 ]]; then
-		print_info 1 "        >> Deduping cpio..."
+		print_info 1 "$(getIndent 1)>> Deduping cpio..."
 		local TDIR="${TEMP}/initramfs-final"
 		mkdir -p "${TDIR}"
 		cd "${TDIR}"
@@ -1055,7 +1060,7 @@ create_initramfs() {
 		cd "${TEMP}"
 		rm -rf "${TDIR}"
 	else
-		print_info 1 "        >> Cannot deduping cpio contents without root; skipping"
+		print_info 1 "$(getIndent 1)>> Cannot deduping cpio contents without root; skipping"
 	fi
 
 	cd "${TEMP}"
@@ -1068,13 +1073,13 @@ create_initramfs() {
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' ${KERNEL_OUTPUTDIR}/.config
 		compress_config='INITRAMFS_COMPRESSION_NONE'
 		case ${compress_ext} in
-			gz)  compress_config='INITRAMFS_COMPRESSION_GZIP' ;;
-			bz2) compress_config='INITRAMFS_COMPRESSION_BZIP2' ;;
+			gz)   compress_config='INITRAMFS_COMPRESSION_GZIP' ;;
+			bz2)  compress_config='INITRAMFS_COMPRESSION_BZIP2' ;;
 			lzma) compress_config='INITRAMFS_COMPRESSION_LZMA' ;;
-			xz) compress_config='INITRAMFS_COMPRESSION_XZ' ;;
-			lzo) compress_config='INITRAMFS_COMPRESSION_LZO' ;;
-			lz4) compress_config='INITRAMFS_COMPRESSION_LZ4' ;;
-			*) compress_config='INITRAMFS_COMPRESSION_NONE' ;;
+			xz)   compress_config='INITRAMFS_COMPRESSION_XZ' ;;
+			lzo)  compress_config='INITRAMFS_COMPRESSION_LZO' ;;
+			lz4)  compress_config='INITRAMFS_COMPRESSION_LZ4' ;;
+			*)    compress_config='INITRAMFS_COMPRESSION_NONE' ;;
 		esac
 		# All N default except XZ, so there it gets used if the kernel does
 		# compression on it's own.
@@ -1094,8 +1099,8 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			# NOTE:  We do not work with ${KERNEL_CONFIG} here, since things like
-			#        "make oldconfig" or --noclean could be in effect.
+			# NOTE: We do not work with ${KERNEL_CONFIG} here, since things like
+			#       "make oldconfig" or --noclean could be in effect.
 			if [ -f "${KERNEL_OUTPUTDIR}"/.config ]; then
 				local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}"/.config
 			else
@@ -1132,7 +1137,7 @@ create_initramfs() {
 							'CONFIG_RD_BZIP2 cmd_bzip2 bzip2' \
 							'CONFIG_RD_GZIP  cmd_gzip  gzip' \
 							'CONFIG_RD_LZO   cmd_lzop  lzop' \
-							'CONFIG_RD_LZ4   cmd_lz4  lz4' \
+							'CONFIG_RD_LZ4   cmd_lz4   lz4' \
 							; do
 						set -- ${tuple}
 						kernel_option=$1
@@ -1164,12 +1169,12 @@ create_initramfs() {
 			esac
 
 			if [ -n "${compression}" ]; then
-				print_info 1 "        >> Compressing cpio data (${compress_ext})..."
-				print_info 5 "        >> Compression command (${compress_cmd} $CPIO)..."
+				print_info 1 "$(getIndent 1)>> Compressing cpio data (${compress_ext})..."
+				print_info 5 "$(getIndent 1)>> Compression command (${compress_cmd} $CPIO)..."
 				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
 				mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
 			else
-				print_info 1 "        >> Not compressing cpio data ..."
+				print_info 1 "$(getIndent 1)>> Not compressing cpio data ..."
 			fi
 		fi
 		## To early load microcode we need to follow some pretty specific steps
@@ -1181,35 +1186,35 @@ create_initramfs() {
 			print_info 1 "--microcode-initramfs is enabled by default for compatability but made obsolete by sys-boot/grub-2.02-r1"
 			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
 			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
-			print_info 1 "early-microcode: >> Preparing..."
+			print_info 1 "$(getIndent 1)>> Adding early-microcode support..."
 			UCODEDIR="${TMPDIR}/ucode_tmp/kernel/x86/microcode/"
 			mkdir -p "${UCODEDIR}"
-			if [  "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]; then
+			if [ "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]; then
 				if [ -d /lib/firmware/intel-ucode ]; then
-					print_info 1 "                 >> adding GenuineIntel.bin"
+					print_info 1 "$(getIndent 2)early-microcode: Adding GenuineIntel.bin..."
 					cat /lib/firmware/intel-ucode/* > "${UCODEDIR}/GenuineIntel.bin" || gen_die "Failed to concat intel cpu ucode"
 				else
-					print_info 1 "CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
+					print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
 				fi
 			fi
-			if [  "${cfg_CONFIG_MICROCODE_AMD}" == "y" ]; then
+			if [ "${cfg_CONFIG_MICROCODE_AMD}" == "y" ]; then
 				if [ -d /lib/firmware/amd-ucode ]; then
-					print_info 1 "                 >> adding AuthenticAMD.bin"
+					print_info 1 "$(getIndent 2)early-microcode: Adding AuthenticAMD.bin..."
 					cat /lib/firmware/amd-ucode/*.bin > "${UCODEDIR}/AuthenticAMD.bin" || gen_dir "Failed to concat amd cpu ucode"
 				else
-					print_info 1 "CONFIG_MICROCODE_AMD=y set but no ucode available.  Please install sys-firmware/linux-firmware"
+					print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE_AMD=y set but no ucode available. Please install sys-firmware/linux-firmware"
 				fi
 			fi
 			if [ -f "${UCODEDIR}/AuthenticAMD.bin" -o -f "${UCODEDIR}/GenuineIntel.bin" ]; then
-				print_info 1 "early-microcode: >> Creating cpio..."
+				print_info 1 "$(getIndent 2)early-microcode: Creating cpio..."
 				pushd "${TMPDIR}/ucode_tmp" > /dev/null
 				find . | cpio -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
 				popd > /dev/null
-				print_info 1 "early-microcode: >> Prepending early-microcode to initramfs"
+				print_info 1 "$(getIndent 2)early-microcode: Prepending early-microcode to initramfs..."
 				cat "${TMPDIR}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
 				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
 			else
-				print_info 1 "CONFIG_MICROCODE=y is set but no microcode found"
+				print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE=y is set but no microcode found"
 			fi
 		fi
 		if isTrue "${WRAP_INITRD}"
@@ -1217,8 +1222,8 @@ create_initramfs() {
 			local mkimage_cmd=$(type -p mkimage)
 			[[ -z ${mkimage_cmd} ]] && gen_die "mkimage is not available. Please install package 'dev-embedded/u-boot-tools'."
 			local mkimage_args="-A ${ARCH} -O linux -T ramdisk -C ${compression:-none} -a 0x00000000 -e 0x00000000"
-			print_info 1 "        >> Wrapping initramfs using mkimage..."
-			print_info 2 "${mkimage_cmd} ${mkimage_args} -n initramfs-${KV} -d ${CPIO} ${CPIO}.uboot" 
+			print_info 1 "$(getIndent 1)>> Wrapping initramfs using mkimage..."
+			print_info 2 "$(getIndent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KV} -d ${CPIO} ${CPIO}.uboot"
 			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KV}" -d "${CPIO}" "${CPIO}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
 			mv -f "${CPIO}.uboot" "${CPIO}" || gen_die "Rename failed"
 		fi

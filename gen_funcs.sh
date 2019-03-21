@@ -231,6 +231,23 @@ gen_die() {
   	exit 1
 }
 
+getIndent() {
+	[[ "$#" -lt '1' ]] &&
+		gen_die 'getIndent(): improper usage!'
+
+	local _level=${1}
+	local _indent=
+	local _indentTemplate="        "
+	local i=0
+
+	while [[ ${i} -lt ${_level} ]]; do
+		_indent+=${_indentTemplate}
+		i=$[$i+1]
+	done
+
+	echo "${_indent}"
+}
+
 isBootRO()
 {
 	return $(awk '( $2 == "'${BOOTDIR}'" && $4 ~ /(^|,)ro(,|$)/){ I=1; exit }END{print !I }' /proc/mounts);
