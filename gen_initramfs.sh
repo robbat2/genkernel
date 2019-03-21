@@ -1065,6 +1065,21 @@ create_initramfs() {
 
 	cd "${TEMP}"
 
+	# NOTE: We do not work with ${KERNEL_CONFIG} here, since things like
+	#       "make oldconfig" or --noclean could be in effect.
+	if [ -f "${KERNEL_OUTPUTDIR}"/.config ]; then
+		local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}"/.config
+	else
+		local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
+	fi
+
+	if [[ "$(file --brief --mime-type "${ACTUAL_KERNEL_CONFIG}")" == application/x-gzip ]]; then
+		# Support --kernel-config=/proc/config.gz, mainly
+		local CONFGREP=zgrep
+	else
+		local CONFGREP=grep
+	fi
+
 	if isTrue "${INTEGRATED_INITRAMFS}"
 	then
 		# Explicitly do not compress if we are integrating into the kernel.
@@ -1099,21 +1114,6 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			# NOTE: We do not work with ${KERNEL_CONFIG} here, since things like
-			#       "make oldconfig" or --noclean could be in effect.
-			if [ -f "${KERNEL_OUTPUTDIR}"/.config ]; then
-				local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}"/.config
-			else
-				local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
-			fi
-
-			if [[ "$(file --brief --mime-type "${ACTUAL_KERNEL_CONFIG}")" == application/x-gzip ]]; then
-				# Support --kernel-config=/proc/config.gz, mainly
-				local CONFGREP=zgrep
-			else
-				local CONFGREP=grep
-			fi
-
 			cmd_xz=$(type -p xz)
 			cmd_lzma=$(type -p lzma)
 			cmd_bzip2=$(type -p bzip2)
@@ -1177,6 +1177,7 @@ create_initramfs() {
 				print_info 1 "$(getIndent 1)>> Not compressing cpio data ..."
 			fi
 		fi
+
 		## To early load microcode we need to follow some pretty specific steps
 		## mostly laid out in linux/Documentation/x86/early-microcode.txt
 		## It only loads monolithic ucode from an uncompressed cpio, which MUST
