@@ -530,7 +530,9 @@ compile_libaio() {
 }
 
 compile_lvm() {
-	if [ -f "${LVM_BINCACHE}" ]
+	compile_libaio
+
+	if [[ -f "${LVM_BINCACHE}" && "${LVM_BINCACHE}" -nt "${LIBAIO_BINCACHE}" ]]
 	then
 		print_info 1 "$(getIndent 3)lvm: >> Using cache"
 	else
@@ -542,6 +544,12 @@ compile_lvm() {
 			gen_die 'Could not extract LVM source tarball!'
 		[ -d "${LVM_DIR}" ] ||
 			gen_die "LVM directory ${LVM_DIR} is invalid!"
+
+		rm -rf "${TEMP}/libaio" > /dev/null
+		mkdir -p "${TEMP}/libaio"
+		/bin/tar -xpf "${LIBAIO_BINCACHE}" -C "${TEMP}/libaio" ||
+			gen_die "Could not extract libaio binary cache!";
+
 		cd "${LVM_DIR}"
 		print_info 1 "$(getIndent 3)lvm: >> Patching ..."
 		apply_patches lvm ${LVM_VER}
@@ -553,7 +561,7 @@ compile_lvm() {
 		LVM_CONF=(
 			--enable-static_link
 			--prefix=/
-			--disable-dmeventd # Fails to build libdm-string.c:(.text+0x1481): undefined reference to `nearbyintl'
+			--enable-dmeventd
 			--enable-cmdlib
 			--enable-applib
 			--disable-lvmetad
@@ -570,22 +578,21 @@ compile_lvm() {
 			--with-raid=internal
 		)
 		CFLAGS="-fPIC" \
-		LIBS='-luuid -lrt -lpthread -lm' \
-		LDFLAGS='-Wl,--no-as-needed' \
+		LDFLAGS="-L${TEMP}/libaio/lib" \
 		./configure "${LVM_CONF[@]}" \
 			>> ${LOGFILE} 2>&1 || \
 			gen_die 'Configure of lvm failed!'
 		print_info 1 "$(getIndent 3)lvm: >> Compiling..."
 		compile_generic '' utils || gen_die "failed to build LVM"
 
-		mkdir -p "${TEMP}/lvm/sbin"
 		print_info 1 "$(getIndent 3)lvm: >> Installing to DESTDIR..."
+		mkdir -p "${TEMP}/lvm/sbin"
 		compile_generic "install DESTDIR=${TEMP}/lvm/" utils || gen_die "failed to install LVM"
 		# Upstream does u-w on files, and this breaks stuff.
 		chmod -R u+w "${TEMP}/lvm/"
 
-		cd "${TEMP}/lvm"
 		print_info 1 "$(getIndent 3)lvm: >> Copying to bincache..."
+		cd "${TEMP}/lvm" || gen_die "cannot chdir into '${TEMP}/lvm'"
 		${UTILS_CROSS_COMPILE}strip "sbin/lvm.static" ||
 			gen_die 'Could not strip lvm.static!'
 		# See bug 382555
@@ -596,7 +603,7 @@ compile_lvm() {
 
 		cd "${TEMP}"
 		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/lvm" > /dev/null
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${LVM_DIR}" lvm
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${LVM_DIR}" libaio lvm
 		return 0
 	fi
 }
