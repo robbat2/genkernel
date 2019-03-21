@@ -1080,6 +1080,12 @@ create_initramfs() {
 		local CONFGREP=grep
 	fi
 
+	if isTrue "${LVM}" ; then
+		if ! ${CONFGREP} -q "^CONFIG_FILE_LOCKING=y" "${ACTUAL_KERNEL_CONFIG}" ; then
+			gen_die "LVM will require a kernel with CONFIG_FILE_LOCKING=y set!"
+		fi
+	fi
+
 	if isTrue "${INTEGRATED_INITRAMFS}"
 	then
 		# Explicitly do not compress if we are integrating into the kernel.
