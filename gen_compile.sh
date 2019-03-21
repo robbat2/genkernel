@@ -212,6 +212,11 @@ apply_patches() {
 
 	if [ -d "${patchdir}" ]
 	then
+		local silent="-s "
+		if [[ "${LOGLEVEL}" -gt 1 ]]; then
+			silent=
+		fi
+
 		print_info 1 "$(getIndent 3)${util}: >> Applying patches..."
 		for i in ${patchdir}/*{diff,patch}
 		do
@@ -220,7 +225,7 @@ apply_patches() {
 			for j in `seq 0 5`
 			do
 				patch -p${j} --backup-if-mismatch -f < "${i}" --dry-run >/dev/null && \
-					patch -p${j} --backup-if-mismatch -f < "${i}"
+					patch ${silent}-p${j} --backup-if-mismatch -f < "${i}"
 				if [ $? = 0 ]
 				then
 					patch_success=1
