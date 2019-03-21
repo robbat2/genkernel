@@ -653,8 +653,11 @@ compile_mdadm() {
 
 compile_dmraid() {
 	compile_device_mapper
-	if [ ! -f "${DMRAID_BINCACHE}" ]
+
+	if [[ -f "${DMRAID_BINCACHE}" && "${DMRAID_BINCACHE}" -nt "${LVM_BINCACHE}" ]]
 	then
+		print_info 1 "$(getIndent 3)dmraid: >> Using cache"
+	else
 		[ -f "${DMRAID_SRCTAR}" ] ||
 			gen_die "Could not find DMRAID source tarball: ${DMRAID_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
@@ -663,21 +666,19 @@ compile_dmraid() {
 			gen_die 'Could not extract DMRAID source tarball!'
 		[ -d "${DMRAID_DIR}" ] ||
 			gen_die "DMRAID directory ${DMRAID_DIR} is invalid!"
+
 		rm -rf "${TEMP}/lvm" > /dev/null
 		mkdir -p "${TEMP}/lvm"
 		/bin/tar -xpf "${LVM_BINCACHE}" -C "${TEMP}/lvm" ||
 			gen_die "Could not extract LVM2 binary cache!";
 
-		cd "${DMRAID_DIR}"
+		print_info 1 "$(getIndent 3)dmraid: >> Patching ..."
+		cd "${DMRAID_DIR}" || gen_die "cannot chdir into '${DMRAID_DIR}'"
 		apply_patches dmraid ${DMRAID_VER}
-		print_info 1 "$(getIndent 3)dmraid: >> Configuring..."
 
-		LDFLAGS="-L${TEMP}/lvm/lib" \
-		CFLAGS="-I${TEMP}/lvm/include" \
+		print_info 1 "$(getIndent 3)dmraid: >> Configuring..."
 		DEVMAPPEREVENT_CFLAGS="-I${TEMP}/lvm/include" \
-		CPPFLAGS="-I${TEMP}/lvm/include" \
-		LIBS="-ldevmapper -lm -lrt -lpthread" \
-		LDFLAGS='-Wl,--no-as-needed' \
+		LIBS="-lm -lrt -lpthread" \
 		./configure --enable-static_link \
 			--with-devmapper-prefix="${TEMP}/lvm" \
 			--prefix=${TEMP}/dmraid >> ${LOGFILE} 2>&1 ||
@@ -689,13 +690,13 @@ compile_dmraid() {
 		###echo "DMRAIDLIBS += -lselinux -lsepol" >> tools/Makefile
 		mkdir -p "${TEMP}/dmraid"
 		print_info 1 "$(getIndent 3)dmraid: >> Compiling..."
-		# Force dmraid to be built with -j1 for bug #188273
-		MAKEOPTS="${MAKEOPTS} -j1" compile_generic '' utils
+		compile_generic '' utils
 		#compile_generic 'install' utils
 		mkdir ${TEMP}/dmraid/sbin
 		install -m 0755 -s tools/dmraid "${TEMP}/dmraid/sbin/dmraid"
+
 		print_info 1 "$(getIndent 3)dmraid: >> Copying to bincache..."
-		cd "${TEMP}/dmraid"
+		cd "${TEMP}/dmraid" || gen_die "cannot chdir into '${TEMP}/dmraid'"
 		/bin/tar -cjf "${DMRAID_BINCACHE}" sbin/dmraid ||
 			gen_die 'Could not create binary cache'
 
