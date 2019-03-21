@@ -492,6 +492,43 @@ compile_busybox() {
 	fi
 }
 
+compile_libaio() {
+	if [ -f "${LIBAIO_BINCACHE}" ]
+	then
+		print_info 1 "$(getIndent 3)libaio: >> Using cache"
+	else
+		[ -f "${LIBAIO_SRCTAR}" ] ||
+			gen_die "Could not find libaio source tarball: ${LIBAIO_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
+		cd "${TEMP}"
+		rm -rf ${LIBAIO_DIR} > /dev/null
+		/bin/tar -xpf ${LIBAIO_SRCTAR} ||
+			gen_die 'Could not extract libaio source tarball!'
+		[ -d "${LIBAIO_DIR}" ] ||
+			gen_die "libaio directory ${LIBAIO_DIR} is invalid!"
+
+		print_info 1 "$(getIndent 3)libaio: >> Patching ..."
+		cd "${LIBAIO_DIR}" || gen_die "cannot chdir into '${LIBAIO_DIR}'"
+		apply_patches libaio ${LIBAIO_VER}
+
+		print_info 1 "$(getIndent 3)libaio: >> Compiling..."
+		CFLAGS="-fPIC" \
+		LDFLAGS='-Wl,--no-as-needed' \
+		compile_generic '' utils || gen_die "failed to build libaio"
+
+		print_info 1 "$(getIndent 3)libaio: >> Installing to DESTDIR..."
+		compile_generic "prefix=${TEMP}/libaio install" utils || gen_die "failed to install libaio"
+
+		print_info 1 "$(getIndent 3)libaio: >> Copying to bincache..."
+		cd "${TEMP}/libaio" || gen_die "cannot chdir into '${TEMP}/libaio'"
+		/bin/tar -cjf "${LIBAIO_BINCACHE}" . ||
+			gen_die 'Could not create libaio binary cache'
+
+		cd "${TEMP}"
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${LIBAIO_DIR}" libaio
+		return 0
+	fi
+}
+
 compile_lvm() {
 	if [ -f "${LVM_BINCACHE}" ]
 	then
