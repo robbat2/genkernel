@@ -806,7 +806,7 @@ append_modules() {
 	local group_modules
 	local MOD_EXT="$(modules_kext)"
 
-	print_info 2 "initramfs: >> Searching for modules..."
+	print_info 2 "$(getIndent 2)initramfs: >> Searching for modules..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
 	then
 		cd ${INSTALL_MOD_PATH}
@@ -824,11 +824,11 @@ append_modules() {
 		mymod=`find ./lib/modules/${KV} -name "${i}${MOD_EXT}" 2>/dev/null| head -n 1 `
 		if [ -z "${mymod}" ]
 		then
-			print_warning 2 "Warning :: ${i}${MOD_EXT} not found; skipping..."
+			print_warning 2 "$(getIndent 3) - ${i}${MOD_EXT} not found; skipping..."
 			continue;
 		fi
 
-		print_info 2 "initramfs: >> Copying ${i}${MOD_EXT}..."
+		print_info 2 "$(getIndent 3) - Copying ${i}${MOD_EXT}..."
 		cp -ax --parents "${mymod}" "${TEMP}/initramfs-modules-${KV}-temp"
 	done
 
