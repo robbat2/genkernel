@@ -47,11 +47,11 @@ config_kernel() {
 				NOW=`date +--%Y-%m-%d--%H-%M-%S`
 				cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
 					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
-				print_info 1 "        Previous config backed up to .config${NOW}.bak"
+				print_info 1 "$(getIndent 1)Previous config backed up to .config${NOW}.bak"
 			fi
 		fi
 		print_info 1 "kernel: Using config from ${KERNEL_CONFIG}"
-		print_info 1 'kernel: >> Running mrproper...'
+		print_info 1 "$(getIndent 1)>> Running mrproper..."
 		compile_generic mrproper kernel
 	else
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
@@ -78,17 +78,17 @@ config_kernel() {
 
 	if isTrue "${OLDCONFIG}"
 	then
-		print_info 1 '        >> Running oldconfig...'
+		print_info 1 "$(getIndent 1)>> Running oldconfig..."
 		yes '' 2>/dev/null | compile_generic oldconfig kernel 2>/dev/null
 	else
-		print_info 1 "kernel: --oldconfig is disabled; not running 'make oldconfig'."
+		print_info 1 "$(getIndent 1)--oldconfig is disabled; not running 'make oldconfig'."
 	fi
 	if isTrue "${CLEAN}"
 	then
-		print_info 1 'kernel: >> Cleaning...'
+		print_info 1 "$(getIndent 1)>> Cleaning..."
 		compile_generic clean kernel
 	else
-		print_info 1 "kernel: --clean is disabled; not running 'make clean'."
+		print_info 1 "$(getIndent 1)--clean is disabled; not running 'make clean'."
 	fi
 
 	local add_config
@@ -108,7 +108,7 @@ config_kernel() {
 
 	if [ x"${add_config}" != x"" ]
 	then
-		print_info 1 "kernel: >> Invoking ${add_config}..."
+		print_info 1 "$(getIndent 1)>> Invoking ${add_config}..."
 		compile_generic $add_config kernelruntask
 		[ "$?" ] || gen_die "Error: ${add_config} failed!"
 	fi

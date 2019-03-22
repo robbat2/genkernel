@@ -310,21 +310,21 @@ compile_generic() {
 }
 
 compile_modules() {
-	print_info 1 "$(getIndent 3)>> Compiling ${KV} modules..."
+	print_info 1 "$(getIndent 1)>> Compiling ${KV} modules..."
 	cd ${KERNEL_DIR}
 	compile_generic modules kernel
 	export UNAME_MACHINE="${ARCH}"
 	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 	if [ "${CMD_STRIP_TYPE}" == "all" -o "${CMD_STRIP_TYPE}" == "modules" ]
 	then
-		print_info 1 "$(getIndent 3)>> Installing ${KV} modules (and stripping)"
+		print_info 1 "$(getIndent 1)>> Installing ${KV} modules (and stripping)"
 		INSTALL_MOD_STRIP=1
 		export INSTALL_MOD_STRIP
 	else
-		print_info 1 "$(getIndent 3)>> Installing ${KV} modules"
+		print_info 1 "$(getIndent 1)>> Installing ${KV} modules"
 	fi
 	MAKEOPTS="${MAKEOPTS} -j1" compile_generic "modules_install" kernel
-	print_info 1 "$(getIndent 3)>> Generating module dependency data..."
+	print_info 1 "$(getIndent 1)>> Generating module dependency data..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
 	then
 		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV}
@@ -343,30 +343,30 @@ compile_kernel() {
 	if [ "${KERNEL_MAKE_DIRECTIVE_OVERRIDE}" != "${DEFAULT_KERNEL_MAKE_DIRECTIVE_OVERRIDE}" ]; then
 		kernel_make_directive="${KERNEL_MAKE_DIRECTIVE_OVERRIDE}"
 	fi
-	print_info 1 "$(getIndent 3)>> Compiling ${KV} ${kernel_make_directive/_install/ [ install ]/}..."
+	print_info 1 "$(getIndent 1)>> Compiling ${KV} ${kernel_make_directive/_install/ [ install ]/}..."
 	compile_generic "${kernel_make_directive}" kernel
 	if [ "${KERNEL_MAKE_DIRECTIVE_2}" != '' ]
 	then
-		print_info 1 "$(getIndent 3)>> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2}..."
+		print_info 1 "$(getIndent 1)>> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2}..."
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
 	if isTrue "${FIRMWARE_INSTALL}" && [ ! -e "${KERNEL_DIR}/ihex2fw.c" ] ; then
 		# Kernel v4.14 removed firmware from the kernel sources, including the
 		# ihex2fw.c tool source. Try and detect the tool to see if we are in >=v4.14
-		print_warning 1 "$(getIndent 3)>> Linux v4.14 removed in-kernel firmware, you MUST install the sys-kernel/linux-firmware package!"
+		print_warning 1 "$(getIndent 1)>> Linux v4.14 removed in-kernel firmware, you MUST install the sys-kernel/linux-firmware package!"
 	elif isTrue "${FIRMWARE_INSTALL}" ; then
 		local cfg_CONFIG_FIRMWARE_IN_KERNEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" CONFIG_FIRMWARE_IN_KERNEL)
 		if isTrue "$cfg_CONFIG_FIRMWARE_IN_KERNEL"; then
-			print_info 1 "$(getIndent 3)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y)..."
+			print_info 1 "$(getIndent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y)..."
 		else
-			print_info 1 "$(getIndent 3)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
+			print_info 1 "$(getIndent 1)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
 			[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 			[ "${INSTALL_FW_PATH}" != '' ] && export INSTALL_FW_PATH
 			MAKEOPTS="${MAKEOPTS} -j1" compile_generic "firmware_install" kernel
 		fi
 	else
-		print_info 1 "$(getIndent 3)>> Not installing firmware as requested by configuration FIRMWARE_INSTALL=no..."
+		print_info 1 "$(getIndent 1)>> Not installing firmware as requested by configuration FIRMWARE_INSTALL=no..."
 	fi
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})
