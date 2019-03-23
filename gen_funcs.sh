@@ -518,7 +518,17 @@ rootfs_type_is() {
 }
 
 check_distfiles() {
-	for i in $BUSYBOX_SRCTAR $MULTIPATH_SRCTAR $LVM_SRCTAR $DMRAID_SRCTAR $ISCSI_SRCTAR $GPG_SRCTAR
+	for i in \
+		$BUSYBOX_SRCTAR \
+		$DMRAID_SRCTAR \
+		$FUSE_SRCTAR \
+		$GPG_SRCTAR \
+		$ISCSI_SRCTAR \
+		$LIBAIO_SRCTAR \
+		$LVM_SRCTAR \
+		$MDADM_SRCTAR \
+		$MULTIPATH_SRCTAR \
+		$UNIONFS_FUSE_SRCTAR
 	do
 		if [ ! -f "${i}" ]
 		then
