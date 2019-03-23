@@ -58,7 +58,7 @@ cleanup(){
 			rm -rf "$TEMP"
 		fi
 
-		if isTrue ${POSTCLEAR}
+		if isTrue "${POSTCLEAR}"
 		then
 			echo
 			print_info 1 'RUNNING FINAL CACHE/TMP CLEANUP'
@@ -78,9 +78,9 @@ cleanup(){
 }
 
 trap trap_cleanup SIGHUP SIGQUIT SIGINT SIGTERM SIGKILL
-BUILD_KERNEL=0
-BUILD_RAMDISK=0
-BUILD_MODULES=0
+BUILD_KERNEL="no"
+BUILD_RAMDISK="no"
+BUILD_MODULES="no"
 
 # Parse all command line options...
 Options=$* # Save for later
@@ -91,7 +91,7 @@ do
 done
 
 # Check if no action is specified...
-if [ "${BUILD_KERNEL}" = '0' -a "${BUILD_RAMDISK}" = '0' ]
+if ! isTrue "${BUILD_KERNEL}" && ! isTrue "${BUILD_RAMDISK}"
 then
 	usage
 	exit 1
@@ -156,10 +156,10 @@ dump_debugcache
 NORMAL=${BOLD} print_info 1 "Linux Kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}..."
 print_info 1 ".. with config file ${KERNEL_CONFIG}"
 
-# Check BOOTDIR is mounted
-if ! isTrue ${CMD_INSTALL}
+# Check if BOOTDIR is mounted
+if ! isTrue "${CMD_INSTALL}"
 then
-	isTrue ${MOUNTBOOT} && print_info 2 'Skipping automatic mount of boot'
+	isTrue "${MOUNTBOOT}" && print_info 2 'Skipping automatic mount of boot'
 else
 	[[ -d ${BOOTDIR} ]] || gen_die "${BOOTDIR} is not a directory"
 
@@ -167,7 +167,7 @@ else
 	then
 		if egrep -q "^[^#].+[[:space:]]${BOOTDIR}[[:space:]]" /etc/fstab
 		then
-			if isTrue ${MOUNTBOOT}
+			if isTrue "${MOUNTBOOT}"
 			then
 				if ! mount ${BOOTDIR}
 				then
@@ -184,7 +184,7 @@ else
 		fi
 	elif isBootRO
 	then
-		if isTrue ${MOUNTBOOT}
+		if isTrue "${MOUNTBOOT}"
 		then
 			if ! mount -o remount,rw ${BOOTDIR}
 			then
@@ -220,13 +220,13 @@ fi
 #	echo
 #fi
 
-KERNCACHE_IS_VALID=0
+KERNCACHE_IS_VALID="no"
 if [ "${KERNCACHE}" != "" ]
 then
 	gen_kerncache_is_valid
 fi
 
-if [ ${BUILD_KERNEL} = '1' -a "${KERNCACHE_IS_VALID}" = '0' ]
+if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
 	# Configure kernel
 	config_kernel
@@ -243,12 +243,12 @@ then
 	compile_kernel
 
 	# Compile modules
-	if [ "${BUILD_MODULES}" = '1' -a "${BUILD_STATIC}" = '0' ]
+	if isTrue "${BUILD_MODULES}" && ! isTrue "${BUILD_STATIC}"
 	then
 		compile_modules
 	fi
 
-	if [ "${SAVE_CONFIG}" = '1' ]
+	if isTrue "${SAVE_CONFIG}"
 	then
 		print_info 1 "Copying config for successful build to /etc/kernels/kernel-config-${ARCH}-${KV}"
 		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
@@ -260,15 +260,15 @@ fi
 
 if isTrue "${CMD_INSTALL}"
 then
-	if [ "${KERNCACHE}" != "" -a "${KERNCACHE_IS_VALID}" != "0" ]
+	if [ "${KERNCACHE}" != "" ] && isTrue "${KERNCACHE_IS_VALID}"
 	then
 		gen_kerncache_extract_kernel
 	fi
 fi
 
-if [ "${KERNCACHE}" != "" -a "${KERNCACHE_IS_VALID}" != "0" ]
+if [ "${KERNCACHE}" != "" ] && isTrue "${KERNCACHE_IS_VALID}"
 then
-	[ "${BUILD_STATIC}" = '0' ] && gen_kerncache_extract_modules
+	! isTrue "${BUILD_STATIC}" && gen_kerncache_extract_modules
 	gen_kerncache_extract_config
 fi
 
@@ -305,7 +305,7 @@ then
 	print_info 1 "" 1 0
 fi
 
-if [ "${BUILD_RAMDISK}" = '1' ]
+if isTrue "${BUILD_RAMDISK}"
 then
 	# Compile initramfs
 	create_initramfs
@@ -313,7 +313,7 @@ else
 	print_info 1 'initrd: Not building since only the kernel was requested...'
 fi
 
-if isTrue "${INTEGRATED_INITRAMFS}" #|| [ "${BUILD_KERNEL}" = '1' -a "${KERNCACHE_IS_VALID}" == "0" ]
+if isTrue "${INTEGRATED_INITRAMFS}"
 then
 	# We build the kernel a second time to include the initramfs
 	compile_kernel
@@ -326,7 +326,7 @@ fi
 # Clean up...
 [ -n "${CTEMP}" ] && rm -rf "${TEMP}"
 
-if [ "${BUILD_KERNEL}" = '1' ]
+if isTrue "${BUILD_KERNEL}"
 then
 	if isTrue "${CMD_INSTALL}"
 	then
@@ -337,7 +337,7 @@ then
 	print_info 1 ''
 	print_info 1 'Required Kernel Parameters:'
 	print_info 1 '    root=/dev/$ROOT'
-	if [ "${BUILD_RAMDISK}" = '0' ]
+	if ! isTrue "${BUILD_RAMDISK}"
 	then
 		print_info 1 '    [ And "vga=0x317 splash=verbose" if you use a framebuffer ]'
 		print_info 1 ''
@@ -353,22 +353,22 @@ then
 	fi
 fi
 
-if [ "${BUILD_RAMDISK}" = '1' ]
+if isTrue "${BUILD_RAMDISK}"
 then
 	echo
 	print_warning 1 'WARNING... WARNING... WARNING...'
 	print_warning 1 'Additional kernel cmdline arguments that *may* be required to boot properly...'
-	[ "${SPLASH}" = '1' ] && print_warning 1 "add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
-	[ "${LVM}" = '1' ] && print_warning 1 'add "dolvm" for lvm support'
-	[ "${DMRAID}" = '1' ] && print_warning 1 'add "dodmraid" for dmraid support'
-	[ "${MDADM}" = '1' ] && print_warning 1 'add "domdadm" for RAID support'
-	[ "${DMRAID}" = '1' ] && print_warning 1 '	or "dodmraid=<additional options>"'
-	[ "${ZFS}" = '1' ] && print_warning 1 'add "dozfs" for ZFS volume management support'
-	[ "${ZFS}" = '1' ] && print_warning 1 '	and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>" to force booting from a specific dataset'
-	[ "${ZFS}" = '1' ] && print_warning 1 'If importing ZFS pool is slow, add dozfs=cache or dozfs=force to kernel commandline.'
-	[ "${ZFS}" = '1' ] && print_warning 1 '"man genkernel" explains "dozfs" in detail.'
-	[ "${BTRFS}" = '1' ] && print_warning 1 'add "dobtrfs" for Btrfs device scanning support'
-	[ "${ISCSI}" = '1' ] && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
+	isTrue "${SPLASH}" && print_warning 1 "add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
+	isTrue "${LVM}"    && print_warning 1 'add "dolvm" for LVM support'
+	isTrue "${DMRAID}" && print_warning 1 'add "dodmraid" for dmraid support'
+	isTrue "${MDADM}"  && print_warning 1 'add "domdadm" for MDRAID support'
+	isTrue "${DMRAID}" && print_warning 1 '	or "dodmraid=<additional options>"'
+	isTrue "${ZFS}"    && print_warning 1 'add "dozfs" for ZFS volume management support'
+	isTrue "${ZFS}"    && print_warning 1 '	and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>" to force booting from a specific dataset'
+	isTrue "${ZFS}"    && print_warning 1 'If importing ZFS pool is slow, add dozfs=cache or dozfs=force to kernel commandline.'
+	isTrue "${ZFS}"    && print_warning 1 '"man genkernel" explains "dozfs" in detail.'
+	isTrue "${BTRFS}"  && print_warning 1 'add "dobtrfs" for Btrfs device scanning support'
+	isTrue "${ISCSI}"  && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
 
 	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
 		# Support --kernel-config=/proc/config.gz, mainly

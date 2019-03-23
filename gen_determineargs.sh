@@ -2,7 +2,7 @@
 # $Id$
 
 get_KV() {
-	if [ "${KERNEL_SOURCES}" = '0' -a -e "${KERNCACHE}" ]
+	if ! isTrue "${KERNEL_SOURCES}" && [ -e "${KERNCACHE}" ]
 	then
 		/bin/tar -x -C ${TEMP} -f ${KERNCACHE} kerncache.config
 		if [ -e ${TEMP}/kerncache.config ]
@@ -181,7 +181,7 @@ determine_real_args() {
 		fi
 	fi
 
-	if [ "${KERNEL_SOURCES}" != "0" ]
+	if isTrue "${KERNEL_SOURCES}"
 	then
 		if [ ! -d ${KERNEL_DIR} ]
 		then
@@ -191,11 +191,11 @@ determine_real_args() {
 
 	if [ -z "${KERNCACHE}" ]
 	then
-		if [ "${KERNEL_DIR}" = '' -a "${KERNEL_SOURCES}" != "0" ]
+		if [ "${KERNEL_DIR}" = '' ] && isTrue "${KERNEL_SOURCES}"
 		then
 			gen_die 'No kernel source directory!'
 		fi
-		if [ ! -e "${KERNEL_DIR}" -a "${KERNEL_SOURCES}" != "0" ]
+		if [ ! -e "${KERNEL_DIR}" ] && isTrue "${KERNEL_SOURCES}"
 		then
 			gen_die 'No kernel source directory!'
 		fi
@@ -210,9 +210,9 @@ determine_real_args() {
 	# imply --no-mrproper.
 	if [ "${CMD_CLEAN}" != '' ]
 	then
-		if ! isTrue ${CLEAN}
+		if ! isTrue "${CLEAN}"
 		then
-			MRPROPER=0
+			MRPROPER="no"
 		fi
 	fi
 

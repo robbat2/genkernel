@@ -214,8 +214,8 @@ usage() {
 }
 
 parse_optbool() {
-	local opt=${1/--no-*/0} # false
-	opt=${opt/--*/1} # true
+	local opt=${1/--no-*/no} # false
+	opt=${opt/--*/yes} # true
 	echo $opt
 }
 
@@ -296,8 +296,8 @@ parse_cmdline() {
 			print_info 2 "CMD_MODPROBEDIR: ${CMD_MODPROBEDIR}"
 			;;
 		--do-keymap-auto)
-			CMD_DOKEYMAPAUTO=1
-			CMD_KEYMAP=1
+			CMD_DOKEYMAPAUTO="yes"
+			CMD_KEYMAP="yes"
 			print_info 2 "CMD_DOKEYMAPAUTO: ${CMD_DOKEYMAPAUTO}"
 			;;
 		--keymap|--no-keymap)
@@ -317,7 +317,7 @@ parse_cmdline() {
 		--mdadm|--no-mdadm)
 			CMD_MDADM=`parse_optbool "$*"`
 			print_info 2 "CMD_MDADM: $CMD_MDADM"
-			if [ "$CMD_MDADM" = "1" -a ! -e /sbin/mdadm ]
+			if isTrue "${CMD_MDADM}" && [ ! -e /sbin/mdadm ]
 			then
 				print_warning 'Warning: --mdadm generally requires sys-fs/mdadm present on the host system'
 			fi
@@ -332,8 +332,8 @@ parse_cmdline() {
 			;;
 		--microcode|--no-microcode)
 			case `parse_optbool "$*"` in
-				0) CMD_MICROCODE='no' ;;
-				1) CMD_MICROCODE='all' ;;
+				no)  CMD_MICROCODE='no' ;;
+				yes) CMD_MICROCODE='all' ;;
 			esac
 			print_info 2 "CMD_MICROCODE: ${CMD_MICROCODE}"
 			;;
@@ -363,16 +363,16 @@ parse_cmdline() {
 			;;
 		--dmraid|--no-dmraid)
 			CMD_DMRAID=`parse_optbool "$*"`
-			if [ "$CMD_DMRAID" = "1" -a ! -e /usr/sbin/dmraid ]
+			if isTrue "${CMD_DMRAID}" && [ ! -e /usr/sbin/dmraid ]
 			then
-				echo 'Error: --dmraid requires sys-fs/dmraid'
-				echo '		 to be installed on the host system.'
+				echo 'Error: --dmraid requires sys-fs/dmraid' \
+					'to be installed on the host system.'
 				exit 1
 			fi
-			if [ "$CMD_DMRAID" = "1" -a ! -e /usr/include/libdevmapper.h ]
+			if isTrue "${CMD_DMRAID}" && [ ! -e /usr/include/libdevmapper.h ]
 			then
-				echo 'Error: --dmraid requires sys-fs/lvm2'
-				echo '		 to be installed on the host system.'
+				echo 'Error: --dmraid requires sys-fs/lvm2' \
+					'to be installed on the host system.'
 				exit 1
 			fi
 			print_info 2 "CMD_DMRAID: ${CMD_DMRAID}"
@@ -395,16 +395,16 @@ parse_cmdline() {
 			;;
 		--multipath|--no-multipath)
 			CMD_MULTIPATH=`parse_optbool "$*"`
-			if [ "$CMD_MULTIPATH" = "1" -a ! -e /sbin/multipath ]
+			if isTrue "${CMD_MULTIPATH}" && [ ! -e /sbin/multipath ]
 			then
-				echo 'Error: --multipath requires sys-fs/multipath-tools'
-				echo '		 to be installed on the host system.'
+				echo 'Error: --multipath requires sys-fs/multipath-tools' \
+					'to be installed on the host system.'
 				exit 1
 			fi
-			if [ "$CMD_MULTIPATH" = "1" -a ! -e /usr/include/libdevmapper.h ]
+			if isTrue "${CMD_MULTIPATH}" && [ ! -e /usr/include/libdevmapper.h ]
 			then
-				echo 'Error: --multipath requires sys-fs/lvm2'
-				echo '		 to be installed on the host system.'
+				echo 'Error: --multipath requires sys-fs/lvm2' \
+					'to be installed on the host system.'
 				exit 1
 			fi
 			print_info 2 "CMD_MULTIPATH: ${CMD_MULTIPATH}"
@@ -435,15 +435,15 @@ parse_cmdline() {
 			TERM_COLUMNS=`stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1`
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
-				echo "Error: You need a terminal with at least 80 columns"
-				echo "		 and 19 lines for --menuconfig; try --no-menuconfig..."
+				echo 'Error: You need a terminal with at least 80 columns' \
+					'and 19 lines for --menuconfig; try --no-menuconfig...'
 				exit 1
 			fi
-			CMD_MENUCONFIG=1
+			CMD_MENUCONFIG="yes"
 			print_info 2 "CMD_MENUCONFIG: ${CMD_MENUCONFIG}"
 			;;
 		--no-menuconfig)
-			CMD_MENUCONFIG=0
+			CMD_MENUCONFIG="no"
 			print_info 2 "CMD_MENUCONFIG: ${CMD_MENUCONFIG}"
 			;;
 		--nconfig)
@@ -451,15 +451,15 @@ parse_cmdline() {
 			TERM_COLUMNS=`stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1`
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
-				echo "Error: You need a terminal with at least 80 columns"
-				echo "		 and 19 lines for --nconfig; try --no-nconfig..."
+				echo 'Error: You need a terminal with at least 80 columns' \
+					'and 19 lines for --nconfig; try --no-nconfig...'
 				exit 1
 			fi
-			CMD_NCONFIG=1
+			CMD_NCONFIG="yes"
 			print_info 2 "CMD_NCONFIG: ${CMD_NCONFIG}"
 			;;
 		--no-nconfig)
-			CMD_NCONFIG=0
+			CMD_NCONFIG="no"
 			print_info 2 "CMD_NCONFIG: ${CMD_NCONFIG}"
 			;;
 		--gconfig|--no-gconfig)
@@ -484,12 +484,12 @@ parse_cmdline() {
 			;;
 		--oldconfig|--no-oldconfig)
 			CMD_OLDCONFIG=`parse_optbool "$*"`
-			[ "$CMD_OLDCONFIG" = "1" ] && CMD_CLEAN=0
+			isTrue "${CMD_OLDCONFIG}" && CMD_CLEAN="no"
 			print_info 2 "CMD_CLEAN: ${CMD_CLEAN}"
 			print_info 2 "CMD_OLDCONFIG: ${CMD_OLDCONFIG}"
 			;;
 		--gensplash=*)
-			CMD_SPLASH=1
+			CMD_SPLASH="yes"
 			SPLASH_THEME="${*#*=}"
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			print_info 2 "SPLASH_THEME: ${SPLASH_THEME}"
@@ -504,7 +504,7 @@ parse_cmdline() {
 			print_warning 1 "Please use --splash, as --gensplash is deprecated."
 			;;
 		--splash=*)
-			CMD_SPLASH=1
+			CMD_SPLASH="yes"
 			SPLASH_THEME="${*#*=}"
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			print_info 2 "SPLASH_THEME: ${SPLASH_THEME}"
@@ -653,12 +653,12 @@ parse_cmdline() {
 			;;
 		--firmware-dir=*)
 			CMD_FIRMWARE_DIR="${*#*=}"
-			CMD_FIRMWARE=1
+			CMD_FIRMWARE="yes"
 			print_info 2 "CMD_FIRMWARE_DIR: ${CMD_FIRMWARE_DIR}"
 			;;
 		--firmware-files=*)
 			CMD_FIRMWARE_FILES="${*#*=}"
-			CMD_FIRMWARE=1
+			CMD_FIRMWARE="yes"
 			print_info 2 "CMD_FIRMWARE_FILES: ${CMD_FIRMWARE_FILES}"
 			;;
 		--firmware-install|--no-firmware-install)
@@ -692,7 +692,7 @@ parse_cmdline() {
 			CMD_NICE="${*#*=}"
 			if [ ${CMD_NICE} -lt 0 -o ${CMD_NICE} -gt 19 ]
 			then
-				echo "Error:  Illegal value specified for --nice= parameter."
+				echo 'Error:  Illegal value specified for --nice= parameter.'
 				exit 1
 			fi
 			print_info 2 "CMD_NICE: ${CMD_NICE}"
@@ -710,23 +710,25 @@ parse_cmdline() {
 			print_info 2 "CMD_STRIP_TYPE: ${CMD_STRIP_TYPE}"
 			;;
 		all)
-			BUILD_KERNEL=1
-			BUILD_MODULES=1
-			BUILD_RAMDISK=1
+			BUILD_KERNEL="yes"
+			BUILD_MODULES="yes"
+			BUILD_RAMDISK="yes"
 			;;
 		ramdisk|initramfs)
-			BUILD_RAMDISK=1
+			BUILD_KERNEL="no"
+			BUILD_MODULES="no"
+			BUILD_RAMDISK="yes"
 			;;
 		kernel)
-			BUILD_KERNEL=1
-			BUILD_MODULES=1
-			BUILD_RAMDISK=0
+			BUILD_KERNEL="yes"
+			BUILD_MODULES="yes"
+			BUILD_RAMDISK="no"
 			;;
 		bzImage)
-			BUILD_KERNEL=1
-			BUILD_MODULES=0
-			BUILD_RAMDISK=0
-			CMD_RAMDISKMODULES=0
+			BUILD_KERNEL="yes"
+			BUILD_MODULES="no"
+			BUILD_RAMDISK="no"
+			CMD_RAMDISKMODULES="no"
 			print_info 2 "CMD_RAMDISKMODULES: ${CMD_RAMDISKMODULES}"
 			;;
 		--help)

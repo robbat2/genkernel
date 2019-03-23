@@ -210,7 +210,7 @@ append_blkid(){
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-blkid-temp/"
 
-	if [[ "${DISKLABEL}" = "1" ]]; then
+	if isTrue "${DISKLABEL}"; then
 		copy_binaries "${TEMP}"/initramfs-blkid-temp/ /sbin/blkid
 	fi
 
@@ -457,7 +457,7 @@ append_mdadm(){
 	cd ${TEMP}
 	mkdir -p "${TEMP}/initramfs-mdadm-temp/etc/"
 	mkdir -p "${TEMP}/initramfs-mdadm-temp/sbin/"
-	if [ "${MDADM}" = '1' ]
+	if isTrue "${MDADM}"
 	then
 		if [ -n "${MDADM_CONFIG}" ]
 		then
@@ -658,7 +658,7 @@ append_luks() {
 	mkdir -p "${TEMP}/initramfs-luks-temp/sbin"
 	cd "${TEMP}/initramfs-luks-temp"
 
-	if isTrue ${LUKS}
+	if isTrue "${LUKS}"
 	then
 		[ -x "${_luks_source}" ] \
 				|| gen_die "$(printf "${_luks_error_format}" "no file ${_luks_source}")"
@@ -884,7 +884,7 @@ append_auxilary() {
 		cp "${CMD_LINUXRC}" "${TEMP}/initramfs-aux-temp/init"
 		print_info 2 "$(getIndent 1)>> Copying user specified linuxrc: ${CMD_LINUXRC} to init"
 	else
-		if isTrue ${NETBOOT}
+		if isTrue "${NETBOOT}"
 		then
 			cp "${GK_SHARE}/netboot/linuxrc.x" "${TEMP}/initramfs-aux-temp/init"
 		else
@@ -932,11 +932,11 @@ append_auxilary() {
 	done
 	echo '"' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 
-	if isTrue $CMD_DOKEYMAPAUTO
+	if isTrue "${CMD_DOKEYMAPAUTO}"
 	then
 		echo 'MY_HWOPTS="${MY_HWOPTS} keymap"' >> ${TEMP}/initramfs-aux-temp/etc/initrd.defaults
 	fi
-	if isTrue $CMD_KEYMAP
+	if isTrue "${CMD_KEYMAP}"
 	then
 		print_info 1 "$(getIndent 1)>> Copying keymaps"
 		mkdir -p "${TEMP}/initramfs-aux-temp/lib/"
@@ -950,7 +950,7 @@ append_auxilary() {
 	chmod +x "${TEMP}/initramfs-aux-temp/etc/initrd.scripts"
 	chmod +x "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 
-	if isTrue ${NETBOOT}
+	if isTrue "${NETBOOT}"
 	then
 		cd "${GK_SHARE}/netboot/misc"
 		cp -pPRf * "${TEMP}/initramfs-aux-temp/"
@@ -969,7 +969,7 @@ append_data() {
 	local func="append_${name}"
 
 	[ $# -eq 0 ] && gen_die "append_data() called with zero arguments"
-	if [ $# -eq 1 ] || isTrue ${var}
+	if [ $# -eq 1 ] || isTrue "${var}"
 	then
 		print_info 1 "$(getIndent 1)>> Appending ${name} cpio data..."
 		${func} || gen_die "${func}() failed"
@@ -1003,7 +1003,7 @@ create_initramfs() {
 	append_data 'multipath' "${MULTIPATH}"
 	append_data 'gpg' "${GPG}"
 
-	if [ "${RAMDISKMODULES}" = '1' ]
+	if isTrue "${RAMDISKMODULES}"
 	then
 		append_data 'modules'
 	else

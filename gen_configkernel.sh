@@ -36,7 +36,7 @@ config_kernel() {
 	determine_config_file
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'
 
-	if isTrue ${MRPROPER}
+	if isTrue "${MRPROPER}"
 	then
 		# Backup current kernel .config
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
@@ -92,16 +92,16 @@ config_kernel() {
 	fi
 
 	local add_config
-	if isTrue ${MENUCONFIG}
+	if isTrue "${MENUCONFIG}"
 	then
 		add_config=menuconfig
-	elif isTrue ${CMD_NCONFIG}
+	elif isTrue "${CMD_NCONFIG}"
 	then
 		add_config=nconfig
-	elif isTrue ${CMD_GCONFIG}
+	elif isTrue "${CMD_GCONFIG}"
 	then
 		add_config=gconfig
-	elif isTrue ${CMD_XCONFIG}
+	elif isTrue "${CMD_XCONFIG}"
 	then
 		add_config=xconfig
 	fi
@@ -114,7 +114,7 @@ config_kernel() {
 	fi
 
 	# Force this on if we are using --genzimage
-	if isTrue ${CMD_GENZIMAGE}
+	if isTrue "${CMD_GENZIMAGE}"
 	then
 		# Make sure Ext2 support is on...
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
@@ -153,7 +153,7 @@ config_kernel() {
 	esac
 
 	# Make sure lvm modules are on if --lvm
-	if isTrue ${CMD_LVM}
+	if isTrue "${CMD_LVM}"
 	then
 		cfg_CONFIG_DM_SNAPSHOT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT")
 		case "$cfg_CONFIG_DM_SNAPSHOT" in
@@ -171,7 +171,7 @@ config_kernel() {
 	fi
 
 	# Multipath
-	if isTrue ${CMD_MULTIPATH}
+	if isTrue "${CMD_MULTIPATH}"
 	then
 		cfg_CONFIG_DM_MULTIPATH=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH")
 		case "$cfg_CONFIG_DM_MULTIPATH" in
@@ -189,7 +189,7 @@ config_kernel() {
 	fi
 
 	# Make sure dmraid modules are on if --dmraid
-	if isTrue ${CMD_DMRAID}
+	if isTrue "${CMD_DMRAID}"
 	then
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 	fi
@@ -197,7 +197,7 @@ config_kernel() {
 	# Make sure iSCSI modules are enabled in the kernel, if --iscsi
 	# CONFIG_SCSI_ISCSI_ATTRS
 	# CONFIG_ISCSI_TCP
-	if isTrue ${CMD_ISCSI}
+	if isTrue "${CMD_ISCSI}"
 	then
 		cfg_CONFIG_ISCSI_BOOT_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS")
 		case "$cfg_CONFIG_ISCSI_BOOT_SYSFS" in
@@ -220,7 +220,7 @@ config_kernel() {
 	fi
 
 	# Make sure HyperV modules are enabled in the kernel, if --hyperv
-	if isTrue ${CMD_HYPERV}
+	if isTrue "${CMD_HYPERV}"
 	then
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_UTILS" "y"
@@ -234,14 +234,14 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UIO_HV_GENERIC" "y"
 	fi
 
-	if isTrue ${SPLASH}
+	if isTrue "${SPLASH}"
 	then
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_SPLASH" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_CON_DECOR" "y"
 	fi
 
 	# VirtIO
-	if isTrue ${CMD_VIRTIO}
+	if isTrue "${CMD_VIRTIO}"
 	then
 		for k in \
 			CONFIG_VIRTIO \

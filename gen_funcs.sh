@@ -23,7 +23,7 @@ isTrue() {
 }
 
 setColorVars() {
-if isTrue ${USECOLOR}
+if isTrue "${USECOLOR}"
 then
 	GOOD=$'\e[32;01m'
 	WARN=$'\e[33;01m'
@@ -205,7 +205,7 @@ gen_die() {
 	print_error 1 "-- Grepping log... --"
 	print_error 1 ''
 
-	if isTrue ${USECOLOR}
+	if isTrue "${USECOLOR}"
 	then
 		GREP_COLOR='1' grep -B5 -E --colour=always "([Ww][Aa][Rr][Nn][Ii][Nn][Gg]|[Ee][Rr][Rr][Oo][Rr][ :,!]|[Ff][Aa][Ii][Ll][Ee]?[Dd]?)" ${LOGFILE} \
 				| sed -s "s|^\(*\)\?|${BAD}*${NORMAL}|"
@@ -258,12 +258,12 @@ setup_cache_dir()
 
 [ ! -d "${CACHE_DIR}/${GK_V}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
 
-if [ "${CLEAR_CACHE_DIR}" == 'yes' ]
+if isTrue "${CLEAR_CACHE_DIR}"
 then
 	print_info 1 "Clearing cache dir contents from ${CACHE_DIR}"
 	while read i
 	do
-		print_info 1 "	 >> removing ${i}"
+		print_info 1 "$(getIndent 1)>> removing ${i}"
 		rm "${i}"
 	done < <(find "${CACHE_DIR}" -maxdepth 2 -type f -name '*.tar.*' -o -name '*.bz2')
 fi
@@ -272,7 +272,7 @@ fi
 
 clear_tmpdir()
 {
-if isTrue ${CMD_INSTALL}
+if isTrue "${CMD_INSTALL}"
 then
 	TMPDIR_CONTENTS=`ls ${TMPDIR}`
 	print_info 1 "Removing tmp dir contents"
@@ -313,7 +313,7 @@ copy_image_with_preserve() {
 	# Old product might be a different version.  If so, we need to read
 	# the symlink to see what it's name is, if there are symlinks.
 	cd ${KERNEL_OUTPUTDIR}
-	if [ "${SYMLINK}" = '1' ]
+	if isTrue "${SYMLINK}"
 	then
  		print_info 4 "automatically managing symlinks and old images." 1 0
 		if [ -e "${BOOTDIR}/${symlinkName}" ]
@@ -359,7 +359,7 @@ copy_image_with_preserve() {
 
 	# When symlinks are not being managed by genkernel, old symlinks might
     # still be useful.  Leave 'em alone unless managed.
-	if [ "${SYMLINK}" = '1' ]
+	if isTrue "${SYMLINK}"
 	then
 		print_info 5 "  Deleting old symlinks, if any."
 		rm -f "${BOOTDIR}/${symlinkName}"
@@ -405,7 +405,7 @@ copy_image_with_preserve() {
 	cp "${newSrceImage}" "${BOOTDIR}/${currDestImage}" ||
 	    gen_die "Could not copy the ${symlinkName} image to ${BOOTDIR}!"
 
-	if [ "${SYMLINK}" = '1' ]
+	if isTrue "${SYMLINK}"
 	then
 		print_info 5 "  Make new symlink(s) (from ${BOOTDIR}):"
 		print_info 5 "    ${symlinkName} -> ${currDestImage}"

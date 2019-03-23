@@ -53,7 +53,7 @@ set_bootloader_grub2() {
 	grub-mkconfig -o "${GRUB_CONF}" 2> /dev/null ||
 		grub2-mkconfig -o "${GRUB_CONF}" 2> /dev/null ||
 		gen_die "grub-mkconfig failed"
-	[ "${BUILD_RAMDISK}" -ne 0 ] && sed -i 's/ro single/ro debug/' "${GRUB_CONF}"
+	isTrue "${BUILD_RAMDISK}" && sed -i 's/ro single/ro debug/' "${GRUB_CONF}"
 }
 
 set_bootloader_grub() {
@@ -93,11 +93,11 @@ set_bootloader_grub() {
 			echo "# Genkernel generated entry, see GRUB documentation for details" >> ${GRUB_CONF}
 			echo "title=Gentoo Linux ($KV)" >> ${GRUB_CONF}
 			printf "%b\n" "\tkernel /kernel-${KNAME}-${ARCH}-${KV} root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
-			if [ "${BUILD_INITRD}" = '1' ]
+			if isTrue "${BUILD_RAMDISK}"
 			then
 				if [ "${PAT}" -gt '4' ]
 				then
-				    printf "%b\n" "\tinitrd /initramfs-${KNAME}-${ARCH}-${KV}" >> ${GRUB_CONF}
+					printf "%b\n" "\tinitrd /initramfs-${KNAME}-${ARCH}-${KV}" >> ${GRUB_CONF}
 				fi
 			fi
 			echo >> ${GRUB_CONF}
