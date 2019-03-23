@@ -169,7 +169,7 @@ gen_kerncache_extract_config()
 gen_kerncache_is_valid()
 {
 	KERNCACHE_IS_VALID="no"
-	if [ "${NO_KERNEL_SOURCES}" = '1' ]
+	if ! isTrue "${KERNEL_SOURCES}"
 	then
 		BUILD_KERNEL="no"
 		# Can make this more secure ....
