@@ -280,7 +280,24 @@ compile_generic() {
 	esac
 
 	case "${argstype}" in
-		kernel|kernelruntask) ARGS="`compile_kernel_args`" ;;
+		kernel|kernelruntask)
+			ARGS="`compile_kernel_args`"
+			if [[ "${ARGS}" = *O=* ]]
+			then
+				if [ -f "${KERNEL_DIR}/.config" -o -d "${KERNEL_DIR}/include/config" ]
+				then
+					# Kernel's build system doesn't remove all files
+					# even when "make clean" was called which will cause
+					# build failures when KERNEL_OUTPUTDIR will change.
+					#
+					# See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Makefile?h=v5.0#n1067 for details
+					error_message="'${KERNEL_DIR}' is tainted and cannot be used"
+					error_message+=" to compile a kernel with different KERNEL_OUTPUTDIR set."
+					error_message+=" Please re-install a fresh kernel source!"
+					gen_die "${error_message}"
+				fi
+			fi
+			;;
 		utils) ARGS="`compile_utils_args`" ;;
 		*) ARGS="" ;;
 	esac
