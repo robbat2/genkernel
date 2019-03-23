@@ -74,7 +74,7 @@ append_devices() {
 	nod /dev/ttyS0 600 0 0 c 4 64
 	EOF
 	if [[ "${LOGLEVEL}" -gt 1 ]]; then
-		echo "Adding devices to cpio:"
+		echo "$(getIndent 2)Adding devices to cpio:"
 		cat "${TEMP}/initramfs-base-temp.devices"
 	fi
 	${KERNEL_OUTPUTDIR}/usr/gen_init_cpio "${TEMP}/initramfs-base-temp.devices" >"${CPIO}" \
