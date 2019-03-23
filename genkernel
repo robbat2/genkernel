@@ -44,7 +44,7 @@ source ${GK_SHARE}/gen_moddeps.sh || gen_die "Could not read ${GK_SHARE}/gen_mod
 source ${GK_SHARE}/gen_package.sh || gen_die "Could not read ${GK_SHARE}/gen_package.sh"
 source ${GK_SHARE}/gen_bootloader.sh || gen_die "Could not read ${GK_SHARE}/gen_bootloader.sh"
 
-TEMP=${TMPDIR}/$RANDOM.$RANDOM.$RANDOM.$$
+TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX)
 
 trap_cleanup(){
 	# Call exit code of 1 for failure

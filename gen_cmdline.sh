@@ -564,7 +564,7 @@ parse_cmdline() {
 			;;
 		--tempdir=*)
 			TMPDIR="${*#*=}"
-			TEMP=${TMPDIR}/$RANDOM.$RANDOM.$RANDOM.$$
+			TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX)
 			print_info 2 "TMPDIR: ${TMPDIR}"
 			print_info 2 "TEMP: ${TEMP}"
 			;;
