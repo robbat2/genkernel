@@ -118,8 +118,10 @@ longusage() {
   echo "	--hyperv		Include Microsoft Hyper-V support"
   echo "	--no-hyperv		Exclude Microsoft Hyper-V support"
   echo "	--ssh			Include SSH (dropbear) support"
-  echo "	--no-ssh 		Exclude SSH (dropbear) support"
-  echo "	--bootloader=grub	Add new kernel to GRUB configuration"
+  echo "	--no-ssh		Exclude SSH (dropbear) support"
+  echo "	--bootloader=(grub|grub2)"
+  echo "				Add new kernel to GRUB (grub) or GRUB2 (grub2) bootloader"
+  echo "	--no-bootloader		Skip bootloader update"
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
   echo "	--busybox-config=<file>	Specifies a user created busybox config"
   echo "	--genzimage		Make and install kernelz image (PowerPC)"
@@ -411,6 +413,18 @@ parse_cmdline() {
 			;;
 		--bootloader=*)
 			CMD_BOOTLOADER="${*#*=}"
+			[ -z "${CMD_BOOTLOADER}" ] && CMD_BOOTLOADER="no"
+			case "${CMD_BOOTLOADER}" in
+				no|grub|grub2)
+					;;
+				*)
+					echo "Error: Bootloader '${CMD_BOOTLOADER}' is unsupported."
+					exit 1
+			esac
+			print_info 2 "CMD_BOOTLOADER: ${CMD_BOOTLOADER}"
+			;;
+		--no-bootloader)
+			CMD_BOOTLOADER="no"
 			print_info 2 "CMD_BOOTLOADER: ${CMD_BOOTLOADER}"
 			;;
 		--iscsi|--no-iscsi)

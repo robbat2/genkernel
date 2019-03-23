@@ -119,6 +119,7 @@ determine_real_args() {
 	set_config_with_override BOOL   DMRAID               CMD_DMRAID
 	set_config_with_override BOOL   ISCSI                CMD_ISCSI
 	set_config_with_override BOOL   HYPERV               CMD_HYPERV
+	set_config_with_override STRING BOOTLOADER           CMD_BOOTLOADER           "no"
 	set_config_with_override BOOL   BUSYBOX              CMD_BUSYBOX              "yes"
 	set_config_with_override BOOL   NFS                  CMD_NFS                  "yes"
 	set_config_with_override STRING MICROCODE            CMD_MICROCODE            "all"

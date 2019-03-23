@@ -1,6 +1,8 @@
 # $Id$
 
 set_bootloader() {
+	print_info 1 ''
+
 	case "${BOOTLOADER}" in
 		grub)
 			set_bootloader_grub
@@ -8,8 +10,11 @@ set_bootloader() {
 		grub2)
 			set_bootloader_grub2
 			;;
+		no)
+			print_info 1 "No bootloader set: Skipping bootloader update!"
+			;;
 		*)
-			print_warning "Bootloader ${BOOTLOADER} is not currently supported"
+			print_warning 1 "Bootloader '${BOOTLOADER}' is currently not supported"
 			;;
 	esac
 }
