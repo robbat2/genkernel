@@ -418,7 +418,7 @@ parse_cmdline() {
 			print_info 2 "CMD_ISCSI: ${CMD_ISCSI}"
 			;;
 		--hyperv|--no-hyperv)
-			CMD_ISCSI=`parse_optbool "$*"`
+			CMD_HYPERV=`parse_optbool "$*"`
 			print_info 2 "CMD_HYPERV: ${CMD_HYPERV}"
 			;;
 		--ssh|--no-ssh)
