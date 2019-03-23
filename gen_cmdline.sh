@@ -565,7 +565,7 @@ parse_cmdline() {
 			;;
 		--debug-cleanup|--no-debug-cleanup)
 			CMD_DEBUGCLEANUP=`parse_optbool "$*"`
-			print_info 2 "DEBUGCLEANUP: ${DEBUGCLEANUP}"
+			print_info 2 "CMD_DEBUGCLEANUP: ${CMD_DEBUGCLEANUP}"
 			;;
 		--logfile=*)
 			CMD_LOGFILE="${*#*=}"
