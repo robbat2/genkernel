@@ -1203,7 +1203,7 @@ create_initramfs() {
 			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
 			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
 			print_info 1 "$(getIndent 1)>> Adding early-microcode support..."
-			UCODEDIR="${TMPDIR}/ucode_tmp/kernel/x86/microcode/"
+			UCODEDIR="${TEMP}/ucode_tmp/kernel/x86/microcode/"
 			mkdir -p "${UCODEDIR}"
 			if [ "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]; then
 				if [ -d /lib/firmware/intel-ucode ]; then
@@ -1223,11 +1223,11 @@ create_initramfs() {
 			fi
 			if [ -f "${UCODEDIR}/AuthenticAMD.bin" -o -f "${UCODEDIR}/GenuineIntel.bin" ]; then
 				print_info 1 "$(getIndent 2)early-microcode: Creating cpio..."
-				pushd "${TMPDIR}/ucode_tmp" > /dev/null
+				pushd "${TEMP}/ucode_tmp" > /dev/null
 				find . | cpio -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
 				popd > /dev/null
 				print_info 1 "$(getIndent 2)early-microcode: Prepending early-microcode to initramfs..."
-				cat "${TMPDIR}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
+				cat "${TEMP}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
 				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
 			else
 				print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE=y is set but no microcode found"
