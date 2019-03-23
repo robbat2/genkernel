@@ -95,6 +95,7 @@ determine_real_args() {
 	set_config_with_override STRING MODPROBEDIR          CMD_MODPROBEDIR          "/etc/modprobe.d"
 
 	set_config_with_override BOOL   SPLASH               CMD_SPLASH               "no"
+	set_config_with_override BOOL   CLEAR_CACHEDIR       CMD_CLEAR_CACHEDIR       "no"
 	set_config_with_override BOOL   POSTCLEAR            CMD_POSTCLEAR
 	set_config_with_override BOOL   MRPROPER             CMD_MRPROPER
 	set_config_with_override BOOL   MENUCONFIG           CMD_MENUCONFIG

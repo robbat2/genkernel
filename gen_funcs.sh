@@ -252,7 +252,7 @@ isBootRO() {
 setup_cache_dir() {
 	[ ! -d "${CACHE_DIR}/${GK_V}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
 
-	if isTrue "${CLEAR_CACHE_DIR}"
+	if isTrue "${CLEAR_CACHEDIR}"
 	then
 		print_info 1 "Clearing cache dir contents from ${CACHE_DIR} ..."
 		while read i

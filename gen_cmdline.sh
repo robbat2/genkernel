@@ -142,7 +142,11 @@ longusage() {
   echo "  Internals"
   echo "	--arch-override=<arch>	Force to arch instead of autodetect"
   echo "	--cachedir=<dir>	Override the default cache location"
-  echo "	--tempdir=<dir>		Location of Genkernel's temporary directory"
+  echo "	--clear-cachedir	Clear genkernel's cache location on start. Useful"
+  echo "				if you want to force rebuild of included tools"
+  echo "				like BusyBox, DMRAID, GnuPG, LVM, MDADM ..."
+  echo "	--no-clear-cachedir	Do not clean up on genkernel start"
+  echo "	--tempdir=<dir>		Location of genkernel's temporary directory"
   echo "	--postclear			Clear all tmp files and caches after genkernel has run"
   echo "	--no-postclear		Do not clean up after genkernel has run"
   echo "  Output Settings"
@@ -602,6 +606,10 @@ parse_cmdline() {
 		--cachedir=*)
 			CACHE_DIR="${*#*=}"
 			print_info 2 "CACHE_DIR: ${CACHE_DIR}"
+			;;
+		--clear-cachedir|--no-clear-cachedir)
+			CMD_CLEAR_CACHEDIR=`parse_optbool "$*"`
+			print_info 2 "CMD_CLEAR_CACHEDIR: ${CMD_CLEAR_CACHEDIR}"
 			;;
 		--minkernpackage=*)
 			CMD_MINKERNPACKAGE="${*#*=}"

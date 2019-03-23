@@ -63,7 +63,7 @@ cleanup(){
 			echo
 			print_info 1 'RUNNING FINAL CACHE/TMP CLEANUP'
 			print_info 1 "CACHE_DIR: ${CACHE_DIR}"
-			CLEAR_CACHE_DIR='yes'
+			CLEAR_CACHEDIR='yes'
 			setup_cache_dir
 			echo
 			print_info 1 "TMPDIR: ${TMPDIR}"
