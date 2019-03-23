@@ -679,8 +679,8 @@ parse_cmdline() {
 			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
 			;;
 		--compress-initramfs-type=*|--compress-initrd-type=*)
-			COMPRESS_INITRD_TYPE="${*#*=}"
-			print_info 2 "CMD_COMPRESS_INITRD_TYPE: ${CMD_LINUXRC}"
+			CMD_COMPRESS_INITRD_TYPE="${*#*=}"
+			print_info 2 "CMD_COMPRESS_INITRD_TYPE: ${CMD_COMPRESS_INITRD_TYPE}"
 			;;
 		--config=*)
 			print_info 2 "CMD_GK_CONFIG: "${*#*=}""
