@@ -63,6 +63,10 @@ log_future_cpio_content() {
 }
 
 append_devices() {
+	if [[ ! -x "${KERNEL_OUTPUTDIR}/usr/gen_init_cpio" ]]; then
+		compile_gen_init_cpio
+	fi
+
 	# WARNING, does NOT support appending to cpio!
 	cat >"${TEMP}/initramfs-base-temp.devices" <<-EOF
 	dir /dev 0755 0 0
