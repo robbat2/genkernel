@@ -169,20 +169,21 @@ gen_kerncache_extract_config()
 gen_kerncache_is_valid()
 {
 	KERNCACHE_IS_VALID="no"
-	if ! isTrue "${KERNEL_SOURCES}"
-	then
-		BUILD_KERNEL="no"
-		# Can make this more secure ....
 
-		/bin/tar -xf ${KERNCACHE} -C ${TEMP}
-		if [ -e ${TEMP}/config-${ARCH}-${KV} -a -e ${TEMP}/kernel-${ARCH}-${KV} ]
+	if [ -e "${KERNCACHE}" ]
+	then
+		if ! isTrue "${KERNEL_SOURCES}"
 		then
-			print_info 1 'Valid kernel cache found; no sources will be used'
-			KERNCACHE_IS_VALID="yes"
-		fi
-	else
-		if [ -e "${KERNCACHE}" ]
-		then
+			BUILD_KERNEL="no"
+			# Can make this more secure ....
+
+			/bin/tar -xf ${KERNCACHE} -C ${TEMP}
+			if [ -e ${TEMP}/config-${ARCH}-${KV} -a -e ${TEMP}/kernel-${ARCH}-${KV} ]
+			then
+				print_info 1 'Valid kernel cache found; no sources will be used'
+				KERNCACHE_IS_VALID="yes"
+			fi
+		else
 			KERNEL_CONFIG="/${KERNEL_OUTPUTDIR}/.config"
 			if [ "${CMD_KERNEL_CONFIG}" != '' ]
 			then
@@ -207,7 +208,6 @@ gen_kerncache_is_valid()
 					local CONFGREP=grep
 				fi
 				test2=$("${CONFGREP}" -v "^#" ${KERNEL_CONFIG} | md5sum | cut -d " " -f 1)
-
 
 				if [ "${test1}" == "${test2}" ]
 				then
