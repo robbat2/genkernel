@@ -1190,7 +1190,12 @@ create_initramfs() {
 		## be before the other cpio archives in the stream.
 		cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
 		if isTrue "${MICROCODE_INITRAMFS}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
-			print_info 1 "--microcode-initramfs is enabled by default for compatability but made obsolete by sys-boot/grub-2.02-r1"
+			if [[ "${MICROCODE}" == intel ]]; then
+				# Only show this information for Intel users because we have no mechanism yet
+				# to generate amd-*.img in /boot after sys-kernel/linux-firmware update
+				print_info 1 "MICROCODE_INITRAMFS option is enabled by default for compatability but made obsolete by >=sys-boot/grub-2.02-r1"
+			fi
+
 			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
 			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
 			print_info 1 "$(getIndent 1)>> Adding early-microcode support..."
@@ -1222,6 +1227,7 @@ create_initramfs() {
 				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
 			else
 				print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE=y is set but no microcode found"
+				print_info 1 "$(getIndent 2)early-microcode: You can disable MICROCODE_INITRAMFS option if you use your bootloader to load AMD/Intel ucode initrd"
 			fi
 		fi
 		if isTrue "${WRAP_INITRD}"
