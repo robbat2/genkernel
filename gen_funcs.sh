@@ -23,22 +23,22 @@ isTrue() {
 }
 
 setColorVars() {
-if isTrue "${USECOLOR}"
-then
-	GOOD=$'\e[32;01m'
-	WARN=$'\e[33;01m'
-	BAD=$'\e[31;01m'
-	NORMAL=$'\e[0m'
-	BOLD=$'\e[0;01m'
-	UNDER=$'\e[4m'
-else
-	GOOD=''
-	WARN=''
-	BAD=''
-	NORMAL=''
-	BOLD=''
-	UNDER=''
-fi
+	if isTrue "${USECOLOR}"
+	then
+		GOOD=$'\e[32;01m'
+		WARN=$'\e[33;01m'
+		BAD=$'\e[31;01m'
+		NORMAL=$'\e[0m'
+		BOLD=$'\e[0;01m'
+		UNDER=$'\e[4m'
+	else
+		GOOD=''
+		WARN=''
+		BAD=''
+		NORMAL=''
+		BOLD=''
+		UNDER=''
+	fi
 }
 setColorVars
 
@@ -154,13 +154,11 @@ print_info() {
 	return 0
 }
 
-print_error()
-{
+print_error() {
 	GOOD=${BAD} print_info "$@"
 }
 
-print_warning()
-{
+print_warning() {
 	GOOD=${WARN} print_info "$@"
 }
 
@@ -169,29 +167,28 @@ print_warning()
 # $2 = variable value
 # $3 = string
 
-var_replace()
-{
-  # Escape '\' and '.' in $2 to make it safe to use
-  # in the later sed expression
-  local SAFE_VAR
-  SAFE_VAR=`echo "${2}" | sed -e 's/\([\/\.]\)/\\\\\\1/g'`
+var_replace() {
+	# Escape '\' and '.' in $2 to make it safe to use
+	# in the later sed expression
+	local SAFE_VAR
+	SAFE_VAR=`echo "${2}" | sed -e 's/\([\/\.]\)/\\\\\\1/g'`
 
-  echo "${3}" | sed -e "s/%%${1}%%/${SAFE_VAR}/g" -
+	echo "${3}" | sed -e "s/%%${1}%%/${SAFE_VAR}/g" -
 }
 
 arch_replace() {
-  var_replace "ARCH" "${ARCH}" "${1}"
+	var_replace "ARCH" "${ARCH}" "${1}"
 }
 
 cache_replace() {
-  var_replace "CACHE" "${CACHE_DIR}/${GK_V}" "${1}"
+	var_replace "CACHE" "${CACHE_DIR}/${GK_V}" "${1}"
 }
 
 clear_log() {
-    if [ -f "${LOGFILE}" ]
-    then
-	(echo > "${LOGFILE}") 2>/dev/null || small_die "Genkernel: Could not write to ${LOGFILE}."
-    fi
+	if [ -f "${LOGFILE}" ]
+	then
+		(echo > "${LOGFILE}") 2>/dev/null || small_die "Genkernel: Could not write to ${LOGFILE}."
+	fi
 }
 
 gen_die() {
@@ -208,7 +205,7 @@ gen_die() {
 	if isTrue "${USECOLOR}"
 	then
 		GREP_COLOR='1' grep -B5 -E --colour=always "([Ww][Aa][Rr][Nn][Ii][Nn][Gg]|[Ee][Rr][Rr][Oo][Rr][ :,!]|[Ff][Aa][Ii][Ll][Ee]?[Dd]?)" ${LOGFILE} \
-				| sed -s "s|^\(*\)\?|${BAD}*${NORMAL}|"
+			| sed -s "s|^\(*\)\?|${BAD}*${NORMAL}|"
 	else
 		grep -B5 -E "([Ww][Aa][Rr][Nn][Ii][Nn][Gg]|[Ee][Rr][Rr][Oo][Rr][ :,!]|[Ff][Aa][Ii][Ll][Ee]?[Dd]?)" ${LOGFILE}
 	fi
@@ -227,8 +224,8 @@ gen_die() {
 	print_error 1 ''
 
 	# Cleanup temp dirs and caches if requested
-	isTrue "${CMD_DEBUGCLEANUP}"  && cleanup
-  	exit 1
+	isTrue "${CMD_DEBUGCLEANUP}" && cleanup
+	exit 1
 }
 
 getIndent() {
@@ -248,40 +245,35 @@ getIndent() {
 	echo "${_indent}"
 }
 
-isBootRO()
-{
+isBootRO() {
 	return $(awk '( $2 == "'${BOOTDIR}'" && $4 ~ /(^|,)ro(,|$)/){ I=1; exit }END{print !I }' /proc/mounts);
 }
 
-setup_cache_dir()
-{
+setup_cache_dir() {
+	[ ! -d "${CACHE_DIR}/${GK_V}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
 
-[ ! -d "${CACHE_DIR}/${GK_V}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
-
-if isTrue "${CLEAR_CACHE_DIR}"
-then
-	print_info 1 "Clearing cache dir contents from ${CACHE_DIR}"
-	while read i
-	do
-		print_info 1 "$(getIndent 1)>> removing ${i}"
-		rm "${i}"
-	done < <(find "${CACHE_DIR}" -maxdepth 2 -type f -name '*.tar.*' -o -name '*.bz2')
-fi
-
+	if isTrue "${CLEAR_CACHE_DIR}"
+	then
+		print_info 1 "Clearing cache dir contents from ${CACHE_DIR} ..."
+		while read i
+		do
+			print_info 1 "$(getIndent 1)>> removing ${i}"
+			rm "${i}"
+		done < <(find "${CACHE_DIR}" -maxdepth 2 -type f -name '*.tar.*' -o -name '*.bz2')
+	fi
 }
 
-clear_tmpdir()
-{
-if isTrue "${CMD_INSTALL}"
-then
-	TMPDIR_CONTENTS=`ls ${TMPDIR}`
-	print_info 1 "Removing tmp dir contents"
-	for i in ${TMPDIR_CONTENTS}
-	do
-		print_info 1 "	 >> removing ${i}"
-		rm -r ${TMPDIR}/${i}
-	done
-fi
+clear_tmpdir() {
+	if isTrue "${CMD_INSTALL}"
+	then
+		TMPDIR_CONTENTS=`ls ${TMPDIR}`
+		print_info 1 "Removing tmp dir contents"
+		for i in ${TMPDIR_CONTENTS}
+		do
+			print_info 1 "$(getIndent 1)>> removing ${i}"
+			rm -r ${TMPDIR}/${i}
+		done
+	fi
 }
 
 #
@@ -328,6 +320,7 @@ copy_image_with_preserve() {
 			print_info 5 "  Current ${symlinkName} symlink did not exist."
 			print_info 5 "    Defaulted to: ${currDestImage}"
 		fi
+
 		if [ -e "${BOOTDIR}/${currDestImage}" ]
 		then
 			currDestImageExists=1
@@ -346,6 +339,7 @@ copy_image_with_preserve() {
 			print_info 5 "  Old ${symlinkName} symlink did not exist."
 			print_info 5 "    Defaulted to: ${prevDestImage}"
 		fi
+
 		if [ -e "${BOOTDIR}/${prevDestImage}" ]
 		then
 			prevDestImageExists=1
@@ -358,7 +352,7 @@ copy_image_with_preserve() {
 	fi
 
 	# When symlinks are not being managed by genkernel, old symlinks might
-    # still be useful.  Leave 'em alone unless managed.
+	# still be useful.  Leave 'em alone unless managed.
 	if isTrue "${SYMLINK}"
 	then
 		print_info 5 "  Deleting old symlinks, if any."
@@ -375,7 +369,7 @@ copy_image_with_preserve() {
 		#
 		# Case for new and currrent of the same base version.
 		#
- 		print_info 5 "  Same base version.  May have to delete old image to make room."
+		print_info 5 "  Same base version.  May have to delete old image to make room."
 
 		if [ "${currDestImageExists}" = '1' ]
 		then
@@ -387,7 +381,7 @@ copy_image_with_preserve() {
 			print_info 5 "  Moving ${BOOTDIR}/${currDestImage}"
 			print_info 5 "    to ${BOOTDIR}/${currDestImage}.old"
 			mv "${BOOTDIR}/${currDestImage}" "${BOOTDIR}/${currDestImage}.old" ||
-			    gen_die "Could not rename the old ${symlinkName} image!"
+				gen_die "Could not rename the old ${symlinkName} image!"
 			prevDestImage="${currDestImage}.old"
 			prevDestImageExists=1
 		fi
@@ -395,7 +389,7 @@ copy_image_with_preserve() {
 		#
 		# Case for new / current not of the same base version.
 		#
- 		print_info 5 "  Different base version.  Do not delete old images."
+		print_info 5 "  Different base version.  Do not delete old images."
 		prevDestImage="${currDestImage}"
 		currDestImage="${fullDestName}"
 	fi
@@ -403,7 +397,7 @@ copy_image_with_preserve() {
 	print_info 5 "  Copying ${symlinkName}: ${newSrceImage}"
 	print_info 5 "    to ${BOOTDIR}/${currDestImage}"
 	cp "${newSrceImage}" "${BOOTDIR}/${currDestImage}" ||
-	    gen_die "Could not copy the ${symlinkName} image to ${BOOTDIR}!"
+		gen_die "Could not copy the ${symlinkName} image to ${BOOTDIR}!"
 
 	if isTrue "${SYMLINK}"
 	then
@@ -411,12 +405,13 @@ copy_image_with_preserve() {
 		print_info 5 "    ${symlinkName} -> ${currDestImage}"
 		pushd ${BOOTDIR} >/dev/null
 		ln -s "${currDestImage}" "${symlinkName}" || 
-		    gen_die "Could not create the ${symlinkName} symlink!"
+			gen_die "Could not create the ${symlinkName} symlink!"
+
 		if [ "${prevDestImageExists}" = '1' ]
 		then
 			print_info 5 "    ${symlinkName}.old -> ${prevDestImage}"
 			ln -s "${prevDestImage}" "${symlinkName}.old" ||
-			    gen_die "Could not create the ${symlinkName}.old symlink!"
+				gen_die "Could not create the ${symlinkName}.old symlink!"
 		fi
 		popd >/dev/null
 	fi
