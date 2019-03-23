@@ -632,6 +632,7 @@ parse_cmdline() {
 			KERNEL_MAKE_DIRECTIVE_2='zImage.initrd'
 			KERNEL_BINARY_2='arch/powerpc/boot/zImage.initrd'
 			CMD_GENZIMAGE="yes"
+			print_info 2 "CMD_GENZIMAGE: ${CMD_GENZIMAGE}"
 #			ENABLE_PEGASOS_HACKS="yes"
 #			print_info 2 "ENABLE_PEGASOS_HACKS: ${ENABLE_PEGASOS_HACKS}"
 			;;
