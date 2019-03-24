@@ -785,9 +785,10 @@ compile_fuse() {
 }
 
 compile_unionfs_fuse() {
-	if [ ! -f "${UNIONFS_FUSE_BINCACHE}" ]
+	if [ -f "${UNIONFS_FUSE_BINCACHE}" ]
 	then
-
+		print_info 1 "$(getIndent 3)unionfs-fuse: Using cache"
+	else
 		# We'll call compile_fuse() from here, since it's not needed directly by anything else
 		compile_fuse
 
