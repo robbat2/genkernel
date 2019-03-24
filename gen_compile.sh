@@ -821,30 +821,33 @@ compile_unionfs_fuse() {
 }
 
 compile_iscsi() {
-	if [ -f "${ISCSI_BINCACHE}" ]
+	compile_iscsi_isns
+
+	if [[ -f "${ISCSI_BINCACHE}" && "${ISCSI_BINCACHE}" -nt "${ISCSI_ISNS_BINCACHE}" ]]
 	then
-		print_info 1 "$(getIndent 3)iSCSI: Using cache"
+		print_info 1 "$(getIndent 3)iscsistart: Using cache"
 	else
 		[ ! -f "${ISCSI_SRCTAR}" ] &&
-			gen_die "Could not find iSCSI source tarball: ${ISCSI_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
+			gen_die "Could not find open-scsi source tarball: ${ISCSI_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
 		rm -rf "${ISCSI_DIR}"
 		tar -xpf "${ISCSI_SRCTAR}"
 		[ ! -d "${ISCSI_DIR}" ] &&
-			gen_die "ISCSI directory ${ISCSI_DIR} invalid"
-		print_info 1 "$(getIndent 3)iSCSI: >> Compiling..."
+			gen_die "open-scsi directory ${ISCSI_DIR} is invalid"
+
+		rm -rf "${TEMP}/iscsi-isns" > /dev/null
+		mkdir -p "${TEMP}/iscsi-isns"
+		/bin/tar -xpf "${ISCSI_ISNS_BINCACHE}" -C "${TEMP}/iscsi-isns" ||
+			gen_die "Could not extract open-isns binary cache!"
+
 		cd "${TEMP}/${ISCSI_DIR}"
+		print_info 1 "$(getIndent 3)open-scsi: >> Patching..."
 		apply_patches iscsi ${ISCSI_VER}
 
-		# Only build userspace
-		print_info 1 "$(getIndent 3)iSCSI: >> Configuring userspace..."
-		cd utils/open-isns || gen_die 'Could not enter open-isns dir'
-		# we currently have a patch that changes configure.ac
-		# once given patch is dropped, drop autoconf too
-		autoconf || gen_die 'Could not tweak open-iscsi configuration'
-		./configure --without-slp >> ${LOGFILE} 2>&1 || gen_die 'Could not configure userspace'
-		cd ../.. || gen_die 'wtf?'
-		MAKE=${UTILS_MAKE} compile_generic "user" ""
+		print_info 1 "$(getIndent 3)open-scsi: >> Compiling..."
+		CFLAGS="-I${TEMP}/iscsi-isns/usr/include" \
+		LDFLAGS="-L${TEMP}/iscsi-isns/usr/lib -lrt -lpthread" \
+		compile_generic "user" utils
 
 		# if kernel modules exist, copy them to initramfs, otherwise it will be compiled into the kernel
 		mkdir -p "${TEMP}/initramfs-iscsi-temp/lib/modules/${KV}/kernel/drivers/scsi/"
@@ -854,6 +857,7 @@ compile_iscsi() {
 			module=${KERNEL_OUTPUTDIR}/drivers/scsi/${modname}${KEXT}
 			if [ -e "${module}" ]
 			then
+				print_info 2 "$(getIndent 4) - Copying ${modname}${KEXT}..."
 				cp $module "${TEMP}/initramfs-iscsi-temp/lib/modules/${KV}/kernel/drivers/scsi/"
 			fi
 		done
@@ -870,7 +874,52 @@ compile_iscsi() {
 			gen_die 'Could not copy the iscsistart binary to the package directory, does the directory exist?'
 
 		cd "${TEMP}"
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${ISCSI_DIR}" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${ISCSI_DIR}" "iscsi-isns" > /dev/null
+		return 0
+	fi
+}
+
+compile_iscsi_isns() {
+	if [ -f "${ISCSI_ISNS_BINCACHE}" ]
+	then
+		print_info 1 "$(getIndent 3)open-isns: >> Using cache"
+	else
+		[ -f "${ISCSI_ISNS_SRCTAR}" ] ||
+			gen_die "Could not find open-isns source tarball: ${ISCSI_ISNS_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
+		cd "${TEMP}"
+		rm -rf ${ISCSI_ISNS_DIR} > /dev/null
+		/bin/tar -xpf ${ISCSI_ISNS_SRCTAR} ||
+			gen_die 'Could not extract open-isns source tarball!'
+		[ -d "${ISCSI_ISNS_DIR}" ] ||
+			gen_die "open-isns directory ${ISCSI_ISNS_DIR} is invalid!"
+
+		print_info 1 "$(getIndent 3)open-isns: >> Patching ..."
+		cd "${ISCSI_ISNS_DIR}" || gen_die "cannot chdir into '${ISCSI_ISNS_DIR}'"
+		apply_patches iscsi-isns ${ISCSI_ISNS_VER}
+
+		print_info 1 "$(getIndent 3)open-isns: >> Configuring..."
+		./configure \
+			--prefix=/usr \
+			--enable-static \
+			--without-slp \
+			>> ${LOGFILE} 2>&1 || \
+			gen_die "failed to configure open-isns"
+
+		print_info 1 "$(getIndent 3)open-isns: >> Compiling..."
+		compile_generic '' utils || gen_die "failed to build open-isns"
+
+		print_info 1 "$(getIndent 3)open-isns: >> Installing to DESTDIR..."
+		compile_generic "DESTDIR=${TEMP}/iscsi-isns install" utils || gen_die "failed to install open-isns"
+		compile_generic "DESTDIR=${TEMP}/iscsi-isns install_hdrs" utils || gen_die "failed to install open-isns"
+		compile_generic "DESTDIR=${TEMP}/iscsi-isns install_lib" utils || gen_die "failed to install open-isns"
+
+		print_info 1 "$(getIndent 3)open-isns: >> Copying to bincache..."
+		cd "${TEMP}/iscsi-isns" || gen_die "cannot chdir into '${TEMP}/iscsi-isns'"
+		/bin/tar -cjf "${ISCSI_ISNS_BINCACHE}" . ||
+			gen_die 'Could not create open-isns binary cache'
+
+		cd "${TEMP}"
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${ISCSI_ISNS_DIR}" > /dev/null
 		return 0
 	fi
 }

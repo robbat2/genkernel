@@ -524,6 +524,7 @@ check_distfiles() {
 		$FUSE_SRCTAR \
 		$GPG_SRCTAR \
 		$ISCSI_SRCTAR \
+		$ISCSI_ISNS_SRCTAR \
 		$LIBAIO_SRCTAR \
 		$LVM_SRCTAR \
 		$MDADM_SRCTAR \
