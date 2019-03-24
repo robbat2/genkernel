@@ -751,37 +751,25 @@ compile_device_mapper() {
 }
 
 compile_fuse() {
-	if [ ! -f "${FUSE_BINCACHE}" ]
-	then
-		[ ! -f "${FUSE_SRCTAR}" ] &&
-			gen_die "Could not find fuse source tarball: ${FUSE_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
-		cd "${TEMP}"
-		rm -rf "${FUSE_DIR}"
-		tar -xpf "${FUSE_SRCTAR}"
-		[ ! -d "${FUSE_DIR}" ] &&
-			gen_die "fuse directory ${FUSE_DIR} invalid"
-		cd "${FUSE_DIR}"
-		apply_patches fuse ${FUSE_VER}
-		print_info 1 "$(getIndent 3)fuse: >> Configuring..."
-		./configure --disable-example >> ${LOGFILE} 2>&1 ||
-			gen_die 'Configuring fuse failed!'
-		print_info 1 "$(getIndent 3)fuse: >> Compiling..."
-		MAKE=${UTILS_MAKE} compile_generic "" ""
+	[ ! -f "${FUSE_SRCTAR}" ] &&
+		gen_die "Could not find fuse source tarball: ${FUSE_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
+	cd "${TEMP}"
+	rm -rf "${FUSE_DIR}" > /dev/null
+	/bin/tar -xpf "${FUSE_SRCTAR}" ||
+		gen_die 'Could not extract fuse source tarball!'
+	[ ! -d "${FUSE_DIR}" ] &&
+		gen_die "fuse directory ${FUSE_DIR} is invalid"
 
-		# Since we're linking statically against libfuse, we don't need to cache the .so
-#		print_info 1 "$(getIndent 3)libfuse: >> Copying to bincache..."
-#		[ -f "${TEMP}/${FUSE_DIR}/lib/.libs/libfuse.so" ] ||
-#			gen_die 'libfuse.so does not exist!'
-#		${UTILS_CROSS_COMPILE}strip "${TEMP}/${FUSE_DIR}/lib/.libs/libfuse.so" ||
-#			gen_die 'Could not strip libfuse.so!'
-#		cd "${TEMP}/${FUSE_DIR}/lib/.libs"
-#		tar -cjf "${FUSE_BINCACHE}" libfuse*so* ||
-#			gen_die 'Could not create fuse bincache!'
+	cd "${FUSE_DIR}"
+	print_info 1 "$(getIndent 3)fuse: >> Patching ..."
+	apply_patches fuse ${FUSE_VER}
 
-		cd "${TEMP}"
-#		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${FUSE_DIR}" > /dev/null
-		return 0
-	fi
+	print_info 1 "$(getIndent 3)fuse: >> Configuring..."
+	./configure --disable-example >> ${LOGFILE} 2>&1 ||
+		gen_die 'Configuring fuse failed!'
+
+	print_info 1 "$(getIndent 3)fuse: >> Compiling..."
+	compile_generic '' utils || gen_die "failed to build fuse"
 }
 
 compile_unionfs_fuse() {
@@ -795,16 +783,27 @@ compile_unionfs_fuse() {
 		[ ! -f "${UNIONFS_FUSE_SRCTAR}" ] &&
 			gen_die "Could not find unionfs-fuse source tarball: ${UNIONFS_FUSE_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
-		rm -rf "${UNIONFS_FUSE_DIR}"
-		tar -xpf "${UNIONFS_FUSE_SRCTAR}"
+		rm -rf "${UNIONFS_FUSE_DIR}" > /dev/null
+		tar -xpf "${UNIONFS_FUSE_SRCTAR}" ||
+			gen_die 'Could not extract unionfs-fuse source tarball!'
 		[ ! -d "${UNIONFS_FUSE_DIR}" ] &&
-			gen_die "unionfs-fuse directory ${UNIONFS_FUSE_DIR} invalid"
+			gen_die "unionfs-fuse directory ${UNIONFS_FUSE_DIR} is invalid"
+
 		cd "${UNIONFS_FUSE_DIR}"
+		print_info 1 "$(getIndent 3)unionfs-fuse: >> Patching ..."
 		apply_patches unionfs-fuse ${UNIONFS_FUSE_VER}
+
+		print_info 1 "$(getIndent 3)unionfs-fuse: >> Preparing ..."
+		FUSE_CFLAGS="-I${TEMP}/${FUSE_DIR}/include -D_FILE_OFFSET_BITS=64" # pkg-config --cflags fuse
+		FUSE_LIBS="-L${TEMP}/${FUSE_DIR}/lib/.libs -lfuse -pthread -ldl" # pkg-config --static --libs fuse
+		sed -i \
+			-e "s|\$(shell pkg-config --cflags fuse)|${FUSE_CFLAGS}|g" \
+			-e "s|\$(shell pkg-config --libs fuse)|-static ${FUSE_LIBS}|g" \
+			src/Makefile || gen_die "Failed to adjust unionfs-fuse Makefile"
+
 		print_info 1 "$(getIndent 3)unionfs-fuse: >> Compiling..."
-		sed -i "/^\(CFLAGS\|CPPFLAGS\)/s:^\\(.*\\)$:\\1 -static -I${TEMP}/${FUSE_DIR}/include -L${TEMP}/${FUSE_DIR}/lib/.libs:" Makefile src/Makefile
-		sed -i "/^LIB = /s:^LIB = \(.*\)$:LIB = -static -L${TEMP}/${FUSE_DIR}/lib/.libs \1 -ldl -lpthread -lrt:" Makefile src/Makefile
-		MAKE=${UTILS_MAKE} compile_generic "" ""
+		compile_generic '' utils || gen_die "failed to build unionfs-fuse"
+
 		print_info 1 "$(getIndent 3)unionfs-fuse: >> Copying to bincache..."
 		[ -f "${TEMP}/${UNIONFS_FUSE_DIR}/src/unionfs" ] ||
 			gen_die 'unionfs binary does not exist!'
@@ -816,7 +815,7 @@ compile_unionfs_fuse() {
 			gen_die 'Could not copy the unionfs binary to the package directory, does the directory exist?'
 
 		cd "${TEMP}"
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${UNIONFS_FUSE_DIR}" > /dev/null
+		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${FUSE_DIR}" "${UNIONFS_FUSE_DIR}" > /dev/null
 		return 0
 	fi
 }
