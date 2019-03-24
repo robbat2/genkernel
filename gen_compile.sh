@@ -569,12 +569,12 @@ compile_libaio() {
 }
 
 compile_lvm() {
+	compile_libaio
+
 	if [[ -f "${LVM_BINCACHE}" && "${LVM_BINCACHE}" -nt "${LIBAIO_BINCACHE}" ]]
 	then
 		print_info 1 "$(getIndent 3)lvm: >> Using cache"
 	else
-		compile_libaio
-
 		[ -f "${LVM_SRCTAR}" ] ||
 			gen_die "Could not find LVM source tarball: ${LVM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
