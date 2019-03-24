@@ -822,8 +822,10 @@ compile_unionfs_fuse() {
 }
 
 compile_iscsi() {
-	if [ ! -f "${ISCSI_BINCACHE}" ]
+	if [ -f "${ISCSI_BINCACHE}" ]
 	then
+		print_info 1 "$(getIndent 3)iSCSI: Using cache"
+	else
 		[ ! -f "${ISCSI_SRCTAR}" ] &&
 			gen_die "Could not find iSCSI source tarball: ${ISCSI_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
 		cd "${TEMP}"
