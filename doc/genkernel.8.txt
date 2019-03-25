@@ -68,7 +68,7 @@ You can specify your options in any order.
 CONFIGURATION OPTIONS
 ~~~~~~~~~~~~~~~~~~~~~
 *--config*=<file>::
-    Genkernel configuration file to use
+    Genkernel configuration file to use.
 
 
 DEBUGGING OPTIONS
@@ -97,18 +97,28 @@ KERNEL CONFIGURATION
 *--*[*no-*]*nconfig*::
     Runs, or does not run "make nconfig" after running "make oldconfig".
 
-*--*[*no-*]*save-config*::
-    Saves, or does not save the kernel configuration to '/etc/kernels'
-    if the kernel is successfully compiled.
-
-*--virtio*::
-    Adds Virtio support to kernel configuration.
-
 *--*[*no-*]*gconfig*::
     Runs, or does not run "make gconfig" after "make oldconfig".
 
 *--*[*no-*]*xconfig*::
     Runs, or does not run "make xconfig" after "make oldconfig".
+
+*--*[*no-*]*save-config*::
+    Saves, or does not save the kernel configuration to '/etc/kernels'
+    if the kernel is successfully compiled.
+
+*--*[*no-*]*hyperv*::
+    Adds, or skip adding Microsoft Hyper-V support to kernel configuration.
+
+*--microcode*[=<all|amd|intel>]::
+    Adds early microcode loading support for all, only AMD or Intel processors
+    to kernel configuration.
+
+*--no-microcode*::
+    Do not add early microcode loading support to kernel configuration.
+
+*--*[*no-*]*virtio*::
+    Adds, or skip adding VirtIO support to kernel configuration.
 
 
 KERNEL COMPILATION
@@ -202,10 +212,10 @@ LOW-LEVEL COMPILATION OPTIONS
 *--kernel-target*=<t>::
     Override default make target (bzImage), note that values
     like *--kernel-target=* are also valid (useful for Xen
-    based kernel sources)
+    based kernel sources).
 
 *--kernel-binary*=<path>::
-    Override default kernel binary path (arch/foo/boot/bar)
+    Override default kernel binary path (arch/foo/boot/bar).
 
 *--kernel-outputdir*=<path>::
     Save output files outside the source tree. This should be used rather than
@@ -231,6 +241,9 @@ LOW-LEVEL COMPILATION OPTIONS
 *--utils-arch*=<arch>::
     Force to arch for utils only instead of autodetect.
 
+*--makeopts*=<makeopts>::
+    GNU Make options such as -j2, etc.
+
 *--*[*no-*]*mountboot*::
     Mount, or not, BOOTDIR automatically if mountable.
 
@@ -240,12 +253,10 @@ LOW-LEVEL COMPILATION OPTIONS
 *--modprobedir*=<dir>::
     Set the location of the modprobe.d-directory, default is '/etc/modprobe.d'.
 
-*--makeopts*=<makeopts>::
-    GNU Make options such as -j2, etc.
-
 *--*[*no-*]*nice*[=<niceness>]::
     Runs the kernel make at the default niceness (reduction in priority) of
     10, or in the case of --no-nice, runs the kernel make at normal priority.
+
 
 INITIALIZATION
 ~~~~~~~~~~~~~~
@@ -279,14 +290,16 @@ INITIALIZATION
     By default the ramdisk will be built *without* an mdadm.conf and
     will auto-detect arrays during boot-up.
 
+*--*[*no-*]*microcode-initramfs*::
+    Prepends, or do not prepend ucode(s) to the initramfs.
+    But only when kernel configuration does support early microcode loading.
+    See *--microcode* option to auto-update kernel configuration.
+
 *--*[*no-*]*dmraid*::
     Includes or excludes DMRAID support.
 
 *--*[*no-*]*nfs*::
     Includes or excludes NFS support.
-
-*--*[*no-*]*microcode*::
-    Includes or excludes early microcode support.
 
 *--*[*no-*]*e2fsprogs*::
     Includes or excludes e2fsprogs.
@@ -298,19 +311,16 @@ INITIALIZATION
     Includes or excludes Btrfs support.
 
 *--*[*no-*]*multipath*::
-    Includes or excludes Multipath support
+    Includes or excludes Multipath support.
 
 *--*[*no-*]*iscsi*::
-    Includes or excludes iSCSI support
-
-*--*[*no-*]*hyperv*::
-    Includes or excludes Microsoft Hyper-V support
+    Includes or excludes iSCSI support.
 
 *--*[*no-*]*ssh*::
     Includes or excludes SSH (dropbear) support for remote LUKS keys.
 
-*--bootloader*=*grub*::
-    Add new kernel to GRUB configuration.
+*--bootloader*=<grub|grub2>::
+    Add new kernel to GRUB or GRUB2 configuration.
 
 *--linuxrc*=<file>::
     Use <file> for the linuxrc instead of the genkernel linuxrc.
@@ -338,10 +348,10 @@ INITIALIZATION
     Includes or excludes busybox in the initrd or initramfs.
 
 *--*[*no-*]*unionfs*::
-    Includes or excludes support for unionfs
+    Includes or excludes support for unionfs.
 
 *--*[*no-*]*netboot*::
-    Creates or does not create a self-contained env in the initramfs
+    Creates or does not create a self-contained env in the initramfs.
 
 *--real-root*=<foo>::
     Specify a default for *real_root*= kernel option.
@@ -356,6 +366,9 @@ INTERNALS
 *--cachedir*=<dir>::
     Override the default cache location.
 
+*--*[*no-*]*clear-cachedir*::
+    Clears or skips clearing all files in cache location on genkernel start.
+
 *--tempdir*=<dir>::
     Sets genkernel's temporary working directory to <dir>.
 
@@ -367,14 +380,14 @@ OUTPUT SETTINGS
 ~~~~~~~~~~~~~~~
 *--kernname*=<...>::
     Tag the kernel and initrd with a name, if not defined this
-    option defaults to genkernel
+    option defaults to genkernel.
 
 *--minkernpackage*=<tbz2>::
     File to output a .tar.bz2'd kernel and initrd: no modules outside
     of the initrd will be included...
 
 *--modulespackage*=<tbz2>::
-    File to output a .tar.bz2'd modules after the callbacks have run
+    File to output a .tar.bz2'd modules after the callbacks have run.
 
 *--kerncache*=<tbz2>::
     File to output a .tar.bz2'd kernel, contents of '/lib/modules/'
@@ -388,14 +401,7 @@ OUTPUT SETTINGS
 
 *--initramfs-overlay*=<dir>::
     Directory structure to include in the initramfs, only available
-    on >=2.6 kernels
-
-*--strip*=<all|kernel|modules|none>::
-    Strip debug symbols from none, all, installed kernel (obsolete) or
-    modules (default).
-
-*--no-strip*::
-    Alias for *--strip=none*.
+    on >=2.6 kernels.
 
 *--*[*no-*]*firmware*::
     Enable or disables copying of firmware into initramfs.
@@ -427,6 +433,13 @@ OUTPUT SETTINGS
     Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop).
     "Best" causes selection of the best available algorithm that is selected
     in your kernel configuration.
+
+*--strip*=<all|kernel|modules|none>::
+    Strip debug symbols from none, all, installed kernel (obsolete) or
+    modules (default).
+
+*--no-strip*::
+    Alias for *--strip=none*.
 
 
 RAMDISK/INITRAMFS OPTIONS
@@ -466,7 +479,7 @@ recognized by the kernel itself.
 
 *root_trim*=(yes|no)::
     Enables TRIM support for a Luks-based root device.  Only useful
-    with SSD setups.  Have a look at 'http://en.wikipedia.org/wiki/TRIM'
+    with SSD setups.  Have a look at 'https://en.wikipedia.org/wiki/TRIM'
     for more information.
 
 *swap_key*=<...>::
@@ -510,17 +523,17 @@ recognized by the kernel itself.
 *nfsroot*=<...>::
     If present,  the initrd will try to mount a livecd from that
     location. Otherwise the location will be deduced from the DCHP
-    request (option root-path)
+    request (option root-path).
 
 *dolvm*::
-    Activate LVM volumes on bootup
+    Activate LVM volumes on bootup.
 
 *lvmraid*=<...>::
     Specify RAID devices to set up before the activation of LVM volumes.
     Implies option *dolvm*.
 
 *domdadm*::
-    Scan for RAID arrays on bootup
+    Scan for RAID arrays on bootup.
 
 *dozfs*[=cache,force]::
     Scan for bootable ZFS pools on bootup. Optionally use cachefile or force import if
@@ -530,7 +543,7 @@ recognized by the kernel itself.
     Scan for attached Btrfs devices on bootup.
 
 *domultipath*::
-    Activate Multipath on bootup
+    Activate Multipath on bootup.
 
 *doscsi*::
     Activate SCSI devices on bootup, necessary when SCSI support is
@@ -614,7 +627,7 @@ recognized by the kernel itself.
 
 *aufs.modules*=<...>::
     Use an alternate location for filesystem overlays to be added on top of
-    the livecd and below the writable tmpfs.  Default is /modules/
+    the livecd and below the writable tmpfs.  Default is /modules/.
 
 *overlayfs*::
     Enables support for Overlayfs (if available in the kernel).
