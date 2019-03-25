@@ -446,6 +446,18 @@ parse_cmdline() {
 		--ssh|--no-ssh)
 			CMD_SSH=`parse_optbool "$*"`
 			print_info 2 "CMD_SSH: ${CMD_SSH}"
+			if isTrue "${CMD_SSH}" && [ ! -e /usr/sbin/dropbear ]
+			then
+				echo 'Error: --ssh requires net-misc/dropbear' \
+					'to be installed on the host system.'
+				exit 1
+			fi
+			if isTrue "${CMD_SSH}" && [ ! -e /etc/dropbear/authorized_keys ]
+			then
+				echo 'Error: --ssh requires that dropbear is configured' \
+					'but /etc/dropbear/authorized_keys does not exist!'
+				exit 1
+			fi
 			;;
 		--loglevel=*)
 			CMD_LOGLEVEL="${*#*=}"

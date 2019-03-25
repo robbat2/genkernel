@@ -693,15 +693,30 @@ append_dropbear(){
 	then
 		if [ -e /usr/bin/dropbearconvert -a /etc/ssh/ssh_host_rsa_key ]
 		then
-			/usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear/dropbear_rsa_host_key
+			if /usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear/dropbear_rsa_host_key
+			then
+				print_info 1 "$(getIndent 2)SSH: >> /etc/ssh/ssh_host_rsa_key converted into /etc/dropbear/dropbear_rsa_host_key"
+			else
+				gen_die "RSA host key conversion using dropbearconvert failed"
+			fi
 		else
-			/usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key -s 4096 > /dev/null
+			if /usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key -s 4096 > /dev/null
+			then
+				print_info 1 "$(getIndent 2)SSH: >> New dropbear RSA host key /etc/dropbear/dropbear_rsa_host_key created"
+			else
+				gen_die "RSA host key generation using dropbearkey failed"
+			fi
 		fi
 	fi
-	
+
 	if [ ! -e /etc/dropbear/dropbear_dss_host_key ]
 	then
-		/usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null
+		if /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null
+		then
+			print_info 1 "$(getIndent 2)SSH: >> New dropbear DSS host key /etc/dropbear/dropbear_dss_host_key created"
+		else
+			gen_die "DSS host key generation using dropbearkey failed"
+		fi
 	fi
 
 	cd "${TEMP}" \
@@ -712,20 +727,20 @@ append_dropbear(){
 	mkdir -p ${TEMP}/initramfs-dropbear-temp/bin
 	mkdir -p ${TEMP}/initramfs-dropbear-temp/root/.ssh
 
-	cp -L ${GK_SHARE}/defaults/login-remote.sh ${TEMP}/initramfs-dropbear-temp/bin/
-	cp -L /etc/dropbear/{dropbear_rsa_host_key,dropbear_dss_host_key} ${TEMP}/initramfs-dropbear-temp/etc/dropbear/
-	cp -L /etc/dropbear/authorized_keys ${TEMP}/initramfs-dropbear-temp/root/.ssh
-	cp -L /etc/localtime ${TEMP}/initramfs-dropbear-temp/etc/
+	cp -L ${GK_SHARE}/defaults/login-remote.sh ${TEMP}/initramfs-dropbear-temp/bin/ || gen_die "failed to copy defaults/login-remote.sh"
+	cp -L /etc/dropbear/{dropbear_rsa_host_key,dropbear_dss_host_key} ${TEMP}/initramfs-dropbear-temp/etc/dropbear/ || gen_die "failed to copy dropbear host key(s)"
+	cp -L /etc/dropbear/authorized_keys ${TEMP}/initramfs-dropbear-temp/root/.ssh || gen_die "failed to copy /etc/dropbear/authorized_keys. Did you forget to configure dropbear?"
+	cp -L /etc/localtime ${TEMP}/initramfs-dropbear-temp/etc/ || gen_die "failed to copy /etc/localtime. Please set system's timezone!"
 	if [ ${ARCH} = "x86_64" ]
 	then
 		mkdir -p ${TEMP}/initramfs-dropbear-temp/lib64
-		cp -L /lib64/libnss_files.so.2 ${TEMP}/initramfs-dropbear-temp/lib64/
+		cp -L /lib64/libnss_files.so.2 ${TEMP}/initramfs-dropbear-temp/lib64/ || gen_die "failed to copy libnss_files.so.2"
 	else
 		mkdir -p ${TEMP}/initramfs-dropbear-temp/lib
-		cp -L /lib/libnss_files.so.2 ${TEMP}/initramfs-dropbear-temp/lib/
+		cp -L /lib/libnss_files.so.2 ${TEMP}/initramfs-dropbear-temp/lib/ || gen_die "failed to libnss_files.so.2"
 	fi
-	
-	sed "s/compat/files/g" /etc/nsswitch.conf > ${TEMP}/initramfs-dropbear-temp/etc/nsswitch.conf
+
+	sed "s/compat/files/g" /etc/nsswitch.conf > ${TEMP}/initramfs-dropbear-temp/etc/nsswitch.conf || gen_die "failed to modify /etc/nsswitch.conf"
 	echo "root:x:0:0:root:/root:/bin/login-remote.sh" > ${TEMP}/initramfs-dropbear-temp/etc/passwd
 	echo "/bin/login-remote.sh" > ${TEMP}/initramfs-dropbear-temp/etc/shells
 	echo "root:!:0:0:99999:7:::" > ${TEMP}/initramfs-dropbear-temp/etc/shadow
@@ -739,10 +754,10 @@ append_dropbear(){
 	chmod 0644 ${TEMP}/initramfs-dropbear-temp/etc/group
 	mkfifo ${TEMP}/initramfs-dropbear-temp/etc/dropbear/fifo_root
 	mkfifo ${TEMP}/initramfs-dropbear-temp/etc/dropbear/fifo_swap
-	
+
 	copy_binaries "${TEMP}"/initramfs-dropbear-temp/ /usr/sbin/dropbear \
 		/bin/login /usr/bin/passwd
-	
+
 	log_future_cpio_content
 	cd "${TEMP}"/initramfs-dropbear-temp \
 		|| gen_die "cd '${TEMP}/initramfs-dropbear-temp' failed"
