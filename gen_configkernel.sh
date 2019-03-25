@@ -38,39 +38,55 @@ config_kernel() {
 	determine_config_file
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'
 
+	print_info 1 "kernel: >> Initializing..."
+
+	if isTrue "${CLEAN}" && isTrue "${MRPROPER}"
+	then
+		print_info 1 "$(getIndent 1)>> Skipping 'make clean' -- will run 'make mrproper' later"
+	elif isTrue "${CLEAN}" && ! isTrue "${MRPROPER}"
+	then
+		print_info 1 "$(getIndent 1)>> Cleaning..."
+		compile_generic clean kernel
+	else
+		print_info 1 "$(getIndent 1)>> --clean is disabled; not running 'make clean'."
+	fi
+
 	if isTrue "${MRPROPER}"
 	then
 		# Backup current kernel .config
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
 		then
 			# Current .config is different then one we are going to use
-			if ! diff -q "${KERNEL_OUTPUTDIR}"/.config ${KERNEL_CONFIG}
+			if ! diff -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" > /dev/null
 			then
 				NOW=`date +--%Y-%m-%d--%H-%M-%S`
 				cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
 					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
-				print_info 1 "$(getIndent 1)Previous config backed up to .config${NOW}.bak"
+				print_info 1 "$(getIndent 1)>> Previous config backed up to .config${NOW}.bak"
 			fi
 		fi
-		print_info 1 "kernel: Using config from ${KERNEL_CONFIG}"
+
 		print_info 1 "$(getIndent 1)>> Running mrproper..."
 		compile_generic mrproper kernel
 	else
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
 		then
-			print_info 1 "kernel: Using config from ${KERNEL_OUTPUTDIR}/.config"
+			print_info 1 "$(getIndent 1)>> Using config from ${KERNEL_OUTPUTDIR}/.config"
 		else
-			print_info 1 "kernel: Using config from ${KERNEL_CONFIG}"
+			print_info 1 "$(getIndent 1)>> Using config from ${KERNEL_CONFIG}"
 		fi
-		print_info 1 "kernel: --mrproper is disabled; not running 'make mrproper'."
+		print_info 1 "$(getIndent 1)>> --mrproper is disabled; not running 'make mrproper'."
 	fi
 
 	# If we're not cleaning a la mrproper, then we don't want to try to overwrite the configs
 	# or we might remove configurations someone is trying to test.
 	if isTrue "${MRPROPER}" || [ ! -f "${KERNEL_OUTPUTDIR}/.config" ]
 	then
+		print_info 1 "$(getIndent 1)>> Using config from ${KERNEL_CONFIG}"
+
 		local message='Could not copy configuration file!'
-		if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+		if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]
+		then
 			# Support --kernel-config=/proc/config.gz, mainly
 			zcat "${KERNEL_CONFIG}" > "${KERNEL_OUTPUTDIR}/.config" || gen_die "${message}"
 		else
@@ -83,14 +99,7 @@ config_kernel() {
 		print_info 1 "$(getIndent 1)>> Running oldconfig..."
 		yes '' 2>/dev/null | compile_generic oldconfig kernel 2>/dev/null
 	else
-		print_info 1 "$(getIndent 1)--oldconfig is disabled; not running 'make oldconfig'."
-	fi
-	if isTrue "${CLEAN}"
-	then
-		print_info 1 "$(getIndent 1)>> Cleaning..."
-		compile_generic clean kernel
-	else
-		print_info 1 "$(getIndent 1)--clean is disabled; not running 'make clean'."
+		print_info 1 "$(getIndent 1)>> --oldconfig is disabled; not running 'make oldconfig'."
 	fi
 
 	local add_config
