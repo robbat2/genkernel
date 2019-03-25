@@ -335,8 +335,7 @@ INITIALIZATION
     Includes or excludes disk label and uuid support in your initrd.
 
 *--*[*no-*]*luks*::
-    Includes or excludes Luks support from static binaries if they exist on
-    the system.
+    Includes or excludes LUKS support.
 
 *--*[*no-*]*gpg*::
     Includes or excludes support for GnuPG 1.x, the portable standalone branch
@@ -461,11 +460,11 @@ recognized by the kernel itself.
     Does the same as *root*=, which should be used in its place.
 
 *crypt_root*=<...>::
-    This specifies the device encrypted by Luks, which contains the
+    This specifies the device encrypted by LUKS, which contains the
     root filesystem to mount.
 
 *crypt_swap*=<...>::
-    This specifies the swap device encrypted by Luks.
+    This specifies the swap device encrypted by LUKS.
 
 *root_key*=<...>::
     In case your root is encrypted with a key, you can use a device
@@ -478,7 +477,7 @@ recognized by the kernel itself.
     look for the device in every boot.
 
 *root_trim*=(yes|no)::
-    Enables TRIM support for a Luks-based root device.  Only useful
+    Enables TRIM support for a LUKS-based root device.  Only useful
     with SSD setups.  Have a look at 'https://en.wikipedia.org/wiki/TRIM'
     for more information.
 

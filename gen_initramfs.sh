@@ -649,7 +649,7 @@ append_overlay(){
 }
 
 append_luks() {
-	local _luks_error_format="LUKS support cannot be included: %s. Please emerge sys-fs/cryptsetup[static]."
+	local _luks_error_format="LUKS support cannot be included: %s. Please emerge sys-fs/cryptsetup."
 	local _luks_source=/sbin/cryptsetup
 	local _luks_dest=/sbin/cryptsetup
 
