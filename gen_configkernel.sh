@@ -24,7 +24,9 @@ determine_config_file() {
 	then
 		gen_die 'Error: No kernel .config specified, or file not found!'
 	fi
-    KERNEL_CONFIG="$(readlink -f "${KERNEL_CONFIG}")"
+
+	KERNEL_CONFIG="$(readlink -f "${KERNEL_CONFIG}")"
+
 	# Validate the symlink result if any
 	if [ ! -f "${KERNEL_CONFIG}" ]
 	then
