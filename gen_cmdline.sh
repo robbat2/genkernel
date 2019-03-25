@@ -35,7 +35,13 @@ longusage() {
   echo "	--no-xconfig		Don't run xconfig after oldconfig"
   echo "	--save-config		Save the configuration to /etc/kernels"
   echo "	--no-save-config	Don't save the configuration to /etc/kernels"
-  echo "	--virtio		Include VirtIO kernel code"
+  echo "	--hyperv		Enable Microsoft Hyper-V kernel options in kernel"
+  echo "	--no-hyperv		Don't enable Microsoft Hyper-V kernel options in kernel"
+  echo "	--microcode[=<type>]	Enable early microcode support in kernel configuration,"
+  echo "				'all' for all, 'amd' for AMD and 'intel' for Intel CPU types."
+  echo "	--no-microcode		Don't enable early microcode support in kernel configuration"
+  echo "	--virtio		Enable VirtIO kernel options in kernel"
+  echo "	--no-virtio		Don't enable VirtIO kernel options in kernel"
   echo "  Kernel Compile settings"
   echo "	--oldconfig		Implies --no-clean and runs a 'make oldconfig'"
   echo "	--clean			Run make clean before compilation"
@@ -101,9 +107,9 @@ longusage() {
   echo "	--mdadm			Include MDADM/MDMON support"
   echo "	--no-mdadm		Exclude MDADM/MDMON support"
   echo "	--mdadm-config=<file>	Use file as mdadm.conf in initramfs"
-  echo "	--microcode[=<type>]	Include early microcode support, for 'all'/'amd'/'intel' CPU types"
-  echo "	--no-microcode		Exclude early microcode support"
-  echo "	--microcode-initramfs	Include early microcode in initramfs"
+  echo "	--microcode-initramfs	Prepend early microcode to initramfs"
+  echo "	--no-microcode-initramfs"
+  echo "				Don't prepend early microcode to initramfs"
   echo "	--nfs			Include NFS support"
   echo "	--no-nfs		Exclude NFS support"
   echo "	--dmraid		Include DMRAID support"
@@ -118,8 +124,6 @@ longusage() {
   echo "	--no-multipath		Exclude Multipath support"
   echo "	--iscsi			Include iSCSI support"
   echo "	--no-iscsi		Exclude iSCSI support"
-  echo "	--hyperv		Include Microsoft Hyper-V support"
-  echo "	--no-hyperv		Exclude Microsoft Hyper-V support"
   echo "	--ssh			Include SSH (dropbear) support"
   echo "	--no-ssh		Exclude SSH (dropbear) support"
   echo "	--bootloader=(grub|grub2)"
@@ -395,7 +399,7 @@ parse_cmdline() {
 			CMD_BTRFS=`parse_optbool "$*"`
 			print_info 2 "CMD_BTRFS: ${CMD_BTRFS}"
 			;;
-		--virtio)
+		--virtio|--no-virtio)
 			CMD_VIRTIO=`parse_optbool "$*"`
 			print_info 2 "CMD_VIRTIO: ${CMD_VIRTIO}"
 			;;
