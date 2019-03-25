@@ -72,7 +72,8 @@ verify-doc: doc/genkernel.8.txt
 		tr -s ' ' '\n' | \
 		sed -r \
 			-e 's,[[:space:]]*--(no-)?,,g' \
-			-e '/bootloader/s,=grub,,g' | \
+			-e '/bootloader/s,=\(grub\|grub2\),,g' \
+			-e '/microcode/s,\[\],,g' | \
 		while read opt ; do \
 			regex="^*--(...no-...)?$$opt" ; \
 			if ! egrep -e "$$regex" $< -sq ; then \
