@@ -32,5 +32,8 @@ MODULES_FS="ext2 ext3 ext4 btrfs reiserfs jfs nfs xfs zfs f2fs fuse loop squashf
 # Crypto
 MODULES_CRYPTO="sha256_generic cbc crc32c_generic crc32c-intel crc32_generic aes_generic xts"
 
+# Hyper-V
+MODULES_HYPERV="hv_utils hv_vmbus hv_balloon hyperv_keyboard hv_netvsc hid_hyperv hv_utils hyperv_fb hv_storvsc"
+
 # Virtio
 MODULES_VIRTIO="virtio_scsi virtio_blk virtio_console virtio-rng virtio virtio_balloon virtio_input virtio_ring virtio_pci virtio_mmio virtio_crypto virtio_net"

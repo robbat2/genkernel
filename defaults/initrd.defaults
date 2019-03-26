@@ -97,8 +97,8 @@ DEFAULT_NFSOPTIONS="ro,nolock"
 # - modules
 HWOPTS_BLK='nvme pata sata scsi usb firewire waitscan'
 HWOPTS_OBSOLETE='pcmcia ataraid' # Obsolete stuff that might be useful on old hardware, do$X only.
-HWOPTS="keymap cache modules virtio ${HWOPTS_BLK} lvm dmraid multipath mdadm zfs fs net iscsi crypto"
+HWOPTS="keymap cache modules virtio hyperv ${HWOPTS_BLK} lvm dmraid multipath mdadm zfs fs net iscsi crypto"
 
 # This is the set of default HWOPTS, in the order that they are loaded.
 # This is whitespace aligned with HWOPTS above.
-MY_HWOPTS="          modules virtio ${HWOPTS_BLK} lvm dmraid           mdadm     fs net       crypto"
+MY_HWOPTS="          modules virtio hyperv ${HWOPTS_BLK} lvm dmraid           mdadm     fs net       crypto"
