@@ -529,17 +529,24 @@ config_kernel() {
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_DEV_VIRTIO" "${newvirtio_setting}"
 	fi
 
-	# Microcode setting, intended for early microcode loading
-	# needs to be compiled in.
-	kconfig_microcode_intel=(CONFIG_MICROCODE_INTEL CONFIG_MICROCODE_INTEL_EARLY)
-	kconfig_microcode_amd=(CONFIG_MICROCODE_AMD CONFIG_MICROCODE_AMD_EARLY)
+	# Microcode setting, intended for early microcode loading, if --microcode
 	if [[ -n "${MICROCODE}" ]]
 	then
-		kconfigs=(CONFIG_MICROCODE CONFIG_MICROCODE_OLD_INTERFACE CONFIG_MICROCODE_EARLY)
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for early microcode loading support are set..."
+		kconfig_microcode_intel=(CONFIG_MICROCODE_INTEL CONFIG_MICROCODE_INTEL_EARLY)
+
+		kconfig_microcode_amd=(CONFIG_MICROCODE_AMD)
+		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfig_microcode_amd+=(CONFIG_MICROCODE_AMD_EARLY)
+
+		kconfigs=(CONFIG_MICROCODE CONFIG_MICROCODE_OLD_INTERFACE)
+		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs+=(CONFIG_MICROCODE_EARLY)
+
 		[[ "$MICROCODE" == all ]] && kconfigs+=( ${kconfig_microcode_amd[@]} ${kconfig_microcode_intel[@]} )
 		[[ "$MICROCODE" == amd ]] && kconfigs+=( ${kconfig_microcode_amd[@]} )
 		[[ "$MICROCODE" == intel ]] && kconfigs+=( ${kconfig_microcode_intel[@]} )
-		for k in "${kconfigs[@]}" ; do
+
+		for k in "${kconfigs[@]}"
+		do
 			cfg=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
 			case "$cfg" in
 				y) ;; # Do nothing
