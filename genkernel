@@ -310,7 +310,7 @@ then
 	# Compile initramfs
 	create_initramfs
 else
-	print_info 1 'initrd: Not building since only the kernel was requested...'
+	print_info 1 'initramfs: Not building since only the kernel was requested...'
 fi
 
 if isTrue "${INTEGRATED_INITRAMFS}"
