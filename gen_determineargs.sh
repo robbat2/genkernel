@@ -99,58 +99,58 @@ determine_real_args() {
 
 	set_config_with_override BOOL   SPLASH               CMD_SPLASH               "no"
 	set_config_with_override BOOL   CLEAR_CACHEDIR       CMD_CLEAR_CACHEDIR       "no"
-	set_config_with_override BOOL   POSTCLEAR            CMD_POSTCLEAR
-	set_config_with_override BOOL   MRPROPER             CMD_MRPROPER
-	set_config_with_override BOOL   MENUCONFIG           CMD_MENUCONFIG
-	set_config_with_override BOOL   GCONFIG              CMD_GCONFIG
-	set_config_with_override BOOL   NCONFIG              CMD_NCONFIG
-	set_config_with_override BOOL   XCONFIG              CMD_XCONFIG
-	set_config_with_override BOOL   CLEAN                CMD_CLEAN
+	set_config_with_override BOOL   POSTCLEAR            CMD_POSTCLEAR            "no"
+	set_config_with_override BOOL   MRPROPER             CMD_MRPROPER             "yes"
+	set_config_with_override BOOL   MENUCONFIG           CMD_MENUCONFIG           "no"
+	set_config_with_override BOOL   GCONFIG              CMD_GCONFIG              "no"
+	set_config_with_override BOOL   NCONFIG              CMD_NCONFIG              "no"
+	set_config_with_override BOOL   XCONFIG              CMD_XCONFIG              "no"
+	set_config_with_override BOOL   CLEAN                CMD_CLEAN                "yes"
 
 	set_config_with_override STRING MINKERNPACKAGE       CMD_MINKERNPACKAGE
 	set_config_with_override STRING MODULESPACKAGE       CMD_MODULESPACKAGE
 	set_config_with_override STRING KERNCACHE            CMD_KERNCACHE
-	set_config_with_override BOOL   RAMDISKMODULES       CMD_RAMDISKMODULES        "yes"
-	set_config_with_override BOOL   ALLRAMDISKMODULES    CMD_ALLRAMDISKMODULES
+	set_config_with_override BOOL   RAMDISKMODULES       CMD_RAMDISKMODULES       "yes"
+	set_config_with_override BOOL   ALLRAMDISKMODULES    CMD_ALLRAMDISKMODULES    "no"
 	set_config_with_override STRING INITRAMFS_OVERLAY    CMD_INITRAMFS_OVERLAY
-	set_config_with_override BOOL   MOUNTBOOT            CMD_MOUNTBOOT
-	set_config_with_override BOOL   BUILD_STATIC         CMD_STATIC
-	set_config_with_override BOOL   SAVE_CONFIG          CMD_SAVE_CONFIG
-	set_config_with_override BOOL   SYMLINK              CMD_SYMLINK
+	set_config_with_override BOOL   MOUNTBOOT            CMD_MOUNTBOOT            "yes"
+	set_config_with_override BOOL   BUILD_STATIC         CMD_STATIC               "no"
+	set_config_with_override BOOL   SAVE_CONFIG          CMD_SAVE_CONFIG          "yes"
+	set_config_with_override BOOL   SYMLINK              CMD_SYMLINK              "no"
 	set_config_with_override STRING INSTALL_MOD_PATH     CMD_INSTALL_MOD_PATH
-	set_config_with_override BOOL   OLDCONFIG            CMD_OLDCONFIG
+	set_config_with_override BOOL   OLDCONFIG            CMD_OLDCONFIG            "yes"
 	set_config_with_override BOOL   SSH                  CMD_SSH                  "no"
-	set_config_with_override BOOL   LVM                  CMD_LVM
-	set_config_with_override BOOL   DMRAID               CMD_DMRAID
-	set_config_with_override BOOL   ISCSI                CMD_ISCSI
-	set_config_with_override BOOL   HYPERV               CMD_HYPERV
+	set_config_with_override BOOL   LVM                  CMD_LVM                  "no"
+	set_config_with_override BOOL   DMRAID               CMD_DMRAID               "no"
+	set_config_with_override BOOL   ISCSI                CMD_ISCSI                "no"
+	set_config_with_override BOOL   HYPERV               CMD_HYPERV               "no"
 	set_config_with_override STRING BOOTLOADER           CMD_BOOTLOADER           "no"
 	set_config_with_override BOOL   BUSYBOX              CMD_BUSYBOX              "yes"
 	set_config_with_override BOOL   NFS                  CMD_NFS                  "yes"
 	set_config_with_override STRING MICROCODE            CMD_MICROCODE            "all"
 	set_config_with_override BOOL   MICROCODE_INITRAMFS  CMD_MICROCODE_INITRAMFS  "yes"
-	set_config_with_override BOOL   UNIONFS              CMD_UNIONFS
-	set_config_with_override BOOL   NETBOOT              CMD_NETBOOT
+	set_config_with_override BOOL   UNIONFS              CMD_UNIONFS              "no"
+	set_config_with_override BOOL   NETBOOT              CMD_NETBOOT              "no"
 	set_config_with_override STRING REAL_ROOT            CMD_REAL_ROOT
-	set_config_with_override BOOL   DISKLABEL            CMD_DISKLABEL
-	set_config_with_override BOOL   LUKS                 CMD_LUKS
-	set_config_with_override BOOL   GPG                  CMD_GPG
-	set_config_with_override BOOL   MDADM                CMD_MDADM
+	set_config_with_override BOOL   DISKLABEL            CMD_DISKLABEL            "yes"
+	set_config_with_override BOOL   LUKS                 CMD_LUKS                 "no"
+	set_config_with_override BOOL   GPG                  CMD_GPG                  "no"
+	set_config_with_override BOOL   MDADM                CMD_MDADM                "no"
 	set_config_with_override STRING MDADM_CONFIG         CMD_MDADM_CONFIG
 	set_config_with_override BOOL   E2FSPROGS            CMD_E2FSPROGS            "no"
 	set_config_with_override BOOL   ZFS                  CMD_ZFS                  "$(rootfs_type_is zfs)"
 	set_config_with_override BOOL   BTRFS                CMD_BTRFS                "$(rootfs_type_is btrfs)"
-	set_config_with_override BOOL   VIRTIO               CMD_VIRTIO				  "no"
-	set_config_with_override BOOL   MULTIPATH            CMD_MULTIPATH
-	set_config_with_override BOOL   FIRMWARE             CMD_FIRMWARE
+	set_config_with_override BOOL   VIRTIO               CMD_VIRTIO               "no"
+	set_config_with_override BOOL   MULTIPATH            CMD_MULTIPATH            "no"
+	set_config_with_override BOOL   FIRMWARE             CMD_FIRMWARE             "no"
 	set_config_with_override STRING FIRMWARE_DIR         CMD_FIRMWARE_DIR         "/lib/firmware"
 	set_config_with_override STRING FIRMWARE_FILES       CMD_FIRMWARE_FILES
 	set_config_with_override BOOL   FIRMWARE_INSTALL     CMD_FIRMWARE_INSTALL     "no"
-	set_config_with_override BOOL   INTEGRATED_INITRAMFS CMD_INTEGRATED_INITRAMFS
-	set_config_with_override BOOL   WRAP_INITRD          CMD_WRAP_INITRD
-	set_config_with_override BOOL   GENZIMAGE            CMD_GENZIMAGE
+	set_config_with_override BOOL   INTEGRATED_INITRAMFS CMD_INTEGRATED_INITRAMFS "no"
+	set_config_with_override BOOL   WRAP_INITRD          CMD_WRAP_INITRD          "no"
+	set_config_with_override BOOL   GENZIMAGE            CMD_GENZIMAGE            "no"
 	set_config_with_override BOOL   KEYMAP               CMD_KEYMAP               "yes"
-	set_config_with_override BOOL   DOKEYMAPAUTO         CMD_DOKEYMAPAUTO
+	set_config_with_override BOOL   DOKEYMAPAUTO         CMD_DOKEYMAPAUTO         "no"
 	set_config_with_override STRING BUSYBOX_CONFIG       CMD_BUSYBOX_CONFIG
 	set_config_with_override STRING STRIP_TYPE           CMD_STRIP_TYPE           "modules"
 	set_config_with_override BOOL   INSTALL              CMD_INSTALL              "yes"
