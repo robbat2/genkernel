@@ -570,7 +570,24 @@ function kconfig_set_opt() {
 	kconfig="$1"
 	optname="$2"
 	optval="$3"
-	sed -i "${kconfig}" \
-		-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
-	|| gen_die "Failed to set ${optname}=${optval} in $kconfig"
+
+	curropt=$(grep -E "^#? ?${optname}[ =].*$" "${kconfig}")
+	if [[ -z "${curropt}" ]]
+	then
+		print_info 2 "$(getIndent 2) - Adding option '${optname}' with value '${optval}' to '${kconfig}'..."
+		echo "${optname}=${optval}" >> "${kconfig}" ||
+			gen_die "Failed to add '${optname}=${optval}' to '$kconfig'"
+
+		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
+	elif [[ "${curropt}" != "*#*" && "${curropt#*=}" == "${optval}" ]]
+	then
+		print_info 2 "$(getIndent 2) - Option '${optname}=${optval}' already exists in '${kconfig}'; Skipping..."
+	else
+		print_info 2 "$(getIndent 2) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
+		sed -i "${kconfig}" \
+			-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" ||
+				gen_die "Failed to set '${optname}=${optval}' in '$kconfig'"
+
+		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
+	fi
 }
