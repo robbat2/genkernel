@@ -63,6 +63,9 @@ get_KV() {
 			KV=${VER}.${PAT}.${SUB}${EXV}${LCV}
 		fi
 	fi
+
+	KV_MAJOR=$(echo $KV | cut -f1 -d.)
+	KV_MINOR=$(echo $KV | cut -f2 -d.)
 }
 
 determine_real_args() {
