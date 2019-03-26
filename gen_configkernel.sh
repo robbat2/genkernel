@@ -206,9 +206,10 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FILE_LOCKING" "y"
 	fi
 
-	# Multipath
+	# Make sure multipath modules are enabled in the kernel, if --multipath
 	if isTrue "${CMD_MULTIPATH}"
 	then
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for multipath support are set..."
 		cfg_CONFIG_DM_MULTIPATH=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH")
 		case "$cfg_CONFIG_DM_MULTIPATH" in
 			y|m) ;; # Do nothing
@@ -219,9 +220,10 @@ config_kernel() {
 			y|m) ;; # Do nothing
 			*) cfg_CONFIG_DM_MULTIPATH_RDAC=${newcfg_setting}
 		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "${cfg_CONFIG_DM_MULTIPATH}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH_RDAC" "${cfg_CONFIG_DM_MULTIPATH_RDAC}"
 	fi
 
 	# Make sure dmraid modules are on if --dmraid
