@@ -405,39 +405,128 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_CON_DECOR" "y"
 	fi
 
-	# VirtIO
+	# Make sure VirtIO modules are enabled in the kernel, if --virtio
 	if isTrue "${CMD_VIRTIO}"
 	then
-		for k in \
-			CONFIG_VIRTIO \
-			CONFIG_VIRTIO_BALLOON \
-			CONFIG_VIRTIO_BLK \
-			CONFIG_VIRTIO_BLK_SCSI \
-			CONFIG_VIRTIO_CONSOLE \
-			CONFIG_VIRTIO_INPUT \
-			CONFIG_VIRTIO_MMIO \
-			CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES \
-			CONFIG_VIRTIO_NET \
-			CONFIG_VIRTIO_PCI \
-			CONFIG_VIRTIO_VSOCKETS \
-			\
-			CONFIG_BLK_MQ_VIRTIO \
-			CONFIG_CRYPTO_DEV_VIRTIO \
-			CONFIG_DRM_VIRTIO_GPU \
-			CONFIG_HW_RANDOM_VIRTIO \
-			CONFIG_PARAVIRT_GUEST \
-			CONFIG_SCSI_VIRTIO \
-			CONFIG_VHOST_NET \
-			\
-			CONFIG_FW_CFG_SYSFS \
-			; do
-			cfg___virtio_opt=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
-			case "$cfg___virtio_opt" in
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for VirtIO support are set..."
+		# VirtIO deps
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_HW" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MMU" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NETDEVICES" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET_CORE" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HAS_IOMEM" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HAS_DMA" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TTY" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PARAVIRT_GUEST" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SYSFS" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HAS_IOPORT_MAP" "y"
+
+		cfg_CONFIG_SCSI=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI")
+		case "${cfg_CONFIG_SCSI}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_SCSI=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI" "${cfg_CONFIG_SCSI}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_LOWLEVEL" "y"
+
+		cfg_CONFIG_DRM=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DRM")
+		case "${cfg_CONFIG_DRM}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_DRM=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DRM" "${cfg_CONFIG_DRM}"
+
+		cfg_CONFIG_HW_RANDOM=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HW_RANDOM")
+		case "${cfg_CONFIG_HW_RANDOM}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_HW_RANDOM=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HW_RANDOM" "${cfg_CONFIG_HW_RANDOM}"
+
+		cfg_CONFIG_INPUT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INPUT")
+		case "${cfg_CONFIG_INPUT}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_INPUT=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INPUT" "${cfg_CONFIG_INPUT}"
+
+		cfg_CONFIG_VHOST_NET=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VHOST_NET")
+		case "${cfg_CONFIG_VHOST_NET}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_VHOST_NET=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VHOST_NET" "${cfg_CONFIG_VHOST_NET}"
+
+		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4006 ]
+		then
+			cfg_CONFIG_FW_CFG_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FW_CFG_SYSFS")
+			case "${cfg_CONFIG_FW_CFG_SYSFS}" in
 				y|m) ;; # Do nothing
-				*) cfg___virtio_opt='y'
+				*) cfg_CONFIG_FW_CFG_SYSFS=${newcfg_setting}
 			esac
-			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg___virtio_opt}"
-		done
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FW_CFG_SYSFS" "${cfg_CONFIG_FW_CFG_SYSFS}"
+		fi
+
+		cfg_CONFIG_VIRTIO=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO")
+		cfg_CONFIG_SCSI_VIRTIO=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_VIRTIO")
+		cfg_CONFIG_VIRTIO_BLK=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BLK")
+		cfg_CONFIG_VIRTIO_NET=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_NET")
+		cfg_CONFIG_VIRTIO_PCI=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_PCI")
+		if \
+			isTrue "${cfg_CONFIG_VIRTIO}" || \
+			isTrue "${cfg_CONFIG_SCSI_VIRTIO}" || \
+			isTrue "${cfg_CONFIG_VIRTIO_BLK}" || \
+			isTrue "${cfg_CONFIG_VIRTIO_NET}" || \
+			isTrue "${cfg_CONFIG_VIRTIO_PCI}"
+		then
+			# If the user has configured VirtIO as built-in, we need to respect that.
+			newvirtio_setting="y"
+		else
+			newvirtio_setting=${newcfg_setting}
+		fi
+
+		# VirtIO modules, activate in order!
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MENU" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_VIRTIO" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BLK" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_NET" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_PCI" "${newvirtio_setting}"
+
+		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4011 ]
+		then
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BLK_SCSI" "y"
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_MQ_VIRTIO" "y"
+		fi
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BALLOON" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_CONSOLE" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_INPUT" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DRM_VIRTIO_GPU" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HW_RANDOM_VIRTIO" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MMIO" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES" "y"
+
+		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4008 ]
+		then
+			cfg_CONFIG_VSOCKETS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS")
+			case "${cfg_CONFIG_VSOCKETS}" in
+				y|m) ;; # Do nothing
+				*) cfg_CONFIG_VSOCKETS=${newcfg_setting}
+			esac
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS" "${cfg_CONFIG_VSOCKETS}"
+
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_VSOCKETS" "${newvirtio_setting}"
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_VSOCKETS_COMMON" "${newvirtio_setting}"
+		fi
+
+		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4010 ] &&
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_DEV_VIRTIO" "${newvirtio_setting}"
 	fi
 
 	# Microcode setting, intended for early microcode loading
