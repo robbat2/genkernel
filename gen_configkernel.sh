@@ -124,6 +124,8 @@ config_kernel() {
 		[ "$?" ] || gen_die "Error: ${add_config} failed!"
 	fi
 
+	[ -f "${TEMP}/.kconfig_modified" ] && rm "${TEMP}/.kconfig_modified"
+
 	# Force this on if we are using --genzimage
 	if isTrue "${CMD_GENZIMAGE}"
 	then
@@ -554,5 +556,19 @@ config_kernel() {
 			esac
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg}"
 		done
+	fi
+
+	if [ -f "${TEMP}/.kconfig_modified" ]
+	then
+		if isTrue "${OLDCONFIG}"
+		then
+			print_info 1 "$(getIndent 1)>> Re-running oldconfig due to changed kernel options..."
+			yes '' 2>/dev/null | compile_generic oldconfig kernel 2>/dev/null
+		else
+			print_info 1 "$(getIndent 1)>> Running olddefconfig due to changed kernel options..."
+			compile_generic olddefconfig kernel 2>/dev/null
+		fi
+	else
+		print_info 2 "$(getIndent 1)>> genkernel did not need to add/modify any kernel options."
 	fi
 }
