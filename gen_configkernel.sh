@@ -184,9 +184,10 @@ config_kernel() {
 		*) cfg_CONFIG_BLK_DEV_DM=${newcfg_setting}
 	esac
 
-	# Make sure lvm modules are on if --lvm
+	# Make sure lvm modules are enabled in the kernel, if --lvm
 	if isTrue "${CMD_LVM}"
 	then
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for LVM support are set..."
 		cfg_CONFIG_DM_SNAPSHOT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT")
 		case "$cfg_CONFIG_DM_SNAPSHOT" in
 			y|m) ;; # Do nothing
@@ -197,9 +198,12 @@ config_kernel() {
 			y|m) ;; # Do nothing
 			*) cfg_CONFIG_DM_MIRROR=${newcfg_setting}
 		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT" "${cfg_CONFIG_DM_SNAPSHOT}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR" "${cfg_CONFIG_DM_MIRROR}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FILE_LOCKING" "y"
 	fi
 
 	# Multipath
