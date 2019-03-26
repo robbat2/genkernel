@@ -103,7 +103,7 @@ append_base_layout() {
 	mkdir -p ${TEMP}/initramfs-base-temp/temp
 	mkdir -p ${TEMP}/initramfs-base-temp/tmp
 	mkdir -p ${TEMP}/initramfs-base-temp/sys
-	mkdir -p ${TEMP}/initramfs-temp/.initrd
+	mkdir -p ${TEMP}/initramfs-base-temp/.initrd
 	mkdir -p ${TEMP}/initramfs-base-temp/var/lock/dmraid
 	mkdir -p ${TEMP}/initramfs-base-temp/sbin
 	mkdir -p ${TEMP}/initramfs-base-temp/usr/bin
