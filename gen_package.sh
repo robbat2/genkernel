@@ -2,7 +2,8 @@
 # $Id$
 
 gen_minkernpackage() {
-	print_info 1 'Creating minimal kernel package'
+	print_info 1 ''
+	print_info 1 "Creating minimal kernel package in '${MINKERNPACKAGE}'..."
 	rm -rf "${TEMP}/minkernpackage" > /dev/null 2>&1
 	mkdir "${TEMP}/minkernpackage" || gen_die 'Could not make a directory for the kernel package!'
 	if [ "${KERNCACHE}" != "" ]
@@ -17,7 +18,7 @@ gen_minkernpackage() {
 			mv minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}}
 		fi
 		if [ ! -f minkernpackage/kernel-${KNAME}-${ARCH}-${KV} \
-		  -o ! -f minkernpackage/config-${KNAME}-${ARCH}-${KV} ];
+			-o ! -f minkernpackage/config-${KNAME}-${ARCH}-${KV} ];
 		then
 			gen_die "Cannot locate kernel binary"
 		fi
@@ -53,31 +54,37 @@ gen_minkernpackage() {
 
 	cd "${TEMP}/minkernpackage"
 	/bin/tar -jcpf ${MINKERNPACKAGE} * || gen_die 'Could not compress the kernel package!'
-	print_info 3 "Created minimal kernel package: $(readlink -f ${MINKERNPACKAGE})"
-	cd "${TEMP}" && rm -rf "${TEMP}/minkernpackage" > /dev/null 2>&1
+
+	cd "${TEMP}"
+	isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/minkernpackage" > /dev/null
+	return 0
 }
 
 gen_modulespackage() {
-	print_info 1 'Creating modules package'
+	print_info 1 ''
+	print_info 1 "Creating modules package in '${MODULESPACKAGE}'..."
 	rm -rf "${TEMP}/modulespackage" > /dev/null 2>&1
 	mkdir "${TEMP}/modulespackage" || gen_die 'Could not make a directory for the kernel package!'
 
 	if [ -d ${INSTALL_MOD_PATH}/lib/modules/${KV} ]
 	then
-	    mkdir -p ${TEMP}/modulespackage/lib/modules
-	    cp -r "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
-	    cd "${TEMP}/modulespackage"
-	    /bin/tar -jcpf ${MODULESPACKAGE} * || gen_die 'Could not compress the modules package!'
+		mkdir -p ${TEMP}/modulespackage/lib/modules
+		cp -r "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
+		cd "${TEMP}/modulespackage"
+		/bin/tar -jcpf ${MODULESPACKAGE} * || gen_die 'Could not compress the modules package!'
 	else
-	    print_info 1 "Could not create a modules package ${INSTALL_MOD_PATH}/lib/modules/${KV} was not found"
+		print_info 1 "Could not create modules package, '${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found"
 	fi
-	print_info 3 "Created modules package: $(readlink -f ${MODULESPACKAGE})"
-	cd "${TEMP}" && rm -rf "${TEMP}/modulespackage" > /dev/null 2>&1
+
+	cd "${TEMP}"
+	isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/modulespackage" > /dev/null
+	return 0
 }
 
 gen_kerncache()
 {
-	print_info 1 'Creating kernel cache'
+	print_info 1 ''
+	print_info 1 "Creating kernel cache in '${KERNCACHE}'..."
 	rm -rf "${TEMP}/kerncache" > /dev/null 2>&1
 	mkdir "${TEMP}/kerncache" || gen_die 'Could not make a directory for the kernel cache!'
 
@@ -118,8 +125,10 @@ gen_kerncache()
 
 	cd "${TEMP}/kerncache"
 	/bin/tar -jcpf ${KERNCACHE} * || gen_die 'Could not compress the kernel package!'
-	print_info 3 "Created kernel cache: $(readlink -f ${KERNCACHE})"
-	cd "${TEMP}" && rm -rf "${TEMP}/kerncache" > /dev/null 2>&1
+
+	cd "${TEMP}"
+	isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/kerncache" > /dev/null
+	return 0
 }
 
 gen_kerncache_extract_kernel()
