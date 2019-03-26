@@ -124,6 +124,7 @@ config_kernel() {
 		[ "$?" ] || gen_die "Error: ${add_config} failed!"
 	fi
 
+	local -a required_kernel_options
 	[ -f "${TEMP}/.kconfig_modified" ] && rm "${TEMP}/.kconfig_modified"
 
 	# Force this on if we are using --genzimage
@@ -140,10 +141,12 @@ config_kernel() {
 				cfg_CONFIG_EXT4_FS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT4_FS")
 				if isTrue "${cfg_CONFIG_EXT4_FS}"
 				then
-					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT4_USE_FOR_EXT2" "y"
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT4_USE_FOR_EXT2" "y" &&
+						required_kernel_options+=(CONFIG_EXT4_USE_FOR_EXT2)
 				else
 					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
-					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y" &&
+						required_kernel_options+=(CONFIG_EXT2_FS)
 				fi
 			fi
 		fi
@@ -202,10 +205,12 @@ config_kernel() {
 		esac
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" &&
+			required_kernel_options+=(CONFIG_BLK_DEV_DM)
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT" "${cfg_CONFIG_DM_SNAPSHOT}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MIRROR" "${cfg_CONFIG_DM_MIRROR}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FILE_LOCKING" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FILE_LOCKING" "y" &&
+			required_kernel_options+=(CONFIG_FILE_LOCKING)
 	fi
 
 	# Make sure multipath modules are enabled in the kernel, if --multipath
@@ -224,8 +229,10 @@ config_kernel() {
 		esac
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "${cfg_CONFIG_DM_MULTIPATH}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" &&
+			required_kernel_options+=(CONFIG_BLK_DEV_DM)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "${cfg_CONFIG_DM_MULTIPATH}" &&
+			required_kernel_options+=(CONFIG_DM_MULTIPATH)
 	fi
 
 	# Make sure dmraid modules are enabled in the kernel, if --dmraid
@@ -234,7 +241,8 @@ config_kernel() {
 		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for DMRAID support are set..."
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" &&
+			required_kernel_options+=(CONFIG_BLK_DEV_DM)
 	fi
 
 	# Make sure iSCSI modules are enabled in the kernel, if --iscsi
@@ -267,9 +275,12 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI" "${cfg_CONFIG_SCSI}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_LOWLEVEL" "y"
 
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS" "${cfg_CONFIG_ISCSI_BOOT_SYSFS}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "${cfg_CONFIG_ISCSI_TCP}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "${cfg_CONFIG_SCSI_ISCSI_ATTRS}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS" "${cfg_CONFIG_ISCSI_BOOT_SYSFS}" &&
+			required_kernel_options+=(CONFIG_ISCSI_BOOT_SYSFS)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "${cfg_CONFIG_ISCSI_TCP}" &&
+			required_kernel_options+=(CONFIG_ISCSI_TCP)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "${cfg_CONFIG_SCSI_ISCSI_ATTRS}" &&
+			required_kernel_options+=(CONFIG_SCSI_ISCSI_ATTRS)
 	fi
 
 	# Make sure Hyper-V modules are enabled in the kernel, if --hyperv
@@ -362,11 +373,15 @@ config_kernel() {
 			*) cfg_CONFIG_HYPERV=${newcfg_setting}
 		esac
 
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV" "${cfg_CONFIG_HYPERV}" &&
+			required_kernel_options+=(CONFIG_HYPERV)
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_UTILS" "${cfg_CONFIG_HYPERV}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_BALLOON" "${cfg_CONFIG_HYPERV}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_STORAGE" "${cfg_CONFIG_HYPERV}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_NET" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_BALLOON" "${cfg_CONFIG_HYPERV}" &&
+			required_kernel_options+=(CONFIG_HYPERV_BALLOON)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_STORAGE" "${cfg_CONFIG_HYPERV}" &&
+			required_kernel_options+=(CONFIG_HYPERV_STORAGE)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_NET" "${cfg_CONFIG_HYPERV}" &&
+			required_kernel_options+=(CONFIG_HYPERV_NET)
 
 		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4014 ]
 		then
@@ -493,11 +508,15 @@ config_kernel() {
 		fi
 
 		# VirtIO modules, activate in order!
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO" "${newvirtio_setting}" &&
+			required_kernel_options+=(CONFIG_VIRTIO)
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MENU" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_VIRTIO" "${newvirtio_setting}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BLK" "${newvirtio_setting}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_NET" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_VIRTIO" "${newvirtio_setting}" &&
+			required_kernel_options+=(CONFIG_SCSI_VIRTIO)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BLK" "${newvirtio_setting}" &&
+			required_kernel_options+=(CONFIG_VIRTIO_BLK)
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_NET" "${newvirtio_setting}" &&
+			required_kernel_options+=(CONFIG_VIRTIO_NET)
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_PCI" "${newvirtio_setting}"
 
 		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4011 ]
@@ -556,6 +575,8 @@ config_kernel() {
 			esac
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg}"
 		done
+
+		required_kernel_options+=(CONFIG_MICROCODE)
 	fi
 
 	if [ -f "${TEMP}/.kconfig_modified" ]
@@ -571,4 +592,16 @@ config_kernel() {
 	else
 		print_info 2 "$(getIndent 1)>> genkernel did not need to add/modify any kernel options."
 	fi
+
+	print_info 2 "$(getIndent 1)>> checking for required kernel options..."
+	for required_kernel_option in "${required_kernel_options[@]}"
+	do
+		optval=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "${required_kernel_option}")
+		if [ -z "${optval}" ]
+		then
+			gen_die "something went wrong: Required kernel option '${required_kernel_option}' which genkernel tried to set is missing!"
+		else
+			print_info 2 "$(getIndent 2) - '${required_kernel_option}' is set to '${optval}'"
+		fi
+	done
 }
