@@ -1110,7 +1110,9 @@ create_initramfs() {
 		# Explicitly do not compress if we are integrating into the kernel.
 		# The kernel will do a better job of it than us.
 		mv ${TMPDIR}/initramfs-${KV} ${TMPDIR}/initramfs-${KV}.cpio
-		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' ${KERNEL_OUTPUTDIR}/.config
+		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" ||
+			gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
+
 		compress_config='INITRAMFS_COMPRESSION_NONE'
 		case ${compress_ext} in
 			gz)   compress_config='INITRAMFS_COMPRESSION_GZIP' ;;
