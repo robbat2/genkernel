@@ -149,21 +149,26 @@ config_kernel() {
 
 	# Do we support modules at all?
 	cfg_CONFIG_MODULES=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MODULES")
-	if isTrue "$cfg_CONFIG_MODULES" ; then
+	if isTrue "${cfg_CONFIG_MODULES}"
+	then
 		# yes, we support modules, set 'm' for new stuff.
 		newcfg_setting='m'
 		# Compare the kernel module compression vs the depmod module compression support
 		# WARNING: if the buildhost has +XZ but the target machine has -XZ, you will get failures!
 		cfg_CONFIG_MODULE_COMPRESS_GZIP=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MODULE_COMPRESS_GZIP")
 		cfg_CONFIG_MODULE_COMPRESS_XZ=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MODULE_COMPRESS_XZ")
-		if isTrue "${cfg_CONFIG_MODULE_COMPRESS_GZIP}"; then
+		if isTrue "${cfg_CONFIG_MODULE_COMPRESS_GZIP}"
+		then
 			depmod_GZIP=$(/sbin/depmod -V | tr ' ' '\n' | awk '/ZLIB/{print $1; exit}')
-			if [[ "${depmod_GZIP}" != "+ZLIB" ]]; then
+			if [[ "${depmod_GZIP}" != "+ZLIB" ]]
+			then
 				gen_die 'depmod does not support ZLIB/GZIP, cannot build with CONFIG_MODULE_COMPRESS_GZIP'
 			fi
-		elif isTrue "${cfg_CONFIG_MODULE_COMPRESS_XZ}" ; then
+		elif isTrue "${cfg_CONFIG_MODULE_COMPRESS_XZ}"
+		then
 			depmod_XZ=$(/sbin/depmod -V | tr ' ' '\n' | awk '/XZ/{print $1; exit}')
-			if [[ "${depmod_XZ}" != "+XZ" ]]; then
+			if [[ "${depmod_XZ}" != "+XZ" ]]
+			then
 				gen_die 'depmod does not support XZ, cannot build with CONFIG_MODULE_COMPRESS_XZ'
 			fi
 		fi
