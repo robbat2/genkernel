@@ -226,9 +226,12 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH" "${cfg_CONFIG_DM_MULTIPATH}"
 	fi
 
-	# Make sure dmraid modules are on if --dmraid
+	# Make sure dmraid modules are enabled in the kernel, if --dmraid
 	if isTrue "${CMD_DMRAID}"
 	then
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for DMRAID support are set..."
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}"
 	fi
 
