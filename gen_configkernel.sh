@@ -270,19 +270,127 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "${cfg_CONFIG_SCSI_ISCSI_ATTRS}"
 	fi
 
-	# Make sure HyperV modules are enabled in the kernel, if --hyperv
+	# Make sure Hyper-V modules are enabled in the kernel, if --hyperv
 	if isTrue "${CMD_HYPERV}"
 	then
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_UTILS" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_BALLOON" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_STORAGE" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_NET" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_KEYBOARD" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI_HYPERV" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_HYPERV" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HID_HYPERV_MOUSE" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UIO_HV_GENERIC" "y"
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for Hyper-V support are set..."
+		# Hyper-V deps
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_X86" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ACPI" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_X86_LOCAL_APIC" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERVISOR_GUEST" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET" "y"
+
+		cfg_CONFIG_CONNECTOR=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CONNECTOR")
+		case "${cfg_CONFIG_CONNECTOR}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_CONNECTOR=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CONNECTOR" "${cfg_CONFIG_CONNECTOR}"
+
+		cfg_CONFIG_NLS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NLS")
+		case "${cfg_CONFIG_NLS}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_NLS=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NLS" "${cfg_CONFIG_NLS}"
+
+		cfg_CONFIG_SCSI=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI")
+		case "${cfg_CONFIG_SCSI}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_SCSI=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI" "${cfg_CONFIG_SCSI}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_LOWLEVEL" "y"
+
+		cfg_CONFIG_SCSI_FC_ATTRS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_FC_ATTRS")
+		case "${cfg_CONFIG_SCSI_FC_ATTRS}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_SCSI_FC_ATTRS=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_FC_ATTRS" "${cfg_CONFIG_SCSI_FC_ATTRS}"
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NETDEVICES" "y"
+
+		cfg_CONFIG_SERIO=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SERIO")
+		case "${cfg_CONFIG_SERIO}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_SERIO=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SERIO" "${cfg_CONFIG_SERIO}"
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI_MSI" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI_MSI_IRQ_DOMAIN" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_X86_64" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HAS_IOMEM" "y"
+
+		cfg_CONFIG_FB=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB")
+		case "${cfg_CONFIG_FB}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_FB=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB" "${cfg_CONFIG_FB}"
+
+		cfg_CONFIG_INPUT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INPUT")
+		case "${cfg_CONFIG_INPUT}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_INPUT=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INPUT" "${cfg_CONFIG_INPUT}"
+
+		cfg_CONFIG_HID=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HID")
+		case "${cfg_CONFIG_HID}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_HID=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HID" "${cfg_CONFIG_HID}"
+
+		cfg_CONFIG_UIO=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UIO")
+		case "${cfg_CONFIG_UIO}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_UIO=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UIO" "${cfg_CONFIG_UIO}"
+
+		# Hyper-V modules, activate in order!
+		cfg_CONFIG_HYPERV=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV")
+		case "$cfg_CONFIG_HYPERV" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_HYPERV=${newcfg_setting}
+		esac
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_UTILS" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_BALLOON" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_STORAGE" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_NET" "${cfg_CONFIG_HYPERV}"
+
+		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4014 ]
+		then
+			cfg_CONFIG_VSOCKETS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS")
+			case "${cfg_CONFIG_VSOCKETS}" in
+				y|m) ;; # Do nothing
+				*) cfg_CONFIG_VSOCKETS=${newcfg_setting}
+			esac
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS" "${cfg_CONFIG_VSOCKETS}"
+
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_VSOCKETS" "${cfg_CONFIG_HYPERV}"
+		fi
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_KEYBOARD" "${cfg_CONFIG_HYPERV}"
+
+		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4006 ] &&
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI_HYPERV" "${cfg_CONFIG_HYPERV}"
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_HYPERV" "${cfg_CONFIG_HYPERV}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HID_HYPERV_MOUSE" "${cfg_CONFIG_HYPERV}"
+
+		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4010 ] &&
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UIO_HV_GENERIC" "${cfg_CONFIG_HYPERV}"
+
+		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4012 ] &&
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_TSCPAGE" "y"
 	fi
 
 	if isTrue "${SPLASH}"
