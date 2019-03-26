@@ -236,10 +236,9 @@ config_kernel() {
 	fi
 
 	# Make sure iSCSI modules are enabled in the kernel, if --iscsi
-	# CONFIG_SCSI_ISCSI_ATTRS
-	# CONFIG_ISCSI_TCP
 	if isTrue "${CMD_ISCSI}"
 	then
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for iSCSI support are set..."
 		cfg_CONFIG_ISCSI_BOOT_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS")
 		case "$cfg_CONFIG_ISCSI_BOOT_SYSFS" in
 			y|m) ;; # Do nothing
@@ -255,6 +254,17 @@ config_kernel() {
 			y|m) ;; # Do nothing
 			*) cfg_CONFIG_SCSI_ISCSI_ATTRS=${newcfg_setting}
 		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INET" "y"
+
+		cfg_CONFIG_SCSI=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI")
+		case "${cfg_CONFIG_SCSI}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_SCSI=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI" "${cfg_CONFIG_SCSI}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_LOWLEVEL" "y"
+
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS" "${cfg_CONFIG_ISCSI_BOOT_SYSFS}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_TCP" "${cfg_CONFIG_ISCSI_TCP}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SCSI_ISCSI_ATTRS" "${cfg_CONFIG_SCSI_ISCSI_ATTRS}"
