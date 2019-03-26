@@ -127,8 +127,24 @@ config_kernel() {
 	# Force this on if we are using --genzimage
 	if isTrue "${CMD_GENZIMAGE}"
 	then
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for --genzimage are set..."
 		# Make sure Ext2 support is on...
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
+		cfg_CONFIG_EXT2_FS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS")
+		if ! isTrue "${cfg_CONFIG_EXT2_FS}"
+		then
+			cfg_CONFIG_EXT4_USE_FOR_EXT2=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT4_USE_FOR_EXT2")
+			if ! isTrue "${cfg_CONFIG_EXT4_USE_FOR_EXT2}"
+			then
+				cfg_CONFIG_EXT4_FS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT4_FS")
+				if isTrue "${cfg_CONFIG_EXT4_FS}"
+				then
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT4_USE_FOR_EXT2" "y"
+				else
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS" "y"
+				fi
+			fi
+		fi
 	fi
 
 	# Do we support modules at all?
