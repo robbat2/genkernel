@@ -363,10 +363,25 @@ then
 	isTrue "${DMRAID}" && print_warning 1 'add "dodmraid" for dmraid support'
 	isTrue "${MDADM}"  && print_warning 1 'add "domdadm" for MDRAID support'
 	isTrue "${DMRAID}" && print_warning 1 '	or "dodmraid=<additional options>"'
-	isTrue "${ZFS}"    && print_warning 1 'add "dozfs" for ZFS volume management support'
-	isTrue "${ZFS}"    && print_warning 1 '	and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>" to force booting from a specific dataset'
-	isTrue "${ZFS}"    && print_warning 1 'If importing ZFS pool is slow, add dozfs=cache or dozfs=force to kernel commandline.'
-	isTrue "${ZFS}"    && print_warning 1 '"man genkernel" explains "dozfs" in detail.'
+
+	if isTrue "{ZFS}"
+	then
+		print_warning 1 'add "dozfs" for ZFS volume management support'
+		print_warning 1 '	and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>" to force booting from a specific dataset'
+		print_warning 1 ''
+		if [ -f "${TEMP}/.embedded_hostid" ]
+		then
+			local _hostid=$(cat "${TEMP}/.embedded_hostid")
+			print_warning '1' "Hostid '${_hostid}' is embedded into initramfs."
+			print_warning '1' "If you will use this initramfs for a different system you MUST set 'spl_hostid=<hostid>' parameter to overwrite embedded hostid!"
+		else
+			print_warning '1' "No hostid embedded into initramfs. You MUST set 'spl_hostid=<hostid>' parameter to provide hostid for ZFS!"
+		fi
+		print_warning 1 ''
+		print_warning 1 'If importing ZFS pool is slow, add dozfs=cache or dozfs=force to kernel commandline.'
+		print_warning 1 '"man genkernel" explains "dozfs" in detail.'
+	fi
+
 	isTrue "${BTRFS}"  && print_warning 1 'add "dobtrfs" for Btrfs device scanning support'
 	isTrue "${ISCSI}"  && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
 
