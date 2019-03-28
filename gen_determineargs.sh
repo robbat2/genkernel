@@ -2,6 +2,9 @@
 # $Id$
 
 get_KV() {
+	local old_KV=
+	[ -n "${KV}" ] && old_KV="${KV}"
+
 	if ! isTrue "${KERNEL_SOURCES}" && [ -e "${KERNCACHE}" ]
 	then
 		/bin/tar -x -C ${TEMP} -f ${KERNCACHE} kerncache.config
@@ -30,42 +33,47 @@ get_KV() {
 		SUB=`grep ^SUBLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
 		EXV=`grep ^EXTRAVERSION\ \= ${KERNEL_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
 
-		if [ -z "${SUB}" ]
-		then
-			# Handle O= build directories
-			KERNEL_SOURCE_DIR=`grep ^MAKEARGS\ \:\=  ${KERNEL_DIR}/Makefile | awk '{ print $4 };'`
-			[ -z "${KERNEL_SOURCE_DIR}" ] && gen_die "Deriving \${KERNEL_SOURCE_DIR} failed"
-			SUB=`grep ^SUBLEVEL\ \= ${KERNEL_SOURCE_DIR}/Makefile | awk '{ print $3 };'`
-			EXV=`grep ^EXTRAVERSION\ \= ${KERNEL_SOURCE_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
-		fi
-
-		cd ${KERNEL_DIR}
-		#compile_generic prepare kernel > /dev/null 2>&1
-		cd - > /dev/null 2>&1
-		[ -f "${KERNEL_DIR}/include/linux/version.h" ] && \
-			VERSION_SOURCE="${KERNEL_DIR}/include/linux/version.h"
-		[ -f "${KERNEL_DIR}/include/linux/utsrelease.h" ] && \
-			VERSION_SOURCE="${KERNEL_DIR}/include/linux/utsrelease.h"
+		# The files we are looking for are always in KERNEL_OUTPUTDIR
+		# because in most cases, KERNEL_OUTPUTDIR == KERNEL_DIR.
+		# If KERNEL_OUTPUTDIR != KERNEL_DIR, --kernel-outputdir is used,
+		# in which case files will only be in KERNEL_OUTPUTDIR.
+		[ -f "${KERNEL_OUTPUTDIR}/include/linux/version.h" ] && \
+			VERSION_SOURCE="${KERNEL_OUTPUTDIR}/include/linux/version.h"
+		[ -f "${KERNEL_OUTPUTDIR}/include/linux/utsrelease.h" ] && \
+			VERSION_SOURCE="${KERNEL_OUTPUTDIR}/include/linux/utsrelease.h"
 		# Handle new-style releases where version.h doesn't have UTS_RELEASE
-		if [ -f ${KERNEL_DIR}/include/config/kernel.release ]
+		if [ -f ${KERNEL_OUTPUTDIR}/include/config/kernel.release ]
 		then
-			UTS_RELEASE=`cat ${KERNEL_DIR}/include/config/kernel.release`
+			print_info 3 "Using '${KERNEL_OUTPUTDIR}/include/config/kernel.release' to extract LOCALVERSION..."
+			UTS_RELEASE=`cat ${KERNEL_OUTPUTDIR}/include/config/kernel.release`
 			LOV=`echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//"`
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		elif [ -n "${VERSION_SOURCE}" ]
 		then
+			print_info 3 "Using '${VERSION_SOURCE}' to extract LOCALVERSION..."
 			UTS_RELEASE=`grep UTS_RELEASE ${VERSION_SOURCE} | sed -e 's/#define UTS_RELEASE "\(.*\)"/\1/'`
 			LOV=`echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//"`
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		else
-			determine_config_file
-			LCV=`grep ^CONFIG_LOCALVERSION= "${KERNEL_CONFIG}" | sed -r -e "s/.*=\"(.*)\"/\1/"`
-			KV=${VER}.${PAT}.${SUB}${EXV}${LCV}
+			# We will be here only when currently selected kernel source
+			# is untouched. I.e. after a new kernel sources version was installed
+			# and genkernel was called for the first time.
+			# However, we have no chance to get a LOCALVERSION,
+			# so don't even try -- it would be useless at this stage.
+			print_info 3 "Unable to determine LOCALVERSION -- maybe fresh sources?"
+			KV=${VER}.${PAT}.${SUB}${EXV}
 		fi
 	fi
 
 	KV_MAJOR=$(echo $KV | cut -f1 -d.)
 	KV_MINOR=$(echo $KV | cut -f2 -d.)
+
+	if [ -n "${old_KV}" -a "${KV}" != "${old_KV}" ]
+	then
+		print_info 3 "KV changed from '${old_KV}' to '${KV}'!"
+		echo "${old_KV}" > "${TEMP}/.old_kv" ||
+			gen_die "failed to to store '${old_KV}' in '${TEMP}/.old_kv' marker"
+	fi
 }
 
 determine_real_args() {
