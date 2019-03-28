@@ -251,7 +251,7 @@ compile_gen_init_cpio() {
 	print_info 1 "$(getIndent 2)>> Compiling gen_init_cpio..."
 
 	[ ! -e "${gen_init_cpio_SRC}" ] && gen_die "'${gen_init_cpio_SRC}' is missing. Cannot compile gen_init_cpio!"
-	[ ! -d "${gen_init_cpio_DIR}" ] && mkdir "${gen_init_cpio_DIR}"
+	[ ! -d "${gen_init_cpio_DIR}" ] && mkdir -p "${gen_init_cpio_DIR}" || gen_die "failed to create '${gen_init_cpio_DIR}'!"
 
 	export_utils_args
 
