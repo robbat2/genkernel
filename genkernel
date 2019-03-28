@@ -232,9 +232,11 @@ then
 	config_kernel
 
 	# Make prepare
-	if [ "${ARCH_HAVENOPREPARE}" = '' ]
+	if ! isTrue "${ARCH_HAVENOPREPARE}"
 	then
 		compile_generic prepare kernel
+	else
+		print_info 2 "Skipping 'make prepare' due to ARCH_HAVENOPREPARE=yes!"
 	fi
 
 	# KV may have changed due to the configuration
