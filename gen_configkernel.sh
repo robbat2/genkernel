@@ -187,6 +187,21 @@ config_kernel() {
 	else
 		# no, we do NOT support modules, set 'y' for new stuff.
 		newcfg_setting='y'
+
+		if ! isTrue "${BUILD_STATIC}"
+		then
+			local _no_modules_support_warning="$(getIndent 1)>> Forcing --static "
+			if isTrue "${BUILD_RAMDISK}" && isTrue "${RAMDISKMODULES}"
+			then
+				_no_modules_support_warning+="and --no-ramdisk-modules "
+				RAMDISKMODULES="no"
+			fi
+
+			_no_modules_support_warning+="to avoid genkernel failures because kernel does NOT support modules..."
+
+			print_warning 1 "${_no_modules_support_warning}"
+			BUILD_STATIC="yes"
+		fi
 	fi
 
 	# If the user has configured DM as built-in, we need to respect that.
