@@ -43,7 +43,6 @@ determine_config_file() {
 }
 
 config_kernel() {
-	determine_config_file
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'
 
 	print_info 1 "kernel: >> Initializing..."
