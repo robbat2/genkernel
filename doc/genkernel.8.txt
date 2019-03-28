@@ -278,8 +278,8 @@ INITIALIZATION
     Enables or disables keymap selection at boot.
 
 *--*[*no-*]*lvm*::
-    Adds or skips in LVM support from static binaries if they exist on the
-    system,  or compile static LVM binaries if static ones do not exist.
+    Includes or excludes LVM support.
+    When enabled, this will compile LVM for you.
 
 *--*[*no-*]*mdadm*::
     Includes or excludes mdadm/mdmon support.
