@@ -185,7 +185,7 @@ config_kernel() {
 			fi
 		fi
 	else
-		# no, we support modules, set 'y' for new stuff.
+		# no, we do NOT support modules, set 'y' for new stuff.
 		newcfg_setting='y'
 	fi
 
