@@ -425,8 +425,11 @@ OUTPUT SETTINGS
     Wrap initramfs using mkimage for u-boot boots. Please note that only
     certain compression types are supported by mkimage (see manpage).
 
-*--*[*no-*]*compress-initramfs*, *--*[*no-*]*compress-initrd*::
+*--*[*no-*]*compress-initramfs*::
     Compresses or does not compress the generated initramfs.
+
+*--*[*no-*]*compress-initrd*::
+    Deprecated alias for *--*[*no-*]*compress-initramfs*.
 
 *--compress-initramfs-type*=<arg>::
     Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop).

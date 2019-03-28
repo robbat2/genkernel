@@ -196,8 +196,8 @@ longusage() {
   echo "				Compress initramfs"
   echo "	--no-compress-initramfs"
   echo "				Do not compress initramfs"
-  echo "	--compress-initrd	Compress initrd"
-  echo "	--no-compress-initrd	Do not compress initrd"
+  echo "	--compress-initrd	Deprecated alias for --compress-initramfs"
+  echo "	--no-compress-initrd	Deprecated alias for --no-compress-initramfs"
   echo "	--compress-initramfs-type=<arg>"
   echo "				Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop)"
   echo "	--strip=(all|kernel|modules|none)"
@@ -717,9 +717,15 @@ parse_cmdline() {
 			CMD_WRAP_INITRD=`parse_optbool "$*"`
 			print_info 2 "CMD_WRAP_INITRD=${CMD_WRAP_INITRD}"
 			;;
-		--compress-initramfs|--no-compress-initramfs|--compress-initrd|--no-compress-initrd)
+		--compress-initramfs|--no-compress-initramfs)
 			CMD_COMPRESS_INITRD=`parse_optbool "$*"`
 			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
+			;;
+		--compress-initrd|--no-compress-initrd)
+			CMD_COMPRESS_INITRD=`parse_optbool "$*"`
+			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
+			echo
+			print_warning 1 "Please use --[no-]compress-initramfs, as --[no-]compress-initrd is deprecated."
 			;;
 		--compress-initramfs-type=*|--compress-initrd-type=*)
 			CMD_COMPRESS_INITRD_TYPE="${*#*=}"
