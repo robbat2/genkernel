@@ -3,6 +3,7 @@
 
 # Fills variable KERNEL_CONFIG
 determine_config_file() {
+	print_info 2 "Checking for suitable kernel configuration..."
 	for f in \
 		"${CMD_KERNEL_CONFIG}" \
 		"/etc/kernels/kernel-config-${ARCH}-${KV}" \
@@ -10,19 +11,26 @@ determine_config_file() {
 		"${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" \
 		"${GK_SHARE}/arch/${ARCH}/generated-config" \
 		"${GK_SHARE}/arch/${ARCH}/kernel-config" \
-		"${DEFAULT_KERNEL_CONFIG}" \
-		; do
-		if [ -n "${f}" -a -f "${f}" ]
+		"${DEFAULT_KERNEL_CONFIG}"
+	do
+		[ -z "${f}" ] && continue
+
+		if [ -f "${f}" ]
 		then
-			if ! grep -sq THIS_CONFIG_IS_BROKEN "$f"
+			if grep -sq THIS_CONFIG_IS_BROKEN "$f"
 			then
+				print_info 2 "$(getIndent 1)- '${f}' is marked as broken; Skipping..."
+			else
 				KERNEL_CONFIG="$f" && break
 			fi
+		else
+				print_info 2 "$(getIndent 1)- '${f}' not found; Skipping..."
 		fi
 	done
+
 	if [ -z "${KERNEL_CONFIG}" ]
 	then
-		gen_die 'Error: No kernel .config specified, or file not found!'
+		gen_die 'No kernel .config specified, or file not found!'
 	fi
 
 	KERNEL_CONFIG="$(readlink -f "${KERNEL_CONFIG}")"
@@ -30,7 +38,7 @@ determine_config_file() {
 	# Validate the symlink result if any
 	if [ ! -f "${KERNEL_CONFIG}" ]
 	then
-		gen_die "Error: No kernel .config: symlinked file not found! ($KERNEL_CONFIG)"
+		gen_die "No kernel .config: symlinked file '$KERNEL_CONFIG' not found!"
 	fi
 }
 
