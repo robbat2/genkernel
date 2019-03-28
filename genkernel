@@ -339,19 +339,12 @@ then
 	print_info 1 ''
 	print_info 1 'Required Kernel Parameters:'
 	print_info 1 '    root=/dev/$ROOT'
-	if ! isTrue "${BUILD_RAMDISK}"
-	then
-		print_info 1 '    [ And "vga=0x317 splash=verbose" if you use a framebuffer ]'
-		print_info 1 ''
-		print_info 1 '    Where $ROOT is the device node for your root partition as the'
-		print_info 1 '    one specified in /etc/fstab'
-	else
-		print_info 1 ''
-		print_info 1 '    Where $ROOT is the device node for your root partition as the'
-		print_info 1 '    one specified in /etc/fstab'
-		print_info 1 ''
-		print_info 1 "If you require Genkernel's hardware detection features; you MUST"
-		print_info 1 'tell your bootloader to use the provided INITRAMFS file.'
+	print_info 1 ''
+	print_info 1 '    Where $ROOT is the device node for your root partition as the'
+	print_info 1 '    one specified in /etc/fstab'
+	print_info 1 ''
+	print_info 1 "If you require Genkernel's hardware detection features; you MUST"
+	print_info 1 'tell your bootloader to use the provided INITRAMFS file.'
 	fi
 fi
 
