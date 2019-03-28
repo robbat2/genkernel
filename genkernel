@@ -158,8 +158,22 @@ check_distfiles
 
 dump_debugcache
 
+KERNCACHE_IS_VALID="no"
+if [ "${KERNCACHE}" != "" ]
+then
+	gen_kerncache_is_valid
+fi
+
 NORMAL=${BOLD} print_info 1 "Linux Kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}..."
 print_info 1 ".. with config file ${KERNEL_CONFIG}"
+
+if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
+then
+	print_info 1 ""
+	print_info 1 "Note: The version above is subject to change (depends on config and status of kernel sources)."
+	print_info 1 ""
+fi
+
 
 # Check if BOOTDIR is mounted
 if ! isTrue "${CMD_INSTALL}"
@@ -203,12 +217,6 @@ else
 	fi
 fi
 
-KERNCACHE_IS_VALID="no"
-if [ "${KERNCACHE}" != "" ]
-then
-	gen_kerncache_is_valid
-fi
-
 if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
 	# Configure kernel
@@ -224,6 +232,14 @@ then
 
 	# KV may have changed due to the configuration
 	get_KV
+	if [ -f "${TEMP}/.old_kv" ]
+	then
+		old_KV=$(cat "${TEMP}/.old_kv")
+		print_info 1 "Kernel version has changed (probably due to config change) since genkernel start:"
+		print_info 1 "We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}..."
+	else
+		print_info 2 "Kernel version has not changed since genkernel start."
+	fi
 
 	compile_kernel
 
