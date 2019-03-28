@@ -48,6 +48,10 @@ get_official_arch() {
 }
 
 set_kernel_arch() {
+	[ -z "${VER}" ] && gen_die "cannot set KERNEL_ARCH without VER!"
+	[ -z "${SUB}" ] && gen_die "cannot set KERNEL_ARCH without SUB!"
+	[ -z "${PAT}" ] && gen_die "cannot set KERNEL_ARCH without PAT!"
+
 	KERNEL_ARCH=${ARCH}
 	case ${ARCH} in
 		ppc|ppc64*)
