@@ -344,7 +344,6 @@ then
 	print_info 1 ''
 	print_info 1 "If you require Genkernel's hardware detection features; you MUST"
 	print_info 1 'tell your bootloader to use the provided INITRAMFS file.'
-	fi
 fi
 
 if isTrue "${BUILD_RAMDISK}"
