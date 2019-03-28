@@ -139,8 +139,13 @@ done
 
 # Based on genkernel.conf, arch-specific configs, and commandline options,
 # get the real arguments for usage...
-
 determine_real_args
+
+get_KV
+# $KV is now either set to the version from previous compilation,
+# which would include LOCALVERSION suffix, or initialized with
+# unmodified KERNEL_SOURCE version (which normally has no LOCALVERSION set).
+
 determine_config_file
 
 set_kernel_arch

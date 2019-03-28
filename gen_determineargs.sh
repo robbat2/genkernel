@@ -259,6 +259,4 @@ determine_real_args() {
 
 		[[ "${FIRMWARE_FILES}" = *,* ]] && gen_die "FIRMWARE_FILES should be a space-separated list."
 	fi
-
-	get_KV
 }
