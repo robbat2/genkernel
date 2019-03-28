@@ -823,22 +823,34 @@ append_modules() {
 	local group_modules
 	local MOD_EXT="$(modules_kext)"
 
-	print_info 2 "$(getIndent 2)initramfs: >> Searching for modules..."
-	if [ "${INSTALL_MOD_PATH}" != '' ]
-	then
-		cd ${INSTALL_MOD_PATH}
-	else
-		cd /
-	fi
-
 	if [ -d "${TEMP}/initramfs-modules-${KV}-temp" ]
 	then
 		rm -r "${TEMP}/initramfs-modules-${KV}-temp/"
 	fi
+
+	print_info 2 "$(getIndent 2)modules: >> Copying modules to initramfs..."
+	if [ "${INSTALL_MOD_PATH}" != '' ]
+	then
+		cd ${INSTALL_MOD_PATH} || gen_die "Failed to chdir into '${INSTALL_MOD_PATH}'!"
+	else
+		cd / || gen_die "Failed to chdir into '/'!"
+	fi
+
+	local _MODULES_DIR="${PWD%/}/lib/modules/${KV}"
+	if [ ! -d "${_MODULES_DIR}" ]
+	then
+		error_message="'${_MODULES_DIR}' does not exist! Did you forget"
+		error_message+=" to compile kernel before building initramfs?"
+		error_message+=" If you know what you are doing please set '--no-ramdisk-modules'."
+		gen_die "${error_message}"
+	fi
+
 	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/lib/modules/${KV}"
+
+	local n_copied_modules=0
 	for i in `gen_dep_list`
 	do
-		mymod=`find ./lib/modules/${KV} -name "${i}${MOD_EXT}" 2>/dev/null| head -n 1 `
+		mymod=`find "${_MODULES_DIR}" -name "${i}${MOD_EXT}" 2>/dev/null| head -n 1 `
 		if [ -z "${mymod}" ]
 		then
 			print_warning 2 "$(getIndent 3) - ${i}${MOD_EXT} not found; skipping..."
@@ -846,10 +858,20 @@ append_modules() {
 		fi
 
 		print_info 2 "$(getIndent 3) - Copying ${i}${MOD_EXT}..."
-		cp -ax --parents "${mymod}" "${TEMP}/initramfs-modules-${KV}-temp"
+		cp -ax --parents "${mymod}" "${TEMP}/initramfs-modules-${KV}-temp" ||
+			gen_die "failed to copy '${mymod}' to '${TEMP}/initramfs-modules-${KV}-temp'"
+		n_copied_modules=$[$n_copied_modules+1]
 	done
 
-	cp -ax --parents ./lib/modules/${KV}/modules* ${TEMP}/initramfs-modules-${KV}-temp 2>/dev/null
+	if [ ${n_copied_modules} -eq 0 ]
+	then
+		print_warning 1 "$(getIndent 2)modules: ${n_copied_modules} modules copied. Is that correct?"
+	else
+		print_info 2 "$(getIndent 2)modules: ${n_copied_modules} modules copied!"
+	fi
+
+	cp -ax --parents "${_MODULES_DIR}"/modules* ${TEMP}/initramfs-modules-${KV}-temp ||
+		gen_die "failed to copy '${_MODULES_DIR}/modules*' to '${TEMP}/initramfs-modules-${KV}-temp'"
 
 	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/etc/modules"
 	for group_modules in ${!MODULES_*}; do
