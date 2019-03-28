@@ -1,7 +1,7 @@
 #!/bin/bash
 # $Id$
 
-get_KV() {
+determine_KV() {
 	local old_KV=
 	[ -n "${KV}" ] && old_KV="${KV}"
 
