@@ -1074,6 +1074,9 @@ startVolumes() {
 		if [ -x '/sbin/mdadm' ]
 		then
 			/sbin/mdadm --assemble --scan
+			#Intel Matrix RAID (and possibly others) have a container layer above the actual volumes,
+			#So we have to look for volumes that haven't been activated.
+			mdadm -IRs
 		else
 			bad_msg "mdadm not found: skipping mdadm raid assembly!"
 		fi
