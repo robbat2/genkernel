@@ -4,7 +4,8 @@
 # Fills variable KERNEL_CONFIG
 determine_config_file() {
 	print_info 2 "Checking for suitable kernel configuration..."
-	if [ -n "${CMD_KERNEL_CONFIG}" ]
+
+	if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" != "default" ]
 	then
 		KERNEL_CONFIG=$(expand_file "${CMD_KERNEL_CONFIG}")
 		if [ -z "${KERNEL_CONFIG}" ]
@@ -15,13 +16,21 @@ determine_config_file() {
 			gen_die "${error_msg}"
 		fi
 	else
-		for f in \
-			"/etc/kernels/kernel-config-${ARCH}-${KV}" \
-			"${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" \
-			"${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" \
-			"${GK_SHARE}/arch/${ARCH}/generated-config" \
-			"${GK_SHARE}/arch/${ARCH}/kernel-config" \
-			"${DEFAULT_KERNEL_CONFIG}"
+		local -a kconfig_candidates
+		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" )
+		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" )
+		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/generated-config" )
+		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config" )
+		kconfig_candidates+=( "${DEFAULT_KERNEL_CONFIG}" )
+
+		if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ]
+		then
+			print_info 1 "Default configuration was forced. Will ignore any user kernel configuration!"
+		else
+			kconfig_candidates=( "/etc/kernels/kernel-config-${ARCH}-${KV}" ${kconfig_candidates[@]} )
+		fi
+
+		for f in "${kconfig_candidates[@]}"
 		do
 			[ -z "${f}" ] && continue
 
@@ -49,7 +58,7 @@ determine_config_file() {
 	# Validate the symlink result if any
 	if [ -z "${KERNEL_CONFIG}" -o ! -f "${KERNEL_CONFIG}" ]
 	then
-		if [ -n "${CMD_KERNEL_CONFIG}" ]
+		if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" != "default" ]
 		then
 			error_msg="No kernel .config: File '${CMD_KERNEL_CONFIG}' not found! "
 			error_msg+="Check --kernel-config value or unset "
@@ -77,21 +86,28 @@ config_kernel() {
 		print_info 1 "$(getIndent 1)>> --clean is disabled; not running 'make clean'."
 	fi
 
-	if isTrue "${MRPROPER}"
+	if isTrue "${MRPROPER}" || [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ]
 	then
 		# Backup current kernel .config
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
 		then
 			# Current .config is different then one we are going to use
-			if ! diff -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" > /dev/null
+			if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ] || \
+				! diff -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" > /dev/null
 			then
 				NOW=`date +--%Y-%m-%d--%H-%M-%S`
 				cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
 					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
 				print_info 1 "$(getIndent 1)>> Previous config backed up to .config${NOW}.bak"
+
+				[ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ] &&
+					rm "${KERNEL_OUTPUTDIR}/.config" > /dev/null
 			fi
 		fi
+	fi
 
+	if isTrue "${MRPROPER}"
+	then
 		print_info 1 "$(getIndent 1)>> Running mrproper..."
 		compile_generic mrproper kernel
 	else

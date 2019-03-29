@@ -181,11 +181,13 @@ KERNEL LOCATIONS
     This specifies the location of the kernel sources;  the default
     is '/usr/src/linux'.
 
-*--kernel-config*=<file>::
+*--kernel-config*=<file|default>::
     This specifies a kernel configuration file to use for compilation;
     by default genkernel uses the config from the previous
     build of the same kernel version or a default kernel config if
     there isn't a previous config.
+    Use the special value 'default' to force usage of default kernel
+    config.
 
 *--module-prefix*=<dir>::
     Prefix to kernel module destination, modules will be installed in
