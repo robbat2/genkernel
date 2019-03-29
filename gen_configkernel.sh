@@ -4,41 +4,60 @@
 # Fills variable KERNEL_CONFIG
 determine_config_file() {
 	print_info 2 "Checking for suitable kernel configuration..."
-	for f in \
-		"${CMD_KERNEL_CONFIG}" \
-		"/etc/kernels/kernel-config-${ARCH}-${KV}" \
-		"${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" \
-		"${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" \
-		"${GK_SHARE}/arch/${ARCH}/generated-config" \
-		"${GK_SHARE}/arch/${ARCH}/kernel-config" \
-		"${DEFAULT_KERNEL_CONFIG}"
-	do
-		[ -z "${f}" ] && continue
-
-		if [ -f "${f}" ]
-		then
-			if grep -sq THIS_CONFIG_IS_BROKEN "$f"
-			then
-				print_info 2 "$(getIndent 1)- '${f}' is marked as broken; Skipping..."
-			else
-				KERNEL_CONFIG="$f" && break
-			fi
-		else
-				print_info 2 "$(getIndent 1)- '${f}' not found; Skipping..."
-		fi
-	done
-
-	if [ -z "${KERNEL_CONFIG}" ]
+	if [ -n "${CMD_KERNEL_CONFIG}" ]
 	then
-		gen_die 'No kernel .config specified, or file not found!'
+		KERNEL_CONFIG=$(expand_file "${CMD_KERNEL_CONFIG}")
+		if [ -z "${KERNEL_CONFIG}" ]
+		then
+			error_msg="No kernel .config: Cannot use '${CMD_KERNEL_CONFIG}' value. "
+			error_msg+="Check --kernel-config value or unset "
+			error_msg+="to use default kernel config provided by genkernel."
+			gen_die "${error_msg}"
+		fi
+	else
+		for f in \
+			"/etc/kernels/kernel-config-${ARCH}-${KV}" \
+			"${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" \
+			"${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" \
+			"${GK_SHARE}/arch/${ARCH}/generated-config" \
+			"${GK_SHARE}/arch/${ARCH}/kernel-config" \
+			"${DEFAULT_KERNEL_CONFIG}"
+		do
+			[ -z "${f}" ] && continue
+
+			if [ -f "${f}" ]
+			then
+				if grep -sq THIS_CONFIG_IS_BROKEN "$f"
+				then
+					print_info 2 "$(getIndent 1)- '${f}' is marked as broken; Skipping..."
+				else
+					KERNEL_CONFIG="$f" && break
+				fi
+			else
+					print_info 2 "$(getIndent 1)- '${f}' not found; Skipping..."
+			fi
+		done
+
+		if [ -z "${KERNEL_CONFIG}" ]
+		then
+			gen_die 'No kernel .config specified, or file not found!'
+		fi
 	fi
 
 	KERNEL_CONFIG="$(readlink -f "${KERNEL_CONFIG}")"
 
 	# Validate the symlink result if any
-	if [ ! -f "${KERNEL_CONFIG}" ]
+	if [ -z "${KERNEL_CONFIG}" -o ! -f "${KERNEL_CONFIG}" ]
 	then
-		gen_die "No kernel .config: symlinked file '$KERNEL_CONFIG' not found!"
+		if [ -n "${CMD_KERNEL_CONFIG}" ]
+		then
+			error_msg="No kernel .config: File '${CMD_KERNEL_CONFIG}' not found! "
+			error_msg+="Check --kernel-config value or unset "
+			error_msg+="to use default kernel config provided by genkernel."
+			gen_die "${error_msg}"
+		else
+			gen_die "No kernel .config: symlinked file '${KERNEL_CONFIG}' not found!"
+		fi
 	fi
 }
 
