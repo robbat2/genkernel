@@ -211,7 +211,7 @@ else
 				echo
 			else
 				print_info 1 "mount: ${BOOTDIR} remounted read/write successfully!"
-				BOOTRW=1
+				BOOTRW="yes"
 			fi
 		fi
 	fi
@@ -393,7 +393,7 @@ then
 	unset CONFGREP
 fi
 
-[ "${BOOTRW}" != '' ] && mount -o remount,ro ${BOOTDIR}
+isTrue "${BOOTRW}" && mount -o remount,ro ${BOOTDIR}
 
 echo
 print_info 1 'Do NOT report kernel bugs as genkernel bugs unless your bug'
