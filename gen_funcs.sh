@@ -538,6 +538,25 @@ check_distfiles() {
 	done
 }
 
+expand_file() {
+	[[ "$#" -lt '1' ]] &&
+		echo ''
+
+	local file="${1}"
+	local expanded_file=
+
+	expanded_file=$(python -c "import os; print(os.path.expanduser('${file}'))" 2>/dev/null)
+	if [ -z "${expanded_file}" ]
+	then
+		# if Python failed for some reason, just reset
+		expanded_file=${file}
+	fi
+
+	expanded_file=$(realpath -q "${expanded_file}" 2>/dev/null)
+
+	echo "${expanded_file}"
+}
+
 find_kernel_binary() {
 	local kernel_binary=$*
 	local curdir=$(pwd)
