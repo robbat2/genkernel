@@ -1567,7 +1567,8 @@ setup_md_device() {
 
 do_rundebugshell() {
 	good_msg 'Type "exit" to continue with normal bootup.'
-	[ -x /bin/sh ] && /bin/sh || /bin/ash
+	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
+	setsid ${SH} -c "exec cttyhack ${SH} --login"
 }
 
 rundebugshell() {
