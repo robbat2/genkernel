@@ -587,6 +587,7 @@ parse_cmdline() {
 			;;
 		--tempdir=*)
 			TMPDIR="${*#*=}"
+			[ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
 			TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX)
 			print_info 2 "TMPDIR: ${TMPDIR}"
 			print_info 2 "TEMP: ${TEMP}"

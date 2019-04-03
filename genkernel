@@ -44,6 +44,7 @@ source ${GK_SHARE}/gen_moddeps.sh || gen_die "Could not read ${GK_SHARE}/gen_mod
 source ${GK_SHARE}/gen_package.sh || gen_die "Could not read ${GK_SHARE}/gen_package.sh"
 source ${GK_SHARE}/gen_bootloader.sh || gen_die "Could not read ${GK_SHARE}/gen_bootloader.sh"
 
+[ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
 TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX)
 
 trap_cleanup(){
@@ -150,7 +151,7 @@ determine_config_file
 
 set_kernel_arch
 
-[ ! -f "${TEMP}" ] && mkdir -p "${TEMP}"
+[ ! -f "${TEMP}" ] && mkdir "${TEMP}" || gen_die "Failed to create '${TEMP}'!"
 
 setup_cache_dir
 
