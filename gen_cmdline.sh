@@ -591,7 +591,7 @@ parse_cmdline() {
 			then
 				mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
 			fi
-			TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX)
+			TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
 			[ -z "${TEMP}" ] && gen_die "mktemp failed!"
 			print_info 2 "TMPDIR: ${TMPDIR}"
 			print_info 2 "TEMP: ${TEMP}"
