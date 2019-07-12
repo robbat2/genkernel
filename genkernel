@@ -81,13 +81,14 @@ fi
 
 clear_log
 NORMAL=${GOOD} print_info 1 "Gentoo Linux Genkernel; Version ${GK_V}${NORMAL}"
+print_info 1 "Using genkernel configuration from '${_GENKERNEL_CONF}' ..."
+unset _GENKERNEL_CONF
 print_info 1 "Running with options: ${GK_OPTIONS}"
 echo
 
 # Set ${ARCH}
 get_official_arch
 
-print_info 1 "Using genkernel.conf from ${_GENKERNEL_CONF}"
 # Save any customizations of MODULES_* first.
 override_module_vars="$(compgen -A variable |grep '^MODULES_')"
 for v in ${override_module_vars}
@@ -158,8 +159,8 @@ then
 	gen_kerncache_is_valid
 fi
 
-NORMAL=${BOLD} print_info 1 "Linux Kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}..."
-print_info 1 ".. with config file ${KERNEL_CONFIG}"
+print_info 1 "Working with Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}"
+print_info 1 "Using kernel config file '${KERNEL_CONFIG}' ..."
 
 if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
