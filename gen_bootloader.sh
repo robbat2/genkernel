@@ -11,10 +11,10 @@ set_bootloader() {
 			set_bootloader_grub2
 			;;
 		no)
-			print_info 1 "No bootloader set: Skipping bootloader update!"
+			print_info 1 "--no-bootloader set; Skipping bootloader update ..."
 			;;
 		*)
-			print_warning 1 "Bootloader '${BOOTLOADER}' is currently not supported"
+			print_warning 1 "Bootloader '${BOOTLOADER}' is currently not supported; Skipping bootloader update ..."
 			;;
 	esac
 }
@@ -47,7 +47,7 @@ set_bootloader_grub2() {
 	fi
 
 	print_info 1 "You can customize Grub2 parameters in /etc/default/grub."
-	print_info 1 "Running grub-mkconfig to create ${GRUB_CONF}..."
+	print_info 1 "Running grub-mkconfig to create '${GRUB_CONF}' ..."
 	grub-mkconfig -o "${GRUB_CONF}" 2> /dev/null ||
 		grub2-mkconfig -o "${GRUB_CONF}" 2> /dev/null ||
 		gen_die "grub-mkconfig failed"
@@ -57,7 +57,7 @@ set_bootloader_grub2() {
 set_bootloader_grub() {
 	local GRUB_CONF="${BOOTDIR}/grub/grub.conf"
 
-	print_info 1 "Adding kernel to ${GRUB_CONF}..."
+	print_info 1 "Adding kernel to '${GRUB_CONF}' ..."
 
 	if [ ! -e ${GRUB_CONF} ]
 	then
@@ -114,7 +114,7 @@ set_bootloader_grub() {
 	else
 		# The grub.conf already exists, so let's try to duplicate the default entry
 		if set_bootloader_grub_check_for_existing_entry "${GRUB_CONF}"; then
-			print_warning 1 "An entry was already found for a kernel/initramfs with this name...skipping update"
+			print_warning 1 "An entry was already found for a kernel/initramfs with this name; Skipping update ..."
 			return 0
 		fi
 
@@ -145,7 +145,7 @@ set_bootloader_grub_duplicate_default() {
 	line_count=$(wc -l < "${GRUB_CONF}")
 	line_nums="$(grep -n "^title" "${GRUB_CONF}" | cut -d: -f1)"
 	if [ -z "${line_nums}" ]; then
-		print_error 1 "No current 'title' entries found in your grub.conf...skipping update"
+		print_error 1 "No current 'title' entries found in your grub.conf; Skipping update ..."
 		return 0
 	fi
 	line_nums="${line_nums} $((${line_count}+1))"
@@ -153,11 +153,11 @@ set_bootloader_grub_duplicate_default() {
 	# Find default entry
 	default=$(sed -rn '/^[[:space:]]*default[[:space:]=]/s/^.*default[[:space:]=]+([[:alnum:]]+).*$/\1/p' "${GRUB_CONF}")
     if [ -z "${default}" ]; then
-		print_warning 1 "No default entry found...assuming 0"
+		print_warning 1 "No default entry found; Assuming 0 ..."
 		default=0
 	fi
 	if ! echo ${default} | grep -q '^[0-9]\+$'; then
-		print_error 1 "We don't support non-numeric (such as 'saved') default values...skipping update"
+		print_error 1 "We don't support non-numeric (such as 'saved') default values; Skipping update ..."
 		return 0
 	fi
 

@@ -3,7 +3,7 @@
 
 # Fills variable KERNEL_CONFIG
 determine_config_file() {
-	print_info 2 "Checking for suitable kernel configuration..."
+	print_info 2 "Checking for suitable kernel configuration ..."
 
 	if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" != "default" ]
 	then
@@ -38,12 +38,12 @@ determine_config_file() {
 			then
 				if grep -sq THIS_CONFIG_IS_BROKEN "$f"
 				then
-					print_info 2 "$(getIndent 1)- '${f}' is marked as broken; Skipping..."
+					print_info 2 "$(getIndent 1)- '${f}' is marked as broken; Skipping ..."
 				else
 					KERNEL_CONFIG="$f" && break
 				fi
 			else
-					print_info 2 "$(getIndent 1)- '${f}' not found; Skipping..."
+					print_info 2 "$(getIndent 1)- '${f}' not found; Skipping ..."
 			fi
 		done
 
@@ -73,14 +73,14 @@ determine_config_file() {
 config_kernel() {
 	cd "${KERNEL_DIR}" || gen_die 'Could not switch to the kernel directory!'
 
-	print_info 1 "kernel: >> Initializing..."
+	print_info 1 "kernel: >> Initializing ..."
 
 	if isTrue "${CLEAN}" && isTrue "${MRPROPER}"
 	then
 		print_info 2 "$(getIndent 1)>> --mrproper is set; Skipping 'make clean' ..."
 	elif isTrue "${CLEAN}" && ! isTrue "${MRPROPER}"
 	then
-		print_info 1 "$(getIndent 1)>> Cleaning..."
+		print_info 1 "$(getIndent 1)>> Cleaning ..."
 		compile_generic clean kernel
 	else
 		print_info 1 "$(getIndent 1)>> --clean is disabled; not running 'make clean'."
@@ -108,7 +108,7 @@ config_kernel() {
 
 	if isTrue "${MRPROPER}"
 	then
-		print_info 1 "$(getIndent 1)>> Running mrproper..."
+		print_info 1 "$(getIndent 1)>> Running mrproper ..."
 		compile_generic mrproper kernel
 	else
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
@@ -138,7 +138,7 @@ config_kernel() {
 
 	if isTrue "${OLDCONFIG}"
 	then
-		print_info 1 "$(getIndent 1)>> Running oldconfig..."
+		print_info 1 "$(getIndent 1)>> Running oldconfig ..."
 		yes '' 2>/dev/null | compile_generic oldconfig kernel 2>/dev/null
 	else
 		print_info 1 "$(getIndent 1)>> --oldconfig is disabled; not running 'make oldconfig'."
@@ -161,7 +161,7 @@ config_kernel() {
 
 	if [ x"${add_config}" != x"" ]
 	then
-		print_info 1 "$(getIndent 1)>> Invoking ${add_config}..."
+		print_info 1 "$(getIndent 1)>> Invoking ${add_config} ..."
 		compile_generic $add_config kernelruntask
 		[ "$?" ] || gen_die "Error: ${add_config} failed!"
 	fi
@@ -172,7 +172,7 @@ config_kernel() {
 	# Force this on if we are using --genzimage
 	if isTrue "${CMD_GENZIMAGE}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for --genzimage are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for --genzimage are set ..."
 		# Make sure Ext2 support is on...
 		cfg_CONFIG_EXT2_FS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_EXT2_FS")
 		if ! isTrue "${cfg_CONFIG_EXT2_FS}"
@@ -232,7 +232,7 @@ config_kernel() {
 				RAMDISKMODULES="no"
 			fi
 
-			_no_modules_support_warning+="to avoid genkernel failures because kernel does NOT support modules..."
+			_no_modules_support_warning+="to avoid genkernel failures because kernel does NOT support modules ..."
 
 			print_warning 1 "${_no_modules_support_warning}"
 			BUILD_STATIC="yes"
@@ -249,7 +249,7 @@ config_kernel() {
 	# Make sure lvm modules are enabled in the kernel, if --lvm
 	if isTrue "${CMD_LVM}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for LVM support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for LVM support are set ..."
 		cfg_CONFIG_DM_SNAPSHOT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_SNAPSHOT")
 		case "$cfg_CONFIG_DM_SNAPSHOT" in
 			y|m) ;; # Do nothing
@@ -273,7 +273,7 @@ config_kernel() {
 	# Make sure multipath modules are enabled in the kernel, if --multipath
 	if isTrue "${CMD_MULTIPATH}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for multipath support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for multipath support are set ..."
 		cfg_CONFIG_DM_MULTIPATH=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_MULTIPATH")
 		case "$cfg_CONFIG_DM_MULTIPATH" in
 			y|m) ;; # Do nothing
@@ -295,7 +295,7 @@ config_kernel() {
 	# Make sure dmraid modules are enabled in the kernel, if --dmraid
 	if isTrue "${CMD_DMRAID}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for DMRAID support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for DMRAID support are set ..."
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" &&
@@ -305,7 +305,7 @@ config_kernel() {
 	# Make sure iSCSI modules are enabled in the kernel, if --iscsi
 	if isTrue "${CMD_ISCSI}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for iSCSI support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for iSCSI support are set ..."
 		cfg_CONFIG_ISCSI_BOOT_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_ISCSI_BOOT_SYSFS")
 		case "$cfg_CONFIG_ISCSI_BOOT_SYSFS" in
 			y|m) ;; # Do nothing
@@ -343,7 +343,7 @@ config_kernel() {
 	# Make sure Hyper-V modules are enabled in the kernel, if --hyperv
 	if isTrue "${CMD_HYPERV}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for Hyper-V support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for Hyper-V support are set ..."
 		# Hyper-V deps
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_X86" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI" "y"
@@ -470,7 +470,7 @@ config_kernel() {
 	# Make sure kernel supports Splash, if --splash
 	if isTrue "${SPLASH}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for Splash support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for Splash support are set ..."
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_SPLASH" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VT" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TTY" "y"
@@ -482,7 +482,7 @@ config_kernel() {
 	# Make sure VirtIO modules are enabled in the kernel, if --virtio
 	if isTrue "${CMD_VIRTIO}"
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for VirtIO support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for VirtIO support are set ..."
 		# VirtIO deps
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO" "y"
@@ -610,7 +610,7 @@ config_kernel() {
 	# Microcode setting, intended for early microcode loading, if --microcode
 	if [[ -n "${MICROCODE}" ]]
 	then
-		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for early microcode loading support are set..."
+		print_info 1 "$(getIndent 1)>> Ensure that required kernel options for early microcode loading support are set ..."
 		kconfig_microcode_intel=(CONFIG_MICROCODE_INTEL CONFIG_MICROCODE_INTEL_EARLY)
 
 		kconfig_microcode_amd=(CONFIG_MICROCODE_AMD)
@@ -640,17 +640,17 @@ config_kernel() {
 	then
 		if isTrue "${OLDCONFIG}"
 		then
-			print_info 1 "$(getIndent 1)>> Re-running oldconfig due to changed kernel options..."
+			print_info 1 "$(getIndent 1)>> Re-running oldconfig due to changed kernel options ..."
 			yes '' 2>/dev/null | compile_generic oldconfig kernel 2>/dev/null
 		else
-			print_info 1 "$(getIndent 1)>> Running olddefconfig due to changed kernel options..."
+			print_info 1 "$(getIndent 1)>> Running olddefconfig due to changed kernel options ..."
 			compile_generic olddefconfig kernel 2>/dev/null
 		fi
 	else
 		print_info 2 "$(getIndent 1)>> genkernel did not need to add/modify any kernel options."
 	fi
 
-	print_info 2 "$(getIndent 1)>> checking for required kernel options..."
+	print_info 2 "$(getIndent 1)>> checking for required kernel options ..."
 	for required_kernel_option in "${required_kernel_options[@]}"
 	do
 		optval=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "${required_kernel_option}")

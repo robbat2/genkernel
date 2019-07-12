@@ -205,7 +205,7 @@ gen_die() {
 		print_error 1 "ERROR: ${1}"
 	fi
 	print_error 1 ''
-	print_error 1 "-- Grepping log... --"
+	print_error 1 "-- Grepping log ... --"
 	print_error 1 ''
 
 	if isTrue "${USECOLOR}"
@@ -216,7 +216,7 @@ gen_die() {
 		grep -B5 -E "([Ww][Aa][Rr][Nn][Ii][Nn][Gg]|[Ee][Rr][Rr][Oo][Rr][ :,!]|[Ff][Aa][Ii][Ll][Ee]?[Dd]?)" ${LOGFILE}
 	fi
 	print_error 1 ''
-	print_error 1 "-- End log... --"
+	print_error 1 "-- End log ... --"
 	print_error 1 ''
 	print_error 1 "Please consult ${LOGFILE} for more information and any"
 	print_error 1 "errors that were reported above."

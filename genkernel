@@ -126,10 +126,10 @@ do
 done
 
 # Read arch-specific config
-print_info 1 "Sourcing arch-specific config.sh from ${ARCH_CONFIG} .."
+print_info 1 "Sourcing arch-specific config.sh from ${ARCH_CONFIG} ..."
 source ${ARCH_CONFIG} || gen_die "Could not read ${ARCH_CONFIG}"
 _MODULES_LOAD=${GK_SHARE}/arch/${ARCH}/modules_load
-print_info 1 "Sourcing arch-specific modules_load from ${_MODULES_LOAD} .."
+print_info 1 "Sourcing arch-specific modules_load from ${_MODULES_LOAD} ..."
 source "${_MODULES_LOAD}" || gen_die "Could not read ${_MODULES_LOAD}"
 
 # Now apply customizations of MODULES_*
@@ -248,7 +248,7 @@ then
 	then
 		old_KV=$(cat "${TEMP}/.old_kv")
 		print_info 1 "$(getIndent 1)>> Kernel version has changed (probably due to config change) since genkernel start:"
-		print_info 1 "$(getIndent 1)>> We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}..."
+		print_info 1 "$(getIndent 1)>> We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL} ..."
 	else
 		print_info 2 "$(getIndent 1)>> Kernel version has not changed since genkernel start."
 	fi
@@ -312,7 +312,7 @@ then
 		[ "${CMD_STATUS}" != '0' ] && gen_die '--callback failed!'
 	else
 		echo
-		print_info 1 ">>> Callback cancelled..."
+		print_info 1 ">>> Callback cancelled ..."
 	fi
 	trap - TERM KILL INT QUIT ABRT
 	print_info 1 "" 1 0
@@ -323,7 +323,7 @@ then
 	# Compile initramfs
 	create_initramfs
 else
-	print_info 1 'initramfs: Not building since only the kernel was requested...'
+	print_info 1 'initramfs: Not building since only the kernel was requested ...'
 fi
 
 if isTrue "${INTEGRATED_INITRAMFS}"
