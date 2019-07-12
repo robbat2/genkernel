@@ -29,13 +29,6 @@ set_bootloader_read_fstab() {
 	echo "${ROOTFS} ${BOOTFS}"
 }
 
-set_bootloader_grub_read_device_map() {
-	# Read GRUB device map
-	[ ! -d ${TEMP} ] && mkdir ${TEMP}
-	echo "quit" | grub --batch --device-map=${TEMP}/grub.map &>/dev/null
-	echo "${TEMP}/grub.map"
-}
-
 set_bootloader_grub2() {
 	local GRUB_CONF
 	for candidate in \
@@ -78,8 +71,10 @@ set_bootloader_grub() {
 		fi
 
 		# Get the GRUB mapping for our device
+		echo "quit" | grub --batch --device-map="${TEMP}/grub.map" &>/dev/null
+
 		local GRUB_BOOT_DISK1=$(echo ${GRUB_BOOTFS} | sed -e 's#\(/dev/.\+\)[[:digit:]]\+#\1#')
-		local GRUB_BOOT_DISK=$(awk '{if ($2 == "'${GRUB_BOOT_DISK1}'") {gsub(/(\(|\))/, "", $1); print $1;}}' ${TEMP}/grub.map)
+		local GRUB_BOOT_DISK=$(awk '{if ($2 == "'${GRUB_BOOT_DISK1}'") {gsub(/(\(|\))/, "", $1); print $1;}}' "${TEMP}/grub.map")
 		local GRUB_BOOT_PARTITION=$(($(echo ${GRUB_BOOTFS} | sed -e 's#/dev/.\+\([[:digit:]]?*\)#\1#') - 1))
 
 		if [ -n "${GRUB_BOOT_DISK}" -a -n "${GRUB_BOOT_PARTITION}" ]
