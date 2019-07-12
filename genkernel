@@ -154,7 +154,7 @@ check_distfiles
 dump_debugcache
 
 KERNCACHE_IS_VALID="no"
-if [ "${KERNCACHE}" != "" ]
+if [ -n "${KERNCACHE}" ]
 then
 	gen_kerncache_is_valid
 fi
@@ -268,7 +268,7 @@ then
 fi
 
 # Run callback
-if [ "${CMD_CALLBACK}" != "" ]
+if [ -n "${CMD_CALLBACK}" ]
 then
 	print_info 1 "" 1 0
 	print_info 1 "Preparing to run callback: \"${CMD_CALLBACK}\"" 0
@@ -277,13 +277,13 @@ then
 	CALLBACK_COUNT=0
 
 	trap "CALLBACK_ESCAPE=1" TERM KILL INT QUIT ABRT
-	while [[ "${CALLBACK_ESCAPE}" = '0' && ${CALLBACK_COUNT} -lt 5 ]]
+	while [[ "${CALLBACK_ESCAPE}" -eq 0 && ${CALLBACK_COUNT} -lt 5 ]]
 	do
 		sleep 1; printf '.';
 		let CALLBACK_COUNT=${CALLBACK_COUNT}+1
 	done
 
-	if [ "${CALLBACK_ESCAPE}" = '0' ]
+	if [ "${CALLBACK_ESCAPE}" -eq 0 ]
 	then
 		echo
 		echo
@@ -291,7 +291,7 @@ then
 		CMD_STATUS="${PIPESTATUS[0]}"
 		echo
 		print_info 1 "<<< Callback exit status: ${CMD_STATUS}"
-		[ "${CMD_STATUS}" != '0' ] && gen_die '--callback failed!'
+		[ "${CMD_STATUS}" -ne 0 ] && gen_die '--callback failed!'
 	else
 		echo
 		print_info 1 ">>> Callback cancelled ..."
@@ -319,9 +319,9 @@ then
 	compile_kernel
 fi
 
-[ "${KERNCACHE}" != "" ] && gen_kerncache
-[ "${MINKERNPACKAGE}" != '' ] && gen_minkernpackage
-[ "${MODULESPACKAGE}" != '' ] && gen_modulespackage
+[ -n "${KERNCACHE}" ] && gen_kerncache
+[ -n "${MINKERNPACKAGE}" ] && gen_minkernpackage
+[ -n "${MODULESPACKAGE}" ] && gen_modulespackage
 
 if isTrue "${BUILD_KERNEL}"
 then
