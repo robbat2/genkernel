@@ -217,11 +217,13 @@ cache_replace() {
 	var_replace "CACHE" "${GK_V_CACHEDIR}" "${1}"
 }
 
-clear_log() {
+start_log() {
 	if [ -f "${LOGFILE}" ]
 	then
-		(echo > "${LOGFILE}") 2>/dev/null || small_die "Genkernel: Could not write to ${LOGFILE}."
+		(echo > "${LOGFILE}") 2>/dev/null || small_die "Genkernel: Could not write to '${LOGFILE}'."
 	fi
+
+	dump_debugcache
 }
 
 gen_die() {
