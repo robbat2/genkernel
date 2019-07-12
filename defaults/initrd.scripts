@@ -1127,9 +1127,7 @@ waitForZFS() {
 	exit 1
 }
 
-startVolumes() {
-	#good_msg 'Checking if volumes need to be started...'
-
+start_volumes() {
 	# Here, we check for /dev/device-mapper, and if it exists, we setup a
 	# a symlink, which should hopefully fix bug #142775 and bug #147015
 	if [ -e /dev/device-mapper ] && [ ! -e /dev/mapper/control ]
@@ -1530,7 +1528,7 @@ start_LUKS() {
 		if [ -n "${REAL_ROOT}" ]
 		then
 			# Rescan volumes
-			startVolumes
+			start_volumes
 		else
 			REAL_ROOT="/dev/mapper/root"
 		fi

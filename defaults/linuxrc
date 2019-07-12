@@ -450,7 +450,7 @@ setup_btrfsctl
 setup_md_device
 
 # Scan volumes
-startVolumes
+start_volumes
 
 setup_keymap
 
