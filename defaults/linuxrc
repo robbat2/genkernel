@@ -123,7 +123,7 @@ do
 				;;
 			esac
 		;;
-		dobtrfs*)
+		dobtrfs)
 			USE_BTRFS=1
 		;;
 		quiet|quiet_genkernel)
