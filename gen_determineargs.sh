@@ -56,11 +56,16 @@ determine_KV() {
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		else
 			# We will be here only when currently selected kernel source
-			# is untouched. I.e. after a new kernel sources version was installed
-			# and genkernel was called for the first time.
-			# However, we have no chance to get a LOCALVERSION,
-			# so don't even try -- it would be useless at this stage.
-			print_info 3 "Unable to determine LOCALVERSION -- maybe fresh sources?"
+			# is untouched (i.e. after a new kernel sources version was
+			# installed and will now be used for the first time) or
+			# was cleaned.
+			# Anyway, we have no chance to get a LOCALVERSION,
+			# so don't even try -- it would be also useless at this stage.
+			# Note: If we are building a kernel in this genkernel run and
+			#       LOCALVERSION will become available later due to
+			#       changed configuration we will notice after we have
+			#       prepared the sources.
+			print_info 3 "Unable to determine LOCALVERSION -- maybe cleaned/fresh sources?"
 			KV=${VER}.${PAT}.${SUB}${EXV}
 		fi
 	fi
