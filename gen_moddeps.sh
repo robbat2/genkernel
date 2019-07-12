@@ -46,6 +46,14 @@ gen_deps() {
 	done
 }
 
+modules_dep_list() {
+	KEXT=$(modules_kext)
+	if [ -f ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep ]
+	then
+		cat ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep | grep ${1}${KEXT}\: | cut -d\:  -f2
+	fi
+}
+
 modules_kext()
 {
 	KEXT=".ko"
@@ -54,14 +62,6 @@ modules_kext()
 		grep -sq '^CONFIG_MODULE_COMPRESS_GZIP=y' "${KERNEL_OUTPUTDIR}"/.config && KEXT='.ko.gz'
 	fi
 	echo ${KEXT}
-}
-
-modules_dep_list() {
-	KEXT=$(modules_kext)
-	if [ -f ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep ]
-	then
-		cat ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep | grep ${1}${KEXT}\: | cut -d\:  -f2
-	fi
 }
 
 # Pass module deps list
