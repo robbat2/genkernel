@@ -333,11 +333,11 @@ clear_tmpdir() {
 	if isTrue "${CMD_INSTALL}"
 	then
 		TMPDIR_CONTENTS=$(ls "${TMPDIR}")
-		print_info 1 "Removing tmp dir contents"
+		print_info 2 "Removing tmp dir contents"
 		for i in ${TMPDIR_CONTENTS}
 		do
-			print_info 1 "$(getIndent 1)>> removing ${i}"
-			rm -r ${TMPDIR}/${i}
+			print_info 3 "$(get_indent 1)>> removing ${i}"
+			rm -r "${TMPDIR}/${i}"
 		done
 	fi
 }
