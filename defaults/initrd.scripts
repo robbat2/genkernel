@@ -1,7 +1,5 @@
 #!/bin/sh
 
-. /etc/initrd.defaults
-
 call_func_timeout() {
 	local func=$1 timeout=$2 pid watcher
 
