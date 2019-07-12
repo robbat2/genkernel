@@ -248,7 +248,7 @@ compile_gen_init_cpio() {
 	local gen_init_cpio_SRC="${KERNEL_DIR}/usr/gen_init_cpio.c"
 	local gen_init_cpio_DIR="${KERNEL_OUTPUTDIR}/usr"
 
-	print_info 1 "$(getIndent 2)>> Compiling gen_init_cpio ..."
+	print_info 2 "$(get_indent 2)>> Compiling gen_init_cpio ..."
 
 	[ ! -e "${gen_init_cpio_SRC}" ] && gen_die "'${gen_init_cpio_SRC}' is missing. Cannot compile gen_init_cpio!"
 	if [ ! -d "${gen_init_cpio_DIR}" ]
@@ -256,12 +256,10 @@ compile_gen_init_cpio() {
 		mkdir -p "${gen_init_cpio_DIR}" || gen_die "Failed to create '${gen_init_cpio_DIR}'!"
 	fi
 
-	export_utils_args
+	local CC=$(tc-getBUILD_CC)
 
-	${CC} -O2 "${KERNEL_DIR}/usr/gen_init_cpio.c" -o "${KERNEL_OUTPUTDIR}/usr/gen_init_cpio" -Wl,--no-as-needed ||
-		gen_die 'Failed to compile gen_init_cpio!'
-
-	unset_utils_args
+	${CC} -O2 "${KERNEL_DIR}/usr/gen_init_cpio.c" -o "${KERNEL_OUTPUTDIR}/usr/gen_init_cpio" -Wl,--no-as-needed \
+		|| gen_die 'Failed to compile gen_init_cpio!'
 }
 
 compile_generic() {
