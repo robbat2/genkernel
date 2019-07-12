@@ -373,37 +373,44 @@ compile_modules() {
 }
 
 compile_kernel() {
-	[ "${KERNEL_MAKE}" = '' ] &&
-		gen_die "KERNEL_MAKE undefined - I don't know how to compile a kernel for this arch!"
-	cd ${KERNEL_DIR}
+	[ -z "${KERNEL_MAKE}" ] \
+		&& gen_die "KERNEL_MAKE undefined - I don't know how to compile a kernel for this arch!"
+
+	cd "${KERNEL_DIR}" || gen_die "Failed to chdir to '${KERNEL_DIR}'!"
+
 	local kernel_make_directive="${KERNEL_MAKE_DIRECTIVE}"
 	if [ "${KERNEL_MAKE_DIRECTIVE_OVERRIDE}" != "${DEFAULT_KERNEL_MAKE_DIRECTIVE_OVERRIDE}" ]; then
 		kernel_make_directive="${KERNEL_MAKE_DIRECTIVE_OVERRIDE}"
 	fi
-	print_info 1 "$(getIndent 1)>> Compiling ${KV} ${kernel_make_directive/_install/ [ install ]/} ..."
+
+	print_info 1 "$(get_indent 1)>> Compiling ${KV} ${kernel_make_directive/_install/ [ install ]/} ..."
 	compile_generic "${kernel_make_directive}" kernel
-	if [ "${KERNEL_MAKE_DIRECTIVE_2}" != '' ]
+
+	if [ -n "${KERNEL_MAKE_DIRECTIVE_2}" ]
 	then
-		print_info 1 "$(getIndent 1)>> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2} ..."
+		print_info 1 "$(get_indent 1)>> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2} ..."
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
-	if isTrue "${FIRMWARE_INSTALL}" && [ ! -e "${KERNEL_DIR}/ihex2fw.c" ] ; then
-		# Kernel v4.14 removed firmware from the kernel sources, including the
-		# ihex2fw.c tool source. Try and detect the tool to see if we are in >=v4.14
-		print_warning 1 "$(getIndent 1)>> Linux v4.14 removed in-kernel firmware, you MUST install the sys-kernel/linux-firmware package!"
-	elif isTrue "${FIRMWARE_INSTALL}" ; then
+	if isTrue "${FIRMWARE_INSTALL}" && [ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -ge 4014 ]
+	then
+		# Kernel v4.14 removed firmware from the kernel sources
+		print_warning 1 "$(get_indent 1)>> Linux v4.14 removed in-kernel firmware, you MUST install the sys-kernel/linux-firmware package!"
+	elif isTrue "${FIRMWARE_INSTALL}"
+	then
 		local cfg_CONFIG_FIRMWARE_IN_KERNEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" CONFIG_FIRMWARE_IN_KERNEL)
-		if isTrue "$cfg_CONFIG_FIRMWARE_IN_KERNEL"; then
-			print_info 1 "$(getIndent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y) ..."
+		if isTrue "$cfg_CONFIG_FIRMWARE_IN_KERNEL"
+		then
+			print_info 1 "$(get_indent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y) ..."
 		else
-			print_info 1 "$(getIndent 1)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y ..."
+			print_info 1 "$(get_indent 1)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y ..."
 			[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 			[ "${INSTALL_FW_PATH}" != '' ] && export INSTALL_FW_PATH
 			MAKEOPTS="${MAKEOPTS} -j1" compile_generic "firmware_install" kernel
 		fi
-	else
-		print_info 1 "$(getIndent 1)>> Not installing firmware as requested by configuration FIRMWARE_INSTALL=no ..."
+	elif [ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -lt 4014 ]
+	then
+		print_info 1 "$(get_indent 1)>> Skipping installation of bundled firmware due to --no-firmware-install ..."
 	fi
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})
@@ -412,6 +419,7 @@ compile_kernel() {
 	then
 		gen_die "Cannot locate kernel binary"
 	fi
+
 	# if source != outputdir, we need this:
 	tmp_kernel_binary="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary}"
 	tmp_kernel_binary2="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary2}"
@@ -419,29 +427,34 @@ compile_kernel() {
 
 	if isTrue "${CMD_INSTALL}"
 	then
-		copy_image_with_preserve "kernel" \
+		copy_image_with_preserve \
+			"kernel" \
 			"${tmp_kernel_binary}" \
 			"kernel-${KNAME}-${ARCH}-${KV}"
 
-		copy_image_with_preserve "System.map" \
+		copy_image_with_preserve \
+			"System.map" \
 			"${systemmap}" \
 			"System.map-${KNAME}-${ARCH}-${KV}"
 
 		if isTrue "${GENZIMAGE}"
 		then
-			copy_image_with_preserve "kernelz" \
+			copy_image_with_preserve \
+				"kernelz" \
 				"${tmp_kernel_binary2}" \
 				"kernelz-${KV}"
 		fi
 	else
-		cp "${tmp_kernel_binary}" "${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}" ||
-			gen_die "Could not copy the kernel binary to ${TMPDIR}!"
-		cp "${systemmap}" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" ||
-			gen_die "Could not copy System.map to ${TMPDIR}!"
+		cp "${tmp_kernel_binary}" "${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}" \
+			|| gen_die "Could not copy the kernel binary to '${TMPDIR}'!"
+
+		cp "${systemmap}" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" \
+			|| gen_die "Could not copy System.map to '${TMPDIR}'!"
+
 		if isTrue "${GENZIMAGE}"
 		then
-			cp "${tmp_kernel_binary2}" "${TMPDIR}/kernelz-${KV}" ||
-				gen_die "Could not copy the kernelz binary to ${TMPDIR}!"
+			cp "${tmp_kernel_binary2}" "${TMPDIR}/kernelz-${KV}" \
+				|| gen_die "Could not copy the kernelz binary to '${TMPDIR}'!"
 		fi
 	fi
 }
