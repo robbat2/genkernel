@@ -85,7 +85,7 @@ DEBUGGING OPTIONS
 *--*[*no-*]*color*::
     Turns on, or off, output in color using escape sequences.
 
-*--*[*no-*]*debug-cleanup*::
+*--*[*no-*]*cleanup*::
     Turns on or off the full post-run cleanup for debug purposes.
 
 

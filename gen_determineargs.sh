@@ -167,7 +167,7 @@ determine_real_args() {
 	set_config_with_override STRING BUSYBOX_CONFIG       CMD_BUSYBOX_CONFIG
 	set_config_with_override STRING STRIP_TYPE           CMD_STRIP_TYPE           "modules"
 	set_config_with_override BOOL   INSTALL              CMD_INSTALL              "yes"
-	set_config_with_override BOOL   DEBUGCLEANUP         CMD_DEBUGCLEANUP         "yes"
+	set_config_with_override BOOL   CLEANUP              CMD_CLEANUP              "yes"
 
 	BOOTDIR=$(arch_replace "${BOOTDIR}")
 	BOOTDIR=${BOOTDIR%/}    # Remove any trailing slash

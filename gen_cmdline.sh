@@ -22,8 +22,8 @@ longusage() {
   echo "	--logfile=<outfile>	Output file for debug info"
   echo "	--color			Output debug in color"
   echo "	--no-color		Do not output debug in color"
-  echo "	--debug-cleanup		Clean up temporary build directories on exit"
-  echo "	--no-debug-cleanup	Do not remove any temporary directories on exit"
+  echo "	--cleanup		Clean up temporary directories on exit"
+  echo "	--no-cleanup		Do not remove any temporary directories on exit"
   echo "  Kernel Configuration settings"
   echo "	--menuconfig		Run menuconfig after oldconfig"
   echo "	--no-menuconfig		Do not run menuconfig after oldconfig"
@@ -609,9 +609,9 @@ parse_cmdline() {
 			print_info 2 "USECOLOR: ${USECOLOR}"
 			setColorVars
 			;;
-		--debug-cleanup|--no-debug-cleanup)
-			CMD_DEBUGCLEANUP=$(parse_optbool "$*")
-			print_info 2 "CMD_DEBUGCLEANUP: ${CMD_DEBUGCLEANUP}"
+		--cleanup|--no-cleanup)
+			CMD_CLEANUP=$(parse_optbool "$*")
+			print_info 2 "CMD_CLEANUP: ${CMD_CLEANUP}"
 			;;
 		--logfile=*)
 			CMD_LOGFILE="${*#*=}"

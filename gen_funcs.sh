@@ -270,7 +270,7 @@ setup_cache_dir() {
 }
 
 cleanup() {
-	if isTrue "${CMD_DEBUGCLEANUP}"
+	if isTrue "${CLEANUP}"
 	then
 		if [ -n "${TEMP}" -a -d "${TEMP}" ]
 		then
@@ -280,19 +280,18 @@ cleanup() {
 		if isTrue "${POSTCLEAR}"
 		then
 			echo
-			print_info 1 'RUNNING FINAL CACHE/TMP CLEANUP'
-			print_info 1 "CACHE_DIR: ${CACHE_DIR}"
-			CLEAR_CACHEDIR='yes'
-			setup_cache_dir
+			print_info 2 'Running final cache/tmp cleanup ...'
+			print_info 3 "CACHE_DIR: ${CACHE_DIR}"
+			CLEAR_CACHEDIR=yes setup_cache_dir
 			echo
-			print_info 1 "TMPDIR: ${TMPDIR}"
+			print_info 3 "TMPDIR: ${TMPDIR}"
 			clear_tmpdir
 		fi
 	else
-		print_info 1 "Not running any cleanup per DEBUGCLEANUP"
-		print_info 1 "TEMP: ${TEMP}"
-		print_info 1 "CACHE_DIR: ${CACHE_DIR}"
-		print_info 1 "TMPDIR: ${TMPDIR}"
+		print_info 2 "--no-cleanup is set; Skipping cleanup ..."
+		print_info 3 "TEMP: ${TEMP}"
+		print_info 3 "CACHE_DIR: ${CACHE_DIR}"
+		print_info 3 "TMPDIR: ${TMPDIR}"
 	fi
 }
 
