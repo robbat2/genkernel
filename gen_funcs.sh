@@ -714,7 +714,7 @@ find_kernel_binary() {
 	local kernel_binary=$*
 	local curdir=$(pwd)
 
-	cd "${KERNEL_OUTPUTDIR}"
+	cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	for i in ${kernel_binary}
 	do
 		if [ -e "${i}" ]
@@ -723,11 +723,8 @@ find_kernel_binary() {
 			break
 		fi
 	done
-#	if [ -z "${tmp_kernel_binary}" ]
-#	then
-#		gen_die "Cannot locate kernel binary!"
-#	fi
-	cd "${curdir}"
+
+	cd "${curdir}" || gen_die "Failed to chdir to '${TDIR}'!"
 	echo "${tmp_kernel_binary}"
 }
 
