@@ -323,9 +323,6 @@ fi
 [ "${MINKERNPACKAGE}" != '' ] && gen_minkernpackage
 [ "${MODULESPACKAGE}" != '' ] && gen_modulespackage
 
-# Clean up...
-[ -n "${CTEMP}" ] && rm -rf "${TEMP}"
-
 if isTrue "${BUILD_KERNEL}"
 then
 	if isTrue "${CMD_INSTALL}"
@@ -403,5 +400,5 @@ print_info 1 'is about the default genkernel configuration...'
 print_info 1 ''
 print_info 1 'Make sure you have the latest ~arch genkernel before reporting bugs.'
 
-#Final Cleanup
+# Final Cleanup
 cleanup
