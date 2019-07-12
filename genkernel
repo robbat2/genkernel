@@ -192,7 +192,7 @@ else
 				fi
 			else
 				print_warning 1 "${BOLD}WARNING${NORMAL}: No mounted ${BOOTDIR} partition detected!"
-				print_warning 1 "$(getIndent 1)Run ``mount ${BOOTDIR}`` to mount it!"
+				print_warning 1 "$(get_indent 1)Run ``mount ${BOOTDIR}`` to mount it!"
 				echo
 			fi
 		fi
@@ -222,7 +222,7 @@ then
 	then
 		compile_generic prepare kernel
 	else
-		print_info 2 "$(getIndent 1)>> Skipping 'make prepare' due to ARCH_HAVENOPREPARE=yes!"
+		print_info 2 "$(get_indent 1)>> Skipping 'make prepare' due to ARCH_HAVENOPREPARE=yes!"
 	fi
 
 	# KV may have changed due to the configuration
@@ -230,10 +230,10 @@ then
 	if [ -f "${TEMP}/.old_kv" ]
 	then
 		old_KV=$(cat "${TEMP}/.old_kv")
-		print_info 1 "$(getIndent 1)>> Kernel version has changed (probably due to config change) since genkernel start:"
-		print_info 1 "$(getIndent 1)>> We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL} ..."
+		print_info 1 "$(get_indent 1)>> Kernel version has changed (probably due to config change) since genkernel start:"
+		print_info 1 "$(get_indent 1)>> We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL} ..."
 	else
-		print_info 2 "$(getIndent 1)>> Kernel version has not changed since genkernel start."
+		print_info 2 "$(get_indent 1)>> Kernel version has not changed since genkernel start."
 	fi
 
 	compile_kernel
@@ -246,7 +246,7 @@ then
 
 	if isTrue "${SAVE_CONFIG}"
 	then
-		print_info 1 "Copying config for successful build to /etc/kernels/kernel-config-${ARCH}-${KV}"
+		print_info 1 "$(get_indent 1)>> Saving config of successful build to '/etc/kernels/kernel-config-${ARCH}-${KV}' ..."
 		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
 		cp "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}" || \
 			print_warning 1 "Unable to copy the kernel configuration file; Ignoring non-fatal error ..."

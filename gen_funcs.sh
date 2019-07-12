@@ -252,16 +252,23 @@ gen_die() {
 	exit 1
 }
 
-getIndent() {
-	[[ "$#" -lt '1' ]] &&
-		gen_die 'getIndent(): improper usage!'
+# @FUNCTION: get_indent
+# @USAGE: <level>
+# @DESCRIPTION:
+# Returns the indent level in spaces.
+#
+# <level> Indentation level.
+get_indent() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
 
 	local _level=${1}
 	local _indent=
 	local _indentTemplate="        "
 	local i=0
 
-	while [[ ${i} -lt ${_level} ]]; do
+	while [[ ${i} -lt ${_level} ]]
+	do
 		_indent+=${_indentTemplate}
 		i=$[$i+1]
 	done
