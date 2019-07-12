@@ -204,6 +204,9 @@ var_replace() {
 }
 
 arch_replace() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
 	var_replace "ARCH" "${ARCH}" "${1}"
 }
 
