@@ -28,6 +28,11 @@ done
 _GENKERNEL_CONF=${CMD_GK_CONFIG:-/etc/genkernel.conf}
 source "${_GENKERNEL_CONF}" || small_die "Could not read ${_GENKERNEL_CONF}"
 
+if [ -z "${GK_SHARE}" ]
+then
+	small_die "GK_SHARE is not set. Please check used genkernel config file at '${_GENKERNEL_CONF}'!"
+fi
+
 # set default LOGLEVEL if uninitialized
 LOGLEVEL=${LOGLEVEL:-1}
 
