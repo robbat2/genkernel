@@ -1,18 +1,24 @@
 #!/bin/sh
 
-[ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
+if [ -z "$1" ]
+then
+	echo "Error: should be called from udhcpc"
+	exit 1
+fi
 
 case ${1} in
-	renew|bound)
-		[ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
-		[ -n "$subnet" ] && NETMASK="netmask $subnet"
-		[ -n "$rootpath" ] && echo "$rootpath" > /rootpath
-		[ -n "$hostname" ] && hostname ${hostname}
+	bound|renew)
+		[ -n "$broadcast" ] && BROADCAST="broadcast ${broadcast}"
+		[ -n "$subnet" ] && NETMASK="netmask ${subnet}"
+		[ -n "$rootpath" ] && echo "${rootpath}" > /rootpath
+		[ -n "$hostname" ] && hostname "${hostname}"
 
-		busybox ifconfig $interface $ip $BROADCAST $NETMASK
+		busybox ifconfig "${interface}" ${ip} ${BROADCAST} ${NETMASK}
+
 		if [ -n "${router}" ]
 		then
-			while route del default gw 0.0.0.0 dev $interface; do
+			while busybox route del default gw 0.0.0.0 dev "${interface}" >/dev/null 2>&1
+			do
 				:
 			done
 
@@ -21,7 +27,9 @@ case ${1} in
 				busybox route add default gw ${i}
 			done
 		fi
+
 		[ -n "$domain" ] && echo "domain ${domain}" >> /etc/resolv.conf
+
 		if [ -n "${dns}" ]
 		then
 			for i in ${dns}
@@ -30,8 +38,21 @@ case ${1} in
 			done
 		fi
 	;;
-	deconfig)
-		busybox ifconfig $interface 0.0.0.0
+	deconfig|leasefail)
+		busybox ifconfig "${interface}" 0.0.0.0
+		while busybox route del default dev "${interface}" >/dev/null 2>&1
+		do
+			:
+		done
+	;;
+	nak)
+		echo "nak: ${message}"
+	;;
+	*)
+		echo "unknown option $1" >&2
+		echo "Usage: $0 {bound|deconfig|leasefail|nak|renew}" >&2
+		exit 1
 	;;
 esac
 
+exit 0
