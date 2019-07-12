@@ -211,7 +211,10 @@ arch_replace() {
 }
 
 cache_replace() {
-	var_replace "CACHE" "${CACHE_DIR}/${GK_V}" "${1}"
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	var_replace "CACHE" "${GK_V_CACHEDIR}" "${1}"
 }
 
 clear_log() {
