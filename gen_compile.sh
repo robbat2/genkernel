@@ -347,29 +347,36 @@ compile_generic() {
 }
 
 compile_modules() {
-	print_info 1 "$(getIndent 1)>> Compiling ${KV} modules ..."
-	cd ${KERNEL_DIR}
+	print_info 1 "$(get_indent 1)>> Compiling ${KV} modules ..."
+
+	cd "${KERNEL_DIR}" || gen_die "Failed to chdir to '${KERNEL_DIR}'!"
+
+	# required for modutils
+	local -x UNAME_MACHINE="${ARCH}"
+
 	compile_generic modules kernel
-	export UNAME_MACHINE="${ARCH}"
-	[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
+
+	[ -n "${INSTALL_MOD_PATH}" ] && local -x INSTALL_MOD_PATH="${INSTALL_MOD_PATH}"
 	if [ "${CMD_STRIP_TYPE}" == "all" -o "${CMD_STRIP_TYPE}" == "modules" ]
 	then
-		print_info 1 "$(getIndent 1)>> Installing ${KV} modules (and stripping)"
-		INSTALL_MOD_STRIP=1
-		export INSTALL_MOD_STRIP
+		print_info 1 "$(get_indent 1)>> Installing ${KV} modules (and stripping) ..."
+		local -x INSTALL_MOD_STRIP=1
 	else
-		print_info 1 "$(getIndent 1)>> Installing ${KV} modules"
+		print_info 1 "$(get_indent 1)>> Installing ${KV} modules ..."
+		local -x INSTALL_MOD_STRIP=0
 	fi
-	MAKEOPTS="${MAKEOPTS} -j1" compile_generic "modules_install" kernel
-	print_info 1 "$(getIndent 1)>> Generating module dependency data ..."
-	if [ "${INSTALL_MOD_PATH}" != '' ]
+
+	compile_generic "modules_install" kernel
+
+	print_info 1 "$(get_indent 1)>> Generating module dependency data ..."
+	if [ -n "${INSTALL_MOD_PATH}" ]
 	then
-		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV}
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV} \
+			|| gen_die "depmod (INSTALL_MOD_PATH=${INSTALL_MOD_PATH}) failed!"
 	else
-		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV}
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV} \
+			|| gen_die "depmod failed!"
 	fi
-	unset UNAME_MACHINE
-	unset INSTALL_MOD_STRIP
 }
 
 compile_kernel() {
