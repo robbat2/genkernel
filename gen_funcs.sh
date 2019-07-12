@@ -450,6 +450,34 @@ copy_image_with_preserve() {
 	fi
 }
 
+# @FUNCTION: debug_breakpoint
+# @USAGE: [<NAME>]
+# @DESCRIPTION:
+# Internal helper function which can be used during development to act like
+# a breakpoint. I.e. will stop execution and show some variables.
+#
+# <NAME> Give breakpoint a name
+debug_breakpoint() {
+	set +x
+	local name=${1}
+	[ -n "${name}" ] && name=" '${name}'"
+
+	echo "Debug breakpoint${name} reached"
+	echo "TEMP: ${TEMP}"
+	[[ -n "${WORKDIR}" ]] && echo "WORKDIR: ${WORKDIR}"
+	[[ -n "${S}" ]] && echo "S: ${S}"
+	[[ -n "${D}" ]] && echo "D: ${D}"
+
+	if [ -n "${GK_WORKER_MASTER_PID}" ]
+	then
+		[[ ${BASHPID:-$(__bashpid)} == ${GK_WORKER_MASTER_PID} ]] || kill -s SIGTERM ${GK_WORKER_MASTER_PID}
+	else
+		[[ ${BASHPID:-$(__bashpid)} == ${GK_MASTER_PID} ]] || kill -s SIGTERM ${GK_MASTER_PID}
+	fi
+
+	exit 99
+}
+
 trap_cleanup(){
 	# Call exit code of 1 for failure
 	cleanup
