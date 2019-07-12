@@ -760,3 +760,6 @@ kconfig_set_opt() {
 		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
 	fi
 }
+
+unset GK_DEFAULT_IFS
+declare -r GK_DEFAULT_IFS="${IFS}"
