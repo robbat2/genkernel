@@ -2,16 +2,15 @@
 
 . /etc/initrd.defaults
 
-call_func_timeout()
-{
+call_func_timeout() {
 	local func=$1 timeout=$2 pid watcher
-	[ $# -ne 2 ] && gen_die "call_func_timeout() called with $# arguments"
 
 	( ${func} ) & pid=$!
 	( sleep ${timeout} && kill -HUP ${pid} ) 2>/dev/null & watcher=$!
-	if wait ${pid} 2>/dev/null; then
-		kill -HUP $watcher 2> /dev/null
-		wait $watcher 2>/dev/null
+	if wait ${pid} 2>/dev/null
+	then
+		kill -HUP ${watcher} 2>/dev/null
+		wait ${watcher} 2>/dev/null
 		return 0
 	fi
 
@@ -19,14 +18,14 @@ call_func_timeout()
 }
 
 modules_load() {
-	fn=$1
+	fn=${1}
 	shift
 	for module in $*
 	do
-		echo ${module} >> /etc/modules/$fn
+		echo ${module} >> /etc/modules/${fn}
 	done
 
-	modules_scan $fn
+	modules_scan ${fn}
 }
 
 modules_scan() {
@@ -43,18 +42,22 @@ modules_scan() {
 		if [ "${MLOAD}" = "${x}" ] # Only module to no-load
 		then
 			[ -z "${QUIET}" ] && \
-				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x}..."
+				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		elif [ "${MLOAD}" = "${MLIST}" ]
 		then
-			if [ "${ROOTFSTYPE}" != 'auto' ] && [ -b "${REAL_ROOT}" ]; then
-				echo "Root block device found, continuing..."
+			if [ "${ROOTFSTYPE}" != 'auto' ] && [ -b "${REAL_ROOT}" ]
+			then
+				echo "Root block device found, continuing ..."
 				break
 			fi
-			if [ -n "${DEBUG}" ]; then
+
+			if [ -n "${DEBUG}" ]
+			then
 				printf "%b" "${BOLD}   ::${NORMAL} "
-				printf "%b" "Scanning for ${x}..."
+				printf "%b" "Scanning for ${x} ..."
 			fi
-			modprobe ${x} > /dev/null 2>&1
+
+			modprobe ${x} >/dev/null 2>&1
 			loaded=${?}
 
 			[ -n "${DEBUG}" -a "${loaded}" = "0" ] && \
@@ -67,13 +70,13 @@ modules_scan() {
 				printf "%b" "${x} "
 		else
 			[ -z "${QUIET}" ] && \
-				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x}..."
+				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		fi
 	done
 	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && echo
 }
 
-uppercase(){
+uppercase() {
 	# needs tr on busybox
 	echo $1 | tr 'a-z' 'A-Z'
 }
@@ -93,16 +96,16 @@ findmediamount() {
 
 	if [ "$#" -gt "0" ]
 	then
-		[ ! -d "${mntdir}" ] && mkdir -p ${mntdir} 2>/dev/null >/dev/null
+		[ ! -d "${mntdir}" ] && mkdir -p ${mntdir} >/dev/null 2>&1
 		if [ -n "${ISOBOOT}" ]
 		then
 			mntcddir="${mntdir%${media}}iso"
-			if [ ! -f ${mntcddir} ]
+			if [ ! -f "${mntcddir}" ]
 			then
-				mkdir ${mntcddir}
+				mkdir "${mntcddir}"
 			fi
 		else
-			mntcddir=${mntdir}
+			mntcddir="${mntdir}"
 		fi
 
 		for x in $*
@@ -130,12 +133,15 @@ findmediamount() {
 				good_msg "Attempting to mount media: ${x}" ${CRYPT_SILENT}
 
 				mount -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
-				if [ "$?" = '0' ]
+				if [ $? -eq 0 ]
 				then
-					if [ -n "${ISOBOOT}" ]; then
-						if [ -f ${mntcddir}/${ISOBOOT} ]; then
-							mount -o loop ${mntcddir}/${ISOBOOT} ${mntdir}
-							if [ "$?" = "0" ]; then
+					if [ -n "${ISOBOOT}" ]
+					then
+						if [ -f "${mntcddir}/${ISOBOOT}" ]
+						then
+							mount -o loop "${mntcddir}/${ISOBOOT}" "${mntdir}"
+							if [ $? -eq 0 ]
+							then
 								good_msg "iso mounted on ${mntdir}"
 							fi
 						fi
@@ -161,22 +167,22 @@ findmediamount() {
 	[ -n "${result}" ] || bad_msg "Media not found" ${CRYPT_SILENT}
 }
 
-devicelist(){
+devicelist() {
 	# Locate the cdrom device with our media on it.
 	# CDROM DEVICES
 	local DEVICES="/dev/cdroms/* /dev/ide/cd/* /dev/sr*"
 	# USB Keychain/Storage
-	DEVICES="$DEVICES /dev/sd*"
+	DEVICES="${DEVICES} /dev/sd*"
 	# IDE devices
-	DEVICES="$DEVICES /dev/hd*"
+	DEVICES="${DEVICES} /dev/hd*"
 	# virtio devices
-	DEVICES="$DEVICES /dev/vd*"
+	DEVICES="${DEVICES} /dev/vd*"
 	# USB using the USB Block Driver
-	DEVICES="$DEVICES /dev/ubd* /dev/ubd/*"
+	DEVICES="${DEVICES} /dev/ubd* /dev/ubd/*"
 	# iSeries devices
-	DEVICES="$DEVICES /dev/iseries/vcd*"
+	DEVICES="${DEVICES} /dev/iseries/vcd*"
 	# builtin mmc/sd card reader devices
-	DEVICES="$DEVICES /dev/mmcblk* /dev/mmcblk*/*"
+	DEVICES="${DEVICES} /dev/mmcblk* /dev/mmcblk*/*"
 	# fallback scanning, this might scan something twice, but it's better than
 	# failing to boot.
 	[ -e /proc/partitions ] && DEVICES="${DEVICES} $(awk '/([0-9]+[[:space:]]+)/{print "/dev/" $4}' /proc/partitions)"
@@ -184,49 +190,53 @@ devicelist(){
 }
 
 bootstrapFS() {
-        if [ 1 = "$aufs" ]; then
-                # Directories used for rw aufs mount filesystem
-                aufs_union=/union aufs_memory=/memory
+	if [ "${aufs}" = '1' ]
+	then
+		# Directories used for rw aufs mount filesystem
+		aufs_union=/union aufs_memory=/memory
 
-                # Mountpoint for the aufs dev
-                aufs_dev_mnt=/mnt/aufs-dev
+		# Mountpoint for the aufs dev
+		aufs_dev_mnt=/mnt/aufs-dev
 
-                if [ -z "$aufs_dev_uid" ]; then
-                        aufs_branch=$aufs_memory/aufs-rw-branch/default
-                else
-                        aufs_branch=$aufs_memory/aufs-rw-branch/$aufs_dev_uid
-                fi
+		if [ -z "${aufs_dev_uid}" ]
+		then
+			aufs_branch=${aufs_memory}/aufs-rw-branch/default
+		else
+			aufs_branch=${aufs_memory}/aufs-rw-branch/${aufs_dev_uid}
+		fi
 
-                mkdir -p $aufs_memory $aufs_union $aufs_dev_mnt
-        else
-                # Legacy SquashFS implementation
-                good_msg "Making tmpfs for ${NEW_ROOT}"
-                mount -n -t tmpfs tmpfs ${NEW_ROOT}
-        fi
+		mkdir -p ${aufs_memory} ${aufs_union} ${aufs_dev_mnt}
+	else
+		# Legacy SquashFS implementation
+		good_msg "Making tmpfs for ${NEW_ROOT}"
+		mount -n -t tmpfs tmpfs ${NEW_ROOT}
+	fi
 
-        # Setup the filesystem nodes and directories
-        for i in ${CDROOT_PATH} /mnt/livecd /mnt/key /mnt/gentoo /tmp /tmp/.initrd /dev /proc /run /sys; do
-                mkdir -p "${NEW_ROOT}${i}"
-                chmod 755 "${NEW_ROOT}${i}"
-        done
+	# Setup the filesystem nodes and directories
+	for i in ${CDROOT_PATH} /mnt/livecd /mnt/key /mnt/gentoo /tmp /tmp/.initrd /dev /proc /run /sys; do
+		mkdir -p "${NEW_ROOT}${i}"
+		chmod 755 "${NEW_ROOT}${i}"
+	done
 
-        [ ! -d "${CDROOT_PATH}" ] && mkdir -p "${CDROOT_PATH}"
-        [ ! -e "${NEW_ROOT}/dev/null" ] && mknod -m 666 "${NEW_ROOT}"/dev/null c 1 3
-        [ ! -e "${NEW_ROOT}/dev/zero" ] && mknod -m 666 "${NEW_ROOT}"/dev/zero c 1 5
-        [ ! -e "${NEW_ROOT}/dev/console" ] && mknod -m 600 "${NEW_ROOT}"/dev/console c 5 1
-        [ ! -e "${NEW_ROOT}/dev/ttyS0" ] && mknod -m 660 "${NEW_ROOT}"/dev/ttyS0 c 4 64
+	[ ! -d "${CDROOT_PATH}" ] && mkdir -p "${CDROOT_PATH}"
+	[ ! -e "${NEW_ROOT}/dev/null" ] && mknod -m 666 "${NEW_ROOT}"/dev/null c 1 3
+	[ ! -e "${NEW_ROOT}/dev/zero" ] && mknod -m 666 "${NEW_ROOT}"/dev/zero c 1 5
+	[ ! -e "${NEW_ROOT}/dev/console" ] && mknod -m 600 "${NEW_ROOT}"/dev/console c 5 1
+	[ ! -e "${NEW_ROOT}/dev/ttyS0" ] && mknod -m 660 "${NEW_ROOT}"/dev/ttyS0 c 4 64
 
-        # For SGI LiveCDs
-        if [ "${LOOPTYPE}" = "sgimips" ]; then
-                [ ! -e "${NEW_ROOT}/dev/sr0" ] && mknod "${NEW_ROOT}/dev/sr0" b 11 0
-                [ ! -e "${NEW_ROOT}/dev/loop0" ] && mknod "${NEW_ROOT}/dev/loop0" b 7 0
-        fi
+	# For SGI LiveCDs
+	if [ "${LOOPTYPE}" = "sgimips" ]
+	then
+		[ ! -e "${NEW_ROOT}/dev/sr0" ] && mknod "${NEW_ROOT}/dev/sr0" b 11 0
+		[ ! -e "${NEW_ROOT}/dev/loop0" ] && mknod "${NEW_ROOT}/dev/loop0" b 7 0
+	fi
 
-        # Required for splash to work. Not an issue with the initrd as this
-        # device isn't created there and is not needed.
-        for minor in 0 1 ; do
-                [ ! -e "${NEW_ROOT}/dev/$minor" ] && mknod -m 600 "${NEW_ROOT}/dev/tty$minor" c 4 $minor
-        done
+	# Required for splash to work. Not an issue with the initrd as this
+	# device isn't created there and is not needed.
+	for minor in 0 1
+	do
+		[ ! -e "${NEW_ROOT}/dev/${minor}" ] && mknod -m 600 "${NEW_ROOT}/dev/tty${minor}" c 4 ${minor}
+	done
 }
 
 bootstrapCD() {
@@ -239,18 +249,22 @@ bootstrapCD() {
 
 	findmediamount "cdrom" "${SUBDIR}/${CDROOT_MARKER}" \
 		"REAL_ROOT" "${CDROOT_PATH}" ${DEVICES}
-	if [ $VERIFY = 1 ]; then
+
+	if [ "${VERIFY}" = '1' ]
+	then
 		cd "${CDROOT_PATH}"
-		if [ -f isoroot_checksums ]; then
-			good_msg "Verifying checksums, this may take some time..."
-			if ! busybox sha512sum -c isoroot_checksums; then
-				bad_msg "Some checksums failed, press any key to poweroff..."
+		if [ -f isoroot_checksums ]
+		then
+			good_msg "Verifying checksums, this may take some time ..."
+			if ! busybox sha512sum -c isoroot_checksums
+			then
+				bad_msg "Some checksums failed, press any key to poweroff ..."
 				read -n1 -s
 				busybox poweroff -f
 			else
-				good_msg "Checksums all valid, continuing boot..."
+				good_msg "Checksums all valid, continuing boot ..."
 			fi
-			cd $OLDPWD
+			cd "${OLDPWD}"
 		else
 			bad_msg "Verify enabled but no checksums file exists, skipping"
 		fi
@@ -278,9 +292,9 @@ cache_cd_contents() {
 			# z=0
 			# for i in $(cat /proc/meminfo | grep -e ^MemFree -e ^Cached | \
 			# cut -d: -f2 | cut -dk -f1 | sed -e "s/^\s*//") ; do
-			# z=$(($z + $i)) ; done
-			# echo $z
-			good_msg "Copying loop file for caching..."
+			# z=$((${z} + ${i})) ; done
+			# echo ${z}
+			good_msg "Copying loop file for caching ..."
 			# Verify that the needed directory exists
 			mkdir -p "$(dirname ${NEW_ROOT}/mnt/${LOOP})"
 			cp -a ${CDROOT_PATH}/${LOOP} ${NEW_ROOT}/mnt/${LOOP}
@@ -298,46 +312,48 @@ cache_cd_contents() {
 
 mount_sysfs() {
 	mount -t sysfs sysfs /sys -o noexec,nosuid,nodev >/dev/null 2>&1
-	ret=$?
-	[ ${ret} -eq 0 ] || bad_msg "Failed to mount /sys!"
+	[ $? -eq 0 ] || bad_msg "Failed to mount /sys!"
 }
 
 # Check support for both aufs and overlayfs
 # union file system style support
 #
 is_union_modules() {
-        local mod mod_dir
+	local mod mod_dir
 
-        case $1 in
-                aufs)
-                        mod=$aufs_modules
-                        mod_dir=$aufs_modules_dir
-                        ;;
-                overlayfs)
-                        mod=$overlayfs_modules
-                        mod_dir=$overlayfs_modules_dir
-        esac
+	case $1 in
+		aufs)
+			mod=${aufs_modules}
+			mod_dir=${aufs_modules_dir}
+			;;
+		overlayfs)
+			mod=${overlayfs_modules}
+			mod_dir=${overlayfs_modules_dir}
+	esac
 
-        # When {aufs,overlayfs}.modules= is used or $CDROOT_PATH/modules
-        # directory is available
-        if [[ 1 = "$mod" || -d $CDROOT_PATH/modules ]]; then
-                if [ -d $CDROOT_PATH/modules ]; then
-                        warn_msg "Adding all modules in $CDROOT_PATH/modules"
-                        union_insert_modules "$CDROOT_PATH"/modules
-                # Is it a block device?
-                elif [ ! -b "$mod_dir" ]; then
-                        bad_msg "$mod_dir is not a valid block device"
-                        bad_msg "aborting modules insert into $CHROOT"
-                else
-                        warn_msg "Adding all modules in $mod_dir"
+	# When {aufs,overlayfs}.modules= is used or $CDROOT_PATH/modules
+	# directory is available
+	if [ "${mod}" = '1' -o -d ${CDROOT_PATH}/modules ]
+	then
+		if [ -d ${CDROOT_PATH}/modules ]
+		then
+			warn_msg "Adding all modules in ${CDROOT_PATH}/modules"
+			union_insert_modules "${CDROOT_PATH}"/modules
+		# Is it a block device?
+		elif [ ! -b "${mod_dir}" ]
+		then
+			bad_msg "${mod_dir} is not a valid block device"
+			bad_msg "aborting modules insert into ${CHROOT}"
+		else
+			warn_msg "Adding all modules in ${mod_dir}"
 
-                        mkdir /mnt/modules
-                        mount "$mod_dir" /mnt/modules
-                        union_insert_modules /mnt/modules
-                fi
-        fi
+			mkdir /mnt/modules
+			mount "${mod_dir}" /mnt/modules
+			union_insert_modules /mnt/modules
+		fi
+	fi
 
-        return 0
+	return 0
 }
 
 # Insert a directory tree $2 to a aufs union specified by $1
@@ -347,139 +363,155 @@ is_union_modules() {
 #
 aufs_insert_dir() {
 	# Always mount it over the precedent (add:1:)
-	if mount -n -o "remount,add:1:$2=rr" aufs "$1"; then
-                good_msg "Addition of $2 to $1 successful"
+	if mount -n -o "remount,add:1:$2=rr" aufs "$1"
+	then
+		good_msg "Addition of $2 to $1 successful"
 	fi
 }
 
 # Insert all modules found in $1, usually $CDROOT_PATH
 # added to allow users to add their own apps.
 union_insert_modules() {
-        local module
+	local module
 
-        for module in "$1/"*.lzm; do
-                if [ 1 = "$overlayfs" ];then
-                        if union_mod overlayfs "$module";then
-                          good_msg "Addition of '$module' to overlay successful"
-                        else
-                          bad_msg "Unable to insert module: '$module'"
-                        fi
+	for module in "$1/"*.lzm; do
+		if [ "${overlayfs}" = '1' ]
+		then
+			if union_mod overlayfs "${module}"
+			then
+				good_msg "Addition of '${module}' to overlay successful"
+			else
+				bad_msg "Unable to insert module: '${module}'"
+			fi
 
-                        # Used in setup_overlayfs()
-                        mod_path="$mod_path:$mod_dir/.$mod"
+			# Used in setup_overlayfs()
+			mod_path="${mod_path}:${mod_dir}/.${mod}"
 
-                        # Assign variable with paths to modules mount point
-                        # TODO: Stop using eval
-                        eval $mod="$mod_dir/.$mod"
-                        mods="$mods $mod"
-                else
-                        union_mod aufs "$module" || bad_msg "Unable to insert module: '$module'"
-                fi
-        done
+			# Assign variable with paths to modules mount point
+			# TODO: Stop using eval
+			eval ${mod}="${mod_dir}/.${mod}"
+			mods="${mods} ${mod}"
+		else
+			union_mod aufs "${module}" || bad_msg "Unable to insert module: '${module}'"
+		fi
+	done
 }
 
 # Helper function for union_insert_modules()
 union_mod() {
-        [ -e "$2" ] || return 0
+	[ -e "$2" ] || return 0
 
-        mod_dir=/mnt/overlay
+	mod_dir=/mnt/overlay
 
-        mod=${2##*/}
-        mod=${mod//-/_}
-        mod=${mod%.*}
+	mod=${2##*/}
+	mod=${mod//-/_}
+	mod=${mod%.*}
 
-        if [ 1 = "$aufs" ]; then
-                if [ ! -d "$aufs_union"/mnt/"$mod" ]; then
-                        mkdir -p "$aufs_union"/mnt/modules/"$mod" || return
-                fi
+	if [ "${aufs}" = '1' ]
+	then
+		if [ ! -d "${aufs_union}"/mnt/"${mod}" ]
+		then
+			mkdir -p "${aufs_union}"/mnt/modules/"${mod}" || return
+		fi
 
-                mount -o loop,ro "$2" "$aufs_union"/mnt/modules/"$mod"
-                aufs_insert_dir "$aufs_union" "$aufs_union"/mnt/modules/"$mod"
-        else
-                if [ ! -d "$mod_dir/.$mod" ]; then
-                        mkdir -p "$mod_dir/.$mod" || return
-                fi
+		mount -o loop,ro "$2" "${aufs_union}"/mnt/modules/"${mod}"
+		aufs_insert_dir "${aufs_union}" "${aufs_union}"/mnt/modules/"${mod}"
+	else
+		if [ ! -d "${mod_dir}/.${mod}" ]
+		then
+			mkdir -p "${mod_dir}/.${mod}" || return
+		fi
 
-                mount -o loop,ro "$2" "$mod_dir/.$mod"
-        fi
+		mount -o loop,ro "$2" "${mod_dir}/.${mod}"
+	fi
 }
 
 # Implements no_umounts variable into $CHROOT/etc/conf.d/localmount for a cleaner shutdown process
 conf_rc_no_umounts() {
-        local conf nomount fnd
-        conf=$CHROOT/etc/conf.d/localmount fnd=0
+	local conf nomount fnd
+	conf=${CHROOT}/etc/conf.d/localmount fnd=0
 
-        if nomount=$(grep -n '^[[:blank:]]*no_umounts=' $conf); then
-                local i n data cmd IFS
-                IFS='
+	if nomount=$(grep -n '^[[:blank:]]*no_umounts=' ${conf})
+	then
+		local i n data cmd IFS
+		IFS='
 '
-                set -- $nomount
-                unset IFS
+		set -- ${nomount}
+		unset IFS
 
-                for i; do
-                        n=${i%%:*}; i=${i#"$n"}
-                        data=${i#*=}
+		for i
+		do
+			n=${i%%:*}; i=${i#"$n"}
+			data=${i#*=}
 
-                        case $data in
-                                "\"$no_umounts\""|"'$no_umounts'") fnd=1;;
-                                *) cmd="$cmd$n d;"
-                        esac
-                done
+			case ${data} in
+				"\"${no_umounts}\""|"'${no_umounts}'") fnd=1;;
+				*) cmd="${cmd}${n} d;"
+			esac
+		done
 
-                if [ -n "$cmd" ]; then
-                        sed -i "${cmd%;}" $conf
-                        test_success "Unable to edit /etc/conf.d/localmount"
-                fi
-        fi
+		if [ -n "${cmd}" ]
+		then
+			sed -i "${cmd%;}" ${conf}
+			test_success "Unable to edit /etc/conf.d/localmount"
+		fi
+	fi
 
-        if [ 0 -eq "$fnd" ]; then
-                printf 'no_umounts="%s"\n' "$no_umounts" >> $conf
-                test_success "Unable to write to /etc/conf.d/localmount"
-        fi
+	if [ ${fnd} -eq 0 ]
+	then
+		printf 'no_umounts="%s"\n' "${no_umounts}" >> ${conf}
+		test_success "Unable to write to /etc/conf.d/localmount"
+	fi
 }
 
-# is_int "$A" ["$B"..]
+# is_int "${A}" ["${B}"..]
 # NOTE we consider a leading 0 false as it would be interpreted as octal
-is_int(){
-        local i
-        for i; do
-                case $i in
-                        ''|*[!0-9]*|0?*) return 1 ;;
-                        *) :
-                esac
-        done
+is_int() {
+	local i
+	for i
+	do
+		case ${i} in
+			''|*[!0-9]*|0?*) return 1 ;;
+			*) :
+		esac
+	done
 }
 
 # Function to create an ext2 fs on $aufs_dev, $aufs_dev_mnt mountpoint
 create_changefs() {
 	local size
 
-	while :; do
+	while :;
+	do
 		read -p '<< Size of file (Press Enter for default 256 MB): ' size
 
-                size=${size:-256}
+		size=${size:-256}
 
-                if ! is_int $size; then
-                        bad_msg "Non numeric value given for size, try again"
-                        continue
-                elif [ 15 -ge "$size" ]; then
-                        bad_msg "Please give a size of at least 16 Megabytes"
+		if ! is_int ${size}
+		then
+			bad_msg "Non numeric value given for size, try again"
+			continue
+		elif [ 15 -ge "${size}" ]
+		then
+			bad_msg "Please give a size of at least 16 Megabytes"
 		else
-			if dd if=/dev/zero "of=$aufs_dev_mnt$aufs_union_file" bs=1 seek="$size"M count=0 &>/dev/null; then
-				good_msg "Creation of $aufs_union_file, ${size}MB on $aufs_dev successful, formatting it ext2"
-				mke2fs -F "$aufs_dev_mnt$aufs_union_file" &>/dev/null
+			if dd if=/dev/zero "of=${aufs_dev_mnt}${aufs_union_file}" bs=1 seek="${size}"M count=0 >/dev/null 2>&1
+			then
+				good_msg "Creation of ${aufs_union_file}, ${size}MB on ${aufs_dev successful}, formatting it ext2"
+				mke2fs -F "${aufs_dev_mnt}${aufs_union_file}" >/dev/null 2>&1
 				break
 			else
-				rm "$aufs_dev_mnt$aufs_union_file"
-				bad_msg "Unable to create ${aufs_union_file#*/} on $aufs_dev of ${size}MB"
+				rm "${aufs_dev_mnt}${aufs_union_file}"
+				bad_msg "Unable to create ${aufs_union_file#*/} on ${aufs_dev} of ${size}MB"
 				bad_msg "Ensure your disk is not full or read-only"
 
 				read -p '<< Type "a" to abort, anything else to continue : ' doabort
-				if [ a = "$doabort" ]; then
-                                        bad_msg "Aborting creation of $aufs_union_file!"
-                                        umount "$aufs_dev" && rmdir "$aufs_dev_mnt"
-                                        return 1
-                                fi
+				if [ "${doabort}" = 'a' ]
+				then
+					bad_msg "Aborting creation of ${aufs_union_file}!"
+					umount "${aufs_dev}" && rmdir "${aufs_dev_mnt}"
+					return 1
+				fi
 			fi
 		fi
 	done
@@ -489,146 +521,168 @@ create_changefs() {
 setup_aufs() {
 	bootstrapCD
 
-        if [ "$aufs_dev" = "search" ]; then
-                findmediamount "aufs-dev" "$aufs_union_file" \
-                        "aufs_dev" "$aufs_dev_mnt" $(devicelist)
-                aufs_mounted="1"
-        elif [ -z $aufs_dev ] && [ -w "$CDROOT_PATH/$aufs_union_file" ]; then
-                aufs_dev="$REAL_ROOT"
-                aufs_dev_mnt="$CDROOT_PATH"
-                aufs_mounted="1"
-        fi
-        if [ -z $aufs_dev ] && [ -w "$CDROOT_PATH/casper-rw" ]; then
-                aufs_dev="$REAL_ROOT"
-                aufs_dev_mnt="$CDROOT_PATH"
-                aufs_union_file="/casper-rw"
-                aufs_mounted="1"
-        fi
+	if [ "${aufs_dev}" = "search" ]
+	then
+		findmediamount "aufs-dev" "${aufs_union_file}" \
+			"aufs_dev" "${aufs_dev_mnt}" $(devicelist)
+		aufs_mounted="1"
+	elif [ -z "${aufs_dev}" ] && [ -w "${CDROOT_PATH}/${aufs_union_file}" ]
+	then
+		aufs_dev="${REAL_ROOT}"
+		aufs_dev_mnt="${CDROOT_PATH}"
+		aufs_mounted="1"
+	fi
 
-        if [ -n "$aufs_dev" ]; then
-                if [ ! -b $aufs_dev ]; then
-                        bad_msg "$aufs_dev is not a valid block device"
-                        local invalidblk=1
-                        unset aufs_dev
+	if [ -z "${aufs_dev}" ] && [ -w "${CDROOT_PATH}/casper-rw" ]
+	then
+		aufs_dev="${REAL_ROOT}"
+		aufs_dev_mnt="${CDROOT_PATH}"
+		aufs_union_file="/casper-rw"
+		aufs_mounted="1"
+	fi
+
+	if [ -n "${aufs_dev}" ]
+	then
+		if [ ! -b "${aufs_dev}" ]
+		then
+			bad_msg "${aufs_dev} is not a valid block device"
+			local invalidblk=1
+			unset aufs_dev
 		#skip this block when aufs_dev_mnt is already mounted
-                elif [ "$aufs_mounted" != "1" ]; then
-                        good_msg "Mounting $aufs_dev to $aufs_memory for aufs support"
+		elif [ "${aufs_mounted}" != "1" ]
+		then
+			good_msg "Mounting ${aufs_dev} to ${aufs_memory} for aufs support"
 
-                        if ! mount -t auto "$aufs_dev" "$aufs_dev_mnt" &>/dev/null; then
-                                bad_msg "Mount of $aufs_dev failed, falling back to ramdisk based aufs"
-                                unset aufs_dev
-		        fi
-                fi
+			if ! mount -t auto "${aufs_dev}" "${aufs_dev_mnt}" >/dev/null 2>&1
+			then
+				bad_msg "Mount of ${aufs_dev} failed, falling back to ramdisk based aufs"
+				unset aufs_dev
+			fi
+		fi
 
-                # Check and attempt to create the AUFS union file
-	        if [ ! -e $aufs_dev_mnt$aufs_union_file ] && [ -n "$aufs_dev" ]; then
-		        create_changefs && mount -t auto "$aufs_dev_mnt$aufs_union_file" "$aufs_memory"
-                elif [ -n "$aufs_dev" ]; then
-                        while :; do
-                                if mount -t auto "$aufs_dev_mnt$aufs_union_file" "$aufs_memory" &>/dev/null; then
-                                        if [ "$aufs_union_file" = "/casper-rw" ];then
-                                                bad_msg "Use of livecd.aufs preferred to casper-rw for changes saving, please rename the file."
-                                        fi
-                                        break
-                                else
-                                        bad_msg "Mounting of changes file failed, Running e2fsck"
+		# Check and attempt to create the AUFS union file
+		if [ ! -e ${aufs_dev_mnt}${aufs_union_file} ] && [ -n "${aufs_dev}" ]
+		then
+			create_changefs && mount -t auto "${aufs_dev_mnt}${aufs_union_file}" "${aufs_memory}"
+		elif [ -n "${aufs_dev}" ]
+		then
+			while :;
+			do
+				if mount -t auto "${aufs_dev_mnt}${aufs_union_file}" "${aufs_memory}" >/dev/null 2>&1
+				then
+					if [ "${aufs_union_file}" = "/casper-rw" ]
+					then
+						bad_msg "Use of livecd.aufs preferred to casper-rw for changes saving, please rename the file."
+					fi
+					break
+				else
+					bad_msg "Mounting of changes file failed, Running e2fsck"
 
-                                        if ! hash e2fsck &>/dev/null; then
-                                                bad_msg "/sbin/e2fsck not found! aborting filesystem check"
-                                                bad_msg "Moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
+					if ! hash e2fsck >/dev/null 2>&1
+					then
+						bad_msg "/sbin/e2fsck not found! aborting filesystem check"
+						bad_msg "Moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
 
-                                                mv "$aufs_dev_mnt$aufs_union_file" "$aufs_dev_mnt$aufs_union_file.bad"
-                                                break
-                                        fi
+						mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
+						break
+					fi
 
-                                        if e2fsck "$aufs_dev_mnt$aufs_union_file" &>/dev/null; then
-                                                good_msg "e2fsck ran successfully. Please verify data after bootup"
-                                        else
-                                                bad_msg "Your ${aufs_union_file#*/} image might be corrupted"
-                                                bad_msg "moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
+					if e2fsck "${aufs_dev_mnt}${aufs_union_file}" >/dev/null 2>&1
+					then
+						good_msg "e2fsck ran successfully. Please verify data after bootup"
+					else
+						bad_msg "Your ${aufs_union_file#*/} image might be corrupted"
+						bad_msg "moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
 
-                                                mv "$aufs_dev_mnt$aufs_union_file" "$aufs_dev_mnt$aufs_union_file.bad"
-                                                break
-                                        fi
-                                fi
-                        done
-                fi
+						mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
+						break
+					fi
+				fi
+			done
+		fi
 
-                # Mount tmpfs only in the case when aufs= boot parameter was
-                # empty or we were not able to mount the storage device
-	        if [ 1 = "$CDROOT" ] && [ ! -f "$aufs_dev_mnt$aufs_union_file" ]; then
-                        aufs_xino=$aufs_memory
-                        umount "$aufs_memory" &>/dev/null
+		# Mount tmpfs only in the case when aufs= boot parameter was
+		# empty or we were not able to mount the storage device
+		if [ "${CDROOT}" = '1' ] && [ ! -f "${aufs_dev_mnt}${aufs_union_file}" ]
+		then
+			aufs_xino=${aufs_memory}
+			umount "${aufs_memory}" >/dev/null 2>&1
 
-                        if [ 1 = "$invalidblk" ]; then
-                                bad_msg "Verify that you've entered a valid device path"
-                        else
-                                bad_msg "Create an extfs ${aufs_union_file#*/} file on this device"
-                        fi
+			if [ "${invalidblk}" = '1' ]
+			then
+				bad_msg "Verify that you've entered a valid device path"
+			else
+				bad_msg "Create an extfs ${aufs_union_file#*/} file on this device"
+			fi
 
-                        bad_msg "if you wish to have aufs data persistency on reboots"
-                        bad_msg "Falling back to ramdisk based aufs"
-                        good_msg "Mounting ramdisk to $aufs_memory for aufs support"
+			bad_msg "if you wish to have aufs data persistency on reboots"
+			bad_msg "Falling back to ramdisk based aufs"
+			good_msg "Mounting ramdisk to ${aufs_memory} for aufs support"
 
-                        mount -t tmpfs tmpfs "$aufs_memory"
-                else
-                        aufs_xino=$aufs_memory/xino
+			mount -t tmpfs tmpfs "${aufs_memory}"
+		else
+			aufs_xino=${aufs_memory}/xino
 
-                        mkdir -p "$aufs_xino"
-                        mount -t tmpfs aufs-xino "$aufs_xino"
-	        fi
-        else
-                aufs_xino=$aufs_memory
+			mkdir -p "${aufs_xino}"
+			mount -t tmpfs aufs-xino "${aufs_xino}"
+		fi
+	else
+		aufs_xino=${aufs_memory}
 
-                good_msg "Mounting ramdisk to $aufs_memory for aufs support"
-                mount -t tmpfs tmpfs "$aufs_memory"
-        fi
+		good_msg "Mounting ramdisk to ${aufs_memory} for aufs support"
+		mount -t tmpfs tmpfs "${aufs_memory}"
+	fi
 
-	mkdir -p "$aufs_branch"
-        if ! mount -t aufs -n -o "nowarn_perm,udba=none,xino=$aufs_xino/.aufs.xino,br:$aufs_branch=rw" aufs "$aufs_union"; then
-		bad_msg "Can't setup union $aufs_union in directory!"
+	mkdir -p "${aufs_branch}"
+	if ! mount -t aufs -n -o "nowarn_perm,udba=none,xino=${aufs_xino}/.aufs.xino,br:${aufs_branch}=rw" aufs "${aufs_union}"
+	then
+		bad_msg "Can't setup union ${aufs_union} in directory!"
 		aufs=0
 	fi
 }
 
 setup_overlayfs() {
-        # Setup  directories and vars
-        local overlay=/mnt/overlay
-        local upperdir="${overlay}/.upper"
-        local workdir="${overlay}/.work"
-        local static=/mnt/livecd
+	# Setup directories and vars
+	local overlay=/mnt/overlay
+	local upperdir="${overlay}/.upper"
+	local workdir="${overlay}/.work"
+	local static=/mnt/livecd
 
-        rundebugshell overlayfs
-        for i in "${overlay}" "${static}"; do
-                [ ! -d "${i}" ] && mkdir -p "${i}"
-        done
+	rundebugshell overlayfs
+	for i in "${overlay}" "${static}"
+	do
+		[ ! -d "${i}" ] && mkdir -p "${i}"
+	done
 
-        good_msg "Loading overlayfs"
-        modprobe overlay > /dev/null 2>&1
+	good_msg "Loading overlayfs"
+	modprobe overlay >/dev/null 2>&1
 	checkfs overlay
 
-        mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "${static}"
-        mount -t tmpfs none "${overlay}"
-        mkdir "${upperdir}" "${workdir}"
+	mount -t squashfs -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${static}"
+	mount -t tmpfs none "${overlay}"
+	mkdir "${upperdir}" "${workdir}"
 
-        is_union_modules overlayfs
-        mount -t overlay overlay -o lowerdir="${static}${mod_path}",upperdir="${upperdir}",workdir="${workdir}" "${NEW_ROOT}"
+	is_union_modules overlayfs
+	mount -t overlay overlay -o lowerdir="${static}${mod_path}",upperdir="${upperdir}",workdir="${workdir}" "${NEW_ROOT}"
 
-        [ ! -d "${NEW_ROOT}${overlay}" ] && mkdir -p "${NEW_ROOT}${overlay}"
-        [ ! -d "${NEW_ROOT}${static}" ] && mkdir -p "${NEW_ROOT}${static}"
+	[ ! -d "${NEW_ROOT}${overlay}" ] && mkdir -p "${NEW_ROOT}${overlay}"
+	[ ! -d "${NEW_ROOT}${static}" ] && mkdir -p "${NEW_ROOT}${static}"
 
-        echo "overlay / overlay defaults 0 0" > "${NEW_ROOT}"/etc/fstab
+	echo "overlay / overlay defaults 0 0" > "${NEW_ROOT}"/etc/fstab
 
-        for i in "${overlay}" "${static}"; do
-                mount --bind "${i}" "${NEW_ROOT}${i}"
-        done
+	for i in "${overlay}" "${static}"
+	do
+		mount --bind "${i}" "${NEW_ROOT}${i}"
+	done
 
-        # Did we populate the overlayfs modules path locations variable?
-        if [ -n "$mods" ]; then
-                for i in $mods; do
-                        mount --bind "${overlay}/.${i}" "${NEW_ROOT}/${overlay}/.${i}"
-                done
-        fi
+	# Did we populate the overlayfs modules path locations variable?
+	if [ -n "${mods}" ]
+	then
+		for i in ${mods}
+		do
+			mount --bind "${overlay}/.${i}" "${NEW_ROOT}/${overlay}/.${i}"
+		done
+	fi
 }
 
 
@@ -637,30 +691,30 @@ findnfsmount() {
 	then
 		[ -e /rootpath ] && NFSROOT=$(cat /rootpath)
 
-		if [ "${NFSROOT}" = '' ]
+		if [ -z "${NFSROOT}" ]
 		then
 			# Obtain NFSIP
 			OPTIONS=$(busybox dmesg | grep rootserver | sed -e "s/,/ /g")
-			for OPTION in $OPTIONS
+			for OPTION in ${OPTIONS}
 			do
-				if [ $(echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 1) = 'rootserver' ]
+				if [ $(echo ${OPTION} | sed -e "s/=/ /g" | cut -d " " -f 1) = 'rootserver' ]
 				then
-					NFSIP=$(echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 2)
-				fi 
+					NFSIP=$(echo ${OPTION} | sed -e "s/=/ /g" | cut -d " " -f 2)
+				fi
 			done
 
 			# Obtain NFSPATH
 			OPTIONS=$(busybox dmesg | grep rootpath | sed -e "s/,/ /g")
-			for OPTION in $OPTIONS
+			for OPTION in ${OPTIONS}
 			do
-				if [ $(echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 1) = 'rootpath' ]
+				if [ $(echo ${OPTION} | sed -e "s/=/ /g" | cut -d " " -f 1) = 'rootpath' ]
 				then
-					NFSPATH=$(echo $OPTION | sed -e "s/=/ /g" | cut -d " " -f 2)
-		 		fi
+					NFSPATH=$(echo ${OPTION} | sed -e "s/=/ /g" | cut -d " " -f 2)
+				fi
 			done
 
 			# Setup NFSROOT
-			if [ "${NFSIP}" != '' ] && [ "$NFSPATH" != '' ]
+			if [ -n "${NFSIP}" -a -n "${NFSPATH}" ]
 			then
 				NFSROOT="${NFSIP}:${NFSPATH}"
 			else
@@ -670,13 +724,13 @@ findnfsmount() {
 			fi
 		fi
 
-		if [ "${NFSROOT}" != '' ]
+		if [ -n "${NFSROOT}" ]
 		then
 			NFSOPTIONS=${NFSROOT#*,}
 			NFSROOT=${NFSROOT%%,*}
 			if [ "${NFSOPTIONS}" = "${NFSROOT}" ]
 			then
-				NFSOPTIONS=$DEFAULT_NFSOPTIONS
+				NFSOPTIONS=${DEFAULT_NFSOPTIONS}
 			else
 				NFSOPTIONS="${DEFAULT_NFSOPTIONS},${NFSOPTIONS}"
 			fi
@@ -685,7 +739,7 @@ findnfsmount() {
 			then
 				good_msg "Attempting to mount NFS CD image on ${NFSROOT} with options ${NFSOPTIONS}"
 				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${CDROOT_PATH}
-				if [ "$?" = '0' ]
+				if [ $? -eq 0 ]
 				then
 					REAL_ROOT="/dev/nfs"
 				else
@@ -695,7 +749,7 @@ findnfsmount() {
 			else
 				good_msg "Attempting to mount NFS root on ${NFSROOT} with options ${NFSOPTIONS}"
 				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}
-				if [ "$?" = '0' ]
+				if [ $? -eq 0 ]
 				then
 					REAL_ROOT="/dev/nfs"
 				else
@@ -719,22 +773,26 @@ find_real_device() {
 			local REAL_DEVICE=""
 			local retval=1
 
-			if [ "${retval}" -ne 0 ]; then
+			if [ ${retval} -ne 0 ]
+			then
 				REAL_DEVICE=$(findfs "${DEVICE}" 2>/dev/null)
 				retval=$?
 			fi
 
-			if [ "$retval" -ne 0 ]; then
+			if [ ${retval} -ne 0 ]
+			then
 				REAL_DEVICE=$(busybox findfs "${DEVICE}" 2>/dev/null)
 				retval=$?
 			fi
 
-			if [ "${retval}" -ne 0 ]; then
+			if [ ${retval} -ne 0 ]
+			then
 				REAL_DEVICE=$(blkid -o device -l -t "${DEVICE}")
 				retval=$?
 			fi
 
-			if [ "${retval}" -eq 0 ] && [ -n "${REAL_DEVICE}" ]; then
+			if [ ${retval} -eq 0 ] && [ -n "${REAL_DEVICE}" ]
+			then
 				DEVICE="${REAL_DEVICE}"
 			fi
 		;;
@@ -743,7 +801,7 @@ find_real_device() {
 }
 
 check_loop() {
-	if [ "${LOOP}" = '' -o ! -e "${CDROOT_PATH}/${LOOP}" ]
+	if [ -z "${LOOP}" -o ! -e "${CDROOT_PATH}/${LOOP}" ]
 	then
 
 		bad_msg "Invalid loop location: ${LOOP}"
@@ -766,32 +824,36 @@ fs_type_in_use() {
 mount_devfs() {
 	# Use devtmpfs if enabled in kernel,
 	# else tmpfs. Always run mdev just in case
-	devfs=tmpfs
-	if checkfs devtmpfs > /dev/null ; then
+	local devfs=tmpfs
+
+	if checkfs devtmpfs >/dev/null
+	then
 		devfs=devtmpfs
 	fi
 
 	# Options copied from /etc/init.d/udev-mount, should probably be kept in sync
-	if ! fs_type_in_use devtmpfs; then
-		mount -t $devfs -o "exec,nosuid,mode=0755,size=10M" udev /dev \
+	if ! fs_type_in_use devtmpfs
+	then
+		mount -t ${devfs} -o "exec,nosuid,mode=0755,size=10M" udev /dev \
 			|| bad_msg "Failed to mount /dev as ${devfs}"
 	fi
 
 	# http://git.busybox.net/busybox/plain/docs/mdev.txt
-	if ! fs_type_in_use devpts; then
+	if ! fs_type_in_use devpts
+	then
 		mkdir -m 0755 /dev/pts
-		mount -t devpts -o gid=5,mode=0620 devpts /dev/pts  || bad_msg "Failed to mount /dev/pts"
+		mount -t devpts -o gid=5,mode=0620 devpts /dev/pts || bad_msg "Failed to mount /dev/pts"
 	fi
 }
 
 test_success() {
 	retcode=$?
 	# If last command failed send error message and fall back to a shell
-	if [ "$retcode" != '0' ]
+	if [ "${retcode}" != '0' ]
 	then
-		error_string=$1
+		error_string=${1}
 		error_string="${error_string:-run command}"
-		bad_msg 'Failed to $1; failing back to the shell...'
+		bad_msg 'Failed to ${1}; failing back to the shell ...'
 		run_shell
 	fi
 }
@@ -804,33 +866,33 @@ test_success() {
 good_msg() {
 	[ -n "${QUIET}" ] && [ -z "${DEBUG}" ] && return 0
 
-	msg_string=$1
+	msg_string=${1}
 	msg_string="${msg_string:-...}"
-	[ "$2" != 1 ] && printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+	[ "$2" != '1' ] && printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 bad_msg() {
-	msg_string=$1
+	msg_string=${1}
 	msg_string="${msg_string:-...}"
-	if [ "$2" != 1 ]
+	if [ "$2" != '1' ]
 	then
-		splash 'verbose' > /dev/null &
+		splash 'verbose' >/dev/null &
 		printf "%b\n" "${BAD}!!${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 	fi
 }
 
 warn_msg() {
-	msg_string=$1
+	msg_string=${1}
 	msg_string="${msg_string:-...}"
-	[ "$2" != 1 ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+	[ "$2" != '1' ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 crypt_filter() {
 	if [ "${CRYPT_SILENT}" = '1' ]
 	then
-		eval $1 >/dev/null 2>/dev/null
+		eval $1 >/dev/null 2>&1
 	else
-		splash 'verbose' > /dev/null &
+		splash 'verbose' >/dev/null &
 		eval $1
 		res=$?
 		if [ ${res} -eq 0 ]
@@ -841,7 +903,7 @@ crypt_filter() {
 	fi
 }
 
-prompt_user(){
+prompt_user() {
 	# $1 = variable whose value is the path (examples: "REAL_ROOT",
 	#      "LUKS_KEYDEV")
 	# $2 = label
@@ -849,7 +911,8 @@ prompt_user(){
 
 	eval local oldvalue='$'${1}
 
-	if [ $# != 2 -a $# != 3 ]; then
+	if [ $# != 2 -a $# != 3 ]
+	then
 		bad_msg "Bad invocation of function prompt_user."
 		bad_msg "Please file a bug report with this message"
 		exit 1
@@ -860,7 +923,7 @@ prompt_user(){
 	bad_msg "Please specify another value or:"
 	bad_msg "- press Enter for the same"
 	bad_msg '- type "shell" for a shell'
-	bad_msg '- type "q" to skip...'
+	bad_msg '- type "q" to skip ...'
 	printf "%s" "${2}(${oldvalue}) :: "
 	read -t 10 ${1}
 	case $(eval echo '$'${1}) in
@@ -885,13 +948,13 @@ cmdline_hwopts() {
 	local FOUND
 	local TMP_HWOPTS
 
-	for x in $HWOPTS
+	for x in ${HWOPTS}
 	do
-		for y in $CMDLINE
+		for y in ${CMDLINE}
 		do
 			if [ "${y}" = "do${x}" ]
 			then
-				MY_HWOPTS="${MY_HWOPTS} $x"
+				MY_HWOPTS="${MY_HWOPTS} ${x}"
 			elif [ "${y}" = "no${x}" ]
 			then
 				MY_HWOPTS="$(echo ${MY_HWOPTS} | sed -e "s/${x}//g" -)"
@@ -905,7 +968,7 @@ cmdline_hwopts() {
 
 	# Shouldnt need to sort this as the following loop should figure out the
 	# duplicates and strip them out
-	#MY_HWOPTS=$(echo ${MY_HWOPTS}|  sort)
+	#MY_HWOPTS=$(echo ${MY_HWOPTS} | sort)
 
 	for x in ${MY_HWOPTS}
 	do
@@ -931,9 +994,9 @@ load_modules() {
 	then
 		good_msg 'Loading modules'
 		# Load appropriate kernel modules
-		for modules in $MY_HWOPTS
+		for modules in ${MY_HWOPTS}
 		do
-			modules_scan $modules
+			modules_scan ${modules}
 		done
 	else
 		good_msg 'Skipping module load; no modules in the ramdisk!'
@@ -957,16 +1020,17 @@ setup_keymap() {
 }
 
 setup_locale() {
-        if [ ! -z "${locale}" ]; then
-                echo "LANG=${locale}"  > ${NEW_ROOT}/etc/sysconfig/locale
-        fi
+	if [ -n "${locale}" ]
+	then
+		echo "LANG=${locale}" >${NEW_ROOT}/etc/sysconfig/locale
+	fi
 }
 
 chooseKeymap() {
 	good_msg "Loading keymaps"
 	if [ -z "${keymap}" ]
 	then
-		splash 'verbose' > /dev/null &
+		splash 'verbose' >/dev/null &
 		cat /lib/keymaps/keymapList
 		read -t 10 -p '<< Load keymap (Enter for default): ' keymap
 		case ${keymap} in
@@ -1017,7 +1081,7 @@ chooseKeymap() {
 	fi
 	if [ -e /lib/keymaps/${keymap}.map ]
 	then
-		good_msg "Loading the ''${keymap}'' keymap"
+		good_msg "Loading the '${keymap}' keymap ..."
 		loadkmap < /lib/keymaps/${keymap}.map
 #		xkeymap=${keymap}
 #		echo ${keymap} | egrep -e "[0-9]+" >/dev/null 2>&1
@@ -1028,14 +1092,14 @@ chooseKeymap() {
 		mkdir -p /etc/sysconfig
 #		echo "XKEYBOARD=${xkeymap}" > /etc/sysconfig/keyboard
 		echo "XKEYBOARD=${keymap}" > /etc/sysconfig/keyboard
-		splash set_msg "Set keymap to ${keymap}"
+		splash set_msg "Set keymap to '${keymap}'"
 	elif [ -z "${keymap}" ]
 	then
 		good_msg
 		good_msg "Keeping default keymap"
 		splash set_msg "Keeping default keymap"
 	else
-		bad_msg "Sorry, but keymap ''${keymap}'' is invalid!"
+		bad_msg "Sorry, but keymap '${keymap}' is invalid!"
 		unset keymap
 		chooseKeymap
 	fi
@@ -1045,16 +1109,21 @@ chooseKeymap() {
 # Copy over user selected keymap
 #
 copyKeymap() {
-        if [ -e /etc/sysconfig/keyboard -a "${CDROOT}" = '1' ]; then
-                [ ! -d ${NEW_ROOT}/etc/sysconfig ] && mkdir -p ${NEW_ROOT}/etc/sysconfig
-                cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
-        fi
+	if [ -e /etc/sysconfig/keyboard -a ${CDROOT} -eq 1 ]
+	then
+		[ ! -d ${NEW_ROOT}/etc/sysconfig ] && mkdir -p ${NEW_ROOT}/etc/sysconfig
+		cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
+	fi
 }
 
 # This helper function is to be called using call_func_timeout.
 # It enables us to wait a reasonable amount of time until /dev/zfs appears.
 waitForZFS() {
-	while [ ! -c /dev/zfs ]; do echo >/dev/null; done;
+	while [ ! -c /dev/zfs ]
+	do
+		echo >/dev/null
+	done
+
 	exit 1
 }
 
@@ -1084,33 +1153,41 @@ startVolumes() {
 
 	if [ "${USE_MULTIPATH_NORMAL}" = '1' ]
 	then
-		for multipath_path in /sbin/multipath /bin/multipath MISSING ; do
-			[ -x "$multipath_path " ] && break
+		for multipath_path in /sbin/multipath /bin/multipath MISSING
+		do
+			[ -x "${multipath_path}" ] && break
 		done
-		for dmsetup_path in /sbin/dmsetup /bin/dmsetup MISSING ; do
-			[ -x "$dmsetup_path " ] && break
+
+		for dmsetup_path in /sbin/dmsetup /bin/dmsetup MISSING
+		do
+			[ -x "${dmsetup_path}" ] && break
 		done
-		for kpartx_path in /sbin/kpartx /bin/kpartx MISSING ; do
-			[ -x "$kpartx_path " ] && break
+
+		for kpartx_path in /sbin/kpartx /bin/kpartx MISSING
+		do
+			[ -x "${kpartx_path}" ] && break
 		done
+
 		fail=0
-		["${multipath_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but multipath binary missing! Skipping multipath"
-		["${dmsetup_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but dmsetup binary missing! Skipping multipath"
-		["${kpartx_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but kpartx binary missing! Skipping multipath"
-		if [ "$fail" = "0" ]
+		[ "${multipath_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but multipath binary missing! Skipping multipath"
+		[ "${dmsetup_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but dmsetup binary missing! Skipping multipath"
+		[ "${kpartx_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but kpartx binary missing! Skipping multipath"
+
+		if [ ${fail} -eq 0 ]
 		then
 			good_msg "Scanning for multipath devices"
 			good_msg ":: Populating scsi_id info for libudev queries"
 			mkdir -p /run/udev/data
-			for ech in /sys/block/* ; do
+			for ech in /sys/block/*
+			do
 				local tgtfile=b$(cat ${ech}/dev)
 				/lib/udev/scsi_id -g -x /dev/${ech##*/} |sed -e 's/^/E:/' >/run/udev/data/${tgtfile}
 			done
-			$multipath_path  -v 0
+			${multipath_path} -v 0
 			sleep 2
 			good_msg "Activating multipath devices"
-			$dmsetup_path ls --target multipath --exec "$kpartx_path -a -v"
-			#for MULTIPATH_VOLUMES in /dev/mapper/*; do $kpartx_path -a $MULTIPATH_VOLUMES; done
+			${dmsetup_path} ls --target multipath --exec "${kpartx_path} -a -v"
+			#for MULTIPATH_VOLUMES in /dev/mapper/*; do ${kpartx_path} -a ${MULTIPATH_VOLUMES}; done
 		fi
 	fi
 
@@ -1119,7 +1196,7 @@ startVolumes() {
 		if [ -x '/sbin/dmraid' ]
 		then
 			good_msg "Activating Device-Mapper RAID(s)"
-			if [ '${DMRAID_OPTS}' = '' ]
+			if [ -z "${DMRAID_OPTS}" ]
 			then
 				/sbin/dmraid -ay
 			else
@@ -1131,9 +1208,11 @@ startVolumes() {
 
 	if [ "${USE_LVM_NORMAL}" = '1' ]
 	then
-		for lvm_path in /sbin/lvm /bin/lvm MISSING ; do
-			[ -x "$lvm_path" ] && break
+		for lvm_path in /sbin/lvm /bin/lvm MISSING
+		do
+			[ -x "${lvm_path}" ] && break
 		done
+
 		if [ "${lvm_path}" = "MISSING" ]
 		then
 			bad_msg "dolvm invoked, but LVM binary not available! skipping LVM volume group activation!"
@@ -1159,7 +1238,7 @@ startVolumes() {
 
 			# And finally execute it all (/proc/... needed if lvm is compiled without readline)
 			good_msg "Scanning for and activating Volume Groups"
-			printf "%b\n" "${lvm_commands}" | $lvm_path /proc/self/fd/0
+			printf "%b\n" "${lvm_commands}" | ${lvm_path} /proc/self/fd/0
 		fi
 	fi
 
@@ -1175,7 +1254,6 @@ startVolumes() {
 
 	if [ "${USE_ZFS}" = '1' ]
 	then
-
 		# Avoid race involving asynchronous module loading
 		if call_func_timeout waitForZFS 5
 		then
@@ -1185,8 +1263,7 @@ startVolumes() {
 			good_msg "Importing ZFS pools"
 
 			/sbin/zpool import -N -a ${ZPOOL_CACHE} ${ZPOOL_FORCE}
-
-			if [ "$?" = '0' ]
+			if [ $? -eq 0 ]
 			then
 				good_msg "Importing ZFS pools succeeded"
 			else
@@ -1194,7 +1271,7 @@ startVolumes() {
 			fi
 		else
 
-			if [ "$(zpool list -H -o name ${ZFS_POOL} 2>&1)" = "$ZFS_POOL" ]
+			if [ "$(zpool list -H -o name ${ZFS_POOL} 2>&1)" = "${ZFS_POOL}" ]
 			then
 				good_msg "ZFS pool ${ZFS_POOL} already imported."
 
@@ -1208,8 +1285,7 @@ startVolumes() {
 				good_msg "Importing ZFS pool ${ZFS_POOL}"
 
 				/sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} "${ZFS_POOL}"
-
-				if [ "$?" = '0' ]
+				if [ $? -eq 0 ]
 				then
 					good_msg "Import of ${ZFS_POOL} succeeded"
 				else
@@ -1221,7 +1297,6 @@ startVolumes() {
 }
 
 startiscsi() {
-
 	if [ ! -n "${ISCSI_NOIBFT}" ]
 	then
 		good_msg "Activating iSCSI via iBFT"
@@ -1232,39 +1307,39 @@ startiscsi() {
 	then
 		good_msg "Activating iSCSI via cmdline"
 
-		if [ "${ISCSI_TGPT}" ]
+		if [ -n "${ISCSI_TGPT}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -g ${ISCSI_TGPT}"
 		else
 			ADDITIONAL="${ADDITIONAL} -g 1"
 		fi
 
-		if [ "${ISCSI_PORT}" ]
+		if [ -n "${ISCSI_PORT}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -p ${ISCSI_PORT}"
 		fi
 
-		if [ "${ISCSI_USERNAME}" ]
+		if [ -n "${ISCSI_USERNAME}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -u ${ISCSI_USERNAME}"
 		fi
 
-		if [ "${ISCSI_PASSWORD}" ]
+		if [ -n "${ISCSI_PASSWORD}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -w ${ISCSI_PASSWORD}"
 		fi
 
-		if [ "${ISCSI_USERNAME_IN}" ]
+		if [ -n "${ISCSI_USERNAME_IN}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -U ${ISCSI_USERNAME_IN}"
 		fi
 
-		if [ "${ISCSI_PASSWORD_IN}" ]
+		if [ -n "${ISCSI_PASSWORD_IN}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -W ${ISCSI_PASSWORD_IN}"
 		fi
 
-		if [ "${ISCSI_DEBUG}" ]
+		if [ -n "${ISCSI_DEBUG}" ]
 		then
 			ADDITIONAL="${ADDITIONAL} -d ${ISCSI_DEBUG}"
 		fi
@@ -1365,7 +1440,8 @@ openLUKS() {
 								bootstrapKey ${TYPE}
 								eval LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"'
 								REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
-								if [ ! -b "${REAL_LUKS_KEYDEV}" ]; then
+								if [ ! -b "${REAL_LUKS_KEYDEV}" ]
+								then
 									KEYDEV_ERROR=1
 									bad_msg "Removable device ${LUKS_KEYDEV} not found." ${CRYPT_SILENT}
 									continue
@@ -1375,7 +1451,7 @@ openLUKS() {
 							fi
 						fi
 						# At this point a device was recognized, now let's see if the key is there
-						[ ! -d "$mntkey" ] && mkdir -p ${mntkey} 2>/dev/null >/dev/null
+						[ ! -d "${mntkey}" ] && mkdir -p ${mntkey} 2>/dev/null >/dev/null
 
 						mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>/dev/null
 						if [ "$?" != '0' ]
@@ -1387,7 +1463,8 @@ openLUKS() {
 							good_msg "Removable device ${REAL_LUKS_KEYDEV} mounted." ${CRYPT_SILENT}
 							sleep 2
 							# keyfile exists?
-							if [ ! -e "${mntkey}${LUKS_KEY}" ]; then
+							if [ ! -e "${mntkey}${LUKS_KEY}" ]
+							then
 								umount -n ${mntkey} 2>/dev/null >/dev/null
 								KEY_ERROR=1
 								KEYDEV_ERROR=1
@@ -1398,7 +1475,8 @@ openLUKS() {
 					fi
 					# At this point a candidate key exists (either mounted before or not)
 					good_msg "${LUKS_KEY} on device ${REAL_LUKS_KEYDEV} found" ${CRYPT_SILENT}
-					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ] && [ -x /sbin/gpg ] ; then
+					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ] && [ -x /sbin/gpg ]
+					then
 						[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
 						mknod /dev/tty c 5 1
 						cryptsetup_options="${cryptsetup_options} -d -"
@@ -1435,18 +1513,19 @@ openLUKS() {
 }
 
 startLUKS() {
-
 	# if key is set but neither ssh enabled or key device is given, find
 	# the key device
 
-	if [ -e "/usr/sbin/dropbear" ]; then
+	if [ -e "/usr/sbin/dropbear" ]
+	then
 		startdropbear
 	fi
 
 	[ -n "${CRYPT_ROOT_KEY}" ] && [ -z "${CRYPT_ROOT_KEYDEV}" ] \
 		&& sleep 6 && bootstrapKey "ROOT"
 
-	if [ -n "${CRYPT_ROOT}" ]; then
+	if [ -n "${CRYPT_ROOT}" ]
+	then
 		openLUKS "root"
 		if [ -n "${REAL_ROOT}" ]
 		then
@@ -1461,7 +1540,8 @@ startLUKS() {
 	[ -n "${CRYPT_SWAP_KEY}" ] && [ -z "${CRYPT_SWAP_KEYDEV}" ] \
 		&& { [ -z "${CRYPT_ROOT}" ] && sleep 6; bootstrapKey "SWAP"; }
 
-	if [ -n "${CRYPT_SWAP}" ]; then
+	if [ -n "${CRYPT_SWAP}" ]
+	then
 		openLUKS "swap"
 		if [ -z "${REAL_RESUME}" ]
 		then
@@ -1469,38 +1549,13 @@ startLUKS() {
 			REAL_RESUME="/dev/mapper/swap"
 		fi
 	fi
-
-	if [ -e "/usr/sbin/dropbear" ]; then
-		/bin/kill $(cat /var/run/dropbear.pid)
-		/sbin/ifconfig $(echo "${IP}" | awk -F":" '{print $6}' ) 0.0.0.0
-	fi
-
-	if [ -e /ROOT.decrypted ]; then
-		rm /ROOT.decrypted
-	fi
-
-	if [ -e /SWAP.decrypted ]; then
-		rm /SWAP.decrypted
-	fi
-}
-
-startdropbear() {
-	if [ "${IP}" == '' ] ; then
-		busybox udhcpc -n -T 15 -q
-	fi
-
-	# setup environment variables for the ssh login shell
-	echo "CRYPT_ROOT=${CRYPT_ROOT}" >  /etc/login-remote.conf
-	echo "CRYPT_SWAP=${CRYPT_SWAP}" >> /etc/login-remote.conf
-	touch /var/log/lastlog
-	/usr/sbin/dropbear
 }
 
 sdelay() {
 	# Sleep a specific number of seconds if SDELAY is set
 	if [ -n "${SDELAY}" ]
 	then
-		good_msg "Waiting ${SDELAY} seconds..."
+		good_msg "Waiting ${SDELAY} seconds ..."
 		sleep ${SDELAY}
 	elif [ "${CDROOT}" = '1' ]
 	then
@@ -1510,25 +1565,26 @@ sdelay() {
 
 quiet_kmsg() {
 	# if QUIET is set make the kernel less chatty
-	[ -n "$QUIET" ] && echo '0' > /proc/sys/kernel/printk
+	[ -n "${QUIET}" ] && echo '0' > /proc/sys/kernel/printk
 }
 
 verbose_kmsg() {
 	# if QUIET is set make the kernel less chatty
-	[ -n "$QUIET" ] && echo '6' > /proc/sys/kernel/printk
+	[ -n "${QUIET}" ] && echo '6' > /proc/sys/kernel/printk
 }
-
 
 cdupdate() {
 	if [ "${CDROOT}" = '1' ]
 	then
 		cdupdate_path=''
-		for p in /${NEW_ROOT}/${CDROOT_PATH}/ /${CDROOT_PATH}/ ; do
+		for p in /${NEW_ROOT}/${CDROOT_PATH}/ /${CDROOT_PATH}/
+		do
 			[ -x "${p}/cdupdate.sh" ] && cdupdate_path="${p}/cdupdate.sh" && break
 		done
+
 		if [ -n "${cdupdate_path}" ]
 		then
-			good_msg "Running cdupdate.sh ($cdupdate_path)"
+			good_msg "Running cdupdate.sh (${cdupdate_path})"
 			${cdupdate_path}
 			if [ "$?" != '0' ]
 			then
@@ -1536,7 +1592,7 @@ cdupdate() {
 				run_shell
 			fi
 		else
-			good_msg 'No cdupdate.sh script found, skipping...'
+			good_msg 'No cdupdate.sh script found, skipping ...'
 		fi
 	fi
 }
@@ -1554,12 +1610,12 @@ setup_md_device() {
 
 	if [ $(echo ${device}|sed -e 's#\(luks:\)\?\(/dev/md\)[[:digit:]]\+#\2#') = "/dev/md" ]
 	then
-		good_msg 'Detected real_root as a md device. Setting up the device node...'
+		good_msg 'Detected real_root as a md device. Setting up the device node ...'
 		MD_NUMBER=$(echo ${device}|sed -e 's#\(luks:\)\?/dev/md\([[:digit:]]\+\)#\2#')
 		if [ ! -e /dev/md${MD_NUMBER} ]
 		then
 			mknod /dev/md${MD_NUMBER} b 9 ${MD_NUMBER} >/dev/null 2>&1
-			[ $? -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed..."
+			[ $? -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed ..."
 		fi
 		mdstart ${MDPART} /dev/md${MD_NUMBER}
 	fi
@@ -1572,7 +1628,7 @@ do_rundebugshell() {
 }
 
 rundebugshell() {
-	if [ -n "$DEBUG" ]
+	if [ -n "${DEBUG}" ]
 	then
 		good_msg 'Starting debug shell as requested by "debug" option.'
 		good_msg "Stopping by: ${1}"
@@ -1581,7 +1637,8 @@ rundebugshell() {
 }
 
 do_resume() {
-	if [ -d /proc/suspend2 -o -d /sys/power/suspend2 -o -d /sys/power/tuxonice ]; then
+	if [ -d /proc/suspend2 -o -d /sys/power/suspend2 -o -d /sys/power/tuxonice ]
+	then
 		tuxonice_resume
 	else
 		swsusp_resume
@@ -1596,7 +1653,8 @@ swsusp_resume() {
 
 tuxonice_resume() {
 	local splash_theme
-	if grep "splash=" /proc/cmdline > /dev/null 2>&1; then
+	if grep "splash=" /proc/cmdline >/dev/null 2>&1
+	then
 		splash_theme=$(cat /proc/cmdline | sed 's/.*splash=/splash=/' | sed 's/ .*//' | sed 's/.*theme://' | sed 's/,.*//')
 	fi
 
@@ -1608,12 +1666,14 @@ tuxonice_resume() {
 	#
 	# Backward compatibility
 	#
-	if [ -e /sys/power/suspend2 ]; then
+	if [ -e /sys/power/suspend2 ]
+	then
 		tuxonice_userui_program="/sys/power/suspend2/user_interface/program"
 		tuxonice_do_resume="/sys/power/suspend2/do_resume"
 		tuxonice_resumedev="/sys/power/suspend2/resume"
 		tuxonice_replace_swsusp="/sys/power/suspend2/replace_swsusp"
-	elif [ -e /proc/suspend2 ]; then
+	elif [ -e /proc/suspend2 ]
+	then
 		tuxonice_userui_program="/proc/suspend2/userui_program"
 		tuxonice_do_resume="/proc/suspend2/do_resume"
 		tuxonice_resumedev="/proc/suspend2/resume"
@@ -1621,7 +1681,8 @@ tuxonice_resume() {
 	fi
 
 	# if 'use_swsusp' is given, use swsusp instead
-	if grep "use_swsusp" /proc/cmdline > /dev/null 2>&1; then
+	if grep "use_swsusp" /proc/cmdline >/dev/null 2>&1
+	then
 		echo 0 > ${tuxonice_replace_swsusp}
 		swsusp_resume
 		return
@@ -1632,16 +1693,18 @@ tuxonice_resume() {
 	# we both configure tuxonice and activate resuming,
 	# however the kernel will resume only if an image is found
 
-	if ! grep suspend_noui /proc/cmdline > /dev/null 2>&1; then
-		which suspend2ui_text > /dev/null 2>&1 && which suspend2ui_text > "${tuxonice_userui_program}"
-		which tuxoniceui_text > /dev/null 2>&1 && which tuxoniceui_text > "${tuxonice_userui_program}"
+	if ! grep suspend_noui /proc/cmdline >/dev/null 2>&1
+	then
+		which suspend2ui_text >/dev/null 2>&1 && which suspend2ui_text > "${tuxonice_userui_program}"
+		which tuxoniceui_text >/dev/null 2>&1 && which tuxoniceui_text > "${tuxonice_userui_program}"
 
-		if [ -n "${splash_theme}" ]; then
+		if [ -n "${splash_theme}" ]
+		then
 			ln -s /etc/splash/${splash_theme} /etc/splash/suspend2
 			ln -s /etc/splash/${splash_theme} /etc/splash/tuxonice
 
-			which suspend2ui_fbsplash > /dev/null 2>&1 && which suspend2ui_fbsplash > "${tuxonice_userui_program}"
-			which tuxoniceui_fbsplash > /dev/null 2>&1 && which tuxoniceui_fbsplash > "${tuxonice_userui_program}"
+			which suspend2ui_fbsplash >/dev/null 2>&1 && which suspend2ui_fbsplash > "${tuxonice_userui_program}"
+			which tuxoniceui_fbsplash >/dev/null 2>&1 && which tuxoniceui_fbsplash > "${tuxonice_userui_program}"
 		fi
 
 	fi
@@ -1661,8 +1724,8 @@ find_loop() {
 
 find_looptype() {
 	LOOPTYPE="${LOOP##*.}"
-	[ "${LOOPTYPE}" == "loop" ] && LOOPTYPE="normal"
-	[ "${LOOP}" == "/zisofs" ] && LOOPTYPE="${LOOP#/}"
+	[ "${LOOPTYPE}" = "loop" ] && LOOPTYPE="normal"
+	[ "${LOOP}" = "/zisofs" ] && LOOPTYPE="${LOOP#/}"
 	[ -z "${LOOPTYPE}" ] && LOOPTYPE="noloop"
 }
 
@@ -1674,17 +1737,18 @@ setup_squashfs_aufs() {
 	# Setup aufs directories and vars
 	aufs_rw_branch=/mnt/aufs-rw-branch aufs_ro_branch=/mnt/livecd
 
-	for dir in $aufs_rw_branch $aufs_ro_branch; do
-		[ ! -d $dir ] && mkdir -p "$dir"
+	for dir in ${aufs_rw_branch} ${aufs_ro_branch}
+	do
+		[ ! -d "${dir}" ] && mkdir -p "${dir}"
 	done
 
 	good_msg "Loading aufs module ..."
-	modprobe aufs &>/dev/null
+	modprobe aufs >/dev/null 2>&1
 	checkfs aufs
 
-        mount -t squashfs -o loop,ro "$CDROOT_PATH/$LOOPEXT$LOOP" "$aufs_ro_branch"
-	mount -t tmpfs none "$aufs_rw_branch"
-	mount -t aufs -o "br:$aufs_rw_branch:$aufs_ro_branch" aufs "$NEW_ROOT"
+	mount -t squashfs -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${aufs_ro_branch}"
+	mount -t tmpfs none "${aufs_rw_branch}"
+	mount -t aufs -o "br:${aufs_rw_branch}:${aufs_ro_branch}" aufs "${NEW_ROOT}"
 }
 
 setup_unionfs() {
@@ -1695,47 +1759,47 @@ setup_unionfs() {
 		# Directory used for rw changes in union mount filesystem
 		UNION=/union
 #		MEMORY=/memory
-#		if [ -z "$UID" ]
+#		if [ -z "${UID}" ]
 #		then
-#			CHANGES=$MEMORY/unionfs_changes/default
+#			CHANGES=${MEMORY}/unionfs_changes/default
 #		else
-#			CHANGES=$MEMORY/unionfs_changes/$UID
+#			CHANGES=${MEMORY}/unionfs_changes/${UID}
 #		fi
 
 #		mkdir -p ${MEMORY}
 		mkdir -p ${UNION}
 		good_msg "Loading fuse module"
-		modprobe fuse > /dev/null 2>&1
-#                 if [ -n "${UNIONFS}" ]
-#                 then
-#                         CHANGESDEV=${UNIONFS}
-#                         good_msg "mounting $CHANGESDEV to $MEMORY for unionfs support"
-#                         mount -t auto $CHANGESDEV $MEMORY
-#                         # mount tmpfs only in the case when changes= boot parameter was
-#                         # empty or we were not able to mount the storage device
-#                         ret=$?
-#                         if [ ${ret} -ne 0 ]
-#                         then
-#                                 bad_msg "mount of $CHANGESDEV failed falling back to ramdisk based unionfs"
-#                                 mount -t tmpfs tmpfs $MEMORY
-#                         fi
-#                         if [ "${CDROOT}" -eq '1' -a ! -f ${MEMORY}/livecd.unionfs  ]
-#                         then
-#                                 umount $MEMORY
-#                                 bad_msg "failed to find livecd.unionfs file on $CHANGESDEV"
-#                                 bad_msg "create a livecd.unionfs file on this device if you wish to use it for unionfs"
-#                                 bad_msg "falling back to ramdisk based unionfs for safety"
-#                                 mount -t tmpfs tmpfs $MEMORY
-#                         fi
-#                 else
-#                         good_msg "Mounting ramdisk to $MEMORY for unionfs support..."
-#                         mount -t tmpfs tmpfs $MEMORY
-#                 fi
+		modprobe fuse >/dev/null 2>&1
+#		 if [ -n "${UNIONFS}" ]
+#		 then
+#			 CHANGESDEV=${UNIONFS}
+#			 good_msg "mounting ${CHANGESDEV} to ${MEMORY} for unionfs support"
+#			 mount -t auto ${CHANGESDEV} ${MEMORY}
+#			 # mount tmpfs only in the case when changes= boot parameter was
+#			 # empty or we were not able to mount the storage device
+#			 ret=$?
+#			 if [ ${ret} -ne 0 ]
+#			 then
+#				 bad_msg "mount of ${CHANGESDEV} failed falling back to ramdisk based unionfs"
+#				 mount -t tmpfs tmpfs ${MEMORY}
+#			 fi
+#			 if [ "${CDROOT}" -eq '1' -a ! -f ${MEMORY}/livecd.unionfs ]
+#			 then
+#				 umount ${MEMORY}
+#				 bad_msg "failed to find livecd.unionfs file on ${CHANGESDEV}"
+#				 bad_msg "create a livecd.unionfs file on this device if you wish to use it for unionfs"
+#				 bad_msg "falling back to ramdisk based unionfs for safety"
+#				 mount -t tmpfs tmpfs ${MEMORY}
+#			 fi
+#		 else
+#			 good_msg "Mounting ramdisk to ${MEMORY} for unionfs support..."
+#			 mount -t tmpfs tmpfs ${MEMORY}
+#		 fi
 
 		mkdir /tmp
 		mkdir -p ${UNION}
-#		mkdir -p $CHANGES
-#		mount -t unionfs -o dirs=$CHANGES=rw unionfs ${UNION}
+#		mkdir -p ${CHANGES}
+#		mount -t unionfs -o dirs=${CHANGES}=rw unionfs ${UNION}
 		good_msg "Creating union mount"
 		unionfs -o allow_other,cow,noinitgroups,suid,dev,default_permissions,use_ino ${rw_dir}=RW:${ro_dir}=RO ${UNION} 2>/dev/null
 		ret=$?
@@ -1751,16 +1815,14 @@ setup_unionfs() {
 	fi
 }
 
-get_mounts_list()
-{
+get_mounts_list() {
 	awk '
 		/^[[:blank:]]*#/ { next }
 		{ print $1 }
 		' ${NEW_ROOT}/etc/initramfs.mounts
 }
 
-get_mount_fstype()
-{
+get_mount_fstype() {
 	[ -e "${NEW_ROOT}"/etc/fstab ] || return 1
 	awk -v fs="$1" '
 		/^[[:blank:]]*#/ { next }
@@ -1768,8 +1830,7 @@ get_mount_fstype()
 		' ${NEW_ROOT}/etc/fstab
 }
 
-get_mount_options()
-{
+get_mount_options() {
 	[ -e "${NEW_ROOT}"/etc/fstab ] || return 1
 	awk -v fs="$1" '
 		/^[[:blank:]]*#/ { next }
@@ -1777,8 +1838,7 @@ get_mount_options()
 		' ${NEW_ROOT}/etc/fstab
 }
 
-get_mount_device()
-{
+get_mount_device() {
 	[ -e "${NEW_ROOT}"/etc/fstab ] || return 1
 	awk -v fs="$1" '
 		/^[[:blank:]]*#/ { next }
@@ -1791,17 +1851,17 @@ get_mount_device()
 # which then rejects the mount.
 # To make like a little easier, busybox mount does not care about leading,
 # trailing or duplicate commas.
-strip_mount_options()
-{
+strip_mount_options() {
 	sed -r \
 		-e 's/(,|^)(no)?auto(,|$)/,/g' \
-                -e 's/(,|^)iversion(,|$)/,/g'
+		-e 's/(,|^)iversion(,|$)/,/g'
 }
 
-checkfs()
-{
-	if [ -r "/proc/filesystems" ]; then
-		if grep -qs "$1" /proc/filesystems ; then
+checkfs() {
+	if [ -r "/proc/filesystems" ]
+	then
+		if grep -qs "$1" /proc/filesystems
+		then
 			return 0
 		fi
 	fi
