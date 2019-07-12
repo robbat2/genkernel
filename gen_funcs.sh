@@ -477,6 +477,38 @@ debug_breakpoint() {
 	exit 99
 }
 
+get_useful_function_stack() {
+	local end_function=${1:-${FUNCNAME}}
+	local n_functions=${#FUNCNAME[@]}
+	local last_function=$(( n_functions - 1 )) # -1 because arrays are starting with 0
+	local first_function=0
+
+	local stack_str=
+	local last_function_name=
+	while [ ${last_function} -gt ${first_function} ]
+	do
+		last_function_name=${FUNCNAME[last_function]}
+		last_function=$(( last_function - 1 ))
+
+		case "${last_function_name}" in
+			__module_main|main)
+				# filter main function
+				continue
+				;;
+			${end_function})
+				# this the end
+				break
+				;;
+			*)
+				;;
+		esac
+
+		stack_str+="${last_function_name}(): "
+	done
+
+	echo "${stack_str}"
+}
+
 trap_cleanup(){
 	# Call exit code of 1 for failure
 	cleanup
