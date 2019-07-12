@@ -1354,8 +1354,11 @@ start_iscsi() {
 # It is either the root or a swap, other devices are supported in the scripts provided with sys-fs/cryptsetup
 # $1 - root/swap
 openLUKS() {
-	# please use 'tr' and this line, or remove it
-	# eval local TYPE=$(uppercase $1)
+	if [ ! -x /sbin/cryptsetup ]
+	then
+		bad_msg "cryptsetup program is missing. Was initramfs built without --luks parameter?"
+		exit 1
+	fi
 
 	case $1 in
 		root)
@@ -1366,15 +1369,16 @@ openLUKS() {
 			;;
 	esac
 
-	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="$1" LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"' LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"' LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
+	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="$1" LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
+	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"' LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
+	local OPENED_LOCKFILE="/${TYPE}.decrypted"
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
-	local mntkey="/mnt/key/" cryptsetup_options='' flag_opened="/${TYPE}.decrypted"
+	local mntkey="/mnt/key/" crypt_filter_ret= cryptsetup_options=''
 
-	[ ! -e /sbin/cryptsetup ] && bad_msg "The ramdisk does not support LUKS" && exit 1
-	while [ 1 ]
+	while true
 	do
 		local gpg_cmd=""
-		if [ -e ${flag_opened} ]
+		if [ -e "${OPENED_LOCKFILE}" ]
 		then
 			good_msg "The LUKS device ${LUKS_DEVICE} meanwhile was opened by someone else."
 			break
@@ -1396,6 +1400,12 @@ openLUKS() {
 			KEYDEV_ERROR=0
 		else
 			LUKS_DEVICE=$(find_real_device "${LUKS_DEVICE}")
+			if [ -z "${LUKS_DEVICE}" ]
+			then
+				bad_msg "Looks like CRYPT_${TYPE} kernel cmdline argument is not set." ${CRYPT_SILENT}
+				DEV_ERROR=1
+				continue
+			fi
 
 			setup_md_device ${LUKS_DEVICE}
 			cryptsetup isLuks ${LUKS_DEVICE}
@@ -1405,13 +1415,13 @@ openLUKS() {
 				DEV_ERROR=1
 				continue
 			else
-				# Handle keys
 				if [ "x${LUKS_TRIM}" = "xyes" ]
 				then
-					good_msg "Enabling TRIM support for ${LUKS_NAME}." ${CRYPT_SILENT}
+					good_msg "Enabling TRIM support for ${LUKS_NAME} ..." ${CRYPT_SILENT}
 					cryptsetup_options="${cryptsetup_options} --allow-discards"
 				fi
 
+				# Handle keys
 				if [ -n "${LUKS_KEY}" ]
 				then
 					local REAL_LUKS_KEYDEV="${LUKS_KEYDEV}"
@@ -1451,10 +1461,11 @@ openLUKS() {
 								continue
 							fi
 						fi
-						# At this point a device was recognized, now let's see if the key is there
-						[ ! -d "${mntkey}" ] && mkdir -p ${mntkey} 2>/dev/null >/dev/null
 
-						mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>/dev/null
+						# At this point a device was recognized, now let's see if the key is there
+						[ ! -d "${mntkey}" ] && mkdir -p "${mntkey}" >/dev/null 2>&1
+
+						mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>&1
 						if [ "$?" != '0' ]
 						then
 							KEYDEV_ERROR=1
@@ -1466,7 +1477,7 @@ openLUKS() {
 							# keyfile exists?
 							if [ ! -e "${mntkey}${LUKS_KEY}" ]
 							then
-								umount -n ${mntkey} 2>/dev/null >/dev/null
+								umount -n "${mntkey}" >/dev/null 2>&1
 								KEY_ERROR=1
 								KEYDEV_ERROR=1
 								bad_msg "Key {LUKS_KEY} on device ${REAL_LUKS_KEYDEV} not found." ${CRYPT_SILENT}
@@ -1476,12 +1487,19 @@ openLUKS() {
 					fi
 					# At this point a candidate key exists (either mounted before or not)
 					good_msg "${LUKS_KEY} on device ${REAL_LUKS_KEYDEV} found" ${CRYPT_SILENT}
-					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ] && [ -x /sbin/gpg ]
+
+					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ]
 					then
-						[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
-						mknod /dev/tty c 5 1
-						cryptsetup_options="${cryptsetup_options} -d -"
-						gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
+						if [ ! -x '/sbin/gpg' ]
+						then
+							bad_msg "GPG-encrypted key file provided but gpg program is missing. Was initramfs built without --gpg parameter?"
+							bad_msg "Falling back to passphrase usage!"
+						else
+							[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
+							mknod /dev/tty c 5 1
+							cryptsetup_options="${cryptsetup_options} -d -"
+							gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
+						fi
 					else
 						cryptsetup_options="${cryptsetup_options} -d ${mntkey}${LUKS_KEY}"
 					fi
@@ -1490,17 +1508,17 @@ openLUKS() {
 				crypt_filter "${gpg_cmd}cryptsetup ${cryptsetup_options} luksOpen ${LUKS_DEVICE} ${LUKS_NAME}"
 				crypt_filter_ret=$?
 
-				touch ${flag_opened}
-
 				[ -e /dev/tty.org ] \
 					&& rm -f /dev/tty \
 					&& mv /dev/tty.org /dev/tty
 
 				if [ ${crypt_filter_ret} -eq 0 ]
 				then
+					touch "${OPENED_LOCKFILE}"
 					good_msg "LUKS device ${LUKS_DEVICE} opened" ${CRYPT_SILENT}
 					break
-				else
+				elif [ ! -e "${OPENED_LOCKFILE}" ]
+				then
 					bad_msg "Failed to open LUKS device ${LUKS_DEVICE}" ${CRYPT_SILENT}
 					DEV_ERROR=1
 					KEY_ERROR=1
@@ -1509,8 +1527,8 @@ openLUKS() {
 			fi
 		fi
 	done
-	umount ${mntkey} 2>/dev/null >/dev/null
-	rmdir -p ${mntkey} 2>/dev/null >/dev/null
+	umount "${mntkey}" >/dev/null 2>&1
+	rmdir -p "${mntkey}" >/dev/null 2>&1
 }
 
 start_LUKS() {
