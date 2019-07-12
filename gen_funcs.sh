@@ -688,8 +688,12 @@ check_distfiles() {
 }
 
 expand_file() {
-	[[ "$#" -lt '1' ]] &&
+	if [[ "${#}" -lt 1 ]]
+	then
+		# Nothing to do for us
 		echo ''
+		return
+	fi
 
 	local file="${1}"
 	local expanded_file=
