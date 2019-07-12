@@ -1,6 +1,27 @@
 #!/bin/bash
 # $Id$
 
+gen_dep_list() {
+	if isTrue "${ALLRAMDISKMODULES}"
+	then
+		strip_mod_paths $(find "${INSTALL_MOD_PATH}/lib/modules/${KV}" -name "*$(modules_kext)") | sort
+	else
+		rm -f "${TEMP}/moddeps" >/dev/null
+
+		local group_modules
+		for group_modules in ${!MODULES_*}
+		do
+			gen_deps ${!group_modules}
+		done
+
+		# Only list each module once
+		if [ -f "${TEMP}/moddeps" ]
+		then
+			cat "${TEMP}/moddeps" | sort | uniq
+		fi
+	fi
+}
+
 modules_kext()
 {
 	KEXT=".ko"
@@ -11,8 +32,7 @@ modules_kext()
 	echo ${KEXT}
 }
 
-modules_dep_list()
-{
+modules_dep_list() {
 	KEXT=$(modules_kext)
 	if [ -f ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep ]
 	then
@@ -56,24 +76,4 @@ gen_deps()
 			echo ${y} >> ${TEMP}/moddeps
 		done
 	done
-}
-
-gen_dep_list()
-{
-	if isTrue "${ALLRAMDISKMODULES}"; then
-		strip_mod_paths $(find "${INSTALL_MOD_PATH}/lib/modules/${KV}" -name "*$(modules_kext)") | sort
-	else
-		local group_modules
-		rm -f ${TEMP}/moddeps > /dev/null
-
-		for group_modules in ${!MODULES_*}; do
-			gen_deps ${!group_modules}
-		done
-
-		# Only list each module once
-		if [ -f ${TEMP}/moddeps ]
-		then
-		    cat ${TEMP}/moddeps | sort | uniq
-		fi
-	fi
 }
