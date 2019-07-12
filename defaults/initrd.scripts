@@ -924,11 +924,16 @@ prompt_user() {
 	bad_msg '- type "q" to skip ...'
 	printf "%s" "${2}(${oldvalue}) :: "
 	read -t 10 ${1}
+	if [ $? -gt 0 ]
+	then
+		# prompt timed out
+		printf "\n"
+	fi
+
 	case $(eval echo '$'${1}) in
 		'q')
 			eval ${1}'='${oldvalue}
 			warn_msg "Skipping step, this will likely cause a boot failure."
-			break
 			;;
 		'shell')
 			eval ${1}'='${oldvalue}
