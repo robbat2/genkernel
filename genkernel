@@ -125,12 +125,21 @@ do
 	eval "${newvar}='${!v}'"
 done
 
+print_info 2 "Sourcing default modules_load from '${GK_SHARE}/defaults/modules_load' ..."
+source "${GK_SHARE}/defaults/modules_load" || gen_die "Could not read '${GK_SHARE}/defaults/modules_load'!"
+
 # Read arch-specific config
-print_info 1 "Sourcing arch-specific config.sh from ${ARCH_CONFIG} ..."
-source ${ARCH_CONFIG} || gen_die "Could not read ${ARCH_CONFIG}"
-_MODULES_LOAD=${GK_SHARE}/arch/${ARCH}/modules_load
-print_info 1 "Sourcing arch-specific modules_load from ${_MODULES_LOAD} ..."
-source "${_MODULES_LOAD}" || gen_die "Could not read ${_MODULES_LOAD}"
+print_info 2 "Sourcing arch-specific config.sh from '${ARCH_CONFIG}' ..."
+source "${ARCH_CONFIG}" || gen_die "Could not read '${ARCH_CONFIG}'!"
+_MODULES_LOAD="${GK_SHARE}/arch/${ARCH}/modules_load"
+if [ -f "${_MODULES_LOAD}" ]
+then
+	print_info 2 "Sourcing arch-specific modules_load from '${_MODULES_LOAD}' ..."
+	source "${_MODULES_LOAD}" || gen_die "Could not read '${_MODULES_LOAD}'!"
+else
+	print_info 2 "No arch-specific modules_load found; Skipping ..."
+fi
+unset _MODULES_LOAD
 
 # Now apply customizations of MODULES_*
 for v in ${override_module_vars}
