@@ -738,29 +738,37 @@ kconfig_get_opt() {
 		-e "/^#\? \?${optname}[ =].*/{ s/.*${optname}[ =]//g; s/is not set\| +//g; p; q }"
 }
 
-kconfig_set_opt() {
-	kconfig="$1"
-	optname="$2"
-	optval="$3"
+KCONFIG_MODIFIED_MARKER="${TEMP}/.kconfig_modified"
 
-	curropt=$(grep -E "^#? ?${optname}[ =].*$" "${kconfig}")
+kconfig_set_opt() {
+	[[ ${#} -lt 3 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at least three arguments (${#} given)!"
+	[[ ${#} -gt 4 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at most four arguments (${#} given)!"
+
+	local kconfig="${1}"
+	local optname="${2}"
+	local optval="${3}"
+	local indentlevel=${4:-2}
+
+	local curropt=$(grep -E "^#? ?${optname}[ =].*$" "${kconfig}")
 	if [[ -z "${curropt}" ]]
 	then
-		print_info 2 "$(getIndent 2) - Adding option '${optname}' with value '${optval}' to '${kconfig}'..."
-		echo "${optname}=${optval}" >> "${kconfig}" ||
-			gen_die "Failed to add '${optname}=${optval}' to '$kconfig'"
+		print_info 2 "$(get_indent ${indentlevel}) - Adding option '${optname}' with value '${optval}' to '${kconfig}'..."
+		echo "${optname}=${optval}" >> "${kconfig}" \
+			|| gen_die "Failed to add '${optname}=${optval}' to '$kconfig'"
 
 		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
 	elif [[ "${curropt}" != "*#*" && "${curropt#*=}" == "${optval}" ]]
 	then
-		print_info 2 "$(getIndent 2) - Option '${optname}=${optval}' already exists in '${kconfig}'; Skipping..."
+		print_info 2 "$(get_indent ${indentlevel}) - Option '${optname}=${optval}' already set in '${kconfig}'; Skipping ..."
 	else
-		print_info 2 "$(getIndent 2) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
+		print_info 2 "$(get_indent ${indentlevel}) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
 		sed -i "${kconfig}" \
-			-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" ||
-				gen_die "Failed to set '${optname}=${optval}' in '$kconfig'"
+			-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
+			|| gen_die "Failed to set '${optname}=${optval}' in '$kconfig'"
 
-		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
+		[ ! -f "${KCONFIG_MODIFIED_MARKER}" ] && touch "${KCONFIG_MODIFIED_MARKER}"
 	fi
 }
 
