@@ -428,7 +428,7 @@ cd /
 # Start iSCSI
 if [ -e /bin/iscsistart ]
 then
-	startiscsi
+	start_iscsi
 fi
 
 # Loop file already exists on fs, assume no mount needed,

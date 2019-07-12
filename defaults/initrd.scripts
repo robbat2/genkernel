@@ -1296,7 +1296,7 @@ startVolumes() {
 	fi
 }
 
-startiscsi() {
+start_iscsi() {
 	if [ ! -n "${ISCSI_NOIBFT}" ]
 	then
 		good_msg "Activating iSCSI via iBFT"
