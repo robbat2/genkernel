@@ -58,7 +58,8 @@ fi
 TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
 [ -z "${TEMP}" ] && gen_die "mktemp failed!"
 
-trap trap_cleanup SIGHUP SIGQUIT SIGINT SIGTERM SIGKILL
+set_default_gk_trap
+
 BUILD_KERNEL="no"
 BUILD_RAMDISK="no"
 BUILD_MODULES="no"
@@ -296,8 +297,9 @@ then
 		echo
 		print_info 1 ">>> Callback cancelled ..."
 	fi
-	trap - TERM KILL INT QUIT ABRT
-	print_info 1 "" 1 0
+
+	# restore default trap
+	set_default_gk_trap
 fi
 
 if isTrue "${BUILD_RAMDISK}"

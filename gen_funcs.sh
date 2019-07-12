@@ -483,6 +483,10 @@ trap_cleanup(){
 	exit 1
 }
 
+set_default_gk_trap() {
+	trap trap_cleanup SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+}
+
 #
 # Helper function to allow command line arguments to override configuration
 # file specified values and to apply defaults.
