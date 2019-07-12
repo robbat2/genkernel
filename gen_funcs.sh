@@ -50,66 +50,78 @@ dump_debugcache() {
 
 # print_info(loglevel, print [, newline [, prefixline [, forcefile ] ] ])
 print_info() {
+	local reset_x=0
+	if [ -o xtrace ]
+	then
+		set +x
+		reset_x=1
+	fi
+
 	local NEWLINE=1
-	local FORCEFILE=0
+	local FORCEFILE=1
 	local PREFIXLINE=1
 	local SCRPRINT=0
 	local STR=''
 
-	# NOT ENOUGH ARGS
-	if [ "$#" -lt '2' ] ; then return 1; fi
+	[[ ${#} -lt 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at least two arguments (${#} given)!"
+
+	[[ ${#} -gt 5 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at most five arguments (${#} given)!"
 
 	# IF 3 OR MORE ARGS, CHECK IF WE WANT A NEWLINE AFTER PRINT
-	if [ "$#" -gt '2' ]
+	if [ ${#} -gt 2 ]
 	then
 		if isTrue "$3"
 		then
-			NEWLINE='1';
+			NEWLINE=1
 		else
-			NEWLINE='0';
+			NEWLINE=0
 		fi
 	fi
 
 	# IF 4 OR MORE ARGS, CHECK IF WE WANT TO PREFIX WITH A *
-	if [ "$#" -gt '3' ]
+	if [ ${#} -gt 3 ]
 	then
 		if isTrue "$4"
 		then
-			PREFIXLINE='1'
+			PREFIXLINE=1
 		else
-			PREFIXLINE='0'
+			PREFIXLINE=0
 		fi
 	fi
 
 	# IF 5 OR MORE ARGS, CHECK IF WE WANT TO FORCE OUTPUT TO DEBUG
 	# FILE EVEN IF IT DOESN'T MEET THE MINIMUM DEBUG REQS
-	if [ "$#" -gt '4' ]
+	if [ ${#} -gt 4 ]
 	then
 		if isTrue "$5"
 		then
-			FORCEFILE='1'
+			FORCEFILE=1
 		else
-			FORCEFILE='0'
+			FORCEFILE=0
 		fi
 	fi
 
 	# PRINT TO SCREEN ONLY IF PASSED LOGLEVEL IS HIGHER THAN
-	# OR EQUAL TO SET DEBUG LEVEL
-	if [ "$1" -lt "${LOGLEVEL}" -o "$1" = "${LOGLEVEL}" ]
+	# OR EQUAL TO SET LOG LEVEL
+	if [[ ${1} -lt ${LOGLEVEL} || ${1} -eq ${LOGLEVEL} ]]
 	then
-		SCRPRINT='1'
+		SCRPRINT=1
 	fi
 
 	# RETURN IF NOT OUTPUTTING ANYWHERE
-	if [ "${SCRPRINT}" != '1' -a "${FORCEFILE}" != '1' ]
+	if [ ${SCRPRINT} -ne 1 -a ${FORCEFILE} -ne 1 ]
 	then
+		[ ${reset_x} -eq 1 ] && set -x
+
 		return 0
 	fi
 
 	# STRUCTURE DATA TO BE OUTPUT TO SCREEN, AND OUTPUT IT
-	if [ "${SCRPRINT}" = '1' ]
+	if [ ${SCRPRINT} -eq 1 ]
 	then
-		if [ "${PREFIXLINE}" = '1' ]
+		if [ ${PREFIXLINE} -eq 1 ]
 		then
 			STR="${GOOD}*${NORMAL} ${2}"
 		else
@@ -117,20 +129,22 @@ print_info() {
 		fi
 
 		printf "%b" "${STR}"
-		if [ "${NEWLINE}" != '0' ]; then
+
+		if [ ${NEWLINE} -ne 0 ]
+		then
 			echo
 		fi
 	fi
 
 	# STRUCTURE DATA TO BE OUTPUT TO FILE, AND OUTPUT IT
-	if [ "${SCRPRINT}" = '1' -o "${FORCEFILE}" = '1' ]
+	if [ ${SCRPRINT} -eq 1 -o ${FORCEFILE} -eq 1 ]
 	then
-		STRR=${2//${WARN}/}
+		local STRR=${2//${WARN}/}
 		STRR=${STRR//${BAD}/}
 		STRR=${STRR//${BOLD}/}
 		STRR=${STRR//${NORMAL}/}
 
-		if [ "${PREFIXLINE}" = '1' ]
+		if [ ${PREFIXLINE} -eq 1 ]
 		then
 			STR="* ${STRR}"
 		else
@@ -141,18 +155,21 @@ print_info() {
 		then
 			DEBUGCACHE="${DEBUGCACHE}${STR}"
 		else
-			printf "%b" "${STR}" >> ${LOGFILE}
+			printf "%b" "${STR}" >> "${LOGFILE}"
 		fi
 
-		if [ "${NEWLINE}" != '0' ]; then
+		if [ ${NEWLINE} -ne 0 ]
+		then
 			if isTrue "${TODEBUGCACHE}"
 			then
 				DEBUGCACHE="${DEBUGCACHE}"$'\n'
 			else
-				echo >> ${LOGFILE}
+				echo >> "${LOGFILE}"
 			fi
 		fi
 	fi
+
+	[ ${reset_x} -eq 1 ] && set -x
 
 	return 0
 }
