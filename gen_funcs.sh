@@ -423,6 +423,12 @@ copy_image_with_preserve() {
 	fi
 }
 
+trap_cleanup(){
+	# Call exit code of 1 for failure
+	cleanup
+	exit 1
+}
+
 #
 # Helper function to allow command line arguments to override configuration
 # file specified values and to apply defaults.

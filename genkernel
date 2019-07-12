@@ -58,12 +58,6 @@ fi
 TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
 [ -z "${TEMP}" ] && gen_die "mktemp failed!"
 
-trap_cleanup(){
-	# Call exit code of 1 for failure
-	cleanup
-	exit 1
-}
-
 cleanup(){
 	if isTrue "${CMD_DEBUGCLEANUP}"
 	then
