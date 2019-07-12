@@ -188,6 +188,9 @@ print_warning() {
 # $3 = string
 
 var_replace() {
+	[[ ${#} -ne 3 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly three arguments (${#} given)!"
+
 	# Escape '\' and '.' in $2 to make it safe to use
 	# in the later sed expression
 	local SAFE_VAR
