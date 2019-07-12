@@ -1099,7 +1099,8 @@ rundebugshell "before entering switch_root"
 
 # init_opts is set in the environment by the kernel when it parses the command line
 init=${REAL_INIT:-/sbin/init}
-if ! mountpoint "${CHROOT}"; then
+if ! mountpoint "${CHROOT}" 1>/dev/null 2>&1
+then
 	bad_msg "$CHROOT was not a mountpoint"
 elif chroot "${CHROOT}" /usr/bin/test ! -x /${init} ; then
 	bad_msg "init=${init} does not exist in the rootfs!"
