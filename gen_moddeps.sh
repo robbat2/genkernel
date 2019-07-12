@@ -67,16 +67,16 @@ modules_kext() {
 }
 
 # Pass module deps list
-strip_mod_paths()
-{
-        local x
-        local ret
-        local myret
+strip_mod_paths() {
+	local x
+	local ret
+	local myret
 
-        for x in ${*}
-        do
-                ret=`basename ${x} | cut -d. -f1`
-                myret="${myret} ${ret}"
-        done
-        echo "${myret}"
+	for x in ${*}
+	do
+		ret=$(basename ${x} | cut -d. -f1)
+		myret="${myret} ${ret}"
+	done
+
+	echo "${myret}"
 }
