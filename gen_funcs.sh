@@ -342,55 +342,49 @@ clear_tmpdir() {
 	fi
 }
 
-#
+# @FUNCTION: copy_image_with_preserve
+# @USAGE: <symlink name> <source image> <dest image>
+# @DESCRIPTION:
 # Function to copy various kernel boot image products to the boot directory,
 # preserve a generation of old images (just like the manual kernel build's
 # "make install" does), and maintain the symlinks (if enabled).
 #
-# Arguments:
-#     $1  Symlink name.  Symlink on the boot directory. Path not included.
-#     $2  Source image.  Fully qualified path name of the source image.
-#     $3  Dest image.    Name of the destination image in the boot directory,
-#         no path included.  This script pushd's into ${BOOTDIR} in order to
-#         create relative symlinks just like the manual kernel build.
+# <symlink name> Symlink in the boot directory. Path not included.
 #
-# - JRG
+# <source image> Fully qualified path name of the source image.
 #
+# <dest image>   Name of the destination image in the boot directory,
+#                no path included.
 copy_image_with_preserve() {
-	local symlinkName=$1
-	local newSrceImage=$2
-	local fullDestName=$3
+	[[ ${#} -ne 3 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly three arguments (${#} given)!"
+
+	local symlinkName=${1}
+	local newSrceImage=${2}
+	local fullDestName=${3}
 
 	local currDestImage
 	local prevDestImage
-	local currDestImageExists=0
-	local prevDestImageExists=0
 
- 	print_info 4 "Copying new ${symlinkName} image, " 0
+	print_info 3 "Shall copy new ${symlinkName} image, " 0
 
 	# Old product might be a different version.  If so, we need to read
 	# the symlink to see what it's name is, if there are symlinks.
-	cd ${KERNEL_OUTPUTDIR}
+	cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${KERNEL_OUTPUTDIR}'!"
 	if isTrue "${SYMLINK}"
 	then
- 		print_info 4 "automatically managing symlinks and old images." 1 0
+		print_info 3 "automatically managing symlinks and old images." 1 0
 		if [ -e "${BOOTDIR}/${symlinkName}" ]
 		then
 			# JRG: Do I need a special case here for when the standard symlink
 			# name is, in fact, not a symlink?
 			currDestImage=$(readlink --no-newline "${BOOTDIR}/${symlinkName}")
-			print_info 5 "  Current ${symlinkName} symlink exists:"
-			print_info 5 "    ${currDestImage}"
+			print_info 4 "Current ${symlinkName} symlink exists:"
+			print_info 4 "  ${currDestImage}"
 		else
 			currDestImage="${fullDestName}"
-			print_info 5 "  Current ${symlinkName} symlink did not exist."
-			print_info 5 "    Defaulted to: ${currDestImage}"
-		fi
-
-		if [ -e "${BOOTDIR}/${currDestImage}" ]
-		then
-			currDestImageExists=1
- 			print_info 5 "  Actual image file exists."
+			print_info 4 "Current ${symlinkName} symlink does NOT exist."
+			print_info 4 "  Defaulted to: ${currDestImage}"
 		fi
 
 		if [ -e "${BOOTDIR}/${symlinkName}.old" ]
@@ -398,32 +392,57 @@ copy_image_with_preserve() {
 			# JRG: Do I need a special case here for when the standard symlink
 			# name is, in fact, not a symlink?
 			prevDestImage=$(readlink --no-newline "${BOOTDIR}/${symlinkName}.old")
-			print_info 5 "  Old ${symlinkName} symlink exists:"
-			print_info 5 "    ${prevDestImage}"
+			print_info 4 "Old ${symlinkName} symlink exists:"
+			print_info 4 "  ${prevDestImage}"
 		else
 			prevDestImage="${fullDestName}.old"
-			print_info 5 "  Old ${symlinkName} symlink did not exist."
-			print_info 5 "    Defaulted to: ${prevDestImage}"
-		fi
-
-		if [ -e "${BOOTDIR}/${prevDestImage}" ]
-		then
-			prevDestImageExists=1
- 			print_info 5 "  Actual old image file exists."
+			print_info 4 "Old ${symlinkName} symlink does NOT exist."
+			print_info 4 "  Defaulted to: ${prevDestImage}"
 		fi
 	else
-		print_info 4 "symlinks not being handled by genkernel." 1 0
+		print_info 3 "symlinks not being handled by genkernel." 1 0
 		currDestImage="${fullDestName}"
 		prevDestImage="${fullDestName}.old"
+	fi
+
+	if [ -e "${BOOTDIR}/${currDestImage}" ]
+	then
+		local currDestImageExists=yes
+		print_info 4 "Actual image file '${BOOTDIR}/${currDestImage}' does exist."
+	else
+		local currDestImageExists=no
+		print_info 4 "Actual image file '${BOOTDIR}/${currDestImage}' does NOT exist."
+	fi
+
+	if [ -e "${BOOTDIR}/${prevDestImage}" ]
+	then
+		local prevDestImageExists=yes
+		print_info 4 "Actual old image file '${BOOTDIR}/${prevDestImage}' does exist."
+	else
+		local prevDestImageExists=no
+		print_info 4 "Actual old image file '${BOOTDIR}/${prevDestImage}' does NOT exist."
 	fi
 
 	# When symlinks are not being managed by genkernel, old symlinks might
 	# still be useful.  Leave 'em alone unless managed.
 	if isTrue "${SYMLINK}"
 	then
-		print_info 5 "  Deleting old symlinks, if any."
-		rm -f "${BOOTDIR}/${symlinkName}"
-		rm -f "${BOOTDIR}/${symlinkName}.old"
+		local -a old_symlinks=()
+		old_symlinks+=( "${BOOTDIR}/${symlinkName}" )
+		old_symlinks+=( "${BOOTDIR}/${symlinkName}.old" )
+
+		local old_symlink=
+		for old_symlink in "${old_symlinks[@]}"
+		do
+			if [ -L "${old_symlink}" ]
+			then
+				print_info 4 "Deleting old symlink '${old_symlink}' ..."
+				rm "${old_symlink}" || gen_die "Failed to delete '${old_symlink}'!"
+			else
+				print_info 4 "Old symlink '${old_symlink}' does NOT exist; Skipping ..."
+			fi
+		done
+		unset old_symlinks old_symlink
 	fi
 
 	# We only erase the .old image when it is the exact same version as the
@@ -432,54 +451,48 @@ copy_image_with_preserve() {
 	# kernel build works.
 	if [ "${currDestImage}" == "${fullDestName}" ]
 	then
-		#
 		# Case for new and currrent of the same base version.
-		#
-		print_info 5 "  Same base version.  May have to delete old image to make room."
+		print_info 4 "Same base version (${currDestImage})."
 
-		if [ "${currDestImageExists}" = '1' ]
+		if isTrue "${currDestImageExists}"
 		then
 			if [ -e "${BOOTDIR}/${currDestImage}.old" ]
 			then
-				print_info 5 "  Deleting old identical version ${symlinkName}."
-				rm -f "${BOOTDIR}/${currDestImage}.old"
+				print_info 3 "Deleting old identical ${symlinkName} version '${BOOTDIR}/${currDestImage}.old' ..."
+				rm "${BOOTDIR}/${currDestImage}.old" \
+					|| gen_die "Failed to delete '${BOOTDIR}/${currDestImage}.old'!"
 			fi
-			print_info 5 "  Moving ${BOOTDIR}/${currDestImage}"
-			print_info 5 "    to ${BOOTDIR}/${currDestImage}.old"
-			mv "${BOOTDIR}/${currDestImage}" "${BOOTDIR}/${currDestImage}.old" ||
-				gen_die "Could not rename the old ${symlinkName} image!"
+
+			print_info 3 "Moving '${BOOTDIR}/${currDestImage}' to '${BOOTDIR}/${currDestImage}.old' ..."
+			mv "${BOOTDIR}/${currDestImage}" "${BOOTDIR}/${currDestImage}.old" \
+				|| gen_die "Could not rename the old ${symlinkName} image!"
+
 			prevDestImage="${currDestImage}.old"
-			prevDestImageExists=1
+			prevDestImageExists=yes
 		fi
 	else
-		#
 		# Case for new / current not of the same base version.
-		#
-		print_info 5 "  Different base version.  Do not delete old images."
+		print_info 4 "Different base version."
 		prevDestImage="${currDestImage}"
 		currDestImage="${fullDestName}"
 	fi
 
-	print_info 5 "  Copying ${symlinkName}: ${newSrceImage}"
-	print_info 5 "    to ${BOOTDIR}/${currDestImage}"
-	cp "${newSrceImage}" "${BOOTDIR}/${currDestImage}" ||
-		gen_die "Could not copy the ${symlinkName} image to ${BOOTDIR}!"
+	print_info 3 "Copying '${newSrceImage}' to '${BOOTDIR}/${currDestImage}' ..."
+	cp -aL "${newSrceImage}" "${BOOTDIR}/${currDestImage}" \
+		|| gen_die "Failed to copy '${newSrceImage}' to '${BOOTDIR}/${currDestImage}'!"
 
 	if isTrue "${SYMLINK}"
 	then
-		print_info 5 "  Make new symlink(s) (from ${BOOTDIR}):"
-		print_info 5 "    ${symlinkName} -> ${currDestImage}"
-		pushd ${BOOTDIR} >/dev/null
-		ln -s "${currDestImage}" "${symlinkName}" || 
-			gen_die "Could not create the ${symlinkName} symlink!"
+		print_info 3 "Creating '${symlinkName}' -> '${currDestImage}' symlink ..."
+		ln -s "${currDestImage}" "${BOOTDIR}/${symlinkName}" \
+			|| gen_die "Failed to create '${symlinkName}' -> '${currDestImage}' symlink!"
 
-		if [ "${prevDestImageExists}" = '1' ]
+		if isTrue "${prevDestImageExists}"
 		then
-			print_info 5 "    ${symlinkName}.old -> ${prevDestImage}"
-			ln -s "${prevDestImage}" "${symlinkName}.old" ||
-				gen_die "Could not create the ${symlinkName}.old symlink!"
+			print_info 3 "Creating '${symlinkName}.old' -> '${prevDestImage}' symlink ..."
+			ln -s "${prevDestImage}" "${BOOTDIR}/${symlinkName}.old" \
+				|| "Failed to create '${symlinkName}.old' -> '${prevDestImage}' symlink!"
 		fi
-		popd >/dev/null
 	fi
 }
 
