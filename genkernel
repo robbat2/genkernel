@@ -8,7 +8,7 @@ GK_V='3.6.0.0'
 # --tempdir command line option.
 TMPDIR='/var/tmp/genkernel'
 
-TODEBUGCACHE=1 # Until an error occurs or LOGFILE is fully qualified.
+TODEBUGCACHE=yes # Until an error occurs or LOGFILE is fully qualified.
 
 small_die() {
 	echo "ERROR: $*" >&2
@@ -19,7 +19,8 @@ small_die() {
 # /etc/genkernel.conf if nobody has specified one.
 
 # NOTE: We are look for --config=... in a way that doesn't modify $@ since we access that again, later
-for arg in "$@"; do
+for arg in "$@"
+do
 	[[ "${arg}" == --config=* ]] && CMD_GK_CONFIG=${arg#--config=}
 done
 
@@ -59,9 +60,11 @@ trap_cleanup(){
 }
 
 cleanup(){
-	if isTrue "${CMD_DEBUGCLEANUP}"; then
-		if [ -n "$TEMP" -a -d "$TEMP" ]; then
-			rm -rf "$TEMP"
+	if isTrue "${CMD_DEBUGCLEANUP}"
+	then
+		if [ -n "${TEMP}" -a -d "${TEMP}" ]
+		then
+			rm -rf "${TEMP}"
 		fi
 
 		if isTrue "${POSTCLEAR}"
@@ -89,12 +92,13 @@ BUILD_RAMDISK="no"
 BUILD_MODULES="no"
 
 # Parse all command line options...
-Options=$* # Save for later
+GK_OPTIONS=$* # Save for later
 while [ $# -gt 0 ]
 do
-	Option=$1; shift
-	parse_cmdline $Option
+	GK_OPTION=$1; shift
+	parse_cmdline ${GK_OPTION}
 done
+unset GK_OPTION
 
 # Check if no action is specified...
 if ! isTrue "${BUILD_KERNEL}" && ! isTrue "${BUILD_RAMDISK}"
@@ -105,7 +109,7 @@ fi
 
 clear_log
 NORMAL=${GOOD} print_info 1 "Gentoo Linux Genkernel; Version ${GK_V}${NORMAL}"
-print_info 1 "Running with options: ${Options}"
+print_info 1 "Running with options: ${GK_OPTIONS}"
 echo
 
 # Set ${ARCH}
@@ -114,9 +118,10 @@ get_official_arch
 print_info 1 "Using genkernel.conf from ${_GENKERNEL_CONF}"
 # Save any customizations of MODULES_* first.
 override_module_vars="$(compgen -A variable |grep '^MODULES_')"
-for v in $override_module_vars ; do
-	print_info 1 "Saving $v to override defaults"
-	newvar=override_$v
+for v in ${override_module_vars}
+do
+	print_info 2 "Saving ${v} to override defaults"
+	newvar=override_${v}
 	eval "${newvar}='${!v}'"
 done
 
@@ -128,19 +133,23 @@ print_info 1 "Sourcing arch-specific modules_load from ${_MODULES_LOAD} .."
 source "${_MODULES_LOAD}" || gen_die "Could not read ${_MODULES_LOAD}"
 
 # Now apply customizations of MODULES_*
-for v in $override_module_vars; do
-	newvar=override_$v
-	print_info 1 "Override $v, default (${!v}), new value (${!newvar})"
+for v in ${override_module_vars}
+do
+	newvar=override_${v}
+	print_info 2 "Override $v, default (${!v}), new value (${!newvar})"
 	eval "${v}='${!newvar}'"
 done
+unset v override_module_vars
 
 # Merge additional modules_load from config
-for group_modules in ${!AMODULES_*}; do
-	group="$(echo $group_modules | cut -d_ -f2)"
-	eval cmodules="\$$group_modules"
+for group_modules in ${!AMODULES_*}
+do
+	group="$(echo ${group_modules} | cut -d_ -f2)"
+	eval cmodules="\$${group_modules}"
 	eval MODULES_${group}=\"\${MODULES_${group}} ${cmodules}\"
 	print_info 1 "<config> Merged AMODULES_${group}:'${cmodules}' into MODULES_${group}"
 done
+unset group group_modules
 
 
 # Based on genkernel.conf, arch-specific configs, and commandline options,
@@ -177,7 +186,6 @@ then
 	print_info 1 "Note: The version above is subject to change (depends on config and status of kernel sources)."
 	print_info 1 ""
 fi
-
 
 # Check if BOOTDIR is mounted
 if ! isTrue "${CMD_INSTALL}"
@@ -258,20 +266,20 @@ then
 		print_info 1 "Copying config for successful build to /etc/kernels/kernel-config-${ARCH}-${KV}"
 		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
 		cp "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}" || \
-			print_warning "Unable to copy the kernel configuration file."
+			print_warning 1 "Unable to copy the kernel configuration file; Ignoring non-fatal error ..."
 			# Just a warning because ordinary users are not allowed to write in /etc
 	fi
 fi
 
 if isTrue "${CMD_INSTALL}"
 then
-	if [ "${KERNCACHE}" != "" ] && isTrue "${KERNCACHE_IS_VALID}"
+	if isTrue "${KERNCACHE_IS_VALID}"
 	then
 		gen_kerncache_extract_kernel
 	fi
 fi
 
-if [ "${KERNCACHE}" != "" ] && isTrue "${KERNCACHE_IS_VALID}"
+if isTrue "${KERNCACHE_IS_VALID}"
 then
 	! isTrue "${BUILD_STATIC}" && gen_kerncache_extract_modules
 	gen_kerncache_extract_config
@@ -383,7 +391,8 @@ then
 	isTrue "${BTRFS}"  && print_warning 1 'add "dobtrfs" for Btrfs device scanning support'
 	isTrue "${ISCSI}"  && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
 
-	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]
+	then
 		# Support --kernel-config=/proc/config.gz, mainly
 		CONFGREP=zgrep
 	else

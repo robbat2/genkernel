@@ -43,8 +43,8 @@ setColorVars() {
 setColorVars
 
 dump_debugcache() {
-	TODEBUGCACHE=0
-	echo "${DEBUGCACHE}" >> ${LOGFILE}
+	TODEBUGCACHE=no
+	echo "${DEBUGCACHE}" >> "${LOGFILE}"
 }
 
 # print_info(loglevel, print [, newline [, prefixline [, forcefile ] ] ])
@@ -136,14 +136,16 @@ print_info() {
 			STR="${STRR}"
 		fi
 
-		if [ "${TODEBUGCACHE}" = '1' ]; then
+		if isTrue "${TODEBUGCACHE}"
+		then
 			DEBUGCACHE="${DEBUGCACHE}${STR}"
 		else
 			printf "%b" "${STR}" >> ${LOGFILE}
 		fi
 
 		if [ "${NEWLINE}" != '0' ]; then
-			if [ "${TODEBUGCACHE}" = '1' ]; then
+			if isTrue "${TODEBUGCACHE}"
+			then
 				DEBUGCACHE="${DEBUGCACHE}"$'\n'
 			else
 				echo >> ${LOGFILE}
