@@ -10,11 +10,11 @@ determine_KV() {
 		/bin/tar -x -C ${TEMP} -f ${KERNCACHE} kerncache.config
 		if [ -e ${TEMP}/kerncache.config ]
 		then
-			VER=`grep ^VERSION\ \= ${TEMP}/kerncache.config | awk '{ print $3 };'`
-			PAT=`grep ^PATCHLEVEL\ \= ${TEMP}/kerncache.config | awk '{ print $3 };'`
-			SUB=`grep ^SUBLEVEL\ \= ${TEMP}/kerncache.config | awk '{ print $3 };'`
-			EXV=`grep ^EXTRAVERSION\ \= ${TEMP}/kerncache.config | sed -e "s/EXTRAVERSION =//" -e "s/ //g"`
-			LOV=`grep ^CONFIG_LOCALVERSION\= ${TEMP}/kerncache.config | sed -e "s/CONFIG_LOCALVERSION=\"\(.*\)\"/\1/"`
+			VER=$(grep ^VERSION\ \= ${TEMP}/kerncache.config | awk '{ print $3 };')
+			PAT=$(grep ^PATCHLEVEL\ \= ${TEMP}/kerncache.config | awk '{ print $3 };')
+			SUB=$(grep ^SUBLEVEL\ \= ${TEMP}/kerncache.config | awk '{ print $3 };')
+			EXV=$(grep ^EXTRAVERSION\ \= ${TEMP}/kerncache.config | sed -e "s/EXTRAVERSION =//" -e "s/ //g")
+			LOV=$(grep ^CONFIG_LOCALVERSION\= ${TEMP}/kerncache.config | sed -e "s/CONFIG_LOCALVERSION=\"\(.*\)\"/\1/")
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		else
 			gen_die "Could not find kerncache.config in the kernel cache! Exiting."
@@ -28,10 +28,10 @@ determine_KV() {
 			gen_die "Kernel Makefile (${KERNEL_DIR}/Makefile) missing.  Maybe re-install the kernel sources."
 		fi
 
-		VER=`grep ^VERSION\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
-		PAT=`grep ^PATCHLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
-		SUB=`grep ^SUBLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };'`
-		EXV=`grep ^EXTRAVERSION\ \= ${KERNEL_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi'`
+		VER=$(grep ^VERSION\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };')
+		PAT=$(grep ^PATCHLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };')
+		SUB=$(grep ^SUBLEVEL\ \= ${KERNEL_DIR}/Makefile | awk '{ print $3 };')
+		EXV=$(grep ^EXTRAVERSION\ \= ${KERNEL_DIR}/Makefile | sed -e "s/EXTRAVERSION =//" -e "s/ //g" -e 's/\$([a-z]*)//gi')
 
 		# The files we are looking for are always in KERNEL_OUTPUTDIR
 		# because in most cases, KERNEL_OUTPUTDIR == KERNEL_DIR.
@@ -45,14 +45,14 @@ determine_KV() {
 		if [ -f ${KERNEL_OUTPUTDIR}/include/config/kernel.release ]
 		then
 			print_info 3 "Using '${KERNEL_OUTPUTDIR}/include/config/kernel.release' to extract LOCALVERSION..."
-			UTS_RELEASE=`cat ${KERNEL_OUTPUTDIR}/include/config/kernel.release`
-			LOV=`echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//"`
+			UTS_RELEASE=$(cat ${KERNEL_OUTPUTDIR}/include/config/kernel.release)
+			LOV=$(echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//")
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		elif [ -n "${VERSION_SOURCE}" ]
 		then
 			print_info 3 "Using '${VERSION_SOURCE}' to extract LOCALVERSION..."
-			UTS_RELEASE=`grep UTS_RELEASE ${VERSION_SOURCE} | sed -e 's/#define UTS_RELEASE "\(.*\)"/\1/'`
-			LOV=`echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//"`
+			UTS_RELEASE=$(grep UTS_RELEASE ${VERSION_SOURCE} | sed -e 's/#define UTS_RELEASE "\(.*\)"/\1/')
+			LOV=$(echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//")
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		else
 			# We will be here only when currently selected kernel source
@@ -169,7 +169,7 @@ determine_real_args() {
 	set_config_with_override BOOL   INSTALL              CMD_INSTALL              "yes"
 	set_config_with_override BOOL   DEBUGCLEANUP         CMD_DEBUGCLEANUP         "yes"
 
-	BOOTDIR=`arch_replace "${BOOTDIR}"`
+	BOOTDIR=$(arch_replace "${BOOTDIR}")
 	BOOTDIR=${BOOTDIR%/}    # Remove any trailing slash
 	MODPROBEDIR=${MODPROBEDIR%/}    # Remove any trailing slash
 
@@ -196,8 +196,8 @@ determine_real_args() {
 		BOOTLOADER="${CMD_BOOTLOADER}"
 		if [ "${CMD_BOOTLOADER}" != "${CMD_BOOTLOADER/:/}" ]
 		then
-			BOOTFS=`echo "${CMD_BOOTLOADER}" | cut -f2- -d:`
-			BOOTLOADER=`echo "${CMD_BOOTLOADER}" | cut -f1 -d:`
+			BOOTFS=$(echo "${CMD_BOOTLOADER}" | cut -f2- -d:)
+			BOOTLOADER=$(echo "${CMD_BOOTLOADER}" | cut -f1 -d:)
 		fi
 	fi
 
@@ -238,17 +238,23 @@ determine_real_args() {
 
 	if [ -n "${MINKERNPACKAGE}" ]
 	then
-		mkdir -p `dirname ${MINKERNPACKAGE}`
+		local minkernpackage_dir=$(dirname "${MINKERNPACKAGE}")
+		mkdir -p "${minkernpackage_dir}" \
+			|| gen_die "Failed to create '${minkernpackage_dir}'!"
 	fi
 
 	if [ -n "${MODULESPACKAGE}" ]
 	then
-		mkdir -p `dirname ${MODULESPACKAGE}`
+		local modulespackage_dir=$(dirname "${MODULESPACKAGE}")
+		mkdir -p "${modulespackage_dir}" \
+			|| gen_die "Failed to create '${modulespackage_dir}'!"
 	fi
 
 	if [ -n "${KERNCACHE}" ]
 	then
-		mkdir -p `dirname ${KERNCACHE}`
+		local kerncache_dir=$(dirname "${KERNCACHE}")
+		mkdir -p "${kerncache_dir}" \
+			|| gen_die "Failed to create '${kerncache_dir}'!"
 	fi
 
 	if ! isTrue "${BUILD_RAMDISK}"

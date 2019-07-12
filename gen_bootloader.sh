@@ -81,7 +81,12 @@ set_bootloader_grub() {
 		then
 
 			# Create grub configuration directory and file if it doesn't exist.
-			[ ! -d `dirname ${GRUB_CONF}` ] && mkdir -p `dirname ${GRUB_CONF}`
+			local GRUB_CONF_DIR=$(dirname "${GRUB_CONF}")
+			if [ ! -d "${GRUB_CONF_DIR}" ]
+			then
+				mkdir -p "${GRUB_CONF_DIR}" \
+					|| gen_die "Failed to create GRUB config directory '${GRUB_CONF_DIR}'!"
+			fi
 
 			touch ${GRUB_CONF}
 			echo 'default 0' >> ${GRUB_CONF}

@@ -46,9 +46,9 @@ WHITE="[1;37m"
 # Just go to the top of the screen
 # printf "[H[J"
 
-KV=`uname -r`
-KMAJOR=`echo $KV | cut -f1 -d.`
-KMINOR=`echo $KV | cut -f2 -d.`
+KV=$(uname -r)
+KMAJOR=$(echo $KV | cut -f1 -d.)
+KMINOR=$(echo $KV | cut -f2 -d.)
 KVER="${KMAJOR}.${KMINOR}"
 MISCOPTS='debug detect'
 

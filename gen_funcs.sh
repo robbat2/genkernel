@@ -173,9 +173,13 @@ var_replace() {
 	# Escape '\' and '.' in $2 to make it safe to use
 	# in the later sed expression
 	local SAFE_VAR
-	SAFE_VAR=`echo "${2}" | sed -e 's/\([\/\.]\)/\\\\\\1/g'`
+	SAFE_VAR=$(echo "${2}" | sed -e 's#\([/.]\)#\\\1#g')
 
 	echo "${3}" | sed -e "s/%%${1}%%/${SAFE_VAR}/g" -
+	if [ $? -ne 0 ]
+	then
+		gen_die "var_replace() failed: 1: '${1}'  2: '${2}'  3: '${3}'"
+	fi
 }
 
 arch_replace() {
@@ -268,7 +272,7 @@ setup_cache_dir() {
 clear_tmpdir() {
 	if isTrue "${CMD_INSTALL}"
 	then
-		TMPDIR_CONTENTS=`ls ${TMPDIR}`
+		TMPDIR_CONTENTS=$(ls "${TMPDIR}")
 		print_info 1 "Removing tmp dir contents"
 		for i in ${TMPDIR_CONTENTS}
 		do
@@ -314,7 +318,7 @@ copy_image_with_preserve() {
 		then
 			# JRG: Do I need a special case here for when the standard symlink
 			# name is, in fact, not a symlink?
-			currDestImage=`readlink --no-newline ${BOOTDIR}/${symlinkName}`
+			currDestImage=$(readlink --no-newline "${BOOTDIR}/${symlinkName}")
 			print_info 5 "  Current ${symlinkName} symlink exists:"
 			print_info 5 "    ${currDestImage}"
 		else
@@ -333,7 +337,7 @@ copy_image_with_preserve() {
 		then
 			# JRG: Do I need a special case here for when the standard symlink
 			# name is, in fact, not a symlink?
-			prevDestImage=`readlink --no-newline ${BOOTDIR}/${symlinkName}.old`
+			prevDestImage=$(readlink --no-newline "${BOOTDIR}/${symlinkName}.old")
 			print_info 5 "  Old ${symlinkName} symlink exists:"
 			print_info 5 "    ${prevDestImage}"
 		else

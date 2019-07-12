@@ -301,7 +301,7 @@ parse_cmdline() {
 			print_info 2 "CMD_MAKEOPTS: ${CMD_MAKEOPTS}"
 			;;
 		--mountboot|--no-mountboot)
-			CMD_MOUNTBOOT=`parse_optbool "$*"`
+			CMD_MOUNTBOOT=$(parse_optbool "$*")
 			print_info 2 "CMD_MOUNTBOOT: ${CMD_MOUNTBOOT}"
 			;;
 		--bootdir=*)
@@ -318,21 +318,21 @@ parse_cmdline() {
 			print_info 2 "CMD_DOKEYMAPAUTO: ${CMD_DOKEYMAPAUTO}"
 			;;
 		--keymap|--no-keymap)
-			CMD_KEYMAP=`parse_optbool "$*"`
+			CMD_KEYMAP=$(parse_optbool "$*")
 			print_info 2 "CMD_KEYMAP: ${CMD_KEYMAP}"
 			;;
 		--lvm|--no-lvm)
-			CMD_LVM=`parse_optbool "$*"`
+			CMD_LVM=$(parse_optbool "$*")
 			print_info 2 "CMD_LVM: ${CMD_LVM}"
 			;;
 		--lvm2|--no-lvm2)
-			CMD_LVM=`parse_optbool "$*"`
+			CMD_LVM=$(parse_optbool "$*")
 			print_info 2 "CMD_LVM: ${CMD_LVM}"
 			echo
 			print_warning 1 "Please use --lvm, as --lvm2 is deprecated."
 			;;
 		--mdadm|--no-mdadm)
-			CMD_MDADM=`parse_optbool "$*"`
+			CMD_MDADM=$(parse_optbool "$*")
 			print_info 2 "CMD_MDADM: $CMD_MDADM"
 			if isTrue "${CMD_MDADM}" && [ ! -e /sbin/mdadm ]
 			then
@@ -344,11 +344,11 @@ parse_cmdline() {
 			print_info 2 "CMD_MDADM_CONFIG: $CMD_MDADM_CONFIG"
 			;;
 		--busybox|--no-busybox)
-			CMD_BUSYBOX=`parse_optbool "$*"`
+			CMD_BUSYBOX=$(parse_optbool "$*")
 			print_info 2 "CMD_BUSYBOX: ${CMD_BUSYBOX}"
 			;;
 		--microcode|--no-microcode)
-			case `parse_optbool "$*"` in
+			case $(parse_optbool "$*") in
 				no)  CMD_MICROCODE='no' ;;
 				yes) CMD_MICROCODE='all' ;;
 			esac
@@ -359,19 +359,19 @@ parse_cmdline() {
 			print_info 2 "CMD_MICROCODE: $CMD_MICROCODE"
 			;;
 		--microcode-initramfs|--no-microcode-initramfs)
-			CMD_MICROCODE_INITRAMFS=`parse_optbool "$*"`
+			CMD_MICROCODE_INITRAMFS=$(parse_optbool "$*")
 			print_info 2 "CMD_MICROCODE_INITRAMFS: ${CMD_MICROCODE_INITRAMFS}"
 			;;
 		--nfs|--no-nfs)
-			CMD_NFS=`parse_optbool "$*"`
+			CMD_NFS=$(parse_optbool "$*")
 			print_info 2 "CMD_NFS: ${CMD_NFS}"
 			;;
 		--unionfs|--no-unionfs)
-			CMD_UNIONFS=`parse_optbool "$*"`
+			CMD_UNIONFS=$(parse_optbool "$*")
 			print_info 2 "CMD_UNIONFS: ${CMD_UNIONFS}"
 			;;
 		--netboot|--no-netboot)
-			CMD_NETBOOT=`parse_optbool "$*"`
+			CMD_NETBOOT=$(parse_optbool "$*")
 			print_info 2 "CMD_NETBOOT: ${CMD_NETBOOT}"
 			;;
 		--real-root=*)
@@ -379,7 +379,7 @@ parse_cmdline() {
 			print_info 2 "CMD_REAL_ROOT: ${CMD_REAL_ROOT}"
 			;;
 		--dmraid|--no-dmraid)
-			CMD_DMRAID=`parse_optbool "$*"`
+			CMD_DMRAID=$(parse_optbool "$*")
 			if isTrue "${CMD_DMRAID}" && [ ! -e /usr/sbin/dmraid ]
 			then
 				echo 'Error: --dmraid requires sys-fs/dmraid' \
@@ -395,23 +395,23 @@ parse_cmdline() {
 			print_info 2 "CMD_DMRAID: ${CMD_DMRAID}"
 			;;
 		--e2fsprogs|--no-e2fsprogs)
-			CMD_E2FSPROGS=`parse_optbool "$*"`
+			CMD_E2FSPROGS=$(parse_optbool "$*")
 			print_info 2 "CMD_E2FSPROGS: ${CMD_E2FSPROGS}"
 			;;
 		--zfs|--no-zfs)
-			CMD_ZFS=`parse_optbool "$*"`
+			CMD_ZFS=$(parse_optbool "$*")
 			print_info 2 "CMD_ZFS: ${CMD_ZFS}"
 			;;
 		--btrfs|--no-btrfs)
-			CMD_BTRFS=`parse_optbool "$*"`
+			CMD_BTRFS=$(parse_optbool "$*")
 			print_info 2 "CMD_BTRFS: ${CMD_BTRFS}"
 			;;
 		--virtio|--no-virtio)
-			CMD_VIRTIO=`parse_optbool "$*"`
+			CMD_VIRTIO=$(parse_optbool "$*")
 			print_info 2 "CMD_VIRTIO: ${CMD_VIRTIO}"
 			;;
 		--multipath|--no-multipath)
-			CMD_MULTIPATH=`parse_optbool "$*"`
+			CMD_MULTIPATH=$(parse_optbool "$*")
 			if isTrue "${CMD_MULTIPATH}" && [ ! -e /sbin/multipath ]
 			then
 				echo 'Error: --multipath requires sys-fs/multipath-tools' \
@@ -443,15 +443,15 @@ parse_cmdline() {
 			print_info 2 "CMD_BOOTLOADER: ${CMD_BOOTLOADER}"
 			;;
 		--iscsi|--no-iscsi)
-			CMD_ISCSI=`parse_optbool "$*"`
+			CMD_ISCSI=$(parse_optbool "$*")
 			print_info 2 "CMD_ISCSI: ${CMD_ISCSI}"
 			;;
 		--hyperv|--no-hyperv)
-			CMD_HYPERV=`parse_optbool "$*"`
+			CMD_HYPERV=$(parse_optbool "$*")
 			print_info 2 "CMD_HYPERV: ${CMD_HYPERV}"
 			;;
 		--ssh|--no-ssh)
-			CMD_SSH=`parse_optbool "$*"`
+			CMD_SSH=$(parse_optbool "$*")
 			print_info 2 "CMD_SSH: ${CMD_SSH}"
 			if isTrue "${CMD_SSH}" && [ ! -e /usr/sbin/dropbear ]
 			then
@@ -472,8 +472,8 @@ parse_cmdline() {
 			print_info 2 "CMD_LOGLEVEL: ${CMD_LOGLEVEL}"
 			;;
 		--menuconfig)
-			TERM_LINES=`stty -a | head -n 1 | cut -d\  -f5 | cut -d\; -f1`
-			TERM_COLUMNS=`stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1`
+			TERM_LINES=$(stty -a | head -n 1 | cut -d\  -f5 | cut -d\; -f1)
+			TERM_COLUMNS=$(stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1)
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
 				echo 'Error: You need a terminal with at least 80 columns' \
@@ -488,8 +488,8 @@ parse_cmdline() {
 			print_info 2 "CMD_MENUCONFIG: ${CMD_MENUCONFIG}"
 			;;
 		--nconfig)
-			TERM_LINES=`stty -a | head -n 1 | cut -d\  -f5 | cut -d\; -f1`
-			TERM_COLUMNS=`stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1`
+			TERM_LINES=$(stty -a | head -n 1 | cut -d\  -f5 | cut -d\; -f1)
+			TERM_COLUMNS=$(stty -a | head -n 1 | cut -d\  -f7 | cut -d\; -f1)
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
 				echo 'Error: You need a terminal with at least 80 columns' \
@@ -504,27 +504,27 @@ parse_cmdline() {
 			print_info 2 "CMD_NCONFIG: ${CMD_NCONFIG}"
 			;;
 		--gconfig|--no-gconfig)
-			CMD_GCONFIG=`parse_optbool "$*"`
+			CMD_GCONFIG=$(parse_optbool "$*")
 			print_info 2 "CMD_GCONFIG: ${CMD_GCONFIG}"
 			;;
 		--xconfig|--no-xconfig)
-			CMD_XCONFIG=`parse_optbool "$*"`
+			CMD_XCONFIG=$(parse_optbool "$*")
 			print_info 2 "CMD_XCONFIG: ${CMD_XCONFIG}"
 			;;
 		--save-config|--no-save-config)
-			CMD_SAVE_CONFIG=`parse_optbool "$*"`
+			CMD_SAVE_CONFIG=$(parse_optbool "$*")
 			print_info 2 "CMD_SAVE_CONFIG: ${CMD_SAVE_CONFIG}"
 			;;
 		--mrproper|--no-mrproper)
-			CMD_MRPROPER=`parse_optbool "$*"`
+			CMD_MRPROPER=$(parse_optbool "$*")
 			print_info 2 "CMD_MRPROPER: ${CMD_MRPROPER}"
 			;;
 		--clean|--no-clean)
-			CMD_CLEAN=`parse_optbool "$*"`
+			CMD_CLEAN=$(parse_optbool "$*")
 			print_info 2 "CMD_CLEAN: ${CMD_CLEAN}"
 			;;
 		--oldconfig|--no-oldconfig)
-			CMD_OLDCONFIG=`parse_optbool "$*"`
+			CMD_OLDCONFIG=$(parse_optbool "$*")
 			isTrue "${CMD_OLDCONFIG}" && CMD_CLEAN="no"
 			print_info 2 "CMD_CLEAN: ${CMD_CLEAN}"
 			print_info 2 "CMD_OLDCONFIG: ${CMD_OLDCONFIG}"
@@ -538,7 +538,7 @@ parse_cmdline() {
 			print_warning 1 "Please use --splash, as --gensplash is deprecated."
 			;;
 		--gensplash|--no-gensplash)
-			CMD_SPLASH=`parse_optbool "$*"`
+			CMD_SPLASH=$(parse_optbool "$*")
 			SPLASH_THEME='default'
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			echo
@@ -551,7 +551,7 @@ parse_cmdline() {
 			print_info 2 "SPLASH_THEME: ${SPLASH_THEME}"
 			;;
 		--splash|--no-splash)
-			CMD_SPLASH=`parse_optbool "$*"`
+			CMD_SPLASH=$(parse_optbool "$*")
 			SPLASH_THEME='default'
 			print_info 2 "CMD_SPLASH: ${CMD_SPLASH}"
 			;;
@@ -566,15 +566,15 @@ parse_cmdline() {
 			print_info 2 "SPLASH_RES: ${SPLASH_RES}"
 			;;
 		--install|--no-install)
-			CMD_INSTALL=`parse_optbool "$*"`
+			CMD_INSTALL=$(parse_optbool "$*")
 			print_info 2 "CMD_INSTALL: ${CMD_INSTALL}"
 			;;
 		--ramdisk-modules|--no-ramdisk-modules)
-			CMD_RAMDISKMODULES=`parse_optbool "$*"`
+			CMD_RAMDISKMODULES=$(parse_optbool "$*")
 			print_info 2 "CMD_RAMDISKMODULES: ${CMD_RAMDISKMODULES}"
 			;;
 		--all-ramdisk-modules|--no-all-ramdisk-modules)
-			CMD_ALLRAMDISKMODULES=`parse_optbool "$*"`
+			CMD_ALLRAMDISKMODULES=$(parse_optbool "$*")
 			print_info 2 "CMD_ALLRAMDISKMODULES: ${CMD_ALLRAMDISKMODULES}"
 			;;
 		--callback=*)
@@ -582,7 +582,7 @@ parse_cmdline() {
 			print_info 2 "CMD_CALLBACK: ${CMD_CALLBACK}/$*"
 			;;
 		--static|--no-static)
-			CMD_STATIC=`parse_optbool "$*"`
+			CMD_STATIC=$(parse_optbool "$*")
 			print_info 2 "CMD_STATIC: ${CMD_STATIC}"
 			;;
 		--tempdir=*)
@@ -597,7 +597,7 @@ parse_cmdline() {
 			print_info 2 "TEMP: ${TEMP}"
 			;;
 		--postclear|--no-postclear)
-			CMD_POSTCLEAR=`parse_optbool "$*"`
+			CMD_POSTCLEAR=$(parse_optbool "$*")
 			print_info 2 "CMD_POSTCLEAR: ${CMD_POSTCLEAR}"
 			;;
 		--arch-override=*)
@@ -605,12 +605,12 @@ parse_cmdline() {
 			print_info 2 "CMD_ARCHOVERRIDE: ${CMD_ARCHOVERRIDE}"
 			;;
 		--color|--no-color)
-			USECOLOR=`parse_optbool "$*"`
+			USECOLOR=$(parse_optbool "$*")
 			print_info 2 "USECOLOR: ${USECOLOR}"
 			setColorVars
 			;;
 		--debug-cleanup|--no-debug-cleanup)
-			CMD_DEBUGCLEANUP=`parse_optbool "$*"`
+			CMD_DEBUGCLEANUP=$(parse_optbool "$*")
 			print_info 2 "CMD_DEBUGCLEANUP: ${CMD_DEBUGCLEANUP}"
 			;;
 		--logfile=*)
@@ -636,7 +636,7 @@ parse_cmdline() {
 			print_info 2 "CACHE_DIR: ${CACHE_DIR}"
 			;;
 		--clear-cachedir|--no-clear-cachedir)
-			CMD_CLEAR_CACHEDIR=`parse_optbool "$*"`
+			CMD_CLEAR_CACHEDIR=$(parse_optbool "$*")
 			print_info 2 "CMD_CLEAR_CACHEDIR: ${CMD_CLEAR_CACHEDIR}"
 			;;
 		--minkernpackage=*)
@@ -659,11 +659,11 @@ parse_cmdline() {
 			print_info 2 "KERNNAME: ${CMD_KERNNAME}"
 			;;
 		--symlink|--no-symlink)
-			CMD_SYMLINK=`parse_optbool "$*"`
+			CMD_SYMLINK=$(parse_optbool "$*")
 			print_info 2 "CMD_SYMLINK: ${CMD_SYMLINK}"
 			;;
 		--kernel-sources|--no-kernel-sources)
-			CMD_KERNEL_SOURCES=`parse_optbool "$*"`
+			CMD_KERNEL_SOURCES=$(parse_optbool "$*")
 			print_info 2 "CMD_KERNEL_SOURCES: ${CMD_KERNEL_SOURCES}"
 			;;
 		--initramfs-overlay=*)
@@ -687,19 +687,19 @@ parse_cmdline() {
 #			print_info 2 "ENABLE_PEGASOS_HACKS: ${ENABLE_PEGASOS_HACKS}"
 			;;
 		--disklabel|--no-disklabel)
-			CMD_DISKLABEL=`parse_optbool "$*"`
+			CMD_DISKLABEL=$(parse_optbool "$*")
 			print_info 2 "CMD_DISKLABEL: ${CMD_DISKLABEL}"
 			;;
 		--luks|--no-luks)
-			CMD_LUKS=`parse_optbool "$*"`
+			CMD_LUKS=$(parse_optbool "$*")
 			print_info 2 "CMD_LUKS: ${CMD_LUKS}"
 			;;
 		--gpg|--no-gpg)
-			CMD_GPG=`parse_optbool "$*"`
+			CMD_GPG=$(parse_optbool "$*")
 			print_info 2 "CMD_GPG: ${CMD_GPG}"
 			;;
 		--firmware|--no-firmware)
-			CMD_FIRMWARE=`parse_optbool "$*"`
+			CMD_FIRMWARE=$(parse_optbool "$*")
 			print_info 2 "CMD_FIRMWARE: ${CMD_FIRMWARE}"
 			;;
 		--firmware-dir=*)
@@ -713,23 +713,23 @@ parse_cmdline() {
 			print_info 2 "CMD_FIRMWARE_FILES: ${CMD_FIRMWARE_FILES}"
 			;;
 		--firmware-install|--no-firmware-install)
-			CMD_FIRMWARE_INSTALL=`parse_optbool "$*"`
+			CMD_FIRMWARE_INSTALL=$(parse_optbool "$*")
 			print_info 2 "CMD_FIRMWARE_INSTALL: ${CMD_FIRMWARE_INSTALL}"
 			;;
 		--integrated-initramfs|--no-integrated-initramfs)
-			CMD_INTEGRATED_INITRAMFS=`parse_optbool "$*"`
+			CMD_INTEGRATED_INITRAMFS=$(parse_optbool "$*")
 			print_info 2 "CMD_INTEGRATED_INITRAMFS=${CMD_INTEGRATED_INITRAMFS}"
 			;;
 		--wrap-initrd|--no-wrap-initrd)
-			CMD_WRAP_INITRD=`parse_optbool "$*"`
+			CMD_WRAP_INITRD=$(parse_optbool "$*")
 			print_info 2 "CMD_WRAP_INITRD=${CMD_WRAP_INITRD}"
 			;;
 		--compress-initramfs|--no-compress-initramfs)
-			CMD_COMPRESS_INITRD=`parse_optbool "$*"`
+			CMD_COMPRESS_INITRD=$(parse_optbool "$*")
 			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
 			;;
 		--compress-initrd|--no-compress-initrd)
-			CMD_COMPRESS_INITRD=`parse_optbool "$*"`
+			CMD_COMPRESS_INITRD=$(parse_optbool "$*")
 			print_info 2 "CMD_COMPRESS_INITRD=${CMD_COMPRESS_INITRD}"
 			echo
 			print_warning 1 "Please use --[no-]compress-initramfs, as --[no-]compress-initrd is deprecated."
@@ -759,7 +759,7 @@ parse_cmdline() {
 			print_info 2 "CMD_NICE: ${CMD_NICE}"
 			;;
 		--strip=*)
-			CMD_STRIP_TYPE=`parse_opt "$*"`
+			CMD_STRIP_TYPE=$(parse_opt "$*")
 			print_info 2 "CMD_STRIP_TYPE: ${CMD_STRIP_TYPE}"
 			;;
 		--no-strip)

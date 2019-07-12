@@ -222,7 +222,7 @@ apply_patches() {
 		do
 			[ -f "${i}" ] || continue
 			patch_success=0
-			for j in `seq 0 5`
+			for j in $(seq 0 5)
 			do
 				patch -p${j} --backup-if-mismatch -f < "${i}" --dry-run >/dev/null && \
 					patch ${silent}-p${j} --backup-if-mismatch -f < "${i}"
@@ -234,7 +234,7 @@ apply_patches() {
 			done
 			if [ ${patch_success} -eq 1 ]
 			then
-				print_info 2 "$(getIndent 3) - `basename ${i}`"
+				print_info 2 "$(getIndent 3) - $(basename "${i}")"
 			else
 				gen_die "Failed to apply patch '${i}' for '${util}-${version}'!"
 			fi
@@ -284,7 +284,7 @@ compile_generic() {
 
 	case "${argstype}" in
 		kernel|kernelruntask)
-			ARGS="`compile_kernel_args`"
+			ARGS="$(compile_kernel_args)"
 			if [[ "${ARGS}" = *O=* ]]
 			then
 				if [ -f "${KERNEL_DIR}/.config" -o -d "${KERNEL_DIR}/include/config" ]
@@ -301,7 +301,7 @@ compile_generic() {
 				fi
 			fi
 			;;
-		utils) ARGS="`compile_utils_args`" ;;
+		utils) ARGS="$(compile_utils_args)" ;;
 		*) ARGS="" ;;
 	esac
 	shift 2

@@ -30,7 +30,7 @@ gen_deps() {
 	for x in ${*}
 	do
 		echo ${x} >> "${TEMP}/moddeps"
-		modlist=`modules_dep_list ${x}`
+		modlist=$(modules_dep_list ${x})
 		if [ "${modlist}" != "" -a "${modlist}" != " " ]
 		then
 			deps=$(strip_mod_paths ${modlist})

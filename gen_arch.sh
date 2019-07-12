@@ -10,7 +10,7 @@ get_official_arch() {
 		then
 			ARCH=${ARCH_OVERRIDE}
 		else
-			ARCH=`uname -m`
+			ARCH=$(uname -m)
 			case "${ARCH}" in
 				i?86)
 					ARCH="x86"

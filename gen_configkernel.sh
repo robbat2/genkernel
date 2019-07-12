@@ -95,7 +95,7 @@ config_kernel() {
 			if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ] || \
 				! diff -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" > /dev/null
 			then
-				NOW=`date +--%Y-%m-%d--%H-%M-%S`
+				NOW=$(date +--%Y-%m-%d--%H-%M-%S)
 				cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
 					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
 				print_info 1 "$(getIndent 1)>> Previous config backed up to .config${NOW}.bak"
