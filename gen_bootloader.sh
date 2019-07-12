@@ -3,6 +3,8 @@
 set_bootloader() {
 	print_info 1 ''
 
+	# When adding/removing supported bootloaders, do NOT forget
+	# to update print_warning in genkernel file as well.
 	case "${BOOTLOADER}" in
 		grub)
 			set_bootloader_grub

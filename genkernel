@@ -325,38 +325,74 @@ fi
 
 if isTrue "${BUILD_KERNEL}"
 then
+	show_warning_initramfs_is_required=yes
+
+	print_info 1 ''
+	print_info 1 'Kernel compiled successfully!'
+
 	if isTrue "${CMD_INSTALL}"
 	then
 		set_bootloader
+
+		# When we have installed kernel and initramfs *and*
+		# updated bootloader, we can assume that initramfs will
+		# be used...
+		case "${BOOTLOADER}" in
+			grub)
+				show_warning_initramfs_is_required=no
+				;;
+			grub2)
+				show_warning_initramfs_is_required=no
+				;;
+		esac
+	else
+		print_info 1 ''
+		print_info 1 "You will find the kernel image in '${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}'."
+		if isTrue "${GENZIMAGE}"
+		then
+			print_info 1 "You will find the kernelz binary in '${TMPDIR}/kernelz-${KV}'."
+		fi
+		print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
 	fi
+
 	print_info 1 ''
-	print_info 1 "Kernel compiled successfully!"
+	print_info 1 'Required kernel parameter:'
 	print_info 1 ''
-	print_info 1 'Required Kernel Parameters:'
-	print_info 1 '    root=/dev/$ROOT'
+	print_info 1 '	root=/dev/$ROOT'
 	print_info 1 ''
-	print_info 1 '    Where $ROOT is the device node for your root partition as the'
-	print_info 1 '    one specified in /etc/fstab'
-	print_info 1 ''
-	print_info 1 "If you require Genkernel's hardware detection features; you MUST"
-	print_info 1 'tell your bootloader to use the provided INITRAMFS file.'
+	print_info 1 'Where $ROOT is the device node for your root partition as the'
+	print_info 1 'one specified in /etc/fstab'
+
+	if isTrue "${show_warning_initramfs_is_required}"
+	then
+		echo
+		print_warning 1 "If you require Genkernel's hardware detection features, you ${BOLD}MUST${NORMAL}"
+		print_warning 1 'tell your bootloader to use the provided initramfs file.'
+	fi
+	unset show_warning_initramfs_is_required
 fi
 
 if isTrue "${BUILD_RAMDISK}"
 then
 	echo
-	print_warning 1 'WARNING... WARNING... WARNING...'
-	print_warning 1 'Additional kernel cmdline arguments that *may* be required to boot properly...'
-	isTrue "${SPLASH}" && print_warning 1 "add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
-	isTrue "${LVM}"    && print_warning 1 'add "dolvm" for LVM support'
-	isTrue "${DMRAID}" && print_warning 1 'add "dodmraid" for dmraid support'
-	isTrue "${MDADM}"  && print_warning 1 'add "domdadm" for MDRAID support'
-	isTrue "${DMRAID}" && print_warning 1 '	or "dodmraid=<additional options>"'
+	print_warning 1 "${BOLD}WARNING... WARNING... WARNING...${NORMAL}"
+	print_warning 1 'Additional kernel parameters that *may* be required to boot properly:'
+	isTrue "${SPLASH}"    && print_warning 1 "- Add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
+	isTrue "${BTRFS}"     && print_warning 1 '- Add "dobtrfs" for Btrfs device scanning support'
+	isTrue "${MULTIPATH}" && print_warning 1 '- Add "domultipath" for multipath support'
+	isTrue "${ISCSI}"     && print_warning 1 '- For iSCSI support, add at least:'
+	isTrue "${ISCSI}"     && print_warning 1 '	- "iscsi_initiatorname=<initiator name>"'
+	isTrue "${ISCSI}"     && print_warning 1 '	- "iscsi_target=<target name>"'
+	isTrue "${ISCSI}"     && print_warning 1 '	- "iscsi_address=<target ip>"'
+	isTrue "${DMRAID}"    && print_warning 1 '- Add "dodmraid" for dmraid support or "dodmraid=<additional options>"'
+	isTrue "${MDADM}"     && print_warning 1 '- Add "domdadm" for MDRAID support'
+	isTrue "${LVM}"       && print_warning 1 '- Add "dolvm" for LVM support'
 
 	if isTrue "${ZFS}"
 	then
-		print_warning 1 'add "dozfs" for ZFS volume management support'
-		print_warning 1 '	and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>" to force booting from a specific dataset'
+		print_warning 1 '- Add "dozfs" for ZFS volume management support'
+		print_warning 1 '  and either "root=ZFS" to use bootfs autodetection or "root=ZFS=<dataset>"'
+		print_warning 1 '  to force booting from a specific dataset'
 		print_warning 1 ''
 		if [ -f "${TEMP}/.embedded_hostid" ]
 		then
@@ -365,15 +401,12 @@ then
 			print_warning 1 "If you will use this initramfs for a different system you MUST set 'spl_hostid=<hostid>' parameter to overwrite embedded hostid!"
 			unset saved_hostid
 		else
-			print_warning '1' "No hostid embedded into initramfs. You MUST set 'spl_hostid=<hostid>' parameter to provide hostid for ZFS!"
+			print_warning 1 "No hostid embedded into initramfs. You MUST set 'spl_hostid=<hostid>' parameter to provide hostid for ZFS!"
 		fi
 		print_warning 1 ''
 		print_warning 1 'If importing ZFS pool is slow, add dozfs=cache or dozfs=force to kernel commandline.'
 		print_warning 1 '"man genkernel" explains "dozfs" in detail.'
 	fi
-
-	isTrue "${BTRFS}"  && print_warning 1 'add "dobtrfs" for Btrfs device scanning support'
-	isTrue "${ISCSI}"  && print_warning 1 'add at least "iscsi_initiatorname=<initiator name> iscsi_target=<target name> and iscsi_address=<target ip>" for iscsi support'
 
 	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]
 	then
