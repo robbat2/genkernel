@@ -156,7 +156,7 @@ do
 	group="$(echo ${group_modules} | cut -d_ -f2)"
 	eval cmodules="\$${group_modules}"
 	eval MODULES_${group}=\"\${MODULES_${group}} ${cmodules}\"
-	print_info 1 "<config> Merged AMODULES_${group}:'${cmodules}' into MODULES_${group}"
+	print_info 2 "<config> Merged AMODULES_${group}:'${cmodules}' into MODULES_${group}"
 done
 unset group group_modules
 
