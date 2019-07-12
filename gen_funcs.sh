@@ -269,6 +269,33 @@ setup_cache_dir() {
 	fi
 }
 
+cleanup() {
+	if isTrue "${CMD_DEBUGCLEANUP}"
+	then
+		if [ -n "${TEMP}" -a -d "${TEMP}" ]
+		then
+			rm -rf "${TEMP}"
+		fi
+
+		if isTrue "${POSTCLEAR}"
+		then
+			echo
+			print_info 1 'RUNNING FINAL CACHE/TMP CLEANUP'
+			print_info 1 "CACHE_DIR: ${CACHE_DIR}"
+			CLEAR_CACHEDIR='yes'
+			setup_cache_dir
+			echo
+			print_info 1 "TMPDIR: ${TMPDIR}"
+			clear_tmpdir
+		fi
+	else
+		print_info 1 "Not running any cleanup per DEBUGCLEANUP"
+		print_info 1 "TEMP: ${TEMP}"
+		print_info 1 "CACHE_DIR: ${CACHE_DIR}"
+		print_info 1 "TMPDIR: ${TMPDIR}"
+	fi
+}
+
 clear_tmpdir() {
 	if isTrue "${CMD_INSTALL}"
 	then
