@@ -729,8 +729,11 @@ find_kernel_binary() {
 }
 
 kconfig_get_opt() {
-	kconfig="$1"
-	optname="$2"
+	[[ ${#} -ne 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
+
+	local kconfig="${1}"
+	local optname="${2}"
 	sed -n "${kconfig}" \
 		-e "/^#\? \?${optname}[ =].*/{ s/.*${optname}[ =]//g; s/is not set\| +//g; p; q }"
 }
