@@ -1512,7 +1512,7 @@ openLUKS() {
 	rmdir -p ${mntkey} 2>/dev/null >/dev/null
 }
 
-startLUKS() {
+start_LUKS() {
 	# if key is set but neither ssh enabled or key device is given, find
 	# the key device
 

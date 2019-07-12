@@ -457,7 +457,7 @@ setup_keymap
 # Initialize LUKS root device except for livecd's
 if [ "${CDROOT}" != 1 ]
 then
-	startLUKS
+	start_LUKS
 	if [ "${NORESUME}" != '1' ] && [ -n "${REAL_RESUME}" ]
 	then
 		case "${REAL_RESUME}" in
@@ -771,7 +771,7 @@ then
 		losetup /dev/loop0 "${CDROOT_PATH}/${LOOPEXT}${LOOP}"
 		test_success 'Preparing loop filesystem'
 
-		startLUKS
+		start_LUKS
 
 		case ${LOOPTYPE} in
 			normal)
