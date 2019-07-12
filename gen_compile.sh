@@ -265,27 +265,94 @@ compile_gen_init_cpio() {
 }
 
 compile_generic() {
-	local RET
-	[ "$#" -lt '2' ] &&
-		gen_die 'compile_generic(): improper usage!'
+	[[ ${#} -ne 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
+
 	local target=${1}
 	local argstype=${2}
+	local RET
 
 	case "${argstype}" in
 		kernel|kernelruntask)
-			export_kernel_args
-			MAKE=${KERNEL_MAKE}
-			;;
-		utils)
-			export_utils_args
-			MAKE=${UTILS_MAKE}
-			;;
-	esac
+			if [ -z "${KERNEL_MAKE}" ]
+			then
+				gen_die "KERNEL_MAKE undefined - I don't know how to compile a kernel for this arch!"
+			else
+				local MAKE=${KERNEL_MAKE}
+			fi
 
-	case "${argstype}" in
-		kernel|kernelruntask)
-			ARGS="$(compile_kernel_args)"
-			if [[ "${ARGS}" = *O=* ]]
+			# Build kernel compile parameter.
+			local ARGS=""
+
+			# Allow for CC/LD... user override!
+			local -a kernel_vars
+			kernel_vars+=( 'ARCH' )
+			kernel_vars+=( 'AS' )
+			kernel_vars+=( 'CC' )
+			kernel_vars+=( 'LD' )
+
+			local kernel_var=
+			for kernel_var in "${kernel_vars[@]}"
+			do
+				local kernel_varname="KERNEL_${kernel_var}"
+				local kernel_default_varname="DEFAULT_${kernel_varname}"
+
+				if [[ -z "${!kernel_default_varname}" ]] \
+					|| [[ -n "${!kernel_default_varname}" ]] \
+					&& [[ "${!kernel_varname}" != "${!kernel_default_varname}" ]]
+				then
+					ARGS="${ARGS} ${kernel_var}=\"${!kernel_varname}\""
+				fi
+			done
+			unset kernel_var kernel_vars kernel_varname kernel_default_varname
+
+			if isTrue "$(tc-is-cross-compiler)"
+			then
+				local can_tc_cross_compile=no
+				local cpu_cbuild=${CBUILD%%-*}
+				local cpu_chost=${CHOST%%-*}
+
+				case "${cpu_cbuild}" in
+					powerpc64*)
+						if [[ "${cpu_chost}" == "powerpc" ]]
+						then
+							can_tc_cross_compile=yes
+						fi
+						;;
+					x86_64*)
+						if [[ "${cpu_chost}" == "i686" ]]
+						then
+							can_tc_cross_compile=yes
+						fi
+						;;
+				esac
+
+				if isTrue "${can_tc_cross_compile}"
+				then
+					local -a kernel_vars
+					kernel_vars+=( 'AS' )
+					kernel_vars+=( 'CC' )
+					kernel_vars+=( 'LD' )
+
+					local kernel_var=
+					for kernel_var in "${kernel_vars[@]}"
+					do
+						if [[ "${ARGS}" == *${kernel_var}=* ]]
+						then
+							# User wants to run specific program ...
+							continue
+						else
+							ARGS="${ARGS} ${kernel_var}=\"$(tc-get${kernel_var})\""
+						fi
+					done
+					unset kernel_var kernel_vars
+				else
+					ARGS="${ARGS} CROSS_COMPILE=\"${CHOST}-\""
+				fi
+				unset can_tc_cross_compile cpu_cbuild cpu_chost
+			fi
+
+			if [ -n "${KERNEL_OUTPUTDIR}" -a "${KERNEL_OUTPUTDIR}" != "${KERNEL_DIR}" ]
 			then
 				if [ -f "${KERNEL_DIR}/.config" -o -d "${KERNEL_DIR}/include/config" ]
 				then
@@ -298,11 +365,16 @@ compile_generic() {
 					error_message+=" to compile a kernel with different KERNEL_OUTPUTDIR set."
 					error_message+=" Please re-install a fresh kernel source!"
 					gen_die "${error_message}"
+				else
+					ARGS="${ARGS} O=\"${KERNEL_OUTPUTDIR}\""
 				fi
 			fi
 			;;
-		utils) ARGS="$(compile_utils_args)" ;;
-		*) ARGS="" ;;
+		*)
+			local error_msg="${FUNCNAME[1]}(): Unsupported compile type '${argstype}'"
+			error_msg+=" for ${FUNCNAME}() specified!"
+			gen_die "${error_msg}"
+			;;
 	esac
 	shift 2
 
@@ -320,30 +392,23 @@ compile_generic() {
 	then
 		# Silent operation, forced -j1
 		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
-		eval ${NICEOPTS}${MAKE} -s ${MAKEOPTS} -j1 "${ARGS}" ${target} $*
+		eval ${NICEOPTS}${MAKE} -s ${MAKEOPTS} -j1 ${ARGS} ${target} $*
 		RET=$?
-	elif [ "${LOGLEVEL}" -gt "1" ]
+	elif [ "${LOGLEVEL}" -gt 3 ]
 	then
 		# Output to stdout and logfile
 		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
-		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* 2>&1 | tee -a ${LOGFILE}
+		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* 2>&1 | tee -a "${LOGFILE}"
 		RET=${PIPESTATUS[0]}
 	else
 		# Output to logfile only
 		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
-		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> ${LOGFILE} 2>&1
+		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> "${LOGFILE}" 2>&1
 		RET=$?
 	fi
-	[ ${RET} -ne 0 ] &&
-		gen_die "Failed to compile the \"${target}\" target ..."
 
-	unset MAKE
-	unset ARGS
-
-	case "${argstype}" in
-		kernel) unset_kernel_args ;;
-		utils) unset_utils_args ;;
-	esac
+	[ ${RET} -ne 0 ] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")${FUNCNAME}() failed to compile the \"${target}\" target!"
 }
 
 compile_modules() {
