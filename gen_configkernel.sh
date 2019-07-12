@@ -77,7 +77,7 @@ config_kernel() {
 
 	if isTrue "${CLEAN}" && isTrue "${MRPROPER}"
 	then
-		print_info 1 "$(getIndent 1)>> Skipping 'make clean' -- will run 'make mrproper' later"
+		print_info 2 "$(getIndent 1)>> --mrproper is set; Skipping 'make clean' ..."
 	elif isTrue "${CLEAN}" && ! isTrue "${MRPROPER}"
 	then
 		print_info 1 "$(getIndent 1)>> Cleaning..."
