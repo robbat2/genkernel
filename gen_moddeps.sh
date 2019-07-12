@@ -22,6 +22,30 @@ gen_dep_list() {
 	fi
 }
 
+gen_deps() {
+	local modlist
+	local deps
+
+	local x
+	for x in ${*}
+	do
+		echo ${x} >> "${TEMP}/moddeps"
+		modlist=`modules_dep_list ${x}`
+		if [ "${modlist}" != "" -a "${modlist}" != " " ]
+		then
+			deps=$(strip_mod_paths ${modlist})
+		else
+			deps=""
+		fi
+
+		local y
+		for y in ${deps}
+		do
+			echo ${y} >> "${TEMP}/moddeps"
+		done
+	done
+}
+
 modules_kext()
 {
 	KEXT=".ko"
@@ -53,27 +77,4 @@ strip_mod_paths()
                 myret="${myret} ${ret}"
         done
         echo "${myret}"
-}
-
-
-gen_deps()
-{
-	local modlist
-	local deps
-
-	for x in ${*}
-	do
-		echo ${x} >> ${TEMP}/moddeps
-		modlist=`modules_dep_list ${x}`
-		if [ "${modlist}" != "" -a "${modlist}" != " " ]
-		then
-			deps=`strip_mod_paths ${modlist}`
-		else
-			deps=""
-		fi
-		for y in ${deps}
-		do
-			echo ${y} >> ${TEMP}/moddeps
-		done
-	done
 }
