@@ -287,7 +287,7 @@ then
 	then
 		echo
 		echo
-		eval ${CMD_CALLBACK} | tee -a ${LOGFILE}
+		eval ${CMD_CALLBACK} | tee -a "${LOGFILE}"
 		CMD_STATUS="${PIPESTATUS[0]}"
 		echo
 		print_info 1 "<<< Callback exit status: ${CMD_STATUS}"
