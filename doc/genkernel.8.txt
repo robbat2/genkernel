@@ -153,9 +153,9 @@ KERNEL COMPILATION
     NOTE: Specifying   *--symlink*  does nothing unless
     *--install* is also specified.
 
-*--oldconfig*::
-    Implies *--no-clean*, and thus *--no-mrproper*, running a
-    "make oldconfig".
+*--*[*no-*]*oldconfig*::
+    Runs, or does not run, "make oldconfig" before compilation.  Specifying
+    *--oldconfig* implies *--no-clean*.
 
 *--*[*no-*]*splash*::
     Installs, or not, framebuffer splash support into initramfs.
