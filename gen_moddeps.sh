@@ -54,13 +54,15 @@ modules_dep_list() {
 	fi
 }
 
-modules_kext()
-{
-	KEXT=".ko"
-	if grep -sq '^CONFIG_MODULE_COMPRESS=y' "${KERNEL_OUTPUTDIR}"/.config; then
+modules_kext() {
+	local KEXT='.ko'
+
+	if grep -sq '^CONFIG_MODULE_COMPRESS=y' "${KERNEL_OUTPUTDIR}"/.config
+	then
 		grep -sq '^CONFIG_MODULE_COMPRESS_XZ=y' "${KERNEL_OUTPUTDIR}"/.config && KEXT='.ko.xz'
 		grep -sq '^CONFIG_MODULE_COMPRESS_GZIP=y' "${KERNEL_OUTPUTDIR}"/.config && KEXT='.ko.gz'
 	fi
+
 	echo ${KEXT}
 }
 
