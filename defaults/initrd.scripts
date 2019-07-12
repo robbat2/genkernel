@@ -811,7 +811,26 @@ check_loop() {
 }
 
 run_shell() {
-	/bin/ash
+	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
+
+	export PS1='rescueshell \w \# '
+
+	if [ -n "${CONSOLE}" ] && [ -c "/dev/${CONSOLE}" ]
+	then
+		setsid ${SH} -c "exec sh --login </dev/${CONSOLE} >/dev/${CONSOLE} 2>&1"
+	elif command -v cttyhack 1>/dev/null 2>&1
+	then
+		setsid cttyhack ${SH} --login
+	elif [ -c '/dev/tty1' ]
+	then
+		setsid ${SH} -c 'exec sh --login </dev/tty1 >/dev/tty1 2>&1'
+	else
+		${SH} --login
+	fi
+
+	echo
+
+	:> "${GK_SHELL_LOCKFILE}"
 }
 
 fs_type_in_use() {
@@ -1640,18 +1659,12 @@ setup_md_device() {
 	fi
 }
 
-do_rundebugshell() {
-	good_msg 'Type "exit" to continue with normal bootup.'
-	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
-	setsid ${SH} -c "exec cttyhack ${SH} --login"
-}
-
 rundebugshell() {
 	if [ -n "${DEBUG}" ]
 	then
 		good_msg 'Starting debug shell as requested by "debug" option.'
 		good_msg "Stopping by: ${1}"
-		do_rundebugshell
+		run_shell
 	fi
 }
 
