@@ -251,7 +251,7 @@ getIndent() {
 	echo "${_indent}"
 }
 
-isBootRO() {
+is_boot_ro() {
 	return $(awk '( $2 == "'${BOOTDIR}'" && $4 ~ /(^|,)ro(,|$)/){ I=1; exit }END{print !I }' /proc/mounts);
 }
 

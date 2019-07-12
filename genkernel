@@ -196,7 +196,7 @@ else
 				echo
 			fi
 		fi
-	elif isBootRO
+	elif is_boot_ro
 	then
 		if isTrue "${MOUNTBOOT}"
 		then
