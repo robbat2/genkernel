@@ -45,6 +45,7 @@ setColorVars
 dump_debugcache() {
 	TODEBUGCACHE=no
 	echo "${DEBUGCACHE}" >> "${LOGFILE}"
+	DEBUGCACHE=
 }
 
 # print_info(loglevel, print [, newline [, prefixline [, forcefile ] ] ])
