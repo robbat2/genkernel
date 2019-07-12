@@ -217,7 +217,7 @@ apply_patches() {
 			silent=
 		fi
 
-		print_info 1 "$(getIndent 3)${util}: >> Applying patches..."
+		print_info 1 "$(getIndent 2)${util}: >> Applying patches ..."
 		for i in ${patchdir}/*{diff,patch}
 		do
 			[ -f "${i}" ] || continue
@@ -234,13 +234,13 @@ apply_patches() {
 			done
 			if [ ${patch_success} -eq 1 ]
 			then
-				print_info 1 "$(getIndent 4) - `basename ${i}`"
+				print_info 2 "$(getIndent 3) - `basename ${i}`"
 			else
-				gen_die "could not apply patch ${i} for ${util}-${version}"
+				gen_die "Failed to apply patch '${i}' for '${util}-${version}'!"
 			fi
 		done
 	else
-		print_info 1 "$(getIndent 3)${util}: >> No patches found in $patchdir ..."
+		print_info 1 "$(getIndent 2)${util}: >> No patches found in $patchdir ..."
 	fi
 }
 
@@ -248,7 +248,7 @@ compile_gen_init_cpio() {
 	local gen_init_cpio_SRC="${KERNEL_DIR}/usr/gen_init_cpio.c"
 	local gen_init_cpio_DIR="${KERNEL_OUTPUTDIR}/usr"
 
-	print_info 1 "$(getIndent 2)>> Compiling gen_init_cpio..."
+	print_info 1 "$(getIndent 2)>> Compiling gen_init_cpio ..."
 
 	[ ! -e "${gen_init_cpio_SRC}" ] && gen_die "'${gen_init_cpio_SRC}' is missing. Cannot compile gen_init_cpio!"
 	if [ ! -d "${gen_init_cpio_DIR}" ]
@@ -335,7 +335,7 @@ compile_generic() {
 		RET=$?
 	fi
 	[ ${RET} -ne 0 ] &&
-		gen_die "Failed to compile the \"${target}\" target..."
+		gen_die "Failed to compile the \"${target}\" target ..."
 
 	unset MAKE
 	unset ARGS
@@ -347,7 +347,7 @@ compile_generic() {
 }
 
 compile_modules() {
-	print_info 1 "$(getIndent 1)>> Compiling ${KV} modules..."
+	print_info 1 "$(getIndent 1)>> Compiling ${KV} modules ..."
 	cd ${KERNEL_DIR}
 	compile_generic modules kernel
 	export UNAME_MACHINE="${ARCH}"
@@ -361,7 +361,7 @@ compile_modules() {
 		print_info 1 "$(getIndent 1)>> Installing ${KV} modules"
 	fi
 	MAKEOPTS="${MAKEOPTS} -j1" compile_generic "modules_install" kernel
-	print_info 1 "$(getIndent 1)>> Generating module dependency data..."
+	print_info 1 "$(getIndent 1)>> Generating module dependency data ..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
 	then
 		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV}
@@ -380,11 +380,11 @@ compile_kernel() {
 	if [ "${KERNEL_MAKE_DIRECTIVE_OVERRIDE}" != "${DEFAULT_KERNEL_MAKE_DIRECTIVE_OVERRIDE}" ]; then
 		kernel_make_directive="${KERNEL_MAKE_DIRECTIVE_OVERRIDE}"
 	fi
-	print_info 1 "$(getIndent 1)>> Compiling ${KV} ${kernel_make_directive/_install/ [ install ]/}..."
+	print_info 1 "$(getIndent 1)>> Compiling ${KV} ${kernel_make_directive/_install/ [ install ]/} ..."
 	compile_generic "${kernel_make_directive}" kernel
 	if [ "${KERNEL_MAKE_DIRECTIVE_2}" != '' ]
 	then
-		print_info 1 "$(getIndent 1)>> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2}..."
+		print_info 1 "$(getIndent 1)>> Starting supplimental compile of ${KV}: ${KERNEL_MAKE_DIRECTIVE_2} ..."
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
@@ -395,15 +395,15 @@ compile_kernel() {
 	elif isTrue "${FIRMWARE_INSTALL}" ; then
 		local cfg_CONFIG_FIRMWARE_IN_KERNEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" CONFIG_FIRMWARE_IN_KERNEL)
 		if isTrue "$cfg_CONFIG_FIRMWARE_IN_KERNEL"; then
-			print_info 1 "$(getIndent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y)..."
+			print_info 1 "$(getIndent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y) ..."
 		else
-			print_info 1 "$(getIndent 1)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y..."
+			print_info 1 "$(getIndent 1)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y ..."
 			[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
 			[ "${INSTALL_FW_PATH}" != '' ] && export INSTALL_FW_PATH
 			MAKEOPTS="${MAKEOPTS} -j1" compile_generic "firmware_install" kernel
 		fi
 	else
-		print_info 1 "$(getIndent 1)>> Not installing firmware as requested by configuration FIRMWARE_INSTALL=no..."
+		print_info 1 "$(getIndent 1)>> Not installing firmware as requested by configuration FIRMWARE_INSTALL=no ..."
 	fi
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})
@@ -488,10 +488,10 @@ compile_busybox() {
 		newconfig_md5="$(md5sum < "${TEMP}/busybox-config")"
 		if [ "${oldconfig_md5}" != "${newconfig_md5}" ]
 		then
-			print_info 1 "$(getIndent 3)busybox: >> Removing stale cache..."
-			rm -rf "${BUSYBOX_BINCACHE}"
+			print_info 1 "$(getIndent 2)busybox: >> Removing stale cache ..."
+			rm -rf "${BUSYBOX_BINCACHE}" || gen_die "Failed to remove stale cache file '${BUSYBOX_BINCACHE}'!"
 		else
-			print_info 1 "$(getIndent 3)busybox: >> Using cache"
+			print_info 1 "$(getIndent 2)busybox: >> Using cache ..."
 		fi
 	fi
 
@@ -514,13 +514,13 @@ compile_busybox() {
 		apply_patches busybox ${BUSYBOX_VER}
 
 		# This has the side-effect of changing the .config
-		print_info 1 "$(getIndent 3)busybox: >> Configuring..."
+		print_info 1 "$(getIndent 2)busybox: >> Configuring ..."
 		yes '' 2>/dev/null | compile_generic oldconfig utils
 
-		print_info 1 "$(getIndent 3)busybox: >> Compiling..."
+		print_info 1 "$(getIndent 2)busybox: >> Compiling ..."
 		compile_generic all utils V=1
 
-		print_info 1 "$(getIndent 3)busybox: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)busybox: >> Copying to bincache ..."
 		[ -f "${TEMP}/${BUSYBOX_DIR}/busybox" ] ||
 			gen_die 'Busybox executable does not exist!'
 		${UTILS_CROSS_COMPILE}strip "${TEMP}/${BUSYBOX_DIR}/busybox" ||
@@ -537,7 +537,7 @@ compile_busybox() {
 compile_libaio() {
 	if [ -f "${LIBAIO_BINCACHE}" ]
 	then
-		print_info 1 "$(getIndent 3)libaio: >> Using cache"
+		print_info 1 "$(getIndent 2)libaio: >> Using cache ..."
 	else
 		[ -f "${LIBAIO_SRCTAR}" ] ||
 			gen_die "Could not find libaio source tarball: ${LIBAIO_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -548,19 +548,18 @@ compile_libaio() {
 		[ -d "${LIBAIO_DIR}" ] ||
 			gen_die "libaio directory ${LIBAIO_DIR} is invalid!"
 
-		print_info 1 "$(getIndent 3)libaio: >> Patching ..."
 		cd "${LIBAIO_DIR}" || gen_die "cannot chdir into '${LIBAIO_DIR}'"
 		apply_patches libaio ${LIBAIO_VER}
 
-		print_info 1 "$(getIndent 3)libaio: >> Compiling..."
+		print_info 1 "$(getIndent 2)libaio: >> Compiling ..."
 		CFLAGS="-fPIC" \
 		LDFLAGS='-Wl,--no-as-needed' \
 		compile_generic '' utils || gen_die "failed to build libaio"
 
-		print_info 1 "$(getIndent 3)libaio: >> Installing to DESTDIR..."
+		print_info 1 "$(getIndent 2)libaio: >> Installing to DESTDIR ..."
 		compile_generic "prefix=${TEMP}/libaio install" utils || gen_die "failed to install libaio"
 
-		print_info 1 "$(getIndent 3)libaio: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)libaio: >> Copying to bincache ..."
 		cd "${TEMP}/libaio" || gen_die "cannot chdir into '${TEMP}/libaio'"
 		/bin/tar -cjf "${LIBAIO_BINCACHE}" . ||
 			gen_die 'Could not create libaio binary cache'
@@ -576,7 +575,7 @@ compile_lvm() {
 
 	if [[ -f "${LVM_BINCACHE}" && "${LVM_BINCACHE}" -nt "${LIBAIO_BINCACHE}" ]]
 	then
-		print_info 1 "$(getIndent 3)lvm: >> Using cache"
+		print_info 1 "$(getIndent 2)lvm: >> Using cache ..."
 	else
 		[ -f "${LVM_SRCTAR}" ] ||
 			gen_die "Could not find LVM source tarball: ${LVM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -593,13 +592,12 @@ compile_lvm() {
 			gen_die "Could not extract libaio binary cache!";
 
 		cd "${LVM_DIR}"
-		print_info 1 "$(getIndent 3)lvm: >> Patching ..."
 		apply_patches lvm ${LVM_VER}
 		# we currently have a patch that changes configure.ac
 		# once given patch is dropped, drop autoconf too
-		print_info 1 "$(getIndent 3)lvm: >> Autoconf ..."
+		print_info 1 "$(getIndent 2)lvm: >> Autoconf ..."
 		autoconf || gen_die 'Autoconf failed for LVM2'
-		print_info 1 "$(getIndent 3)lvm: >> Configuring..."
+		print_info 1 "$(getIndent 2)lvm: >> Configuring ..."
 		LVM_CONF=(
 			--enable-static_link
 			--prefix=/
@@ -624,16 +622,16 @@ compile_lvm() {
 		./configure "${LVM_CONF[@]}" \
 			>> ${LOGFILE} 2>&1 || \
 			gen_die 'Configure of lvm failed!'
-		print_info 1 "$(getIndent 3)lvm: >> Compiling..."
+		print_info 1 "$(getIndent 2)lvm: >> Compiling ..."
 		compile_generic '' utils || gen_die "failed to build LVM"
 
-		print_info 1 "$(getIndent 3)lvm: >> Installing to DESTDIR..."
+		print_info 1 "$(getIndent 2)lvm: >> Installing to DESTDIR ..."
 		mkdir -p "${TEMP}/lvm/sbin"
 		compile_generic "install DESTDIR=${TEMP}/lvm/" utils || gen_die "failed to install LVM"
 		# Upstream does u-w on files, and this breaks stuff.
 		chmod -R u+w "${TEMP}/lvm/"
 
-		print_info 1 "$(getIndent 3)lvm: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)lvm: >> Copying to bincache ..."
 		cd "${TEMP}/lvm" || gen_die "cannot chdir into '${TEMP}/lvm'"
 		${UTILS_CROSS_COMPILE}strip "sbin/lvm.static" ||
 			gen_die 'Could not strip lvm.static!'
@@ -653,7 +651,7 @@ compile_lvm() {
 compile_mdadm() {
 	if [ -f "${MDADM_BINCACHE}" ]
 	then
-		print_info 1 "$(getIndent 3)MDADM: Using cache"
+		print_info 1 "$(getIndent 2)mdadm: >> Using cache ..."
 	else
 		[ -f "${MDADM_SRCTAR}" ] ||
 			gen_die "Could not find MDADM source tarball: ${MDADM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -674,13 +672,13 @@ compile_mdadm() {
 			-e "s/^# LDFLAGS = -static/LDFLAGS = -static/" \
 			Makefile || gen_die "Failed to sed mdadm Makefile"
 
-		print_info 1 "$(getIndent 3)mdadm: >> Compiling..."
+		print_info 1 "$(getIndent 2)mdadm: >> Compiling ..."
 		compile_generic 'mdadm mdmon' utils
 
 		mkdir -p "${TEMP}/mdadm/sbin"
 		install -m 0755 -s mdadm "${TEMP}/mdadm/sbin/mdadm" || gen_die "Failed mdadm install"
 		install -m 0755 -s mdmon "${TEMP}/mdadm/sbin/mdmon" || gen_die "Failed mdmon install"
-		print_info 1 "$(getIndent 3)mdadm: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)mdadm: >> Copying to bincache ..."
 		cd "${TEMP}/mdadm"
 		${UTILS_CROSS_COMPILE}strip "sbin/mdadm" "sbin/mdmon" ||
 			gen_die 'Could not strip mdadm binaries!'
@@ -698,7 +696,7 @@ compile_dmraid() {
 
 	if [[ -f "${DMRAID_BINCACHE}" && "${DMRAID_BINCACHE}" -nt "${LVM_BINCACHE}" ]]
 	then
-		print_info 1 "$(getIndent 3)dmraid: >> Using cache"
+		print_info 1 "$(getIndent 2)dmraid: >> Using cache ..."
 	else
 		[ -f "${DMRAID_SRCTAR}" ] ||
 			gen_die "Could not find DMRAID source tarball: ${DMRAID_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -714,11 +712,10 @@ compile_dmraid() {
 		/bin/tar -xpf "${LVM_BINCACHE}" -C "${TEMP}/lvm" ||
 			gen_die "Could not extract LVM2 binary cache!";
 
-		print_info 1 "$(getIndent 3)dmraid: >> Patching ..."
 		cd "${DMRAID_DIR}" || gen_die "cannot chdir into '${DMRAID_DIR}'"
 		apply_patches dmraid ${DMRAID_VER}
 
-		print_info 1 "$(getIndent 3)dmraid: >> Configuring..."
+		print_info 1 "$(getIndent 2)dmraid: >> Configuring ..."
 		DEVMAPPEREVENT_CFLAGS="-I${TEMP}/lvm/include" \
 		LIBS="-lm -lrt -lpthread" \
 		./configure --enable-static_link \
@@ -731,13 +728,13 @@ compile_dmraid() {
 		sed -i tools/Makefile -e "/DMRAID_LIBS +=/s|-lselinux||g"
 		###echo "DMRAIDLIBS += -lselinux -lsepol" >> tools/Makefile
 		mkdir -p "${TEMP}/dmraid"
-		print_info 1 "$(getIndent 3)dmraid: >> Compiling..."
+		print_info 1 "$(getIndent 2)dmraid: >> Compiling ..."
 		compile_generic '' utils
 		#compile_generic 'install' utils
 		mkdir ${TEMP}/dmraid/sbin
 		install -m 0755 -s tools/dmraid "${TEMP}/dmraid/sbin/dmraid"
 
-		print_info 1 "$(getIndent 3)dmraid: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)dmraid: >> Copying to bincache ..."
 		cd "${TEMP}/dmraid" || gen_die "cannot chdir into '${TEMP}/dmraid'"
 		/bin/tar -cjf "${DMRAID_BINCACHE}" sbin/dmraid ||
 			gen_die 'Could not create binary cache'
@@ -764,21 +761,20 @@ compile_fuse() {
 		gen_die "fuse directory ${FUSE_DIR} is invalid"
 
 	cd "${FUSE_DIR}"
-	print_info 1 "$(getIndent 3)fuse: >> Patching ..."
 	apply_patches fuse ${FUSE_VER}
 
-	print_info 1 "$(getIndent 3)fuse: >> Configuring..."
+	print_info 1 "$(getIndent 2)fuse: >> Configuring ..."
 	./configure --disable-example >> ${LOGFILE} 2>&1 ||
 		gen_die 'Configuring fuse failed!'
 
-	print_info 1 "$(getIndent 3)fuse: >> Compiling..."
+	print_info 1 "$(getIndent 2)fuse: >> Compiling ..."
 	compile_generic '' utils || gen_die "failed to build fuse"
 }
 
 compile_unionfs_fuse() {
 	if [ -f "${UNIONFS_FUSE_BINCACHE}" ]
 	then
-		print_info 1 "$(getIndent 3)unionfs-fuse: Using cache"
+		print_info 1 "$(getIndent 2)unionfs-fuse: Using cache ..."
 	else
 		# We'll call compile_fuse() from here, since it's not needed directly by anything else
 		compile_fuse
@@ -793,10 +789,9 @@ compile_unionfs_fuse() {
 			gen_die "unionfs-fuse directory ${UNIONFS_FUSE_DIR} is invalid"
 
 		cd "${UNIONFS_FUSE_DIR}"
-		print_info 1 "$(getIndent 3)unionfs-fuse: >> Patching ..."
 		apply_patches unionfs-fuse ${UNIONFS_FUSE_VER}
 
-		print_info 1 "$(getIndent 3)unionfs-fuse: >> Preparing ..."
+		print_info 1 "$(getIndent 2)unionfs-fuse: >> Preparing ..."
 		FUSE_CFLAGS="-I${TEMP}/${FUSE_DIR}/include -D_FILE_OFFSET_BITS=64" # pkg-config --cflags fuse
 		FUSE_LIBS="-L${TEMP}/${FUSE_DIR}/lib/.libs -lfuse -pthread -ldl" # pkg-config --static --libs fuse
 		sed -i \
@@ -804,10 +799,10 @@ compile_unionfs_fuse() {
 			-e "s|\$(shell pkg-config --libs fuse)|-static ${FUSE_LIBS}|g" \
 			src/Makefile || gen_die "Failed to adjust unionfs-fuse Makefile"
 
-		print_info 1 "$(getIndent 3)unionfs-fuse: >> Compiling..."
+		print_info 1 "$(getIndent 2)unionfs-fuse: >> Compiling ..."
 		compile_generic '' utils || gen_die "failed to build unionfs-fuse"
 
-		print_info 1 "$(getIndent 3)unionfs-fuse: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)unionfs-fuse: >> Copying to bincache ..."
 		[ -f "${TEMP}/${UNIONFS_FUSE_DIR}/src/unionfs" ] ||
 			gen_die 'unionfs binary does not exist!'
 		${UTILS_CROSS_COMPILE}strip "${TEMP}/${UNIONFS_FUSE_DIR}/src/unionfs" ||
@@ -828,7 +823,7 @@ compile_iscsi() {
 
 	if [[ -f "${ISCSI_BINCACHE}" && "${ISCSI_BINCACHE}" -nt "${ISCSI_ISNS_BINCACHE}" ]]
 	then
-		print_info 1 "$(getIndent 3)iscsistart: Using cache"
+		print_info 1 "$(getIndent 2)iscsistart: Using cache ..."
 	else
 		[ ! -f "${ISCSI_SRCTAR}" ] &&
 			gen_die "Could not find open-scsi source tarball: ${ISCSI_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -844,10 +839,9 @@ compile_iscsi() {
 			gen_die "Could not extract open-isns binary cache!"
 
 		cd "${TEMP}/${ISCSI_DIR}"
-		print_info 1 "$(getIndent 3)open-scsi: >> Patching..."
 		apply_patches iscsi ${ISCSI_VER}
 
-		print_info 1 "$(getIndent 3)open-scsi: >> Compiling..."
+		print_info 1 "$(getIndent 2)open-scsi: >> Compiling ..."
 		CFLAGS="-I${TEMP}/iscsi-isns/usr/include" \
 		LDFLAGS="-L${TEMP}/iscsi-isns/usr/lib -lrt -lpthread" \
 		compile_generic "user" utils
@@ -860,13 +854,13 @@ compile_iscsi() {
 			module=${KERNEL_OUTPUTDIR}/drivers/scsi/${modname}${KEXT}
 			if [ -e "${module}" ]
 			then
-				print_info 2 "$(getIndent 4) - Copying ${modname}${KEXT}..."
+				print_info 2 "$(getIndent 4) - Copying ${modname}${KEXT} ..."
 				cp $module "${TEMP}/initramfs-iscsi-temp/lib/modules/${KV}/kernel/drivers/scsi/"
 			fi
 		done
 
 		cd "${TEMP}/initramfs-iscsi-temp/"
-		print_info 1 "$(getIndent 3)iscsistart: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)iscsistart: >> Copying to bincache ..."
 		[ -f "${TEMP}/${ISCSI_DIR}/usr/iscsistart" ] ||
 			gen_die 'iscsistart executable does not exist!'
 		${UTILS_CROSS_COMPILE}strip "${TEMP}/${ISCSI_DIR}/usr/iscsistart" ||
@@ -885,7 +879,7 @@ compile_iscsi() {
 compile_iscsi_isns() {
 	if [ -f "${ISCSI_ISNS_BINCACHE}" ]
 	then
-		print_info 1 "$(getIndent 3)open-isns: >> Using cache"
+		print_info 1 "$(getIndent 2)open-isns: >> Using cache ..."
 	else
 		[ -f "${ISCSI_ISNS_SRCTAR}" ] ||
 			gen_die "Could not find open-isns source tarball: ${ISCSI_ISNS_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -896,11 +890,10 @@ compile_iscsi_isns() {
 		[ -d "${ISCSI_ISNS_DIR}" ] ||
 			gen_die "open-isns directory ${ISCSI_ISNS_DIR} is invalid!"
 
-		print_info 1 "$(getIndent 3)open-isns: >> Patching ..."
 		cd "${ISCSI_ISNS_DIR}" || gen_die "cannot chdir into '${ISCSI_ISNS_DIR}'"
 		apply_patches iscsi-isns ${ISCSI_ISNS_VER}
 
-		print_info 1 "$(getIndent 3)open-isns: >> Configuring..."
+		print_info 1 "$(getIndent 2)open-isns: >> Configuring ..."
 		./configure \
 			--prefix=/usr \
 			--enable-static \
@@ -908,15 +901,15 @@ compile_iscsi_isns() {
 			>> ${LOGFILE} 2>&1 || \
 			gen_die "failed to configure open-isns"
 
-		print_info 1 "$(getIndent 3)open-isns: >> Compiling..."
+		print_info 1 "$(getIndent 2)open-isns: >> Compiling ..."
 		compile_generic '' utils || gen_die "failed to build open-isns"
 
-		print_info 1 "$(getIndent 3)open-isns: >> Installing to DESTDIR..."
+		print_info 1 "$(getIndent 2)open-isns: >> Installing to DESTDIR ..."
 		compile_generic "DESTDIR=${TEMP}/iscsi-isns install" utils || gen_die "failed to install open-isns"
 		compile_generic "DESTDIR=${TEMP}/iscsi-isns install_hdrs" utils || gen_die "failed to install open-isns"
 		compile_generic "DESTDIR=${TEMP}/iscsi-isns install_lib" utils || gen_die "failed to install open-isns"
 
-		print_info 1 "$(getIndent 3)open-isns: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)open-isns: >> Copying to bincache ..."
 		cd "${TEMP}/iscsi-isns" || gen_die "cannot chdir into '${TEMP}/iscsi-isns'"
 		/bin/tar -cjf "${ISCSI_ISNS_BINCACHE}" . ||
 			gen_die 'Could not create open-isns binary cache'
@@ -930,7 +923,7 @@ compile_iscsi_isns() {
 compile_gpg() {
 	if [ -f "${GPG_BINCACHE}" ]
 	then
-		print_info 1 "$(getIndent 3)gnupg: >> Using cache"
+		print_info 1 "$(getIndent 2)gnupg: >> Using cache ..."
 	else
 		[ ! -f "${GPG_SRCTAR}" ] &&
 			gen_die "Could not find gnupg source tarball: ${GPG_SRCTAR}. Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
@@ -941,7 +934,7 @@ compile_gpg() {
 			gen_die "gnupg directory ${GPG_DIR} invalid"
 		cd "${GPG_DIR}"
 		apply_patches gnupg ${GPG_VER}
-		print_info 1 "$(getIndent 3)gnupg: >> Configuring..."
+		print_info 1 "$(getIndent 2)gnupg: >> Configuring ..."
 		# --enable-minimal works, but it doesn't reduce the command length much.
 		# Given its history and the precision this needs, explicit is cleaner.
 		LDFLAGS='-static' CFLAGS='-Os' ./configure --prefix=/ \
@@ -957,9 +950,9 @@ compile_gpg() {
 			--without-libpth-prefix --without-libiconv-prefix --without-libintl-prefix\
 			--without-zlib --without-bzip2 --without-libusb --without-readline \
 				>> ${LOGFILE} 2>&1 || gen_die 'Configuring gnupg failed!'
-		print_info 1 "$(getIndent 3)gnupg: >> Compiling..."
+		print_info 1 "$(getIndent 2)gnupg: >> Compiling ..."
 		compile_generic "" "utils"
-		print_info 1 "$(getIndent 3)gnupg: >> Copying to bincache..."
+		print_info 1 "$(getIndent 2)gnupg: >> Copying to bincache ..."
 		[ -f "${TEMP}/${GPG_DIR}/g10/gpg" ] ||
 			gen_die 'gnupg executable does not exist!'
 		${UTILS_CROSS_COMPILE}strip "${TEMP}/${GPG_DIR}/g10/gpg" ||
