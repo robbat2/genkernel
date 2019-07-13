@@ -282,16 +282,19 @@ is_boot_ro() {
 }
 
 setup_cache_dir() {
-	[ ! -d "${CACHE_DIR}/${GK_V}" ] && mkdir -p "${CACHE_DIR}/${GK_V}"
+	if [ ! -d "${GK_V_CACHEDIR}" ]
+	then
+		mkdir -p "${GK_V_CACHEDIR}" || gen_die "Failed to create '${GK_V_CACHEDIR}'!"
+	fi
 
 	if isTrue "${CLEAR_CACHEDIR}"
 	then
-		print_info 1 "Clearing cache dir contents from ${CACHE_DIR} ..."
+		print_info 2 "Clearing cache dir contents from ${CACHE_DIR} ..."
 		while read i
 		do
-			print_info 1 "$(getIndent 1)>> removing ${i}"
+			print_info 3 "$(get_indent 1)>> removing ${i}"
 			rm "${i}"
-		done < <(find "${CACHE_DIR}" -maxdepth 2 -type f -name '*.tar.*' -o -name '*.bz2')
+		done < <(find "${CACHE_DIR}" -maxdepth 2 -type f -name '*.tar.*' -o -name '*.bz2' -o -name '*.xz')
 	fi
 }
 

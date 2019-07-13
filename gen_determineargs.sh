@@ -171,6 +171,8 @@ determine_real_args() {
 	set_config_with_override BOOL   INSTALL                  CMD_INSTALL                  "yes"
 	set_config_with_override BOOL   CLEANUP                  CMD_CLEANUP                  "yes"
 
+	declare -gr GK_V_CACHEDIR="${CACHE_DIR}/${GK_V}"
+
 	# Initialize variables
 	BOOTDIR=$(arch_replace "${BOOTDIR}")
 	BOOTDIR=${BOOTDIR%/}    # Remove any trailing slash
