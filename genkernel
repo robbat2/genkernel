@@ -146,7 +146,7 @@ determine_KV
 
 determine_config_file
 
-set_kernel_arch
+determine_kernel_arch
 
 setup_cache_dir
 
