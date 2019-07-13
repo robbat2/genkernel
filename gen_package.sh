@@ -210,15 +210,19 @@ gen_kerncache_extract_modules() {
 	fi
 }
 
-gen_kerncache_extract_config()
-{
-	if [ -e "${KERNCACHE}" ]
+gen_kerncache_extract_config() {
+	print_info 1 "Extracting kerncache config from '${KERNCACHE}' to /etc/kernels ..."
+
+	if [ ! -d '/etc/kernels' ]
 	then
-		print_info 1 'Extracting kerncache config to /etc/kernels'
-		mkdir -p /etc/kernels
-		/bin/tar -xf ${KERNCACHE} -C /etc/kernels config-${ARCH}-${KV}
-		mv /etc/kernels/config-${ARCH}-${KV} /etc/kernels/kernel-config-${ARCH}-${KV}
+		mkdir -p /etc/kernels || gen_die "Failed to create '/etc/kernels'!"
 	fi
+
+	tar -xf "${KERNCACHE}" -C /etc/kernels config-${ARCH}-${KV} \
+		|| gen_die "Failed to extract kerncache config 'config-${ARCH}-${KV}' from '${KERNCACHE}' to '/etc/kernels'!"
+
+	mv /etc/kernels/config-${ARCH}-${KV} /etc/kernels/kernel-config-${ARCH}-${KV} \
+		|| gen_die "Failed to rename kernelcache config '/etc/kernels/config-${ARCH}-${KV}' to '/etc/kernels/kernel-config-${ARCH}-${KV}'!"
 }
 
 gen_kerncache_is_valid()
