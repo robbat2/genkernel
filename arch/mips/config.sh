@@ -8,7 +8,6 @@ KERNEL_MAKE_DIRECTIVE_2=""
 KERNEL_BINARY="./vmlinux"
 
 # Initrd/Initramfs Options
-USECOLOR="yes"
 NOINITRDMODULES="yes"
 BUSYBOX=1
 DMRAID=0

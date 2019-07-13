@@ -7,4 +7,4 @@ KERNEL_MAKE_DIRECTIVE="vmlinux"
 KERNEL_MAKE_DIRECTIVE_2="image"
 KERNEL_BINARY="arch/sparc64/boot/image arch/sparc/boot/image"
 
-USECOLOR="no"
+NOCOLOR="true"

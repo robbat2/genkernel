@@ -22,8 +22,8 @@ isTrue() {
 	return 1
 }
 
-setColorVars() {
-	if isTrue "${USECOLOR}"
+set_color_vars() {
+	if ! isTrue "${NOCOLOR}"
 	then
 		GOOD=$'\e[32;01m'
 		WARN=$'\e[33;01m'
@@ -40,7 +40,7 @@ setColorVars() {
 		UNDER=''
 	fi
 }
-setColorVars
+set_color_vars
 
 dump_debugcache() {
 	TODEBUGCACHE=no

@@ -607,9 +607,15 @@ parse_cmdline() {
 			print_info 2 "CMD_ARCHOVERRIDE: ${CMD_ARCHOVERRIDE}"
 			;;
 		--color|--no-color)
-			USECOLOR=$(parse_optbool "$*")
-			print_info 2 "USECOLOR: ${USECOLOR}"
-			setColorVars
+			CMD_COLOR=$(parse_optbool "$*")
+			if isTrue "${CMD_COLOR}"
+			then
+				NOCOLOR=false
+			else
+				NOCOLOR=true
+			fi
+			print_info 2 "CMD_COLOR: ${CMD_COLOR}"
+			set_color_vars
 			;;
 		--cleanup|--no-cleanup)
 			CMD_CLEANUP=$(parse_optbool "$*")
