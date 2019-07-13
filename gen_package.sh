@@ -225,39 +225,32 @@ gen_kerncache_extract_config() {
 		|| gen_die "Failed to rename kernelcache config '/etc/kernels/config-${ARCH}-${KV}' to '/etc/kernels/kernel-config-${ARCH}-${KV}'!"
 }
 
-gen_kerncache_is_valid()
-{
+gen_kerncache_is_valid() {
 	KERNCACHE_IS_VALID="no"
 
 	if [ -e "${KERNCACHE}" ]
 	then
+		tar -xf "${KERNCACHE}" -C "${TEMP}" \
+			|| gen_die "Failed to extract '${KERNCACHE}' to '${TEMP}'!"
+
 		if ! isTrue "${KERNEL_SOURCES}"
 		then
 			BUILD_KERNEL="no"
 			# Can make this more secure ....
 
-			/bin/tar -xf ${KERNCACHE} -C ${TEMP}
-			if [ -e ${TEMP}/config-${ARCH}-${KV} -a -e ${TEMP}/kernel-${ARCH}-${KV} ]
+			if [ -e "${TEMP}/config-${ARCH}-${KV}" -a -e "${TEMP}/kernel-${ARCH}-${KV}" ]
 			then
-				print_info 1 'Valid kernel cache found; no sources will be used'
+				print_info 1 'Valid kerncache found; No sources will be used ...'
 				KERNCACHE_IS_VALID="yes"
 			fi
 		else
-			KERNEL_CONFIG="/${KERNEL_OUTPUTDIR}/.config"
-			if [ "${CMD_KERNEL_CONFIG}" != '' ]
+			if [ -e "${TEMP}/config-${ARCH}-${KV}" -a -e "${KERNEL_CONFIG}" ]
 			then
-				KERNEL_CONFIG="${CMD_KERNEL_CONFIG}"
-			fi
-
-			/bin/tar -xf ${KERNCACHE} -C ${TEMP}
-			if [ -e ${TEMP}/config-${ARCH}-${KV} -a -e ${KERNEL_CONFIG} ]
-			then
-
-				if [ -e ${TEMP}/config-${ARCH}-${KV}.orig ]
+				if [ -e "${TEMP}/config-${ARCH}-${KV}.orig" ]
 				then
-					test1=$(grep -v "^#" ${TEMP}/config-${ARCH}-${KV}.orig | md5sum | cut -d " " -f 1)
+					local test1=$(grep -v "^#" "${TEMP}/config-${ARCH}-${KV}.orig" | md5sum | cut -d " " -f 1)
 				else
-					test1=$(grep -v "^#" ${TEMP}/config-${ARCH}-${KV} | md5sum | cut -d " " -f 1)
+					local test1=$(grep -v "^#" "${TEMP}/config-${ARCH}-${KV}" | md5sum | cut -d " " -f 1)
 				fi
 
 				if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
@@ -266,18 +259,30 @@ gen_kerncache_is_valid()
 				else
 					local CONFGREP=grep
 				fi
-				test2=$("${CONFGREP}" -v "^#" ${KERNEL_CONFIG} | md5sum | cut -d " " -f 1)
+				local test2=$("${CONFGREP}" -v "^#" "${KERNEL_CONFIG}" | md5sum | cut -d " " -f 1)
 
-				if [ "${test1}" == "${test2}" ]
+				if [[ "${test1}" == "${test2}" ]]
 				then
-					echo
-					print_info 1 "No kernel configuration change, skipping kernel build..."
-					echo
+					print_info 1 "Valid kerncache '${KERNCACHE}' found; Will skip kernel build step ..."
 					KERNCACHE_IS_VALID="yes"
+				else
+					print_info 1 "Kerncache kernel config differs from '${KERNEL_CONFIG}'; Ignoring outdated kerncache '${KERNCACHE}' ..."
 				fi
+			else
+				local invalid_reason="Kerncache does not contain kernel config"
+				if [ ! -e "${KERNEL_CONFIG}" ]
+				then
+					invalid_reason="Kernel config '${KERNEL_CONFIG}' does not exist -- cannot validate kerncache"
+				fi
+
+				print_info 1 "${invalid_reason}; Ignorning kerncache '${KERNCACHE}' ..."
 			fi
 		fi
+	else
+		print_warning 1 "Kerncache '${KERNCACHE}' does not exist (yet?); Ignoring ..."
 	fi
+
+	echo
+
 	export KERNCACHE_IS_VALID
-	return 1
 }
