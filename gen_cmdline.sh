@@ -165,8 +165,9 @@ longusage() {
   echo "	--minkernpackage=<archive>"
   echo "				Archive file created using tar containing kernel and"
   echo "				initramfs"
-  echo "	--modulespackage=<tbz2>	File to output a .tar.bz2'd modules after the"
-  echo "				callbacks have run"
+  echo "	--modulespackage=<archive>"
+  echo "				Archive file created using tar containing modules after"
+  echo "				the callbacks have run"
   echo "	--kerncache=<archive>	Archive file created using tar containing kernel binary,"
   echo "				content of /lib/modules and the kernel config."
   echo "				NOTE: Archive is created before the callbacks are run!"
@@ -644,7 +645,6 @@ parse_cmdline() {
 			;;
 		--modulespackage=*)
 			CMD_MODULESPACKAGE="${*#*=}"
-			[ ${CMD_MODULESPACKAGE:0:1} != / ] && CMD_MODULESPACKAGE=$PWD/$CMD_MODULESPACKAGE
 			print_info 2 "MODULESPACKAGE: ${CMD_MODULESPACKAGE}"
 			;;
 		--kerncache=*)

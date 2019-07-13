@@ -84,24 +84,26 @@ gen_minkernpackage() {
 }
 
 gen_modulespackage() {
-	print_info 1 ''
-	print_info 1 "Creating modules package in '${MODULESPACKAGE}'..."
-	rm -rf "${TEMP}/modulespackage" > /dev/null 2>&1
-	mkdir "${TEMP}/modulespackage" || gen_die 'Could not make a directory for the kernel package!'
-
-	if [ -d ${INSTALL_MOD_PATH}/lib/modules/${KV} ]
+	if [ -d "${INSTALL_MOD_PATH}/lib/modules/${KV}" ]
 	then
-		mkdir -p ${TEMP}/modulespackage/lib/modules
-		cp -r "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
-		cd "${TEMP}/modulespackage"
-		/bin/tar -jcpf ${MODULESPACKAGE} * || gen_die 'Could not compress the modules package!'
-	else
-		print_info 1 "Could not create modules package, '${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found"
-	fi
+		print_info 1 ''
+		print_info 1 "Creating modules package in '${MODULESPACKAGE}' ..."
+		rm -rf "${TEMP}/modulespackage" >/dev/null 2>&1
+		mkdir "${TEMP}/modulespackage" || gen_die "Failed to create '${TEMP}/modulespackage'!"
 
-	cd "${TEMP}"
-	isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/modulespackage" > /dev/null
-	return 0
+		mkdir -p "${TEMP}/modulespackage/lib/modules" || gen_die "Failed to create '${TEMP}/modulespackage/lib/modules'!"
+		cp -arP "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
+
+		cd "${TEMP}/modulespackage" || gen_die "Failed to chdir to '${TEMP}/modulespackage'!"
+
+		local -a tar_cmd=( "$(get_tar_cmd "${MODULESPACKAGE}")" )
+		tar_cmd+=( '*' )
+
+		print_info 2 "COMMAND: ${tar_cmd[*]}" 1 0 1
+		eval "${tar_cmd[@]}" || gen_die "Failed to create compressed modules package '${MODULESPACKAGE}'!"
+	else
+		print_info 1 "'${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found; Skipping creation of modules package in '${MODULESPACKAGE}' ..."
+	fi
 }
 
 gen_kerncache() {

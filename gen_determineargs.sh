@@ -256,9 +256,18 @@ determine_real_args() {
 
 	if [ -n "${MODULESPACKAGE}" ]
 	then
+		MODULESPACKAGE=$(expand_file "${CMD_MODULESPACKAGE}")
+		if [[ -z "${MODULESPACKAGE}" || "${MODULESPACKAGE}" != *.tar* ]]
+		then
+			gen_die "--modulespackage value '${CMD_MODULESPACKAGE}' is invalid!"
+		fi
+
 		local modulespackage_dir=$(dirname "${MODULESPACKAGE}")
-		mkdir -p "${modulespackage_dir}" \
-			|| gen_die "Failed to create '${modulespackage_dir}'!"
+		if [ ! -d "${modulespackage_dir}" ]
+		then
+			mkdir -p "${modulespackage_dir}" \
+				|| gen_die "Failed to create '${modulespackage_dir}'!"
+		fi
 	fi
 
 	if [ -n "${KERNCACHE}" ]
