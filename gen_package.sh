@@ -198,17 +198,15 @@ gen_kerncache_extract_kernel() {
 		"System.map-${KNAME}-${ARCH}-${KV}"
 }
 
-gen_kerncache_extract_modules()
-{
-	if [ -e "${KERNCACHE}" ]
+gen_kerncache_extract_modules() {
+	print_info 1 "Extracting kerncache kernel modules from '${KERNCACHE}' ..."
+	if [ -n "${INSTALL_MOD_PATH}" ]
 	then
-		print_info 1 'Extracting kerncache kernel modules'
-		if [ "${INSTALL_MOD_PATH}" != '' ]
-		then
-			/bin/tar -xf ${KERNCACHE} --strip-components 1 -C ${INSTALL_MOD_PATH}/lib
-		else
-			/bin/tar -xf ${KERNCACHE} --strip-components 1 -C /lib
-		fi
+		tar -xf "${KERNCACHE}" --strip-components 1 -C "${INSTALL_MOD_PATH}"/lib \
+			|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${INSTALL_MOD_PATH}/lib'!"
+	else
+		tar -xf "${KERNCACHE}" --strip-components 1 -C /lib \
+			|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${INSTALL_MOD_PATH}/lib'!"
 	fi
 }
 
