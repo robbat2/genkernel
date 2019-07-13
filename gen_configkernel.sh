@@ -168,7 +168,7 @@ config_kernel() {
 	fi
 
 	local -a required_kernel_options
-	[ -f "${TEMP}/.kconfig_modified" ] && rm "${TEMP}/.kconfig_modified"
+	[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
 
 	# Force this on if we are using --genzimage
 	if isTrue "${CMD_GENZIMAGE}"
@@ -637,7 +637,7 @@ config_kernel() {
 		required_kernel_options+=(CONFIG_MICROCODE)
 	fi
 
-	if [ -f "${TEMP}/.kconfig_modified" ]
+	if [ -f "${KCONFIG_MODIFIED_MARKER}" ]
 	then
 		if isTrue "${OLDCONFIG}"
 		then
