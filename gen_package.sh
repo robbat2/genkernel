@@ -81,54 +81,73 @@ gen_modulespackage() {
 	return 0
 }
 
-gen_kerncache()
-{
+gen_kerncache() {
 	print_info 1 ''
-	print_info 1 "Creating kernel cache in '${KERNCACHE}'..."
-	rm -rf "${TEMP}/kerncache" > /dev/null 2>&1
-	mkdir "${TEMP}/kerncache" || gen_die 'Could not make a directory for the kernel cache!'
+	print_info 1 "Creating kernel cache in '${KERNCACHE}' ..."
+	rm -rf "${TEMP}/kerncache" >/dev/null 2>&1
+	mkdir "${TEMP}/kerncache" || gen_die "Failed to create '${TEMP}/kerncache'!"
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
-	local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
 	if [ -z "${tmp_kernel_binary}" ]
 	then
-		gen_die "Cannot locate kernel binary"
+		gen_die "Failed locate kernel binary '${KERNEL_BINARY}'!"
 	fi
 
-	cd "${KERNEL_OUTPUTDIR}"
-	cp "${tmp_kernel_binary}" "${TEMP}/kerncache/kernel-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the kernel package!'
-	cp "${KERNEL_OUTPUTDIR}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}"
+	cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${KERNEL_OUTPUTDIR}'!"
+
+	cp -aL "${tmp_kernel_binary}" "${TEMP}/kerncache/kernel-${ARCH}-${KV}" \
+		|| gen_die  "Could not copy the kernel binary '${tmp_kernel_binary}' for the kernel package!"
+
+	cp -aL "${KERNEL_OUTPUTDIR}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}" \
+		|| gen_die "Could not copy the kernel config '${KERNEL_OUTPUTDIR}/.config' for the kernel package!"
 
 	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
 		# Support --kernel-config=/proc/config.gz, mainly
-		zcat "${KERNEL_CONFIG}" > "${TEMP}/kerncache/config-${ARCH}-${KV}.orig"
+		zcat "${KERNEL_CONFIG}" > "${TEMP}/kerncache/config-${ARCH}-${KV}.orig" \
+			|| gen_die "Could not copy the kernel config '${KERNEL_CONFIG}' for the kernel package!"
 	else
-		cp "${KERNEL_CONFIG}" "${TEMP}/kerncache/config-${ARCH}-${KV}.orig"
-	fi
-	cp "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}"
-	if isTrue "${GENZIMAGE}"
-	then
-		cp "${tmp_kernel_binary2}" "${TEMP}/kerncache/kernelz-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the kernel package"
+		cp -aL "${KERNEL_CONFIG}" "${TEMP}/kerncache/config-${ARCH}-${KV}.orig" \
+			|| gen_die "Could not copy the kernel config '${KERNEL_CONFIG}' for the kernel package!"
 	fi
 
-	echo "VERSION = ${VER}" > "${TEMP}/kerncache/kerncache.config"
+	cp -aL "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}" \
+		|| gen_die "Could not copy the System.map '${KERNEL_OUTPUTDIR}/System.map' for the kernel package!"
+
+	if isTrue "${GENZIMAGE}"
+	then
+		local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
+		if [ -z "${tmp_kernel_binary2}" ]
+		then
+			gen_die "Failed locate kernelz binary '${KERNEL_BINARY_2}'!"
+		fi
+
+		cp -aL "${tmp_kernel_binary2}" "${TEMP}/kerncache/kernelz-${ARCH}-${KV}" \
+			|| gen_die "Could not copy the kernelz '${tmp_kernel_binary2}' for the kernel package!"
+	fi
+
+	echo "VERSION = ${VER}" > "${TEMP}/kerncache/kerncache.config" \
+		|| gen_die "Failed to write to '${TEMP}/kerncache/kerncache.config'!"
+
 	echo "PATCHLEVEL = ${PAT}" >> "${TEMP}/kerncache/kerncache.config"
 	echo "SUBLEVEL = ${SUB}" >> "${TEMP}/kerncache/kerncache.config"
 	echo "EXTRAVERSION = ${EXV}" >> "${TEMP}/kerncache/kerncache.config"
+	echo "CONFIG_LOCALVERSION = ${LOV}" >> "${TEMP}/kerncache/kerncache.config"
 
-	mkdir -p "${TEMP}/kerncache/lib/modules/"
+	mkdir -p "${TEMP}/kerncache/lib/modules/" \
+		|| gen_die "Failed to create '${TEMP}/kerncache/lib/modules'"
 
-	if [ -d ${INSTALL_MOD_PATH}/lib/modules/${KV} ]
+	if [ -d "${INSTALL_MOD_PATH}/lib/modules/${KV}" ]
 	then
-		cp -r "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/kerncache/lib/modules"
+		cp -arP "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/kerncache/lib/modules"
 	fi
 
-	cd "${TEMP}/kerncache"
-	/bin/tar -jcpf ${KERNCACHE} * || gen_die 'Could not compress the kernel package!'
+	cd "${TEMP}/kerncache" || gen_die "Failed to chdir to '${TEMP}/kerncache'!"
 
-	cd "${TEMP}"
-	isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/kerncache" > /dev/null
-	return 0
+	local -a tar_cmd=( "$(get_tar_cmd "${KERNCACHE}")" )
+	tar_cmd+=( '*' )
+
+	print_info 2 "COMMAND: ${tar_cmd[*]}" 1 0 1
+	eval "${tar_cmd[@]}" || gen_die "Failed to create compressed kernel package '${KERNCACHE}'!"
 }
 
 gen_kerncache_extract_kernel()

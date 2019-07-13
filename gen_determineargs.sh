@@ -7,14 +7,16 @@ determine_KV() {
 
 	if ! isTrue "${KERNEL_SOURCES}" && [ -e "${KERNCACHE}" ]
 	then
-		/bin/tar -x -C ${TEMP} -f ${KERNCACHE} kerncache.config
-		if [ -e ${TEMP}/kerncache.config ]
+		tar -x -C "${TEMP}" -f "${KERNCACHE}" kerncache.config \
+			|| gen_die "Failed to extract 'kerncache.config' from '${KERNCACHE}' to '${TEMP}'!"
+
+		if [ -e "${TEMP}/kerncache.config" ]
 		then
-			VER=$(grep ^VERSION\ \= ${TEMP}/kerncache.config | awk '{ print $3 };')
-			PAT=$(grep ^PATCHLEVEL\ \= ${TEMP}/kerncache.config | awk '{ print $3 };')
-			SUB=$(grep ^SUBLEVEL\ \= ${TEMP}/kerncache.config | awk '{ print $3 };')
-			EXV=$(grep ^EXTRAVERSION\ \= ${TEMP}/kerncache.config | sed -e "s/EXTRAVERSION =//" -e "s/ //g")
-			LOV=$(grep ^CONFIG_LOCALVERSION\= ${TEMP}/kerncache.config | sed -e "s/CONFIG_LOCALVERSION=\"\(.*\)\"/\1/")
+			VER=$(grep ^VERSION\ \= "${TEMP}"/kerncache.config | awk '{ print $3 };')
+			PAT=$(grep ^PATCHLEVEL\ \= "${TEMP}"/kerncache.config | awk '{ print $3 };')
+			SUB=$(grep ^SUBLEVEL\ \= "${TEMP}"/kerncache.config | awk '{ print $3 };')
+			EXV=$(grep ^EXTRAVERSION\ \= "${TEMP}"/kerncache.config | sed -e "s/EXTRAVERSION =//" -e "s/ //g")
+			LOV=$(grep ^CONFIG_LOCALVERSION\ \= "${TEMP}"/kerncache.config | sed -e "s/CONFIG_LOCALVERSION=\"\(.*\)\"/\1/")
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		else
 			gen_die "Could not find kerncache.config in the kernel cache! Exiting."
@@ -252,9 +254,18 @@ determine_real_args() {
 
 	if [ -n "${KERNCACHE}" ]
 	then
+		KERNCACHE=$(expand_file "${CMD_KERNCACHE}")
+		if [[ -z "${KERNCACHE}" || "${KERNCACHE}" != *.tar* ]]
+		then
+			gen_die "--kerncache value '${CMD_KERNCACHE}' is invalid!"
+		fi
+
 		local kerncache_dir=$(dirname "${KERNCACHE}")
-		mkdir -p "${kerncache_dir}" \
-			|| gen_die "Failed to create '${kerncache_dir}'!"
+		if [ ! -d "${kerncache_dir}" ]
+		then
+			mkdir -p "${kerncache_dir}" \
+				|| gen_die "Failed to create '${kerncache_dir}'!"
+		fi
 	fi
 
 	if ! isTrue "${BUILD_RAMDISK}"

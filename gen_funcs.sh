@@ -526,6 +526,47 @@ debug_breakpoint() {
 	exit 99
 }
 
+# @FUNCTION: get_tar_cmd
+# @USAGE: <ARCHIVE>
+# @DESCRIPTION:
+# Returns tar command which can make use of pbzip2, pxz or pigz when
+# possible.
+#
+# <ARCHIVE> Archive file
+get_tar_cmd() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one arguments (${#} given)!"
+
+	local archive_file=${1}
+
+	local -a tar_cmd
+	tar_cmd+=( 'tar -c' )
+
+	local pcmd
+	if [[ "${archive_file}" == *.tar.bz2 ]]
+	then
+		pcmd=$(which pbzip2 2>/dev/null)
+	elif [[ "${archive_file}" == *.tar.xz ]]
+	then
+		pcmd=$(which pxz 2>/dev/null)
+	elif [[ "${archive_file}" == *.tar.gz ]]
+	then
+		pcmd=$(which pigz 2>/dev/null)
+	fi
+
+	if [ -n "${pcmd}" ]
+	then
+		tar_cmd+=( "-I ${pcmd}" )
+	else
+		tar_cmd+=( '-a' )
+	fi
+
+	tar_cmd+=( '-pf' )
+	tar_cmd+=( "${archive_file}" )
+
+	echo "${tar_cmd[@]}"
+}
+
 get_useful_function_stack() {
 	local end_function=${1:-${FUNCNAME}}
 	local n_functions=${#FUNCNAME[@]}

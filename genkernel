@@ -321,7 +321,19 @@ then
 	compile_kernel
 fi
 
-[ -n "${KERNCACHE}" ] && gen_kerncache
+if [ -n "${KERNCACHE}" ]
+then
+	if ! isTrue "${KERNCACHE_IS_VALID}"
+	then
+		# Only update KERNCACHE when KERNCACHE wasn't used because
+		# when it was used nothing has been changed so no update is
+		# necessary.
+		gen_kerncache
+	else
+		print_info 3 "Kerncache was used and kernel/modules therefore didn't change; Skipping '${KERNCACHE}' generation ..."
+	fi
+fi
+
 [ -n "${MINKERNPACKAGE}" ] && gen_minkernpackage
 [ -n "${MODULESPACKAGE}" ] && gen_modulespackage
 

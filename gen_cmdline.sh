@@ -167,10 +167,9 @@ longusage() {
   echo "				included..."
   echo "	--modulespackage=<tbz2>	File to output a .tar.bz2'd modules after the"
   echo "				callbacks have run"
-  echo "	--kerncache=<tbz2>	File to output a .tar.bz2'd kernel contents"
-  echo "				of /lib/modules/ and the kernel config"
-  echo "				NOTE: This is created before the callbacks"
-  echo "				are run!"
+  echo "	--kerncache=<archive>	Archive file created using tar containing kernel binary,"
+  echo "				content of /lib/modules and the kernel config."
+  echo "				NOTE: Archive is created before the callbacks are run!"
   echo "	--no-kernel-sources	This option is only valid if kerncache is"
   echo "				defined. If there is a valid kerncache no checks"
   echo "				will be made against a kernel source tree"
@@ -651,7 +650,6 @@ parse_cmdline() {
 			;;
 		--kerncache=*)
 			CMD_KERNCACHE="${*#*=}"
-			[ ${CMD_KERNCACHE:0:1} != / ] && CMD_KERNCACHE=$PWD/$CMD_KERNCACHE
 			print_info 2 "KERNCACHE: ${CMD_KERNCACHE}"
 			;;
 		--kernname=*)

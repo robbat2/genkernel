@@ -390,10 +390,10 @@ OUTPUT SETTINGS
 *--modulespackage*=<tbz2>::
     File to output a .tar.bz2'd modules after the callbacks have run.
 
-*--kerncache*=<tbz2>::
-    File to output a .tar.bz2'd kernel, contents of '/lib/modules/'
-    and the kernel config.  NOTE: This is created before the callbacks
-    are run.
+*--kerncache*=<archive>::
+   Archive file created using tar containing kernel binary, content of
+   '/lib/modules' and the kernel config.  NOTE: Archive is created before
+   the callbacks are run.
 
 *--*[*no-*]*kernel-sources*::
     This option is only valid if kerncache is defined If there is a
