@@ -175,21 +175,25 @@ gen_kerncache() {
 	eval "${tar_cmd[@]}" || gen_die "Failed to create compressed kernel package '${KERNCACHE}'!"
 }
 
-gen_kerncache_extract_kernel()
-{
-	/bin/tar -xf ${KERNCACHE} -C ${TEMP}
-	copy_image_with_preserve "kernel" \
+gen_kerncache_extract_kernel() {
+	tar -xf "${KERNCACHE}" -C "${TEMP}" \
+		|| gen_die "Failed to extract '${KERNCACHE}' to '${TEMP}'!"
+
+	copy_image_with_preserve \
+		"kernel" \
 		"${TEMP}/kernel-${ARCH}-${KV}" \
 		"kernel-${KNAME}-${ARCH}-${KV}"
 
 	if isTrue "${GENZIMAGE}"
 	then
-		copy_image_with_preserve "kernelz" \
+		copy_image_with_preserve \
+			"kernelz" \
 			"${TEMP}/kernelz-${ARCH}-${KV}" \
 			"kernelz-${KNAME}-${ARCH}-${KV}"
 	fi
 
-	copy_image_with_preserve "System.map" \
+	copy_image_with_preserve \
+		"System.map" \
 		"${TEMP}/System.map-${ARCH}-${KV}" \
 		"System.map-${KNAME}-${ARCH}-${KV}"
 }
