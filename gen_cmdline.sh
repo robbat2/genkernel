@@ -16,7 +16,7 @@ longusage() {
   echo
   echo "Available Options: "
   echo "  Configuration settings"
-  echo "	--config=<file>	genkernel configuration file to use"
+  echo "	--config=<file>		genkernel configuration file to use"
   echo "  Debug settings"
   echo "	--loglevel=<0-5>	Debug Verbosity Level"
   echo "	--logfile=<outfile>	Output file for debug info"
@@ -37,41 +37,44 @@ longusage() {
   echo "	--no-save-config	Don't save the configuration to /etc/kernels"
   echo "	--hyperv		Enable Microsoft Hyper-V kernel options in kernel"
   echo "	--no-hyperv		Don't enable Microsoft Hyper-V kernel options in kernel"
-  echo "	--microcode[=<type>]	Enable early microcode support in kernel configuration,"
-  echo "				'all' for all, 'amd' for AMD and 'intel' for Intel CPU types."
+  echo "	--microcode=(all,amd,intel)"
+  echo "				Enable early microcode support in kernel configuration,"
+  echo "				'all' for all (default), 'amd' for AMD and 'intel' for"
+  echo "				Intel CPU types"
   echo "	--no-microcode		Don't enable early microcode support in kernel configuration"
   echo "	--virtio		Enable VirtIO kernel options in kernel"
   echo "	--no-virtio		Don't enable VirtIO kernel options in kernel"
   echo "  Kernel Compile settings"
   echo "	--oldconfig		Implies --no-clean and runs a 'make oldconfig'"
-  echo "	--clean			Run make clean before compilation"
-  echo "	--no-clean		Do not run make clean before compilation"
-  echo "	--mrproper		Run make mrproper before compilation"
-  echo "	--no-mrproper		Do not run make mrproper before compilation"
+  echo "	--no-oldconfig		Do not run 'make oldconfig' before compilation"
+  echo "	--clean			Run 'make clean' before compilation"
+  echo "	--no-clean		Do not run 'make clean' before compilation"
+  echo "	--mrproper		Run 'make mrproper' before compilation"
+  echo "	--no-mrproper		Do not run 'make mrproper' before compilation"
   echo "	--splash		Install framebuffer splash support into initramfs"
   echo "	--no-splash		Do not install framebuffer splash"
   echo "	--install		Install the kernel after building"
   echo "	--no-install		Do not install the kernel after building"
   echo "	--symlink		Manage symlinks in /boot for installed images"
   echo "	--no-symlink		Do not manage symlinks"
-  echo "	--ramdisk-modules	Copy required modules to the ramdisk"
-  echo "	--no-ramdisk-modules	Don't copy any modules to the ramdisk"
-  echo "	--all-ramdisk-modules	Copy all kernel modules to the ramdisk"
+  echo "	--ramdisk-modules	Copy required modules to the initramfs"
+  echo "	--no-ramdisk-modules	Don't copy any modules to the initramfs"
+  echo "	--all-ramdisk-modules	Copy all kernel modules to the initramfs"
   echo "	--callback=<...>	Run the specified arguments after the"
   echo "				kernel and modules have been compiled"
-  echo "	--static		Build a static (monolithic kernel)."
-  echo "	--no-static		Do not build a static (monolithic kernel)."
+  echo "	--static		Build a static (monolithic kernel)"
+  echo "	--no-static		Do not build a static (monolithic kernel)"
   echo "  Kernel settings"
   echo "	--kerneldir=<dir>	Location of the kernel sources"
   echo "	--kernel-config=<file|default>"
-  echo "				Kernel configuration file to use for compilation."
-  echo "				Use 'default' to explicitly start from scratch"
-  echo "				using genkernel defaults."
+  echo "				Kernel configuration file to use for compilation; Use"
+  echo "				'default' to explicitly start from scratch using"
+  echo "				genkernel defaults"
   echo "	--module-prefix=<dir>	Prefix to kernel module destination, modules"
   echo "				will be installed in <prefix>/lib/modules"
   echo "  Low-Level Compile settings"
-  echo "	--kernel-cc=<compiler>	Compiler to use for kernel (e.g. distcc)"
   echo "	--kernel-as=<assembler>	Assembler to use for kernel"
+  echo "	--kernel-cc=<compiler>	Compiler to use for kernel (e.g. distcc)"
   echo "	--kernel-ld=<linker>	Linker to use for kernel"
   echo "	--kernel-cross-compile=<cross var>"
   echo "				CROSS_COMPILE kernel variable"
@@ -79,24 +82,23 @@ longusage() {
   echo "	--kernel-target=<t>	Override default make target (bzImage)"
   echo "	--kernel-binary=<path>	Override default kernel binary path (arch/foo/boot/bar)"
   echo "	--kernel-outputdir=<path>"
-  echo "				Save output files outside the source tree."
-
-  echo "	--utils-cc=<compiler>	Compiler to use for utilities"
+  echo "				Save output files outside the source tree"
   echo "	--utils-as=<assembler>	Assembler to use for utils"
+  echo "	--utils-cc=<compiler>	Compiler to use for utilities"
   echo "	--utils-ld=<linker>	Linker to use for utils"
   echo "	--utils-make=<makeprog>	GNU Make to use for utils"
   echo "	--utils-cross-compile=<cross var>"
   echo "				CROSS_COMPILE utils variable"
   echo "	--utils-arch=<arch> 	Force to arch for utils only instead of"
   echo "				autodetect."
-  echo "	--makeopts=<makeopts>	Make options such as -j2, etc..."
+  echo "	--makeopts=<makeopts>	Make options such as -j2, etc ..."
   echo "	--mountboot		Mount BOOTDIR automatically if mountable"
   echo "	--no-mountboot		Don't mount BOOTDIR automatically"
   echo "	--bootdir=<dir>		Set the location of the boot-directory, default is /boot"
   echo "	--modprobedir=<dir>	Set the location of the modprobe.d-directory, default is /etc/modprobe.d"
-  echo "	--nice			Run the kernel make at the default nice level (10)."
-  echo "	--nice=<0-19>		Run the kernel make at the selected nice level."
-  echo "	--no-nice		Don't be nice while running the kernel make."
+  echo "	--nice			Run the kernel make at the default nice level (10)"
+  echo "	--nice=<0-19>		Run the kernel make at the selected nice level"
+  echo "	--no-nice		Don't be nice while running the kernel make"
   echo "  Initialization"
   echo "	--splash=<theme>	Enable framebuffer splash using <theme>"
   echo "	--splash-res=<res>	Select splash theme resolutions to install"
@@ -135,8 +137,8 @@ longusage() {
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
   echo "	--busybox-config=<file>	Specifies a user created busybox config"
   echo "	--genzimage		Make and install kernelz image (PowerPC)"
-  echo "	--disklabel		Include disk label and uuid support in your ramdisk"
-  echo "	--no-disklabel		Exclude disk label and uuid support in your ramdisk"
+  echo "	--disklabel		Include disk label and uuid support in your initramfs"
+  echo "	--no-disklabel		Exclude disk label and uuid support in your initramfs"
   echo "	--luks			Include LUKS support"
   echo "	--no-luks		Exclude LUKS support"
   echo "	--gpg			Include GPG-armored LUKS key support"
@@ -159,9 +161,8 @@ longusage() {
   echo "	--postclear		Clear all tmp files and caches after genkernel has run"
   echo "	--no-postclear		Do not clean up after genkernel has run"
   echo "  Output Settings"
-  echo "	--kernname=<...>	Tag the kernel and ramdisk with a name:"
-  echo "				If not defined the option defaults to"
-  echo "				'genkernel'"
+  echo "	--kernname=<...>	Tag the kernel and initramfs with a name; If not defined"
+  echo "				the option defaults to 'genkernel'"
   echo "	--minkernpackage=<archive>"
   echo "				Archive file created using tar containing kernel and"
   echo "				initramfs"
@@ -187,13 +188,14 @@ longusage() {
   echo "				separate the filenames with a comma"
   echo "	--firmware-install	Enable installing firmware onto root filesystem"
   echo "				(only available for kernels older than v4.14)"
+  echo "	--no-firmware-install	Do not install firmware onto root filesystem"
   echo "	--integrated-initramfs"
   echo "				Include the generated initramfs in the kernel"
   echo "				instead of keeping it as a separate file"
   echo "	--no-integrated-initramfs"
   echo "				Do not include the generated initramfs in the kernel"
   echo "	--wrap-initrd		Wrap initramfs using mkimage for u-boot boots"
-  echo "	 --no-wrap-initrd	Do not wrap initramfs using mkimage for u-boot boots"
+  echo "	--no-wrap-initrd	Do not wrap initramfs using mkimage for u-boot boots"
   echo "	--compress-initramfs"
   echo "				Compress initramfs"
   echo "	--no-compress-initramfs"
@@ -204,7 +206,7 @@ longusage() {
   echo "				Compression type for initramfs (best, xz, lzma, bzip2, gzip, lzop)"
   echo "	--strip=(all|kernel|modules|none)"
   echo "				Strip debug symbols from none, all, installed kernel (obsolete) or"
-  echo "				modules (default)."
+  echo "				modules (default)"
   echo "	--no-strip		Don't strip installed kernel or modules, alias for --strip=none"
   echo
   echo "For a detailed list of supported initramfs options and flags; issue:"
@@ -220,9 +222,9 @@ usage() {
   echo 'Some useful options:'
   echo '	--menuconfig		Run menuconfig after oldconfig'
   echo '	--nconfig		Run nconfig after oldconfig (requires ncurses)'
-  echo '	--no-clean		Do not run make clean before compilation'
-  echo '	--no-mrproper		Do not run make mrproper before compilation,'
-  echo '				this is implied by --no-clean.'
+  echo "	--no-clean		Do not run 'make clean' before compilation"
+  echo "	--no-mrproper		Do not run 'make mrproper' before compilation,"
+  echo '				this is implied by --no-clean'
   echo
   echo 'For a detailed list of supported commandline options and flags; issue:'
   echo '	genkernel --help'
@@ -477,7 +479,7 @@ parse_cmdline() {
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
 				echo 'Error: You need a terminal with at least 80 columns' \
-					'and 19 lines for --menuconfig; try --no-menuconfig...'
+					'and 19 lines for --menuconfig; try --no-menuconfig ...'
 				exit 1
 			fi
 			CMD_MENUCONFIG="yes"
@@ -493,7 +495,7 @@ parse_cmdline() {
 			if [[ TERM_LINES -lt 19 || TERM_COLUMNS -lt 80 ]]
 			then
 				echo 'Error: You need a terminal with at least 80 columns' \
-					'and 19 lines for --nconfig; try --no-nconfig...'
+					'and 19 lines for --nconfig; try --no-nconfig ...'
 				exit 1
 			fi
 			CMD_NCONFIG="yes"
@@ -615,9 +617,7 @@ parse_cmdline() {
 			;;
 		--logfile=*)
 			CMD_LOGFILE="${*#*=}"
-			LOGFILE="${*#*=}"
 			print_info 2 "CMD_LOGFILE: ${CMD_LOGFILE}"
-			print_info 2 "LOGFILE: ${CMD_LOGFILE}"
 			;;
 		--kerneldir=*)
 			CMD_KERNEL_DIR="${*#*=}"
