@@ -3,61 +3,84 @@
 
 gen_minkernpackage() {
 	print_info 1 ''
-	print_info 1 "Creating minimal kernel package in '${MINKERNPACKAGE}'..."
-	rm -rf "${TEMP}/minkernpackage" > /dev/null 2>&1
-	mkdir "${TEMP}/minkernpackage" || gen_die 'Could not make a directory for the kernel package!'
-	if [ "${KERNCACHE}" != "" ]
+	print_info 1 "Creating minimal kernel package in '${MINKERNPACKAGE}' ..."
+	rm -rf "${TEMP}/minkernpackage" >/dev/null 2>&1
+	mkdir "${TEMP}/minkernpackage" || gen_die "Failed to create '${TEMP}/minkernpackage'!"
+	if [ -n "${KERNCACHE}" ]
 	then
-		/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernel-${ARCH}-${KV}
-		mv minkernpackage/{kernel-${ARCH}-${KV},kernel-${KNAME}-${ARCH}-${KV}}
-		/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} config-${ARCH}-${KV}
-		mv minkernpackage/{config-${ARCH}-${KV},config-${KNAME}-${ARCH}-${KV}}
+		tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernel-${ARCH}-${KV} \
+			|| gen_die "Failed to extract 'kernel-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+
+		mv "${TEMP}"/minkernpackage/{kernel-${ARCH}-${KV},kernel-${KNAME}-${ARCH}-${KV}} \
+			|| gen_die "Failed to rename '${TEMP}/minkernpackage/kernel-${ARCH}-${KV}' to 'kernel-${KNAME}-${ARCH}-${KV}'!"
+
+		tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" System.map-${ARCH}-${KV} \
+			|| gen_die "Failed to extract 'System.map-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+
+		mv "${TEMP}"/minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}} \
+			|| gen_die "Failed to rename '${TEMP}/minkernpackage/System.map-${ARCH}-${KV}' to 'System.map-${KNAME}-${ARCH}-${KV}'!"
+
+		tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" config-${ARCH}-${KV} \
+			|| gen_die "Failed to extract 'config-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+
+		mv "${TEMP}"/minkernpackage/{config-${ARCH}-${KV},config-${KNAME}-${ARCH}-${KV}} \
+			|| gen_die "Failed to rename '${TEMP}/minkernpackage/config-${ARCH}-${KV}' to 'config-${KNAME}-${ARCH}-${KV}'!"
+
 		if isTrue "${GENZIMAGE}"
 		then
-			/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} kernelz-${ARCH}-${KV}
-			mv minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}}
-		fi
-		if [ ! -f minkernpackage/kernel-${KNAME}-${ARCH}-${KV} \
-			-o ! -f minkernpackage/config-${KNAME}-${ARCH}-${KV} ];
-		then
-			gen_die "Cannot locate kernel binary"
+			tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernelz-${ARCH}-${KV} \
+				|| gen_die "Failed to extract 'kernelz-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+
+			mv "${TEMP}"/minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}} \
+				|| gen_die "Failed to rename '${TEMP}/minkernpackage/kernelz-${ARCH}-${KV}' to 'kernelz-${KNAME}-${ARCH}-${KV}'!"
 		fi
 	else
 		local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
-		local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
 		if [ -z "${tmp_kernel_binary}" ]
 		then
-			gen_die "Cannot locate kernel binary"
+			gen_die "Failed to locate kernel binary '${KERNEL_BINARY}'!"
 		fi
-		cd "${KERNEL_OUTPUTDIR}"
-		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not the copy kernel for the min kernel package!'
-		cp ".config" "${TEMP}/minkernpackage/config-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not the copy kernel config for the min kernel package!'
+
+		cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${KERNEL_OUTPUTDIR}'!"
+
+		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${KNAME}-${ARCH}-${KV}" \
+			|| gen_die "Could not copy the kernel binary '${tmp_kernel_binary}' for the min kernel package!"
+
+		cp "System.map" "${TEMP}/minkernpackage/System.map-${KNAME}-${ARCH}-${KV}" \
+			|| gen_die "Could not copy '${KERNEL_OUTPUTDIR}/System.map' for the min kernel package!"
+
+		cp ".config" "${TEMP}/minkernpackage/config-${KNAME}-${ARCH}-${KV}" \
+			|| gen_die "Could not copy the kernel config '${KERNEL_OUTPUTDIR}/.config' for the min kernel package!"
+
 		if isTrue "${GENZIMAGE}"
 		then
-			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${KNAME}-${ARCH}-${KV}" || gen_die "Could not copy the kernelz for the min kernel package"
+			local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
+			if [ -z "${tmp_kernel_binary2}" ]
+			then
+				gen_die "Failed to locate kernel binary '${KERNEL_BINARY_2}'!"
+			fi
+
+			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${KNAME}-${ARCH}-${KV}" \
+				|| gen_die "Could not copy the kernelz binary '${tmp_kernel_binary2}' for the min kernel package!"
 		fi
 	fi
 
 	if ! isTrue "${INTEGRATED_INITRAMFS}"
 	then
-		isTrue "${BUILD_RAMDISK}" && { cp "${TMPDIR}/initramfs-${KV}" "${TEMP}/minkernpackage/initramfs-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not copy the initramfs for the kernel package!'; }
+		if isTrue "${BUILD_RAMDISK}"
+		then
+			cp "${TMPDIR}/initramfs-${KV}" "${TEMP}/minkernpackage/initramfs-${KNAME}-${ARCH}-${KV}" \
+				|| gen_die "Could not copy the initramfs '${TMPDIR}/initramfs-${KV}' for the min kernel package!"
+		fi
 	fi
 
-	if [ "${KERNCACHE}" != "" ]
-	then
-		/bin/tar -x -C ${TEMP}/minkernpackage -f ${KERNCACHE} System.map-${ARCH}-${KV}
-		mv minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}} ||
-			gen_die 'Could not copy System.map from kerncache for the kernel package!'
-	else
-		cp "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/minkernpackage/System.map-${KNAME}-${ARCH}-${KV}" || gen_die 'Could not copy System.map for the kernel package!';
-	fi
+	cd "${TEMP}/minkernpackage" || gen_die "Failed to chdir to '${TEMP}/minkernpackage'!"
 
-	cd "${TEMP}/minkernpackage"
-	/bin/tar -jcpf ${MINKERNPACKAGE} * || gen_die 'Could not compress the kernel package!'
+	local -a tar_cmd=( "$(get_tar_cmd "${MINKERNPACKAGE}")" )
+	tar_cmd+=( '*' )
 
-	cd "${TEMP}"
-	isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/minkernpackage" > /dev/null
-	return 0
+	print_info 2 "COMMAND: ${tar_cmd[*]}" 1 0 1
+	eval "${tar_cmd[@]}" || gen_die "Failed to create compressed min kernel package '${MINKERNPACKAGE}'!"
 }
 
 gen_modulespackage() {

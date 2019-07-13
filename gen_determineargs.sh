@@ -240,9 +240,18 @@ determine_real_args() {
 
 	if [ -n "${MINKERNPACKAGE}" ]
 	then
+		MINKERNPACKAGE=$(expand_file "${CMD_MINKERNPACKAGE}")
+		if [[ -z "${MINKERNPACKAGE}" || "${MINKERNPACKAGE}" != *.tar* ]]
+		then
+			gen_die "--minkernpackage value '${CMD_MINKERNPACKAGE}' is invalid!"
+		fi
+
 		local minkernpackage_dir=$(dirname "${MINKERNPACKAGE}")
-		mkdir -p "${minkernpackage_dir}" \
-			|| gen_die "Failed to create '${minkernpackage_dir}'!"
+		if [ ! -d "${minkernpackage_dir}" ]
+		then
+			mkdir -p "${minkernpackage_dir}" \
+				|| gen_die "Failed to create '${minkernpackage_dir}'!"
+		fi
 	fi
 
 	if [ -n "${MODULESPACKAGE}" ]

@@ -162,9 +162,9 @@ longusage() {
   echo "	--kernname=<...>	Tag the kernel and ramdisk with a name:"
   echo "				If not defined the option defaults to"
   echo "				'genkernel'"
-  echo "	--minkernpackage=<tbz2>	File to output a .tar.bz2'd kernel and ramdisk:"
-  echo "				No modules outside of the ramdisk will be"
-  echo "				included..."
+  echo "	--minkernpackage=<archive>"
+  echo "				Archive file created using tar containing kernel and"
+  echo "				initramfs"
   echo "	--modulespackage=<tbz2>	File to output a .tar.bz2'd modules after the"
   echo "				callbacks have run"
   echo "	--kerncache=<archive>	Archive file created using tar containing kernel binary,"
@@ -640,7 +640,6 @@ parse_cmdline() {
 			;;
 		--minkernpackage=*)
 			CMD_MINKERNPACKAGE="${*#*=}"
-			[ ${CMD_MINKERNPACKAGE:0:1} != / ] && CMD_MINKERNPACKAGE=$PWD/$CMD_MINKERNPACKAGE
 			print_info 2 "MINKERNPACKAGE: ${CMD_MINKERNPACKAGE}"
 			;;
 		--modulespackage=*)

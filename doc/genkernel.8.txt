@@ -383,9 +383,9 @@ OUTPUT SETTINGS
     Tag the kernel and initrd with a name, if not defined this
     option defaults to genkernel.
 
-*--minkernpackage*=<tbz2>::
-    File to output a .tar.bz2'd kernel and initrd: no modules outside
-    of the initrd will be included...
+*--minkernpackage*=<file>::
+    Archive file created using tar containing kernel and initramfs.
+    NOTE: No modules outside of the initramfs will be included!
 
 *--modulespackage*=<tbz2>::
     File to output a .tar.bz2'd modules after the callbacks have run.
