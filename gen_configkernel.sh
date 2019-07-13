@@ -2,7 +2,7 @@
 # $Id$
 
 # Fills variable KERNEL_CONFIG
-determine_config_file() {
+determine_kernel_config_file() {
 	print_info 2 "Checking for suitable kernel configuration ..."
 
 	if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" != "default" ]
@@ -30,6 +30,7 @@ determine_config_file() {
 			kconfig_candidates=( "/etc/kernels/kernel-config-${ARCH}-${KV}" ${kconfig_candidates[@]} )
 		fi
 
+		local f
 		for f in "${kconfig_candidates[@]}"
 		do
 			[ -z "${f}" ] && continue
@@ -38,12 +39,12 @@ determine_config_file() {
 			then
 				if grep -sq THIS_CONFIG_IS_BROKEN "$f"
 				then
-					print_info 2 "$(getIndent 1)- '${f}' is marked as broken; Skipping ..."
+					print_info 2 "$(get_indent 1)- '${f}' is marked as broken; Skipping ..."
 				else
 					KERNEL_CONFIG="$f" && break
 				fi
 			else
-					print_info 2 "$(getIndent 1)- '${f}' not found; Skipping ..."
+					print_info 2 "$(get_indent 1)- '${f}' not found; Skipping ..."
 			fi
 		done
 

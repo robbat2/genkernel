@@ -144,9 +144,9 @@ determine_KV
 # which would include LOCALVERSION suffix, or initialized with
 # unmodified KERNEL_SOURCE version (which normally has no LOCALVERSION set).
 
-determine_config_file
-
 determine_kernel_arch
+
+determine_kernel_config_file
 
 setup_cache_dir
 
