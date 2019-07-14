@@ -140,6 +140,9 @@ case "${1}" in
 	build)
 		MODULE="${GK_SHARE}/worker_modules/gkbuild.sh"
 		;;
+	unpack)
+		MODULE="${GK_SHARE}/worker_modules/unpack.sh"
+		;;
 	*)
 		die "Unknown module '${1}' specified!"
 		;;

@@ -1042,6 +1042,57 @@ gkbuild() {
 	[ ${RET} -ne 0 ] && gen_die "$(get_useful_function_stack)Failed to create binpkg of ${PKG}-${VERSION}!"
 }
 
+# @FUNCTION: unpack
+# @USAGE: <ARCHIVE> <DEST>
+# @DESCRIPTION:
+# Unpack archive file to dest dir using sandbox.
+#
+# <ARCHIVE> Archive to unpack.
+#
+# <DEST> Folder to unpack to.
+unpack() {
+	[[ ${#} -ne 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
+
+	if ! hash sandbox &>/dev/null
+	then
+		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
+	fi
+
+	local unpack_file=${1}
+	local unpack_dir=${2}
+
+	local -a envvars=(
+		GK_SHARE="${GK_SHARE}"
+		LOGLEVEL="${LOGLEVEL}"
+		LOGFILE="${LOGFILE}"
+		NOCOLOR="${NOCOLOR}"
+		TEMP="${TEMP}"
+		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+	)
+
+	envvars+=(
+		UNPACK_FILE="${unpack_file}"
+		UNPACK_DIR="${unpack_dir}"
+	)
+
+	# set up unpack signal handler
+	local error_msg_detail="Failed to unpack '${unpack_file}' to '${unpack_dir}'!"
+	local error_msg="gen_worker.sh aborted: ${error_msg_detail}"
+	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+
+	env -i \
+		"${envvars[@]}" \
+		sandbox "${GK_SHARE}"/gen_worker.sh unpack 2>&1
+
+	local RET=$?
+
+	# restore default trap
+	set_default_gk_trap
+
+	[ ${RET} -ne 0 ] && gen_die "$(get_useful_function_stack)${error_msg_detail}"
+}
+
 set_default_gk_trap() {
 	trap trap_cleanup SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
 }
