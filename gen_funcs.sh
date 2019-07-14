@@ -903,6 +903,17 @@ tc-is-cross-compiler() {
 
 trap_cleanup() {
 	# Call exit code of 1 for failure
+	if [ -t 0 ]
+	then
+		# try to restore output in case we were trapped while
+		# redirecting output...
+		exec &> /dev/tty
+	fi
+
+	echo ''
+	print_error 1 "Genkernel was unexpectedly terminated."
+	print_error 1 "Please consult '${LOGFILE}' for more information and any"
+	print_error 1 "errors that were reported above."
 	cleanup
 	exit 1
 }
