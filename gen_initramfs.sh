@@ -642,36 +642,49 @@ append_libgcc_s() {
 }
 
 append_linker() {
-	if [ -d "${TEMP}/initramfs-linker-temp" ]
+	local TDIR="${TEMP}/initramfs-linker-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-linker-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-linker-temp/etc"
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
-	if [ -e "/etc/ld.so.conf" ]
+	mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
+
+	if isTrue "$(tc-is-cross-compiler)"
 	then
-		cp "/etc/ld.so.conf" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
-			|| gen_die "Could not copy ld.so.conf"
-	fi
-	if [ -e "/etc/ld.so.cache" ]
-	then
-		cp "/etc/ld.so.cache" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
-			|| gen_die "Could not copy ld.so.cache"
-	fi
-	if [ -d "/etc/ld.so.conf.d" ]
-	then
-		mkdir -p "${TEMP}/initramfs-linker-temp/etc/ld.so.conf.d"
-		cp -r "/etc/ld.so.conf.d" "${TEMP}/initramfs-linker-temp/etc/" 2> /dev/null \
-			|| gen_die "Could not copy ld.so.conf.d"
+		# We cannot copy ld files from host because they could be
+		# incompatible with CHOST.  Instead, add ldconfig to allow
+		# initramfs to regenerate on its own (default /etc/ld.so.conf
+		# for initramfs was added via append_base_layout()).
+		mkdir -p "${TDIR}"/sbin || gen_die "Failed to create '${TDIR}/sbin'!"
+
+		local libdir=$(get_chost_libdir)
+		copy_system_binaries "${TDIR}/sbin" "${libdir}/../sbin/ldconfig"
+	else
+		# Only copy /etc/ld.so.conf.d -- /etc/ld.so.conf was already
+		# added to CPIO via append_base_layout() and because we only
+		# append to CPIO, that file wouldn't be used at all.
+		if [ -d "/etc/ld.so.conf.d" ]
+		then
+			mkdir -p "${TDIR}"/etc/ld.so.conf.d || gen_die "Failed to create '${TDIR}/etc/ld.so.conf.d'!"
+			cp -arL "/etc/ld.so.conf.d" "${TDIR}"/etc \
+				|| gen_die "Failed to copy '/etc/ld.so.conf.d'!"
+		fi
+
+		if [ -e "/etc/ld.so.cache" ]
+		then
+			cp -aL "/etc/ld.so.cache" "${TDIR}"/etc/ld.so.cache \
+				|| gen_die "Failed to copy '/etc/ld.so.cache'!"
+		fi
 	fi
 
-	cd "${TEMP}/initramfs-linker-temp/"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing linker cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-linker-temp" > /dev/null
+		|| gen_die "Failed to append linker to cpio!"
 }
 
 append_splash(){
