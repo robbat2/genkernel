@@ -245,21 +245,25 @@ append_busybox() {
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
-append_e2fsprogs(){
-	if [ -d "${TEMP}"/initramfs-e2fsprogs-temp ]
+append_e2fsprogs() {
+	local PN=e2fsprogs
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}"/initramfs-e2fsprogs-temp
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	cd "${TEMP}" \
-			|| gen_die "cd '${TEMP}' failed"
-	mkdir -p initramfs-e2fsprogs-temp
-	copy_binaries "${TEMP}"/initramfs-e2fsprogs-temp/ /sbin/{e2fsck,mke2fs}
+	populate_binpkg ${PN}
 
-	cd "${TEMP}"/initramfs-e2fsprogs-temp \
-			|| gen_die "cd '${TEMP}/initramfs-e2fsprogs-temp' failed"
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}"
-	rm -rf "${TEMP}"/initramfs-e2fsprogs-temp > /dev/null
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 append_blkid() {
