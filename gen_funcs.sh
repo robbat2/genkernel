@@ -182,6 +182,40 @@ print_warning() {
 	GOOD=${WARN} print_info "$@"
 }
 
+can_run_programs_compiled_by_genkernel() {
+	local can_run_programs=no
+
+	if ! isTrue "$(tc-is-cross-compiler)"
+	then
+		can_run_programs=yes
+	else
+		if [[ ${CBUILD} = x86_64* && ${ARCH} == "x86" ]]
+		then
+			can_run_programs=yes
+		elif [[ ${CBUILD} = powerpc64* && ${ARCH} == "powerpc" ]]
+		then
+			can_run_programs=yes
+		fi
+	fi
+
+	echo "${can_run_programs}"
+}
+
+is_valid_triplet() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local triplet=${1}
+	local is_triplet=no
+
+	if [[ "${triplet}" =~ ^[a-zA-Z0-9]{2,}-[a-zA-Z0-9]{2,}-[a-zA-Z0-9]{2,} ]]
+	then
+		is_triplet=yes
+	fi
+
+	echo "${is_triplet}"
+}
+
 # var_replace(var_name, var_value, string)
 # $1 = variable name
 # $2 = variable value
@@ -519,6 +553,18 @@ debug_breakpoint() {
 	exit 99
 }
 
+get_chost_libdir() {
+	local cc=$(tc-getCC)
+	local libdir=$(dirname "$(realpath "$(${cc} -print-file-name=libnss_files.so)")")
+
+	if [[ -z "${libdir}" ]]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Unable to determine CHOST's libdir!"
+	fi
+
+	echo "${libdir}"
+}
+
 # @FUNCTION: get_tar_cmd
 # @USAGE: <ARCHIVE>
 # @DESCRIPTION:
@@ -560,6 +606,23 @@ get_tar_cmd() {
 	echo "${tar_cmd[@]}"
 }
 
+get_tc_vars() {
+	local -a tc_vars=()
+	tc_vars+=( AR )
+	tc_vars+=( AS )
+	tc_vars+=( CC )
+	tc_vars+=( CPP )
+	tc_vars+=( CXX )
+	tc_vars+=( LD )
+	tc_vars+=( STRIP )
+	tc_vars+=( NM )
+	tc_vars+=( RANLIB )
+	tc_vars+=( OBJCOPY )
+	tc_vars+=( PKG_CONFIG )
+
+	echo "${tc_vars[@]}"
+}
+
 get_useful_function_stack() {
 	local end_function=${1:-${FUNCNAME}}
 	local n_functions=${#FUNCNAME[@]}
@@ -592,7 +655,170 @@ get_useful_function_stack() {
 	echo "${stack_str}"
 }
 
-trap_cleanup(){
+_tc-getPROG() {
+	local tuple=${!1:-""}
+	local v var vars=$2
+	local prog=( $3 )
+
+	var=${vars%% *}
+	for v in ${vars} ; do
+		if [[ -n ${!v} ]] ; then
+			export ${var}="${!v}"
+			echo "${!v}"
+			return 0
+		fi
+	done
+
+	# We allow user to specify different CC/AS/MAKE/LD... values for
+	# building kernel and utilities. To avoid having multiple tc-get*
+	# functions, we default to utilities and allow switching via
+	# TC_PROG_TYPE variable.
+	local type=UTILS
+	if [ -n "${TC_PROG_TYPE}" -a "${TC_PROG_TYPE}" = "KERNEL" ]
+	then
+		type=KERNEL
+	fi
+
+	local prog_default_varname="DEFAULT_${type}_${var}"
+	local prog_override_varname="${type}_${var}"
+
+	if [[ -n "${!prog_default_varname}" ]] \
+		&& [[ "${!prog_override_varname}" != "${!prog_default_varname}" ]]
+	then
+		# User wants to run specific program
+		prog[0]=${!prog_override_varname}
+	elif isTrue "$(tc-is-cross-compiler)"
+	then
+		# Let's try to handle multilib:
+		# We will mimic profile's make.defaults.
+
+		local multilib_cflags multilib_ldflags
+		local cpu_cbuild=${CBUILD%%-*}
+		local cpu_chost=${CHOST%%-*}
+
+		case "${cpu_cbuild}" in
+			powerpc64*)
+				if [[ "${cpu_chost}" == "powerpc" ]]
+				then
+					tuple=${tuple/${cpu_chost}/${cpu_cbuild}}
+					multilib_cflags="-m32"
+					multilib_ldflags="-m elf32ppc"
+				fi
+				;;
+			x86_64*)
+				if [[ "${cpu_chost}" == "i686" ]]
+				then
+					# changing tuple so that we don't call pure gcc
+					tuple=${tuple/${cpu_chost}/${cpu_cbuild}}
+					multilib_cflags="-m32"
+					multilib_ldflags="-m elf_i386"
+				fi
+				;;
+		esac
+
+		case "${var}" in
+			CC)
+				[[ -n "${multilib_cflags}" ]] && prog+=( "${multilib_cflags}" )
+				;;
+			LD)
+				[[ -n "${multilib_ldflags}" ]] &&  prog+=( "${multilib_ldflags}" )
+				;;
+		esac
+	fi
+
+	local search=
+	[[ -n ${tuple} ]] && search=$(type -p ${tuple}-${prog[0]})
+	[[ -n ${search} ]] && prog[0]=${search##*/}
+
+	export ${var}="${prog[*]}"
+	echo "${!var}"
+}
+
+tc-export() {
+	local var
+	for var in "$@"
+	do
+		[[ $(type -t "tc-get${var}") != "function" ]] && gen_die "tc-export: invalid export variable '${var}'"
+		"tc-get${var}" > /dev/null
+	done
+}
+
+tc-getAR() {
+	tc-getPROG AR ar "$@"
+}
+
+tc-getAS() {
+	tc-getPROG AR ar "$@"
+}
+
+tc-getBUILD_CC() {
+	tc-getBUILD_PROG CC gcc "$@"
+}
+
+tc-getCC() {
+	tc-getPROG CC gcc "$@"
+}
+
+tc-getCPP() {
+	local cc=$(tc-getCC)
+	tc-getPROG CPP "${cc} -E" "$@"
+}
+
+tc-getCXX() {
+	tc-getPROG CXX g++ "$@"
+}
+
+tc-getLD() {
+	tc-getPROG LD ld "$@"
+}
+
+tc-getNM() {
+	tc-getPROG NM nm "$@"
+}
+
+tc-getOBJCOPY() {
+	tc-getPROG OBJCOPY objcopy "$@"
+}
+
+tc-getOBJDUMP() {
+	tc-getPROG OBJDUMP objdump "$@"
+}
+
+tc-getBUILD_PROG() {
+	local vars="BUILD_$1 $1_FOR_BUILD HOST$1"
+	# respect host vars if not cross-compiling
+	# https://bugs.gentoo.org/630282
+	isTrue "$(tc-is-cross-compiler)" || vars+=" $1"
+	_tc-getPROG CBUILD "${vars}" "${@:2}"
+}
+
+tc-getPROG() {
+	_tc-getPROG CHOST "$@"
+}
+
+tc-getRANLIB() {
+	tc-getPROG RANLIB ranlib
+}
+
+tc-getSTRIP() {
+	tc-getPROG STRIP strip
+}
+
+tc-getSTRIP() {
+	tc-getPROG STRIP strip "$@";
+}
+
+tc-is-cross-compiler() {
+	local wants_cross_compile=no
+	if [[ "${CBUILD:-${CHOST}}" != "${CHOST}" ]]
+	then
+		wants_cross_compile=yes
+	fi
+
+	echo ${wants_cross_compile}
+}
+
+trap_cleanup() {
 	# Call exit code of 1 for failure
 	cleanup
 	exit 1

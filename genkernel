@@ -87,9 +87,6 @@ unset _GENKERNEL_CONF
 print_info 1 "Running with options: ${GK_OPTIONS}"
 echo
 
-# Set ${ARCH}
-get_official_arch
-
 # Save any customizations of MODULES_* first.
 override_module_vars="$(compgen -A variable |grep '^MODULES_')"
 for v in ${override_module_vars}

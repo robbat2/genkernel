@@ -196,6 +196,11 @@ KERNEL LOCATIONS
 
 LOW-LEVEL COMPILATION OPTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*--cross-compile*=<target triplet>::
+    Target triple (i.e. aarch64-linux-gnu) to build for. Only needed
+    when the system running genkernel has a different architecture like
+    the system which should boot the created kernel/initramfs.
+
 *--kernel-as*=<assembler>::
     Assembler to use for the kernel compilation.
 
@@ -204,9 +209,6 @@ LOW-LEVEL COMPILATION OPTIONS
 
 *--kernel-ld*=<linker>::
     Linker to use for the kernel compilation.
-
-*--kernel-cross-compile*=<cross var>::
-    CROSS_COMPILE kernel variable.
 
 *--kernel-make*=<makeprg>::
     GNU Make to use for the kernel compilation.
@@ -236,12 +238,6 @@ LOW-LEVEL COMPILATION OPTIONS
 
 *--utils-make*=<makeprog>::
     GNU Make to use for utilities.
-
-*--utils-cross-compile*=<cross var>::
-    CROSS_COMPILE utils variable.
-
-*--utils-arch*=<arch>::
-    Force to arch for utils only instead of autodetect.
 
 *--makeopts*=<makeopts>::
     GNU Make options such as -j2, etc.
@@ -360,10 +356,6 @@ INITIALIZATION
 
 INTERNALS
 ~~~~~~~~~
-*--arch-override*=<arch>::
-    Force the architecture settings described by the <arch>  profile
-    instead of autodetecting the running architecture.
-
 *--cachedir*=<dir>::
     Override the default cache location.
 

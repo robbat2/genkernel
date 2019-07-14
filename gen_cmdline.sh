@@ -73,11 +73,11 @@ longusage() {
   echo "	--module-prefix=<dir>	Prefix to kernel module destination, modules"
   echo "				will be installed in <prefix>/lib/modules"
   echo "  Low-Level Compile settings"
+  echo "	--cross-compile=<target-triplet>"
+  echo "				Target triple (i.e. aarch64-linux-gnu) to build for"
   echo "	--kernel-as=<assembler>	Assembler to use for kernel"
   echo "	--kernel-cc=<compiler>	Compiler to use for kernel (e.g. distcc)"
   echo "	--kernel-ld=<linker>	Linker to use for kernel"
-  echo "	--kernel-cross-compile=<cross var>"
-  echo "				CROSS_COMPILE kernel variable"
   echo "	--kernel-make=<makeprg> GNU Make to use for kernel"
   echo "	--kernel-target=<t>	Override default make target (bzImage)"
   echo "	--kernel-binary=<path>	Override default kernel binary path (arch/foo/boot/bar)"
@@ -85,12 +85,9 @@ longusage() {
   echo "				Save output files outside the source tree"
   echo "	--utils-as=<assembler>	Assembler to use for utils"
   echo "	--utils-cc=<compiler>	Compiler to use for utilities"
+  echo "	--utils-cflags=<cflags> C compiler flags used to compile utilities"
   echo "	--utils-ld=<linker>	Linker to use for utils"
   echo "	--utils-make=<makeprog>	GNU Make to use for utils"
-  echo "	--utils-cross-compile=<cross var>"
-  echo "				CROSS_COMPILE utils variable"
-  echo "	--utils-arch=<arch> 	Force to arch for utils only instead of"
-  echo "				autodetect."
   echo "	--makeopts=<makeopts>	Make options such as -j2, etc ..."
   echo "	--mountboot		Mount BOOTDIR automatically if mountable"
   echo "	--no-mountboot		Don't mount BOOTDIR automatically"
@@ -151,7 +148,6 @@ longusage() {
   echo "	--no-netboot		Exclude netboot env"
   echo "	--real-root=<foo>	Specify a default for real_root="
   echo "  Internals"
-  echo "	--arch-override=<arch>	Force to arch instead of autodetect"
   echo "	--cachedir=<dir>	Override the default cache location"
   echo "	--clear-cachedir	Clear genkernel's cache location on start. Useful"
   echo "				if you want to force rebuild of included tools"
@@ -240,6 +236,10 @@ parse_optbool() {
 
 parse_cmdline() {
 	case "$*" in
+		--cross-compile=*)
+			CMD_CROSS_COMPILE="${*#*=}"
+			print_info 2 "CMD_CROSS_COMPILE: ${CMD_CROSS_COMPILE}"
+			;;
 		--kernel-cc=*)
 			CMD_KERNEL_CC="${*#*=}"
 			print_info 2 "CMD_KERNEL_CC: ${CMD_KERNEL_CC}"
@@ -264,11 +264,6 @@ parse_cmdline() {
 			KERNEL_BINARY_OVERRIDE="${*#*=}"
 			print_info 2 "KERNEL_BINARY_OVERRIDE: ${KERNEL_BINARY_OVERRIDE}"
 			;;
-		--kernel-cross-compile=*)
-			CMD_KERNEL_CROSS_COMPILE="${*#*=}"
-			CMD_KERNEL_CROSS_COMPILE=$(echo ${CMD_KERNEL_CROSS_COMPILE}|sed -e 's/.*[^-]$/&-/g')
-			print_info 2 "CMD_KERNEL_CROSS_COMPILE: ${CMD_KERNEL_CROSS_COMPILE}"
-			;;
 		--kernel-outputdir=*)
 			CMD_KERNEL_OUTPUTDIR="${*#*=}"
 			print_info 2 "CMD_KERNEL_OUTPUTDIR: ${CMD_KERNEL_OUTPUTDIR}"
@@ -276,6 +271,10 @@ parse_cmdline() {
 		--utils-cc=*)
 			CMD_UTILS_CC="${*#*=}"
 			print_info 2 "CMD_UTILS_CC: ${CMD_UTILS_CC}"
+			;;
+		--utils-cflags=*)
+			CMD_UTILS_CFLAGS="${*#*=}"
+			print_info 2 "CMD_UTILS_CFLAGS: ${CMD_UTILS_CFLAGS}"
 			;;
 		--utils-ld=*)
 			CMD_UTILS_LD="${*#*=}"
@@ -288,15 +287,6 @@ parse_cmdline() {
 		--utils-make=*)
 			CMD_UTILS_MAKE="${*#*=}"
 			print_info 2 "CMD_UTILS_MAKE: ${CMD_UTILS_MAKE}"
-			;;
-		--utils-cross-compile=*)
-			CMD_UTILS_CROSS_COMPILE="${*#*=}"
-			CMD_UTILS_CROSS_COMPILE=$(echo ${CMD_UTILS_CROSS_COMPILE}|sed -e 's/.*[^-]$/&-/g')
-			print_info 2 "CMD_UTILS_CROSS_COMPILE: ${CMD_UTILS_CROSS_COMPILE}"
-			;;
-		--utils-arch=*)
-			CMD_UTILS_ARCH="${*#*=}"
-			print_info 2 "CMD_UTILS_ARCH: ${CMD_ARCHOVERRIDE}"
 			;;
 		--makeopts=*)
 			CMD_MAKEOPTS="${*#*=}"
@@ -601,10 +591,6 @@ parse_cmdline() {
 		--postclear|--no-postclear)
 			CMD_POSTCLEAR=$(parse_optbool "$*")
 			print_info 2 "CMD_POSTCLEAR: ${CMD_POSTCLEAR}"
-			;;
-		--arch-override=*)
-			CMD_ARCHOVERRIDE="${*#*=}"
-			print_info 2 "CMD_ARCHOVERRIDE: ${CMD_ARCHOVERRIDE}"
 			;;
 		--color|--no-color)
 			CMD_COLOR=$(parse_optbool "$*")

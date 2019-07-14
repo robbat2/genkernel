@@ -84,6 +84,15 @@ determine_KV() {
 }
 
 determine_real_args() {
+	# Unset known variables which will interfere with _tc-getPROG().
+	local tc_var tc_varname_build tc_vars=$(get_tc_vars)
+	for tc_var in ${tc_vars}
+	do
+		tc_varname_build="BUILD_${tc_var}"
+		unset tc_var ${tc_varname_build}
+	done
+	unset tc_var tc_varname_build tc_vars
+
 	print_info 4 "Resolving config file, command line, and arch default settings."
 
 	#                               Dest / Config File   Command Line                     Arch Default
@@ -98,6 +107,7 @@ determine_real_args() {
 	set_config_with_override STRING MAKEOPTS                 CMD_MAKEOPTS                 "$DEFAULT_MAKEOPTS"
 	set_config_with_override STRING NICE                     CMD_NICE                     "10"
 	set_config_with_override STRING KERNEL_MAKE              CMD_KERNEL_MAKE              "$DEFAULT_KERNEL_MAKE"
+	set_config_with_override STRING UTILS_CFLAGS             CMD_UTILS_CFLAGS             "$DEFAULT_UTILS_CFLAGS"
 	set_config_with_override STRING UTILS_MAKE               CMD_UTILS_MAKE               "$DEFAULT_UTILS_MAKE"
 	set_config_with_override STRING KERNEL_CC                CMD_KERNEL_CC                "$DEFAULT_KERNEL_CC"
 	set_config_with_override STRING KERNEL_LD                CMD_KERNEL_LD                "$DEFAULT_KERNEL_LD"
@@ -106,8 +116,7 @@ determine_real_args() {
 	set_config_with_override STRING UTILS_LD                 CMD_UTILS_LD                 "$DEFAULT_UTILS_LD"
 	set_config_with_override STRING UTILS_AS                 CMD_UTILS_AS                 "$DEFAULT_UTILS_AS"
 
-	set_config_with_override STRING KERNEL_CROSS_COMPILE     CMD_KERNEL_CROSS_COMPILE
-	set_config_with_override STRING UTILS_CROSS_COMPILE      CMD_UTILS_CROSS_COMPILE
+	set_config_with_override STRING CROSS_COMPILE            CMD_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR                  CMD_BOOTDIR                  "/boot"
 	set_config_with_override STRING KERNEL_OUTPUTDIR         CMD_KERNEL_OUTPUTDIR         "${KERNEL_DIR}"
 	set_config_with_override STRING MODPROBEDIR              CMD_MODPROBEDIR              "/etc/modprobe.d"
@@ -172,6 +181,96 @@ determine_real_args() {
 	set_config_with_override BOOL   CLEANUP                  CMD_CLEANUP                  "yes"
 
 	declare -gr GK_V_CACHEDIR="${CACHE_DIR}/${GK_V}"
+
+	if [ -n "${CMD_CROSS_COMPILE}" ]
+	then
+		if ! isTrue "$(is_valid_triplet "${CMD_CROSS_COMPILE}")"
+		then
+			gen_die "--cross-compile value '${CMD_CROSS_COMPILE}' does NOT represent a valid triplet!"
+		fi
+
+		ARCH=${CMD_CROSS_COMPILE%%-*}
+		case "${ARCH}" in
+			aarch64*)
+				ARCH="arm64"
+				;;
+			arm*)
+				ARCH="arm"
+				;;
+			i386)
+				ARCH="ia32"
+				;;
+			i486)
+				ARCH="x86"
+				;;
+			i586)
+				ARCH="x86"
+				;;
+			i686)
+				ARCH="x86"
+				;;
+			mips|mips64*)
+				ARCH="mips"
+				;;
+			powerpc)
+				ARCH="ppc"
+				;;
+			powerpc64)
+				ARCH="ppc64"
+				;;
+			powerpc64le)
+				ARCH="ppc64le"
+				;;
+			*)
+				;;
+		esac
+
+		print_info 2 "ARCH forced to '${ARCH}' ..."
+	else
+		ARCH=$(uname -m)
+		if [ -z "${ARCH}" ]
+		then
+			gen_die "Was unable to determine machine hardware name using 'uname -m'!"
+		fi
+
+		case "${ARCH}" in
+			aarch64*)
+				ARCH="arm64"
+				;;
+			arm*)
+				ARCH="arm"
+				;;
+			i?86)
+				ARCH="x86"
+				;;
+			mips|mips64*)
+				ARCH="mips"
+				;;
+			*)
+				;;
+		esac
+
+		print_info 2 "ARCH '${ARCH}' detected ..."
+	fi
+
+	ARCH_CONFIG="${GK_SHARE}/arch/${ARCH}/config.sh"
+	[ -f "${ARCH_CONFIG}" ] || gen_die "${ARCH} not yet supported by genkernel. Please add the arch-specific config file '${ARCH_CONFIG}'!"
+
+	# set CBUILD and CHOST
+	local build_cc=$(tc-getBUILD_CC)
+	CBUILD=$("${build_cc}" -dumpmachine 2>/dev/null)
+	if [ -z "${CBUILD}" ]
+	then
+		gen_die "Failed to determine CBUILD using '${build_cc} -dumpmachine' command!"
+	else
+		CHOST="${CBUILD}"
+	fi
+	unset build_cc
+
+	if [ "${CMD_CROSS_COMPILE}" != '' ]
+	then
+		CHOST="${CMD_CROSS_COMPILE}"
+	fi
 
 	# Initialize variables
 	BOOTDIR=$(arch_replace "${BOOTDIR}")
