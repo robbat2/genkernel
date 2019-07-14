@@ -63,12 +63,10 @@ copy_binaries() {
 }
 
 log_future_cpio_content() {
-	if [[ "${LOGLEVEL}" -gt 1 ]]; then
-		echo =================================================================
-		echo "About to add these files from '${PWD}' to cpio archive:"
-		find . | xargs ls -ald
-		echo =================================================================
-	fi
+	print_info 2 "=================================================================" 1 0 1
+	print_info 2 "About to add these files from '${PWD}' to cpio archive:" 1 0 1
+	print_info 2 "$(find . | xargs ls -ald)" 1 0 1
+	print_info 2 "=================================================================" 1 0 1
 }
 
 append_devices() {
