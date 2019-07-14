@@ -70,26 +70,34 @@ log_future_cpio_content() {
 }
 
 append_devices() {
+	local TFILE="${TEMP}/initramfs-base-temp.devices"
+	if [ -f "${TFILE}" ]
+	then
+		rm "${TFILE}" || gen_die "Failed to clean out existing '${TFILE}'!"
+	fi
+
 	if [[ ! -x "${KERNEL_OUTPUTDIR}/usr/gen_init_cpio" ]]; then
 		compile_gen_init_cpio
 	fi
 
 	# WARNING, does NOT support appending to cpio!
-	cat >"${TEMP}/initramfs-base-temp.devices" <<-EOF
+	cat >"${TFILE}" <<-EOF
 	dir /dev 0755 0 0
 	nod /dev/console 660 0 0 c 5 1
-	nod /dev/null 660 0 0 c 1 3
-	nod /dev/zero 660 0 0 c 1 5
+	nod /dev/null 666 0 0 c 1 3
+	nod /dev/zero 666 0 0 c 1 5
 	nod /dev/tty0 600 0 0 c 4 0
 	nod /dev/tty1 600 0 0 c 4 1
 	nod /dev/ttyS0 600 0 0 c 4 64
 	EOF
-	if [[ "${LOGLEVEL}" -gt 1 ]]; then
-		echo "$(getIndent 2)Adding devices to cpio:"
-		cat "${TEMP}/initramfs-base-temp.devices"
-	fi
-	${KERNEL_OUTPUTDIR}/usr/gen_init_cpio "${TEMP}/initramfs-base-temp.devices" >"${CPIO}" \
-			|| gen_die "Failed to add devices to cpio"
+
+	print_info 2 "=================================================================" 1 0 1
+	print_info 2 "Adding the following devices to cpio:" 1 0 1
+	print_info 2 "$(cat "${TFILE}")" 1 0 1
+	print_info 2 "=================================================================" 1 0 1
+
+	"${KERNEL_OUTPUTDIR}"/usr/gen_init_cpio "${TFILE}" >"${CPIO}" \
+		|| gen_die "Failed to append devices to cpio!"
 }
 
 append_base_layout() {
