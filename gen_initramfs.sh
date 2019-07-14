@@ -613,12 +613,14 @@ append_btrfs() {
 }
 
 append_libgcc_s() {
-	if [ -d "${TEMP}/initramfs-libgcc_s-temp" ]
+	local TDIR="${TEMP}/initramfs-libgcc_s-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-libgcc_s-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-libgcc_s-temp"
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	# Include libgcc_s.so.1:
 	#   - workaround for zfsonlinux/zfs#4749
@@ -631,17 +633,12 @@ append_libgcc_s() {
 		libgccpath="/usr/lib/gcc/*/*/libgcc_s.so.1"
 	fi
 
-	# Copy binaries
-	copy_binaries "${TEMP}/initramfs-libgcc_s-temp" ${libgccpath}
-	cd "${TEMP}/initramfs-libgcc_s-temp/lib64"
-	ln -s "..${libgccpath}"
+	copy_binaries "${TDIR}" ${libgccpath}
 
-	cd "${TEMP}/initramfs-libgcc_s-temp/"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing libgcc_s cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-libgcc_s-temp" > /dev/null
+		|| gen_die "Failed to append libgcc_s to cpio!"
 }
 
 append_linker() {
