@@ -70,6 +70,28 @@ CDROOT_PATH='/mnt/cdrom'
 CDROOT_MARKER='/livecd'
 VERIFY=0
 
+IP='dhcp'
+GK_NET_DHCP_PIDFILE='/var/run/udhcpc.pid'
+GK_NET_DHCP_RETRIES=3
+GK_NET_GW=
+GK_NET_IFACE='eth0'
+GK_NET_LOCKFILE='/tmp/network.started'
+GK_NET_ROUTES=
+GK_NET_TIMEOUT_DAD=10
+GK_NET_TIMEOUT_DECONFIGURATION=10
+GK_NET_TIMEOUT_DHCP=10
+GK_SHELL_LOCKFILE='/var/run/rescueshell.pid'
+GK_SSHD_LOCKFILE='/tmp/remote-rescueshell.lock'
+GK_SSHD_PIDFILE='/var/run/dropbear.pid'
+GK_SSHD_PORT=22
+GK_SSHD_WAIT=
+
+CRYPT_ENV_FILE='/etc/CRYPT_ENV.conf'
+CRYPT_KEYFILE_ROOT='/tmp/root.key'
+CRYPT_KEYFILE_SWAP='/tmp/swap.key'
+CRYPT_ROOT_OPENED_LOCKFILE='/tmp/ROOT.opened'
+CRYPT_SWAP_OPENED_LOCKFILE='/tmp/SWAP.opened'
+
 # Flag for if ok when using CDROOT
 got_good_root='0'
 # if LOOP found on root before mount, trigger Unpacking additional packages

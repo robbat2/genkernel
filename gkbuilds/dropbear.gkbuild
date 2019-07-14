@@ -1,0 +1,68 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	default
+
+	# Disable DSS support
+	echo "#define DROPBEAR_DSS 0" > localoptions.h || die "Failed to disable DSS support"
+}
+
+src_configure() {
+	local myconf=(
+		--enable-static
+		--disable-pam
+		--disable-syslog
+		--with-zlib="${BROOT}/usr"
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_compile() {
+	local MYMAKEOPTS=( "V=1" )
+	MYMAKEOPTS+=( "MULTI=1" )
+	MYMAKEOPTS+=( "PROGRAMS='dropbear dropbearkey dropbearconvert scp'" )
+	gkmake "${MYMAKEOPTS[@]}"
+}
+
+src_install() {
+	local mydir=
+	for mydir in \
+		etc/dropbear \
+		usr/bin \
+		usr/sbin \
+		root/.ssh \
+		var/log \
+		var/run \
+	; do
+		mkdir -p "${D}"/${mydir} || die "Failed to create '${D}/${mydir}'!"
+	done
+
+	cp -a dropbearmulti "${D}"/usr/bin/ \
+		|| die "Failed to copy '${S}/dropbearmulti' to '${D}/usr/bin/'!"
+
+	"${STRIP}" --strip-all "${D}"/usr/bin/dropbearmulti \
+		|| die "Failed to strip '${D}/usr/bin/dropbearmulti'!"
+
+	ln -s ../bin/dropbearmulti "${D}"/usr/sbin/dropbear \
+		|| die "Failed to symlink '${D}/usr/sbin/dropbear' to '${D}/usr/bin/dropbearmulti'!"
+
+	ln -s dropbearmulti "${D}"/usr/bin/dropbearconvert \
+		|| die "Failed to symlink '${D}/usr/bin/dropbearconvert' to '${D}/usr/bin/dropbearmulti'!"
+
+	ln -s dropbearmulti "${D}"/usr/bin/dropbearkey \
+		|| die "Failed to symlink '${D}/usr/bin/dropbearkey' to '${D}/usr/bin/dropbearmulti'!"
+
+	ln -s dropbearmulti "${D}"/usr/bin/scp \
+		|| die "Failed to symlink '${D}/usr/bin/scp' to '${D}/usr/bin/dropbearmulti'!"
+
+	chmod 0700 "${D}"/root/.ssh \
+		|| die "Failed to chmod of '${D}/root/.ssh'!"
+
+	mkfifo "${D}"/etc/dropbear/fifo_root \
+		|| die "Failed to create '${D}/etc/dropbear/fifo_root'!"
+
+	mkfifo "${D}"/etc/dropbear/fifo_swap \
+		|| die "Failed to create '${D}/etc/dropbear/fifo_swap'!"
+}

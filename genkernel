@@ -397,6 +397,7 @@ then
 	isTrue "${DMRAID}"    && print_warning 1 '- Add "dodmraid" for dmraid support or "dodmraid=<additional options>"'
 	isTrue "${MDADM}"     && print_warning 1 '- Add "domdadm" for MDRAID support'
 	isTrue "${LVM}"       && print_warning 1 '- Add "dolvm" for LVM support'
+	isTrue "${SSH}"       && print_warning 1 '- Add "dosshd" to start SSH daemon in initramfs'
 
 	if isTrue "${ZFS}"
 	then

@@ -201,6 +201,19 @@ can_run_programs_compiled_by_genkernel() {
 	echo "${can_run_programs}"
 }
 
+is_valid_ssh_host_keys_parameter_value() {
+	local parameter_value=${1}
+
+	local is_valid=no
+	case "${parameter_value}" in
+		create|create-from-host|runtime)
+			is_valid=yes
+			;;
+	esac
+
+	echo "${is_valid}"
+}
+
 is_valid_triplet() {
 	[[ ${#} -ne 1 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
@@ -524,6 +537,124 @@ copy_image_with_preserve() {
 				|| "Failed to create '${symlinkName}.old' -> '${prevDestImage}' symlink!"
 		fi
 	fi
+}
+
+dropbear_create_key() {
+	[[ ${#} -ne 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
+
+	if ! hash sandbox &>/dev/null
+	then
+		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
+	fi
+
+	local key_file=${1}
+	local command=${2}
+	local key_type=$(dropbear_get_key_type_from_filename "${key_file}")
+
+	local -a envvars=(
+		GK_SHARE="${GK_SHARE}"
+		LOGLEVEL="${LOGLEVEL}"
+		LOGFILE="${LOGFILE}"
+		NOCOLOR="${NOCOLOR}"
+		TEMP="${TEMP}"
+		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+	)
+
+	envvars+=(
+		DROPBEAR_COMMAND="${command}"
+		DROPBEAR_KEY_FILE="${key_file}"
+		DROPBEAR_KEY_TYPE="${key_type}"
+	)
+
+	# set up worker signal handler
+	local error_msg_detail="Failed to create dropbear key '${key_file}'!"
+	local error_msg="gen_worker.sh aborted: ${error_msg_detail}"
+	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+
+	env -i \
+		"${envvars[@]}" \
+		sandbox "${GK_SHARE}"/gen_worker.sh dropbear 2>&1
+
+	local RET=$?
+
+	# restore default trap
+	set_default_gk_trap
+
+	[ ${RET} -ne 0 ] && gen_die "$(get_useful_function_stack)${error_msg_detail}"
+}
+
+dropbear_get_key_type_from_filename() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local key=${1}
+	local type=
+
+	case "${key}" in
+		*_dss_*)
+			type=dss
+			;;
+		*_ecdsa_*)
+			type=ecdsa
+			;;
+		*_rsa_*)
+			type=rsa
+			;;
+		*)
+			gen_die "Failed to determine key type from '${key}'!"
+			;;
+	esac
+
+	echo "${type}"
+}
+
+dropbear_generate_key_info_file() {
+	[[ ${#} -ne 3 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly three arguments (${#} given)!"
+
+	if ! hash sandbox &>/dev/null
+	then
+		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
+	fi
+
+	local command=${1}
+	local key_info_file=${2}
+	local initramfs_dropbear_dir=${3}
+	local key_file="${initramfs_dropbear_dir}/$(basename "${key_info_file/%_key.*/_key}")"
+	local key_type=$(dropbear_get_key_type_from_filename "${key_file}")
+
+	local -a envvars=(
+		GK_SHARE="${GK_SHARE}"
+		LOGLEVEL="${LOGLEVEL}"
+		LOGFILE="${LOGFILE}"
+		NOCOLOR="${NOCOLOR}"
+		TEMP="${TEMP}"
+		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+	)
+
+	envvars+=(
+		DROPBEAR_COMMAND="${command}"
+		DROPBEAR_KEY_FILE="${key_file}"
+		DROPBEAR_KEY_TYPE="${key_type}"
+		DROPBEAR_KEY_INFO_FILE="${key_info_file}"
+	)
+
+	# set up worker signal handler
+	local error_msg_detail="Failed to extract dropbear key information from '${key_file}'!"
+	local error_msg="gen_worker.sh aborted: ${error_msg_detail}"
+	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+
+	env -i \
+		"${envvars[@]}" \
+		sandbox "${GK_SHARE}"/gen_worker.sh dropbear 2>&1
+
+	local RET=$?
+
+	# restore default trap
+	set_default_gk_trap
+
+	[ ${RET} -ne 0 ] && gen_die "$(get_useful_function_stack)${error_msg_detail}"
 }
 
 # @FUNCTION: debug_breakpoint

@@ -191,10 +191,8 @@ do
 		part|partitionable)
 			MDPART=1
 		;;
+		# For network options see start_network() in initrd.scripts
 		# NFS
-		ip=*)
-			IP=${x#*=}
-		;;
 		nfsroot=*)
 			NFSROOT=${x#*=}
 		;;
@@ -262,6 +260,29 @@ do
 		;;
 		crypt_silent)
 			CRYPT_SILENT=1
+		;;
+		dosshd)
+			USE_SSH=1
+		;;
+		gk.sshd.port=*)
+			tmp_port=${x#*=}
+			if is_int "${tmp_port}"
+			then
+				GK_SSHD_PORT=${tmp_port}
+			else
+				warn_msg "'${x}' does not look like a valid port -- ignored!"
+			fi
+			unset tmp_port
+		;;
+		gk.sshd.wait=*)
+			tmp_wait=${x#*=}
+			if is_int "${tmp_wait}"
+			then
+				GK_SSHD_WAIT=${tmp_wait}
+			else
+				warn_msg "'${x}' does not look like a valid time (second) value -- ignored!"
+			fi
+			unset tmp_wait
 		;;
 		real_rootflags=*)
 			REAL_ROOTFLAGS=${x#*=}
@@ -466,6 +487,12 @@ setup_md_device
 start_volumes
 
 setup_keymap
+
+if [ "${USE_SSH}" = '1' ]
+then
+	start_network
+	start_sshd
+fi
 
 # Initialize LUKS root device except for livecd's
 if [ "${CDROOT}" != '1' ]
@@ -1112,6 +1139,13 @@ copyKeymap
 
 # Setup any user defined environment locales for desktop usage
 setup_locale
+
+if [ "${USE_SSH}" = '1' ]
+then
+	wait_sshd
+fi
+
+cleanup
 
 good_msg "Booting (initramfs)"
 

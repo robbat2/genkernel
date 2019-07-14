@@ -128,6 +128,13 @@ longusage() {
   echo "	--no-iscsi		Exclude iSCSI support"
   echo "	--ssh			Include SSH (dropbear) support"
   echo "	--no-ssh		Exclude SSH (dropbear) support"
+  echo "	--ssh-authorized-keys-file=<file>"
+  echo "				Specifies a user created authorized_keys file"
+  echo "	--ssh-host-keys=(create|create-from-host|runtime)"
+  echo "				Use host keys from /etc/dropbear, but CREATE (default) new host key(s)"
+  echo "				if missing, CREATE host key(s) FROM current HOST running genkernel"
+  echo "				(not recommended) or don't embed any host key in initramfs and"
+  echo "				generate at RUNTIME (dropbear -R)"
   echo "	--bootloader=(grub|grub2)"
   echo "				Add new kernel to GRUB (grub) or GRUB2 (grub2) bootloader"
   echo "	--no-bootloader		Skip bootloader update"
@@ -445,18 +452,19 @@ parse_cmdline() {
 		--ssh|--no-ssh)
 			CMD_SSH=$(parse_optbool "$*")
 			print_info 2 "CMD_SSH: ${CMD_SSH}"
-			if isTrue "${CMD_SSH}" && [ ! -e /usr/sbin/dropbear ]
+			;;
+		--ssh-authorized-keys-file=*)
+			CMD_SSH_AUTHORIZED_KEYS_FILE="${*#*=}"
+			print_info 2 "CMD_SSH_AUTHORIZED_KEYS_FILE: ${CMD_SSH_AUTHORIZED_KEYS_FILE}"
+			;;
+		--ssh-host-keys=*)
+			CMD_SSH_HOST_KEYS="${*#*=}"
+			if ! isTrue "$(is_valid_ssh_host_keys_parameter_value "${CMD_SSH_HOST_KEYS}")"
 			then
-				echo 'Error: --ssh requires net-misc/dropbear' \
-					'to be installed on the host system.'
+				echo "Error: --ssh-host-keys value '${CMD_SSH_HOST_KEYS}' is unsupported."
 				exit 1
 			fi
-			if isTrue "${CMD_SSH}" && [ ! -e /etc/dropbear/authorized_keys ]
-			then
-				echo 'Error: --ssh requires that dropbear is configured' \
-					'but /etc/dropbear/authorized_keys does not exist!'
-				exit 1
-			fi
+			print_info 2 "CMD_SSH_HOST_KEYS: ${CMD_SSH_HOST_KEYS}"
 			;;
 		--loglevel=*)
 			CMD_LOGLEVEL="${*#*=}"

@@ -685,7 +685,7 @@ setup_overlayfs() {
 
 
 findnfsmount() {
-	if [ "${IP}" != '' ] || busybox udhcpc -n -T 15 -q
+	if start_network
 	then
 		[ -e /rootpath ] && NFSROOT=$(cat /rootpath)
 
@@ -1390,7 +1390,7 @@ openLUKS() {
 
 	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="$1" LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
 	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"' LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
-	local OPENED_LOCKFILE="/${TYPE}.decrypted"
+	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
 	local mntkey="/mnt/key/" crypt_filter_ret= cryptsetup_options=''
 
@@ -1550,14 +1550,205 @@ openLUKS() {
 	rmdir -p "${mntkey}" >/dev/null 2>&1
 }
 
+iface_name() {
+	local ifname="${1}"
+
+	if echo "${ifname}" | grep -qE ':|-'
+	then
+		local interface=
+		local mac="$(echo "${ifname}" | sed 'y/ABCDEF-/abcdef:/')"
+
+		for interface in /sys/class/net/*
+		do
+			if [ $(cat ${interface}/address) = "${mac}" ]
+			then
+				echo ${interface##*/}
+				return
+			fi
+		done
+	else
+		echo "${ifname}"
+	fi
+}
+
+start_network() {
+	# At least gk.net.iface can only be processed after sysfs was
+	# mounted.
+	local x=
+	for x in ${CMDLINE}
+	do
+		case "${x}" in
+			ip=*)
+				IP=${x#*=}
+			;;
+			gk.net.dhcp.retries=*)
+				local tmp_n_retries=${x#*=}
+				if is_int "${tmp_n_retries}"
+				then
+					GK_NET_DHCP_RETRIES=${tmp_n_retries}
+				else
+					warn_msg "'${x}' does not look like a valid number -- will keep using default value ${GK_NET_DHCP_RETRIES}!"
+				fi
+				unset tmp_n_retries
+			;;
+			gk.net.gw=*)
+				GK_NET_GW=${x#*=}
+			;;
+			gk.net.iface=*)
+				local tmp_iface=$(iface_name "${x#*=}")
+				if [ -z "${tmp_iface}" ]
+				then
+					warn_msg "Interface specified by '${x}' not found, falling back to genkernel defaults ..."
+				else
+					GK_NET_IFACE=${tmp_iface}
+				fi
+			;;
+			gk.net.routes=*)
+				GK_NET_ROUTES=${x#*=}
+			;;
+			gk.net.timeout.dad=*)
+				local tmp_dad_timeout=${x#*=}
+				if is_int "${tmp_dad_timeout}"
+				then
+					GK_NET_TIMEOUT_DAD=${tmp_dad_timeout}
+				else
+					warn_msg "'${x}' does not look like a valid number -- will keep using default value ${GK_NET_TIMEOUT_DAD}!"
+				fi
+				unset tmp_dad_timeout
+			;;
+			gk.net.timeout.deconfiguration=*)
+				local tmp_deconfiguration_timeout=${x#*=}
+				if is_int "${tmp_deconfiguration_timeout}"
+				then
+					GK_NET_TIMEOUT_DECONFIGURATION=${tmp_deconfiguration_timeout}
+				else
+					warn_msg "'${x}' does not look like a valid number -- will keep using default value ${GK_NET_TIMEOUT_DECONFIGURATION}!"
+				fi
+				unset tmp_deconfiguration_timeout
+			;;
+			gk.net.timeout.dhcp=*)
+				local tmp_dhcp_timeout=${x#*=}
+				if is_int "${tmp_dhcp_timeout}"
+				then
+					GK_NET_TIMEOUT_DHCP=${tmp_dhcp_timeout}
+				else
+					warn_msg "'${x}' does not look like a valid number -- will keep using default value ${GK_NET_TIMEOUT_DHCP}!"
+				fi
+				unset tmp_dhcp_timeout
+			;;
+		esac
+	done
+
+	if [ -z "${IP}" -o "${IP}" = 'dhcp' ]
+	then
+		good_msg "Bringing up interface ${GK_NET_IFACE} using dhcp ..." ${QUIET}
+		busybox udhcpc -i "${GK_NET_IFACE}" -n -t ${GK_NET_DHCP_RETRIES} -T ${GK_NET_TIMEOUT_DHCP} -R -p "${GK_NET_DHCP_PIDFILE}"
+	else
+		good_msg "Bringing up interface ${GK_NET_IFACE} ..." ${QUIET}
+		ip link set "${GK_NET_IFACE}" up
+
+		good_msg "Setting address '${IP}' on ${GK_NET_IFACE} ..." ${QUIET}
+		ip addr add "${IP}" dev "${GK_NET_IFACE}"
+
+		if [ -n "${GK_NET_ROUTES}" ]
+		then
+			local route=
+			for route in ${GK_NET_ROUTES}
+			do
+				good_msg "Adding additional route '${route}' on ${GK_NET_IFACE} ..." ${QUIET}
+				ip route add "${route}" dev "${GK_NET_IFACE}"
+			done
+		fi
+
+		if [ -n "${GK_NET_GW}" ]
+		then
+			good_msg "Adding default route via '${GK_NET_GW}' on ${GK_NET_IFACE} ..." ${QUIET}
+			ip route add default via "${GK_NET_GW}" dev "${GK_NET_IFACE}"
+		fi
+	fi
+
+	touch "${GK_NET_LOCKFILE}"
+}
+
+kill_network() {
+	if [ -s "${GK_NET_DHCP_PIDFILE}" ]
+	then
+		good_msg "Stopping udhcpc ..."
+		kill $(cat "${GK_NET_DHCP_PIDFILE}")
+	fi
+
+	# If we are too quick and interface is still configuring IPv6
+	# waiting for DAD to complete due to received IPv6 RA, we have to
+	# wait.
+	# If we don't wait, ip command will bring down interface for a
+	# moment but it will return to up state once DAD is completed which
+	# will cause trouble with real system which is expecting an unused
+	# interface.
+	if ipv6_tentative
+	then
+		[ -z "${QUIET}" ] && \
+		printf "%b" "${WARN}**${NORMAL}${BOLD} Waiting for tentative IPv6 addresses to complete DAD ${NORMAL}..."
+
+		local dad_timeout=10
+		while [ ${dad_timeout} -gt 0 ]
+		do
+			ipv6_tentative || break
+			sleep 1
+			: $(( dad_timeout -= 1 ))
+			[ -z "${QUIET}" ] && \
+			printf "."
+		done
+
+		echo ""
+
+		if [ ${dad_timeout} -le 0 ]
+		then
+			bad_msg "DAD still not completed after ${GK_NET_TIMEOUT_DAD} seconds!"
+		fi
+	fi
+
+	[ -z "${QUIET}" ] && \
+	printf "%b" "${GOOD}>>${NORMAL}${BOLD} Bringing down interface ${GK_NET_IFACE} ${NORMAL}..."
+
+	local deconfiguration_timeout=${GK_NET_TIMEOUT_DECONFIGURATION}
+	while [ ${deconfiguration_timeout} -gt 0 ]
+	do
+		ip addr flush dev "${GK_NET_IFACE}"
+		ip route flush dev "${GK_NET_IFACE}"
+		ip link set "${GK_NET_IFACE}" down
+		if grep -q "down" "/sys/class/net/${GK_NET_IFACE}/operstate"
+		then
+			break
+		fi
+		sleep 1
+		: $(( deconfiguration_timeout -= 1 ))
+		[ -z "${QUIET}" ] && \
+		printf "."
+	done
+
+	echo ""
+
+	if [ ${deconfiguration_timeout} -le 0 ]
+	then
+		bad_msg "Failed to bring down interface ${GK_NET_IFACE} within ${GK_NET_TIMEOUT_DECONFIGURATION} seconds!"
+		return
+	fi
+
+	rm "${GK_NET_LOCKFILE}"
+}
+
+ipv6_tentative() {
+	if ip -family inet6 addr show dev "${GK_NET_IFACE}" | grep -q " tentative "
+	then
+		return 0
+	else
+		return 1
+	fi
+}
+
 start_LUKS() {
 	# if key is set but neither ssh enabled or key device is given, find
 	# the key device
-
-	if [ -e "/usr/sbin/dropbear" ]
-	then
-		startdropbear
-	fi
 
 	[ -n "${CRYPT_ROOT_KEY}" ] && [ -z "${CRYPT_ROOT_KEYDEV}" ] \
 		&& sleep 6 && bootstrapKey "ROOT"
@@ -1586,6 +1777,103 @@ start_LUKS() {
 			# Resume from swap as default
 			REAL_RESUME="/dev/mapper/swap"
 		fi
+	fi
+}
+
+start_sshd() {
+	if [ -s "${GK_SSHD_PIDFILE}" ]
+	then
+		# Already running
+		return
+	fi
+
+	if [ ! -x "/usr/sbin/dropbear" ]
+	then
+		bad_msg "/usr/sbin/dropbear not found! Did you call genkernel with --ssh parameter?"
+		return
+	fi
+
+	# setup environment variables for the ssh login shell
+	local varname= varvalue=
+	touch "${CRYPT_ENV_FILE}"
+	for varname in CRYPT_ROOT CRYPT_ROOT_TRIM CRYPT_SILENT CRYPT_SWAP DEBUG
+	do
+		eval varvalue=\$${varname}
+		echo "${varname}=${varvalue}" >> "${CRYPT_ENV_FILE}"
+	done
+
+	touch /var/log/lastlog
+
+	good_msg "Starting dropbear sshd ..." ${QUIET}
+	/usr/sbin/dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
+	test_success "Failed to start dropbear"
+}
+
+wait_sshd() {
+	if [ -z "${GK_SSHD_WAIT}" -o "${GK_SSHD_WAIT}" = '0' ]
+	then
+		return
+	fi
+
+	if [ -f "${GK_SSHD_LOCKFILE}" -o ! -s "${GK_SSHD_PIDFILE}" ]
+	then
+		return
+	fi
+
+	printf "%b" "${GOOD}>>${NORMAL}${BOLD} gk.sshd.wait set; Waiting ${GK_SSHD_WAIT} seconds for SSH connection ${NORMAL}..."
+
+	local ssh_timeout=${GK_SSHD_WAIT}
+	while [ ${ssh_timeout} -gt 0 ]
+	do
+		if [ -f "${GK_SSHD_LOCKFILE}" ]
+		then
+			echo ""
+			last -W | head -n 3 2>/dev/null
+			break
+		fi
+		sleep 1
+		: $(( ssh_timeout -= 1 ))
+		printf "."
+	done
+
+	echo ""
+}
+
+kill_sshd() {
+	if [ -s "${GK_SSHD_PIDFILE}" ]
+	then
+		good_msg "Stopping dropbear sshd ..." ${QUIET}
+		kill $(cat "${GK_SSHD_PIDFILE}")
+	fi
+}
+
+cleanup() {
+	if [ -f "${GK_NET_LOCKFILE}" ]
+	then
+		if [ -f "${GK_SSHD_LOCKFILE}" ]
+		then
+			warn_msg "The lockfile at '${GK_SSHD_LOCKFILE}' exists."
+			warn_msg "The boot process will be paused until the lock is removed."
+			while true
+			do
+				if [ -f "${GK_SSHD_LOCKFILE}" ]
+				then
+					sleep 1
+				else
+					break
+				fi
+			done
+		fi
+	fi
+
+	kill_sshd
+
+	# Ensure that we terminated any existing connection
+	pkill -9 dropbear >/dev/null 2>&1
+
+	if [ -f "${GK_NET_LOCKFILE}" ]
+	then
+		kill_network
 	fi
 }
 
