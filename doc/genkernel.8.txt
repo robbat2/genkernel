@@ -773,6 +773,7 @@ AUTHORS
 - Chris Gianelloni <wolf31o2@gentoo.org>
 - Sebastian Pipping <sebastian@pipping.org>
 - Robin H. Johnson <robbat2@gentoo.org>
+- Thomas Deutschmann <whissi@gentoo.org>
 - NFS Support by Thomas Seiler <thseiler@gmail.com>
 - GnuPG 1.x integration by dacook <schism@subverted.org>
 - MDADM integration by Matthias Dahl <ua_bugz_gentoo@mortal-soul.de>
