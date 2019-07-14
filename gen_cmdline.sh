@@ -379,18 +379,6 @@ parse_cmdline() {
 			;;
 		--dmraid|--no-dmraid)
 			CMD_DMRAID=$(parse_optbool "$*")
-			if isTrue "${CMD_DMRAID}" && [ ! -e /usr/sbin/dmraid ]
-			then
-				echo 'Error: --dmraid requires sys-fs/dmraid' \
-					'to be installed on the host system.'
-				exit 1
-			fi
-			if isTrue "${CMD_DMRAID}" && [ ! -e /usr/include/libdevmapper.h ]
-			then
-				echo 'Error: --dmraid requires sys-fs/lvm2' \
-					'to be installed on the host system.'
-				exit 1
-			fi
 			print_info 2 "CMD_DMRAID: ${CMD_DMRAID}"
 			;;
 		--e2fsprogs|--no-e2fsprogs)

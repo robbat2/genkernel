@@ -389,33 +389,33 @@ append_multipath(){
 	rm -r "${TEMP}/initramfs-multipath-temp/"
 }
 
-append_dmraid(){
-	if [ -d "${TEMP}/initramfs-dmraid-temp" ]
+append_dmraid() {
+	local PN=dmraid
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-dmraid-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	print_info 1 "$(getIndent 2)DMRAID: Adding support (compiling binaries)..."
-	compile_dmraid
-	mkdir -p "${TEMP}/initramfs-dmraid-temp/"
-	/bin/tar -xpf "${DMRAID_BINCACHE}" -C "${TEMP}/initramfs-dmraid-temp" ||
-		gen_die "Could not extract dmraid binary cache!";
-	[ -x /sbin/dmsetup -a -x /sbin/kpartx ] && copy_binaries \
-		"${TEMP}/initramfs-dmraid-temp/" \
-		/sbin/{kpartx,dmsetup}
-	cd "${TEMP}/initramfs-dmraid-temp/"
-	module_ext=$(modules_kext)
-	RAID456=`find . -type f -name raid456${module_ext}`
-	if [ -n "${RAID456}" ]
-	then
-		cd "${RAID456/raid456${module_ext}/}"
-		ln -sf raid456.kp $(basename ${RAID456})
-		cd "${TEMP}/initramfs-dmraid-temp/"
-	fi
+
+	populate_binpkg ${PN}
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	# Delete unneeded files
+	rm -rf \
+		usr/lib \
+		usr/share \
+		usr/include
+
+	mkdir -p "${TDIR}"/var/lock/dmraid || gen_die "Failed to create '${TDIR}/var/lock/dmraid'!"
+
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing dmraid cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-dmraid-temp/"
+		|| gen_die "Failed to append dmraid to cpio!"
 }
 
 append_iscsi() {
