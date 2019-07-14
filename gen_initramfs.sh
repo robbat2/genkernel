@@ -1032,29 +1032,37 @@ append_dropbear() {
 }
 
 append_firmware() {
+	local TDIR="${TEMP}/initramfs-firmware-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
 	if [ ! -d "${FIRMWARE_DIR}" ]
 	then
-		gen_die "specified firmware directory (${FIRMWARE_DIR}) does not exist"
+		gen_die "Specified firmware directory '${FIRMWARE_DIR}' does not exist!"
 	fi
-	if [ -d "${TEMP}/initramfs-firmware-temp" ]
-	then
-		rm -r "${TEMP}/initramfs-firmware-temp/"
-	fi
-	mkdir -p "${TEMP}/initramfs-firmware-temp/lib/firmware"
-	cd "${TEMP}/initramfs-firmware-temp"
+
+	mkdir -p "${TDIR}"/lib/firmware || gen_die "Failed to create '${TDIR}/lib/firmware'!"
+
 	if [ -n "${FIRMWARE_FILES}" ]
 	then
-		pushd ${FIRMWARE_DIR} >/dev/null
-		cp -rL --parents --target-directory="${TEMP}/initramfs-firmware-temp/lib/firmware/" ${FIRMWARE_FILES}
-		popd >/dev/null
+		pushd "${FIRMWARE_DIR}" &>/dev/null || gen_die "Failed to chdir to '${FIRMWARE_DIR}'!"
+		cp -rL --parents --target-directory="${TDIR}/lib/firmware" ${FIRMWARE_FILES} 2>/dev/null \
+			|| gen_die "Failed to copy firmware files (${FIRMWARE_FILES}) to '${TDIR}/lib/firmware'!"
+		popd &>/dev/null || gen_die "Failed to chdir!"
 	else
-		cp -a "${FIRMWARE_DIR}"/* ${TEMP}/initramfs-firmware-temp/lib/firmware/
+		cp -a "${FIRMWARE_DIR}"/* "${TDIR}"/lib/firmware/ 2>/dev/null \
+			|| gen_die "Failed to copy firmware files to '${TDIR}/lib/firmware'!"
 	fi
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-		|| gen_die "appending firmware to cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-firmware-temp/"
+		|| gen_die "Failed to append firmware to cpio!"
 }
 
 append_gpg() {
