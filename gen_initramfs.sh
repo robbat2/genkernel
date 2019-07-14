@@ -860,23 +860,23 @@ append_firmware() {
 }
 
 append_gpg() {
-	if [ -d "${TEMP}/initramfs-gpg-temp" ]
+	local PN=gnupg
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-gpg-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-gpg-temp/sbin/"
-	if [ ! -e ${GPG_BINCACHE} ] ; then
-		print_info 1 "$(getIndent 2)GPG: Adding support (compiling binaries)..."
-		compile_gpg
-	fi
-	bzip2 -dc "${GPG_BINCACHE}" > "${TEMP}/initramfs-gpg-temp/sbin/gpg" ||
-		gen_die 'Could not extract gpg binary cache!'
-	chmod a+x "${TEMP}/initramfs-gpg-temp/sbin/gpg"
-	cd "${TEMP}/initramfs-gpg-temp/"
+
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}"
-	rm -rf "${TEMP}/initramfs-gpg-temp" > /dev/null
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 print_list()

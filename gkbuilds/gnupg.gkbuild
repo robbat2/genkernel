@@ -1,0 +1,65 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	append-ldflags -static
+
+	local myconf=(
+		--enable-static-rnd=linux
+		--disable-dev-random
+		--disable-asm
+		--disable-selinux-support
+		--disable-gnupg-iconv
+		--disable-card-support
+		--disable-agent-support
+		--disable-bzip2
+		--disable-exec
+		--disable-photo-viewers
+		--disable-keyserver-helpers
+		--disable-ldap
+		--disable-hkp
+		--disable-finger
+		--disable-generic
+		--disable-mailto
+		--disable-keyserver-path
+		--disable-dns-srv
+		--disable-dns-cert
+		--disable-nls
+		--disable-threads
+		--disable-regex
+		--disable-optimization
+		--with-included-zlib
+		--without-capabilities
+		--without-tar
+		--without-ldap
+		--without-libcurl
+		--without-mailprog
+		--without-libpth-prefix
+		--without-libiconv-prefix
+		--without-libintl-prefix
+		--without-zlib
+		--without-bzip2
+		--without-libusb
+		--without-readline
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	rm -rf \
+		"${D}"/usr/bin/gpgsplit \
+		"${D}"/usr/bin/gpgv \
+		"${D}"/usr/share
+
+	"${STRIP}" --strip-all "${D}"/usr/bin/gpg \
+		|| die "Failed to strip '${D}/usr/bin/gpg'!"
+
+	# For backward compatibility
+	mkdir "${D}"/bin || die "Failed to create '${D}/bin'!"
+
+	ln -s ../usr/bin/gpg "${D}"/bin/gpg \
+		|| die "Failed to create symlink '${D}/bin/gpg' to '${D}/usr/bin/gpg'!"
+}
