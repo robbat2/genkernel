@@ -621,6 +621,27 @@ append_mdadm() {
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
+append_xfsprogs() {
+	local PN=xfsprogs
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	populate_binpkg ${PN}
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
+}
+
 append_zfs() {
 	local PN=zfs
 	local TDIR="${TEMP}/initramfs-${PN}-temp"
@@ -1462,6 +1483,7 @@ create_initramfs() {
 	append_data 'multipath' "${MULTIPATH}"
 	append_data 'splash' "${SPLASH}"
 	append_data 'unionfs_fuse' "${UNIONFS}"
+	append_data 'xfsprogs' "${XFSPROGS}"
 	append_data 'zfs' "${ZFS}"
 
 	if isTrue "${ZFS}"

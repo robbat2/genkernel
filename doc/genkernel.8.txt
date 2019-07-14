@@ -302,6 +302,9 @@ INITIALIZATION
 *--*[*no-*]*e2fsprogs*::
     Includes or excludes e2fsprogs.
 
+*--*[*no-*]*xfsprogs*::
+    Includes or excludes xfsprogs.
+
 *--*[*no-*]*zfs*::
     Includes or excludes ZFS support.
 

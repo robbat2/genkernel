@@ -118,6 +118,8 @@ longusage() {
   echo "	--no-dmraid		Exclude DMRAID support"
   echo "	--e2fsprogs		Include e2fsprogs"
   echo "	--no-e2fsprogs		Exclude e2fsprogs"
+  echo "	--xfsprogs		Include xfsprogs"
+  echo "	--no-xfsprogs		Exclude xfsprogs"
   echo "	--zfs			Include ZFS support (enabled by default if rootfs is ZFS)"
   echo "	--no-zfs		Exclude ZFS support"
   echo "	--btrfs			Include Btrfs support (enabled by default if rootfs is Btrfs)"
@@ -384,6 +386,10 @@ parse_cmdline() {
 		--e2fsprogs|--no-e2fsprogs)
 			CMD_E2FSPROGS=$(parse_optbool "$*")
 			print_info 2 "CMD_E2FSPROGS: ${CMD_E2FSPROGS}"
+			;;
+		--xfsprogs|--no-xfsprogs)
+			CMD_XFSPROGS=$(parse_optbool "$*")
+			print_info 2 "CMD_XFSPROGS: ${CMD_XFSPROGS}"
 			;;
 		--zfs|--no-zfs)
 			CMD_ZFS=$(parse_optbool "$*")
