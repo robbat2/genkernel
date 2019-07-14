@@ -682,35 +682,49 @@ append_linker() {
 		|| gen_die "Failed to append linker to cpio!"
 }
 
-append_splash(){
-	splash_geninitramfs=`which splash_geninitramfs 2>/dev/null`
-	if [ -x "${splash_geninitramfs}" ] && grep -q -E '^CONFIG_FRAMEBUFFER_CONSOLE=[y|m]' ${KERNEL_CONFIG}
+append_splash() {
+	local TDIR="${TEMP}/initramfs-splash-temp"
+	if [ -d "${TDIR}" ]
 	then
-		[ -z "${SPLASH_THEME}" ] && [ -e /etc/conf.d/splash ] && source /etc/conf.d/splash
-		[ -z "${SPLASH_THEME}" ] && SPLASH_THEME=default
-		print_info 1 "$(getIndent 1)>> Installing splash [ using the ${SPLASH_THEME} theme ]..."
-		if [ -d "${TEMP}/initramfs-splash-temp" ]
-		then
-			rm -r "${TEMP}/initramfs-splash-temp/"
-		fi
-		mkdir -p "${TEMP}/initramfs-splash-temp"
-		cd /
-		local tmp=""
-		[ -n "${SPLASH_RES}" ] && tmp="-r ${SPLASH_RES}"
-		splash_geninitramfs -c "${TEMP}/initramfs-splash-temp" ${tmp} ${SPLASH_THEME} || gen_die "Could not build splash cpio archive"
-		if [ -e "/usr/share/splashutils/initrd.splash" ]; then
-			mkdir -p "${TEMP}/initramfs-splash-temp/etc"
-			cp -f "/usr/share/splashutils/initrd.splash" "${TEMP}/initramfs-splash-temp/etc"
-		fi
-		cd "${TEMP}/initramfs-splash-temp/"
-		log_future_cpio_content
-		find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing splash cpio"
-		cd "${TEMP}"
-		rm -r "${TEMP}/initramfs-splash-temp/"
-	else
-		print_warning 1 "$(getIndent 1)>> No splash detected; skipping!"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
+
+	if ! hash splash_geninitramfs &>/dev/null
+	then
+		gen_die "Unable to generate splash, 'splash_geninitramfs' was not found!"
+	fi
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	if [ -z "${SPLASH_THEME}" -a -e /etc/conf.d/splash ]
+	then
+		source /etc/conf.d/splash &>/dev/null || gen_die "Failed to source '/etc/conf.d/splash'!"
+	fi
+
+	if [ -z "${SPLASH_THEME}" ]
+	then
+		SPLASH_THEME=default
+	fi
+
+	print_info 1 "$(get_indent 1)>> Installing splash [ using the ${SPLASH_THEME} theme ] ..."
+
+	local res_param=""
+	[ -n "${SPLASH_RES}" ] && res_param="-r ${SPLASH_RES}"
+	splash_geninitramfs -c "${TDIR}" ${res_param} ${SPLASH_THEME} \
+		| gen_die "Failed to build splash cpio archive"
+
+	if [ -e "/usr/share/splashutils/initrd.splash" ]
+	then
+		mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
+		cp -f /usr/share/splashutils/initrd.splash "${TDIR}"/etc/ 2>/dev/null \
+			gen_die "Failed to copy '/usr/share/splashutils/initrd.splash'!"
+	fi
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+		|| gen_die "Failed to append splash to cpio!"
 }
 
 append_overlay() {
