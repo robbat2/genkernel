@@ -713,11 +713,12 @@ append_splash(){
 	fi
 }
 
-append_overlay(){
-	cd ${INITRAMFS_OVERLAY}
+append_overlay() {
+	cd "${INITRAMFS_OVERLAY}"  || gen_die "Failed to chdir to '${INITRAMFS_OVERLAY}'!"
+
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing overlay cpio"
+		|| gen_die "Failed to append overlay to cpio!"
 }
 
 append_luks() {
