@@ -26,6 +26,12 @@ mount -o remount,rw / >/dev/null 2>&1
 # Prevent superfluous printks from being printed to the console
 echo 1 > /proc/sys/kernel/printk
 
+if [ ! -s /etc/ld.so.cache ]
+then
+	# Looks like we were unable to run ldconfig during initramfs generation
+	[ -x /sbin/ldconfig ] && /sbin/ldconfig
+fi
+
 # Set up symlinks
 /bin/busybox --install -s
 
