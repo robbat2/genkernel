@@ -424,6 +424,22 @@ determine_real_args() {
 			gen_die "--multipath requires --lvm but --no-lvm is set!"
 		fi
 
+		if isTrue "${SSH}"
+		then
+			local ssh_authorized_keys_file=$(expand_file "${SSH_AUTHORIZED_KEYS_FILE}")
+			if [ -z "${ssh_authorized_keys_file}" ]
+			then
+				# expand_file() will return also return an empty string when file
+				# doesn't exist!
+				gen_die "--ssh-authorized-keys value '${SSH_AUTHORIZED_KEYS_FILE}' is invalid! Does the file exists?"
+			elif [ ! -s "${ssh_authorized_keys_file}" ]
+			then
+				gen_die "authorized_keys file '${ssh_authorized_keys_file}' is empty!"
+			else
+				declare -gr DROPBEAR_AUTHORIZED_KEYS_FILE="${ssh_authorized_keys_file}"
+			fi
+		fi
+
 		if isTrue "${ZFS}" && isTrue "$(tc-is-cross-compiler)"
 		then
 			local error_msg="Using binpkg for ZFS is not supported."

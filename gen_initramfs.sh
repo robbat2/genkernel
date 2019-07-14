@@ -899,16 +899,9 @@ append_dropbear() {
 		dropbear_command=dropbearconvert
 	fi
 
-	local ssh_authorized_keys_file=$(expand_file "${SSH_AUTHORIZED_KEYS_FILE}")
-	if [ -z "${ssh_authorized_keys_file}" ]
+	if [ -z "${DROPBEAR_AUTHORIZED_KEYS_FILE}" ]
 	then
-		gen_die "--ssh-authorized-keys value '${SSH_AUTHORIZED_KEYS_FILE}' is invalid!"
-	elif [ ! -f "${ssh_authorized_keys_file}" ]
-	then
-		gen_die "authorized_keys file '${ssh_authorized_keys_file}' does NOT exist!"
-	elif [ ! -s "${ssh_authorized_keys_file}" ]
-	then
-		gen_die "authorized_keys file '${ssh_authorized_keys_file}' is empty!"
+		gen_die "Something went wrong: DROPBEAR_AUTHORIZED_KEYS_FILE should already been set but is missing!"
 	fi
 
 	populate_binpkg ${PN}
@@ -1122,8 +1115,8 @@ append_dropbear() {
 	cp -a "${GK_SHARE}"/defaults/unlock-luks.sh "${TDIR}"/usr/sbin/unlock-luks \
 		|| gen_die "Failed to copy '${GK_SHARE}/defaults/unlock-luks.sh' to '${TDIR}/usr/sbin/unlock-luks'"
 
-	cp -aL "${ssh_authorized_keys_file}" "${TDIR}"/root/.ssh/ \
-		|| gen_die "Failed to copy '${ssh_authorized_keys_file}'!"
+	cp -aL "${DROPBEAR_AUTHORIZED_KEYS_FILE}" "${TDIR}"/root/.ssh/ \
+		|| gen_die "Failed to copy '${DROPBEAR_AUTHORIZED_KEYS_FILE}'!"
 
 	cp -aL /etc/localtime "${TDIR}"/etc/ \
 		|| gen_die "Failed to copy '/etc/localtime'. Please set system's timezone!"
