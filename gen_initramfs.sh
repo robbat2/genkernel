@@ -195,49 +195,54 @@ append_base_layout() {
 }
 
 append_busybox() {
-	if [ -d "${TEMP}/initramfs-busybox-temp" ]
+	local PN=busybox
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -rf "${TEMP}/initramfs-busybox-temp" > /dev/null
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	compile_busybox
+	populate_binpkg ${PN}
 
-	mkdir -p "${TEMP}/initramfs-busybox-temp/bin/"
-	tar -xf "${BUSYBOX_BINCACHE}" -C "${TEMP}/initramfs-busybox-temp/bin" busybox ||
-		gen_die 'Could not extract busybox bincache!'
-	chmod +x "${TEMP}/initramfs-busybox-temp/bin/busybox"
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 
-	mkdir -p "${TEMP}/initramfs-busybox-temp/usr/share/udhcpc/"
-	cp "${GK_SHARE}/defaults/udhcpc.scripts" ${TEMP}/initramfs-busybox-temp/usr/share/udhcpc/default.script
-	chmod +x "${TEMP}/initramfs-busybox-temp/usr/share/udhcpc/default.script"
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	# Delete unneeded files
+	rm -rf configs/
+
+	mkdir -p "${TDIR}"/usr/share/udhcpc || gen_die "Failed to create '${TDIR}/usr/share/udhcpc'!"
+
+	cp -a "${GK_SHARE}"/defaults/udhcpc.scripts usr/share/udhcpc/default.script 2>/dev/null \
+		|| gen_die "Failed to copy '${GK_SHARE}/defaults/udhcpc.scripts' to '${TDIR}/usr/share/udhcpc/default.script'!"
+
+	local myfile=
+	for myfile in \
+		bin/busybox \
+		usr/share/udhcpc/default.script \
+	; do
+		chmod +x "${TDIR}"/${myfile} || gen_die "Failed to chmod of '${TDIR}/${myfile}'!"
+	done
 
 	# Set up a few default symlinks
-	local default_applets="[ ash sh mount uname echo cut cat"
-	for i in ${BUSYBOX_APPLETS:-${default_applets}}; do
-		rm -f ${TEMP}/initramfs-busybox-temp/bin/$i
-		ln -s busybox ${TEMP}/initramfs-busybox-temp/bin/$i ||
-			gen_die "Busybox error: could not link ${i}!"
+	local required_applets='[ ash sh mount uname echo cut cat'
+	local required_applet=
+	for required_applet in ${required_applets}
+	do
+		ln -s busybox "${TDIR}"/bin/${required_applet} \
+			|| gen_die "Failed to create Busybox symlink for '${required_applet}' applet!"
 	done
 
-	local mod_applets="sbin/modprobe sbin/insmod sbin/rmmod bin/lsmod"
-	local dir=
-	local name=
-	for i in ${mod_applets}; do
-		dir=$(dirname $i)
-		name=$(basename $i)
-		rm -f ${TEMP}/initramfs-busybox-temp/$dir/$name
-		mkdir -p ${TEMP}/initramfs-busybox-temp/$dir ||
-			gen_die "Busybox error: could not create dir: $dir"
-		ln -s ../bin/busybox ${TEMP}/initramfs-busybox-temp/$dir/$name ||
-			gen_die "Busybox error: could not link ${i}!"
-	done
+	# allow for DNS resolution
+	local libdir=$(get_chost_libdir)
+	mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
+	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so.2
 
-	cd "${TEMP}/initramfs-busybox-temp/"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing busybox cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-busybox-temp" > /dev/null
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 append_e2fsprogs(){

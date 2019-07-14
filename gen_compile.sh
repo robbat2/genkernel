@@ -529,94 +529,6 @@ compile_kernel() {
 	fi
 }
 
-compile_busybox() {
-	[ -f "${BUSYBOX_SRCTAR}" ] ||
-		gen_die "Could not find busybox source tarball: ${BUSYBOX_SRCTAR}!"
-
-	if [ -n "${BUSYBOX_CONFIG}" ]
-	then
-		[ -f "${BUSYBOX_CONFIG}" ] ||
-			gen_die "Could not find busybox config file: ${BUSYBOX_CONFIG}"
-	elif isTrue "${NETBOOT}" && [ -f "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config")" ]
-	then
-		BUSYBOX_CONFIG="$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config")"
-	elif isTrue "${NETBOOT}" && [ -f "${GK_SHARE}/netboot/busy-config" ]
-	then
-		BUSYBOX_CONFIG="${GK_SHARE}/netboot/busy-config"
-	elif [ -f "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config")" ]
-	then
-		BUSYBOX_CONFIG="$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config")"
-	elif [ -f "${GK_SHARE}/defaults/busy-config" ]
-	then
-		BUSYBOX_CONFIG="${GK_SHARE}/defaults/busy-config"
-	else
-		gen_die "Could not find a busybox config file"
-	fi
-
-	# Apply config-based tweaks to the busybox config.
-	# This needs to be done before cache validation.
-	cp "${BUSYBOX_CONFIG}" "${TEMP}/busybox-config"
-
-	# If you want mount.nfs to work on older than 2.6.something, you might need to turn this on.
-	#isTrue "${NFS}" && nfs_opt='y'
-	nfs_opt='n'
-	kconfig_set_opt "${TEMP}/busybox-config" CONFIG_FEATURE_MOUNT_NFS $nfs_opt
-
-	# Delete cache if stored config's MD5 does not match one to be used
-	# This exactly just the .config.gk_orig file, and compares it again the
-	# current .config.
-	if [ -f "${BUSYBOX_BINCACHE}" ]
-	then
-		oldconfig_md5="$(tar -xf "${BUSYBOX_BINCACHE}" -O .config.gk_orig 2>/dev/null | md5sum)"
-		newconfig_md5="$(md5sum < "${TEMP}/busybox-config")"
-		if [ "${oldconfig_md5}" != "${newconfig_md5}" ]
-		then
-			print_info 1 "$(getIndent 2)busybox: >> Removing stale cache ..."
-			rm -rf "${BUSYBOX_BINCACHE}" || gen_die "Failed to remove stale cache file '${BUSYBOX_BINCACHE}'!"
-		else
-			print_info 1 "$(getIndent 2)busybox: >> Using cache ..."
-		fi
-	fi
-
-	# If the busybox bincache does NOT exist, create it; this cannot be merged
-	# with the above statement, because that statement might remove the
-	# bincache.
-	if [ ! -f "${BUSYBOX_BINCACHE}" ]
-	then
-		cd "${TEMP}"
-		rm -rf "${BUSYBOX_DIR}" > /dev/null
-		/bin/tar -xpf ${BUSYBOX_SRCTAR} ||
-			gen_die 'Could not extract busybox source tarball!'
-		[ -d "${BUSYBOX_DIR}" ] ||
-			gen_die "Busybox directory ${BUSYBOX_DIR} is invalid!"
-
-		cp "${TEMP}/busybox-config" "${BUSYBOX_DIR}/.config"
-		cp "${BUSYBOX_DIR}/.config" "${BUSYBOX_DIR}/.config.gk_orig" # used for the bincache compare
-
-		cd "${BUSYBOX_DIR}"
-		apply_patches busybox ${BUSYBOX_VER}
-
-		# This has the side-effect of changing the .config
-		print_info 1 "$(getIndent 2)busybox: >> Configuring ..."
-		yes '' 2>/dev/null | compile_generic oldconfig utils
-
-		print_info 1 "$(getIndent 2)busybox: >> Compiling ..."
-		compile_generic all utils V=1
-
-		print_info 1 "$(getIndent 2)busybox: >> Copying to bincache ..."
-		[ -f "${TEMP}/${BUSYBOX_DIR}/busybox" ] ||
-			gen_die 'Busybox executable does not exist!'
-		${UTILS_CROSS_COMPILE}strip "${TEMP}/${BUSYBOX_DIR}/busybox" ||
-			gen_die 'Could not strip busybox binary!'
-		tar -C "${TEMP}/${BUSYBOX_DIR}" -cjf "${BUSYBOX_BINCACHE}" busybox .config .config.gk_orig ||
-			gen_die 'Could not create the busybox bincache!'
-
-		cd "${TEMP}"
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${BUSYBOX_DIR}" > /dev/null
-		return 0
-	fi
-}
-
 compile_libaio() {
 	if [ -f "${LIBAIO_BINCACHE}" ]
 	then
@@ -1046,6 +958,72 @@ compile_gpg() {
 		cd "${TEMP}"
 		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${GPG_DIR}" > /dev/null
 		return 0
+	fi
+}
+
+determine_busybox_config_file() {
+	print_info 2 "$(get_indent 3)busybox: >> Checking for suitable busybox configuration ..."
+
+	if [ -n "${CMD_BUSYBOX_CONFIG}" ]
+	then
+		BUSYBOX_CONFIG=$(expand_file "${CMD_BUSYBOX_CONFIG}")
+		if [ -z "${BUSYBOX_CONFIG}" ]
+		then
+			error_msg="No busybox .config: Cannot use '${CMD_BUSYBOX_CONFIG}' value. "
+			error_msg+="Check --busybox-config value or unset "
+			error_msg+="to use default busybox config provided by genkernel."
+			gen_die "${error_msg}"
+		fi
+	else
+		local -a bbconfig_candidates=()
+		local busybox_version=$(get_gkpkg_version busybox)
+
+		if isTrue "${NETBOOT}"
+		then
+			bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config-${busybox_version}")" )
+			bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config")" )
+			bbconfig_candidates+=( "${GK_SHARE}/netboot/busy-config-${busybox_version}" )
+			bbconfig_candidates+=( "${GK_SHARE}/netboot/busy-config" )
+		fi
+		bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config-${busybox_version}")" )
+		bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config")" )
+		bbconfig_candidates+=( "${GK_SHARE}/defaults/busy-config-${busybox_version}" )
+		bbconfig_candidates+=( "${GK_SHARE}/defaults/busy-config" )
+
+		local f
+		for f in "${bbconfig_candidates[@]}"
+		do
+			[ -z "${f}" ] && continue
+
+			if [ -f "${f}" ]
+			then
+				BUSYBOX_CONFIG="$f"
+				break
+			else
+				print_info 3 "$(get_indent 1)- '${f}' not found; Skipping ..."
+			fi
+		done
+
+		if [ -z "${BUSYBOX_CONFIG}" ]
+		then
+			gen_die 'No busybox .config specified, or file not found!'
+		fi
+	fi
+
+	BUSYBOX_CONFIG="$(readlink -f "${BUSYBOX_CONFIG}")"
+
+	# Validate the symlink result if any
+	if [ -z "${BUSYBOX_CONFIG}" -o ! -f "${BUSYBOX_CONFIG}" ]
+	then
+		if [ -n "${CMD_BUSYBOX_CONFIG}" ]
+		then
+			error_msg="No busybox .config: File '${CMD_BUSYBOX_CONFIG}' not found! "
+			error_msg+="Check --busybox-config value or unset "
+			error_msg+="to use default busybox config provided by genkernel."
+			gen_die "${error_msg}"
+		else
+			gen_die "No busybox .config: symlinked file '${BUSYBOX_CONFIG}' not found!"
+		fi
 	fi
 }
 

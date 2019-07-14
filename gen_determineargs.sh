@@ -150,6 +150,7 @@ determine_real_args() {
 	set_config_with_override BOOL   HYPERV                   CMD_HYPERV                   "no"
 	set_config_with_override STRING BOOTLOADER               CMD_BOOTLOADER               "no"
 	set_config_with_override BOOL   BUSYBOX                  CMD_BUSYBOX                  "yes"
+	set_config_with_override STRING BUSYBOX_CONFIG           CMD_BUSYBOX_CONFIG
 	set_config_with_override BOOL   NFS                      CMD_NFS                      "yes"
 	set_config_with_override STRING MICROCODE                CMD_MICROCODE                "all"
 	set_config_with_override BOOL   MICROCODE_INITRAMFS      CMD_MICROCODE_INITRAMFS      "yes"

@@ -1,0 +1,39 @@
+We don't use CROSS_COMPILE in genkernel to allow for multilib
+compilation (i.e. x86_64 can compile for x86 without dedicated x86 toolchain).
+
+--- a/Makefile
++++ b/Makefile
+@@ -271,8 +271,8 @@ export quiet Q KBUILD_VERBOSE
+ # Look for make include files relative to root of kernel src
+ MAKEFLAGS += --include-dir=$(srctree)
+ 
+-HOSTCC  	= gcc
+-HOSTCXX  	= g++
++HOSTCC  	?= gcc
++HOSTCXX  	?= g++
+ HOSTCFLAGS	:=
+ HOSTCXXFLAGS	:=
+ # We need some generic definitions
+@@ -288,15 +288,15 @@ MAKEFLAGS += -rR
+ 
+ # Make variables (CC, etc...)
+ 
+-AS		= $(CROSS_COMPILE)as
+-CC		= $(CROSS_COMPILE)gcc
++AS		?= $(CROSS_COMPILE)as
++CC		?= $(CROSS_COMPILE)gcc
+ LD		= $(CC) -nostdlib
+ CPP		= $(CC) -E
+-AR		= $(CROSS_COMPILE)ar
+-NM		= $(CROSS_COMPILE)nm
+-STRIP		= $(CROSS_COMPILE)strip
+-OBJCOPY		= $(CROSS_COMPILE)objcopy
+-OBJDUMP		= $(CROSS_COMPILE)objdump
++AR		?= $(CROSS_COMPILE)ar
++NM		?= $(CROSS_COMPILE)nm
++STRIP		?= $(CROSS_COMPILE)strip
++OBJCOPY		?= $(CROSS_COMPILE)objcopy
++OBJDUMP		?= $(CROSS_COMPILE)objdump
+ PKG_CONFIG	?= $(CROSS_COMPILE)pkg-config
+ AWK		= awk
+ GENKSYMS	= scripts/genksyms/genksyms

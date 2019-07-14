@@ -1,0 +1,21 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	local uname=$(/usr/share/gnuconfig/config.sub "${CHOST}" | cut -d- -f3)
+
+	local myargs=(
+		"${S}"/configure
+		--shared
+		--prefix="/usr"
+		${uname:+--uname=${uname}}
+	)
+
+	gkexec "${myargs[*]}"
+}
+
+src_install() {
+	gkmake V=1 DESTDIR="${D}" install LDCONFIG=:
+
+	rm -rf "${D}"/usr/share
+}
