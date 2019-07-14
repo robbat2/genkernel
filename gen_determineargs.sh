@@ -420,6 +420,13 @@ determine_real_args() {
 		then
 			gen_die "--multipath requires --lvm but --no-lvm is set!"
 		fi
+
+		if isTrue "${ZFS}" && isTrue "$(tc-is-cross-compiler)"
+		then
+			local error_msg="Using binpkg for ZFS is not supported."
+			error_msg+=" Therefore we cannot cross-compile like requested!"
+			gen_die "${error_msg}"
+		fi
 	fi
 
 	MICROCODE=${MICROCODE,,}

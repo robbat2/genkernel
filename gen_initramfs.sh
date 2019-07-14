@@ -547,45 +547,49 @@ append_mdadm() {
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
-append_zfs(){
-	if [ -d "${TEMP}/initramfs-zfs-temp" ]
+append_zfs() {
+	local PN=zfs
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-zfs-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-zfs-temp/etc/zfs"
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	mkdir -p "${TDIR}"/etc/zfs || gen_die "Failed to create '${TDIR}/etc/zfs'!"
 
 	# Copy files to /etc/zfs
 	for i in zdev.conf zpool.cache
 	do
 		if [ -f /etc/zfs/${i} ]
 		then
-			print_info 1 "$(getIndent 2)zfs: >> Including ${i}"
-			cp -a "/etc/zfs/${i}" "${TEMP}/initramfs-zfs-temp/etc/zfs" 2> /dev/null \
-				|| gen_die "Could not copy file ${i} for ZFS"
+			print_info 2 "$(get_indent 2)${PN}: >> Including ${i}"
+			cp -aL "/etc/zfs/${i}" "${TDIR}/etc/zfs/${i}" 2>/dev/null \
+				|| gen_die "Could not copy file '/etc/zfs/${i}' for ZFS"
 		fi
 	done
 
 	if [ -f "/etc/hostid" ]
 	then
-		local _hostid=$(hostid)
-		print_info 1 "$(getIndent 2)zfs: >> Embedding hostid '${_hostid}' into initramfs..."
-		cp -a /etc/hostid "${TEMP}/initramfs-zfs-temp/etc" 2> /dev/null \
+		local _hostid=$(hostid 2>/dev/null)
+		print_info 2 "$(get_indent 2)${PN}: >> Embedding hostid '${_hostid}' into initramfs ..."
+		cp -aL /etc/hostid "${TDIR}"/etc/hostid 2>/dev/null \
 			|| gen_die "Failed to copy /etc/hostid"
 
-		echo "${_hostid}" > "${TEMP}/.embedded_hostid"
+		echo "${_hostid}" > "${TEMP}"/.embedded_hostid \
+			|| gen_die "Failed to record system's hostid!"
 	else
-		print_info 2 "$(getIndent 2)zfs: /etc/hostid not found; You must use 'spl_hostid' kernel command-line parameter!"
+		print_warning 1 "$(get_indent 2)${PN}: /etc/hostid not found; You must use 'spl_hostid' kernel command-line parameter!"
 	fi
 
-	copy_binaries "${TEMP}/initramfs-zfs-temp" /sbin/{mount.zfs,zdb,zfs,zpool}
+	copy_binaries "${TDIR}" /sbin/{mount.zfs,zdb,zfs,zpool}
 
-	cd "${TEMP}/initramfs-zfs-temp/"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing zfs cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-zfs-temp" > /dev/null
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 append_btrfs() {
