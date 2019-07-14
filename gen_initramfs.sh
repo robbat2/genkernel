@@ -508,48 +508,46 @@ append_lvm() {
 		|| gen_die "Failed to append lvm to cpio!"
 }
 
-append_mdadm(){
-	if [ -d "${TEMP}/initramfs-mdadm-temp" ]
+append_mdadm() {
+	local PN=mdadm
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-mdadm-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-mdadm-temp/etc/"
-	mkdir -p "${TEMP}/initramfs-mdadm-temp/sbin/"
-	if isTrue "${MDADM}"
-	then
-		if [ -n "${MDADM_CONFIG}" ]
-		then
-			if [ -f "${MDADM_CONFIG}" ]
-			then
-				cp -a "${MDADM_CONFIG}" "${TEMP}/initramfs-mdadm-temp/etc/mdadm.conf" \
-				|| gen_die "Could not copy mdadm.conf!"
-			else
-				gen_die "${MDADM_CONFIG} does not exist!"
-			fi
-		else
-			print_info 1 "$(getIndent 2)MDADM: Skipping inclusion of mdadm.conf"
-		fi
 
-		if [ -e '/sbin/mdadm' ] && LC_ALL="C" ldd /sbin/mdadm | grep -q 'not a dynamic executable' \
-		&& [ -e '/sbin/mdmon' ] && LC_ALL="C" ldd /sbin/mdmon | grep -q 'not a dynamic executable'
+	populate_binpkg ${PN}
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	local mydir=
+	for mydir in \
+		etc \
+		sbin \
+	; do
+		mkdir -p "${TDIR}"/${mydir} || gen_die "Failed to create '${TDIR}/${mydir}'!"
+	done
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	if [ -n "${MDADM_CONFIG}" ]
+	then
+		if [ -f "${MDADM_CONFIG}" ]
 		then
-			print_info 1 "$(getIndent 2)MDADM: Adding support (using local static binaries /sbin/mdadm and /sbin/mdmon)..."
-			cp /sbin/mdadm /sbin/mdmon "${TEMP}/initramfs-mdadm-temp/sbin/" ||
-				gen_die 'Could not copy over mdadm!'
+			cp -aL "${MDADM_CONFIG}" "${TDIR}"/etc/mdadm.conf 2>/dev/null \
+				|| gen_die "Failed to copy '${MDADM_CONFIG}'!"
 		else
-			print_info 1 "$(getIndent 2)MDADM: Adding support (compiling binaries)..."
-			compile_mdadm
-			/bin/tar -xpf "${MDADM_BINCACHE}" -C "${TEMP}/initramfs-mdadm-temp" ||
-				gen_die "Could not extract mdadm binary cache!";
+			gen_die "Specified '${MDADM_CONFIG}' does not exist!"
 		fi
+	else
+		print_info 2 "$(get_indent 2)${PN}: >> --mdadm-config not set; Skipping inclusion of mdadm.conf ..."
 	fi
-	cd "${TEMP}/initramfs-mdadm-temp/"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing mdadm cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-mdadm-temp" > /dev/null
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 append_zfs(){
