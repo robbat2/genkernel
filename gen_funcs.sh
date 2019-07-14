@@ -566,6 +566,88 @@ get_chost_libdir() {
 	echo "${libdir}"
 }
 
+_get_gkpkg_var_value() {
+	[[ ${#} -ne 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
+
+	local VARNAME=${1}
+	case "${VARNAME}" in
+		BINPKG|DEPS|PN|PV|SRCDIR|SRCTAR)
+			;;
+		*)
+			# Let's make variable support explicit
+			gen_die "$(get_useful_function_stack)Variable '${VARNAME}' is not supported by ${FUNCNAME}()!"
+			;;
+	esac
+
+	local PN=${2}
+	[[ -z "${PN}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): No package specified!"
+
+	[[ -z "${GKPKG_LOOKUP_TABLE[${PN}]}" ]] \
+		&& gen_die "$(get_useful_function_stack)Internal error: Package '${PN}' is unknown! Was package added to software.sh?"
+
+	local REQUESTED_VARNAME="${GKPKG_LOOKUP_TABLE[${PN}]}_${VARNAME}"
+	local REQUESTED_VALUE="${!REQUESTED_VARNAME}"
+	[[ ${VARNAME} != 'DEPS' && -z "${REQUESTED_VALUE}" ]] \
+		&& gen_die "$(get_useful_function_stack)Internal error: Variable '${REQUESTED_VARNAME}' is not set!"
+
+	echo "${REQUESTED_VALUE}"
+}
+
+get_gkpkg_binpkg() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local PN=${1}
+
+	_get_gkpkg_var_value BINPKG ${PN}
+}
+
+get_gkpkg_deps() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local PN=${1}
+	[[ -z "${PN}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): No package specified!"
+
+	_get_gkpkg_var_value DEPS ${PN}
+}
+
+get_gkpkg_srcdir() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local PN=${1}
+	[[ -z "${PN}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): No package specified!"
+
+	_get_gkpkg_var_value SRCDIR ${PN}
+}
+
+get_gkpkg_srctar() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local PN=${1}
+	[[ -z "${PN}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): No package specified!"
+
+	_get_gkpkg_var_value SRCTAR ${PN}
+}
+
+get_gkpkg_version() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local PN=${1}
+	[[ -z "${PN}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): No package specified!"
+
+	_get_gkpkg_var_value PV ${PN}
+}
+
 # @FUNCTION: get_tar_cmd
 # @USAGE: <ARCHIVE>
 # @DESCRIPTION:
@@ -823,6 +905,141 @@ trap_cleanup() {
 	# Call exit code of 1 for failure
 	cleanup
 	exit 1
+}
+
+# @FUNCTION: gkbuild
+# @USAGE: <PKG> <PKG_VERSION> <PKG_SRCDIR> <PKG_SRCTAR> <PKG_BINCACHE> [<PKG_DEPS>]
+# @DESCRIPTION:
+# Builds a package for genkernel's initramfs, with cross-compile support.
+#
+# Genkernel's initramfs uses various utilities like Busybox, LVM,
+# MDADM, cryptsetup or others. gkbuild() will run an ebuild-like script
+# to build such utilities in sandbox environment with cross-compile
+# support (requires existing cross-compile toolchain!).
+#
+# For developers:
+# Any package you want to build using gkbuild() must be correctly added to
+# ${GK_SHARE}/software.sh file, check_distfiles() and determine_real_args()
+# function.
+#
+# For users:
+# Any package you want to add must have set same (initialized!) variables
+# like you can see in ${GK_SHARE}/software.sh.
+#
+# <PKG> Name of the package (as used in ${GK_SHARE}/patches).
+#
+# <PKG_VERSION> Version of the package.
+#
+# <PKG_SRCDIR> Source directory when unpacked.
+#
+# <PKG_SRCTAR> Source file. Only archives supported by `tar -xaf` are
+# supported.
+#
+# <PKG_BINCACHE> File where genkernel will store the package's image.
+#
+# <PKG_DEPS> Single word string of required package's PKG_BINCACHE.
+gkbuild() {
+	[[ ${#} -lt 5 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at least five arguments (${#} given)!"
+	[[ ${#} -gt 7 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at most six arguments (${#} given)!"
+
+	if ! hash sandbox &>/dev/null
+	then
+		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
+	fi
+
+	local PKG=${1}
+	local VERSION=${2}
+	local SRCDIR=${3}
+	local SRCTAR=${4}
+	local BINPKG=${5}
+
+	if [[ "$#" -eq '6' ]]
+	then
+		local DEPS=${6}
+	else
+		local DEPS=""
+	fi
+
+	if [ -z "${PKG}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): PKG is not set!"
+	elif [ -z "${VERSION}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): VERSION is not set!"
+	elif [ -z "${SRCDIR}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): SRCDIR is not set!"
+	elif [ -z "${SRCTAR}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): SRCTAR is not set!"
+	elif [ -z "${BINPKG}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): BINPKG is not set!"
+	fi
+
+	local -a envvars=(
+		GK_SHARE="${GK_SHARE}"
+		LOGLEVEL="${LOGLEVEL}"
+		LOGFILE="${LOGFILE}"
+		NOCOLOR="${NOCOLOR}"
+		TEMP="${TEMP}"
+		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+	)
+
+	envvars+=(
+		GKPKG_PN="${PKG}"
+		GKPKG_PV="${VERSION}"
+		GKPKG_SRCDIR="${SRCDIR}"
+		GKPKG_SRCTAR="${SRCTAR}"
+		GKPKG_BINPKG="${BINPKG}"
+		GKPKG_DEPS="${DEPS}"
+	)
+
+	envvars+=(
+		CFLAGS="${CMD_UTILS_CFLAGS}"
+		CXXFLAGS="${CMD_UTILS_CFLAGS}"
+		CBUILD="${CBUILD}"
+		CHOST="${CHOST}"
+		AR="$(tc-getAR)"
+		AS="$(tc-getAS)"
+		CC="$(tc-getCC)"
+		CPP="$(tc-getCPP)"
+		CXX="$(tc-getCXX)"
+		LD="$(tc-getLD)"
+		NM="$(tc-getNM)"
+		MAKE="${CMD_UTILS_MAKE}"
+		OBJCOPY="$(tc-getOBJCOPY)"
+		OBJDUMP="$(tc-getOBJDUMP)"
+		RANLIB="$(tc-getRANLIB)"
+		STRIP="$(tc-getSTRIP)"
+	)
+
+	if [ ${NICE} -ne 0 ]
+	then
+		NICEOPTS="nice -n${NICE} "
+	else
+		NICEOPTS=""
+	fi
+	envvars+=( NICEOPTS="${NICEOPTS}" )
+
+	envvars+=( MAKEOPTS="${MAKEOPTS}" )
+
+	# set up gkbuild signal handler
+	local error_msg="gen_worker.sh aborted: Failed to compile ${PKG}-${VERSION}!"
+	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+
+	env -i \
+		"${envvars[@]}" \
+		sandbox "${GK_SHARE}"/gen_worker.sh build 2>&1
+
+	local RET=$?
+
+	# remove gkbuild signal handler
+	set_default_gk_trap
+
+	[ ${RET} -ne 0 ] && gen_die "$(get_useful_function_stack)Failed to create binpkg of ${PKG}-${VERSION}!"
 }
 
 set_default_gk_trap() {

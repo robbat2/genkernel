@@ -137,6 +137,9 @@ then
 fi
 
 case "${1}" in
+	build)
+		MODULE="${GK_SHARE}/worker_modules/gkbuild.sh"
+		;;
 	*)
 		die "Unknown module '${1}' specified!"
 		;;

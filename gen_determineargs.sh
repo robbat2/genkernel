@@ -295,6 +295,17 @@ determine_real_args() {
 		eval "$v='$(cache_replace "${!v}")'"
 	done
 
+	declare -gA GKPKG_LOOKUP_TABLE=
+	local pn_varname= pn=
+	for v in "${pkg_prefixes[@]}"
+	do
+		pn_varname="${v}_PN"
+		pn=${!pn_varname}
+
+		GKPKG_LOOKUP_TABLE[${pn}]=${v}
+	done
+	unset v pn pn_varname pkg_prefixes
+
 	if [ -n "${CMD_BOOTLOADER}" ]
 	then
 		BOOTLOADER="${CMD_BOOTLOADER}"

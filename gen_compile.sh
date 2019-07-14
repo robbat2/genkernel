@@ -1048,3 +1048,186 @@ compile_gpg() {
 		return 0
 	fi
 }
+
+populate_binpkg() {
+	[[ ${#} -gt 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at most two arguments (${#} given)!"
+
+	[[ ${#} -lt 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at least one argument (${#} given)!"
+
+	local PN=${1}
+	[[ -z "${PN}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): No package specified!"
+
+	local PV=$(get_gkpkg_version "${PN}")
+	local P=${PN}-${PV}
+
+	local BINPKG=$(get_gkpkg_binpkg "${PN}")
+
+	local -a GKBUILD_CANDIDATES=( "${GK_SHARE}"/gkbuilds/${P}.gkbuild )
+	GKBUILD_CANDIDATES+=( "${GK_SHARE}"/gkbuilds/${PN}.gkbuild )
+
+	if [[ ${#} -eq 1 ]]
+	then
+		local CHECK_LEVEL_CURRENT=0
+		local CHECK_LEVEL_PARENT=0
+		local CHECK_LEVEL_NEXT=${CHECK_LEVEL_CURRENT}
+	else
+		local CHECK_LEVEL_PARENT=${2}
+		local CHECK_LEVEL_CURRENT=$[${CHECK_LEVEL_PARENT}+1]
+		local CHECK_LEVEL_NEXT=${CHECK_LEVEL_CURRENT}
+	fi
+
+	local REQUIRED_BINPKGS_PARENT_VARNAME="CHECK_L${CHECK_LEVEL_PARENT}_REQUIRED_BINPKGS"
+	local REQUIRED_BINPKGS_CURRENT_VARNAME="CHECK_L${CHECK_LEVEL_CURRENT}_REQUIRED_BINPKGS"
+	local REQUIRED_BINPKGS_CURRENT_VARNAME_SEPARATE_WORD="${REQUIRED_BINPKGS_CURRENT_VARNAME}[@]"
+	local REQUIRED_BINPKGS_CURRENT_VARNAME_SINGLE_WORD="${REQUIRED_BINPKGS_CURRENT_VARNAME}[*]"
+
+	# Make sure we start with an empty array just in case ...
+	eval declare -ga ${REQUIRED_BINPKGS_CURRENT_VARNAME}=\(\)
+
+	local CHECK_LEVEL_PREFIX=
+	local i=0
+	while [[ ${i} < ${CHECK_LEVEL_CURRENT} ]]
+	do
+		CHECK_LEVEL_PREFIX="${CHECK_LEVEL_PREFIX% }> "
+		i=$[${i}+1]
+	done
+	unset i
+
+	local -a pkg_deps=( $(get_gkpkg_deps "${PN}") )
+	if [[ ${#pkg_deps[@]} -gt 0 ]]
+	then
+		print_info 3 "${CHECK_LEVEL_PREFIX}Checking for binpkg(s) required for ${P} (L${CHECK_LEVEL_CURRENT}) ..."
+
+		local pkg_dep=
+		for pkg_dep in "${pkg_deps[@]}"
+		do
+			populate_binpkg ${pkg_dep} ${CHECK_LEVEL_NEXT}
+		done
+		unset pkg_dep
+	else
+		print_info 3 "${CHECK_LEVEL_PREFIX}${P} has no dependencies. (L${CHECK_LEVEL_CURRENT})"
+	fi
+	unset pkg_deps
+
+	if [[ "${PN}" == 'busybox' ]]
+	then
+		determine_busybox_config_file
+
+		# Apply config-based tweaks to the busybox config.
+		# This needs to be done before cache validation.
+		cp "${BUSYBOX_CONFIG}" "${TEMP}/busybox-config" \
+			|| gen_die "Failed to copy '${BUSYBOX_CONFIG}' to '${TEMP}/busybox-config'!"
+
+		# If you want mount.nfs to work on older than 2.6.something, you might need to turn this on.
+		#isTrue "${NFS}" && nfs_opt='y'
+		local nfs_opt='n'
+		kconfig_set_opt "${TEMP}/busybox-config" CONFIG_FEATURE_MOUNT_NFS ${nfs_opt}
+
+		# Delete cache if stored config's MD5 does not match one to be used
+		# This exactly just the .config.gk_orig file, and compares it again the
+		# current .config.
+		if [[ -f "${BINPKG}" ]]
+		then
+			local oldconfig_md5="$(tar -xaf "${BINPKG}" -O ./configs/.config.gk_orig 2>/dev/null | md5sum)"
+			local newconfig_md5="$(md5sum < "${TEMP}"/busybox-config)"
+			if [[ "${oldconfig_md5}" != "${newconfig_md5}" ]]
+			then
+				print_info 3 "$(get_indent 2)${PN}: >> Busybox config has changed since binpkg was created; Removing stale ${P} binpkg ..."
+				rm "${BINPKG}" \
+					|| gen_die "Failed to remove stale binpkg '${BINPKG}'!"
+			fi
+		fi
+	fi
+
+	if [[ -f "${BINPKG}" ]]
+	then
+		local GKBUILD=
+		for GKBUILD in "${GKBUILD_CANDIDATES[@]}"
+		do
+			if [[ ! -f "${GKBUILD}" ]]
+			then
+				print_info 3 "${CHECK_LEVEL_PREFIX}GKBUILD '${GKBUILD}' does NOT exist; Skipping ..."
+				continue
+			fi
+
+			if [[ "${BINPKG}" -ot "${GKBUILD}" ]]
+			then
+				print_info 3 "${CHECK_LEVEL_PREFIX}GKBUILD '${GKBUILD}' is newer than us; Removing stale ${P} binpkg ..."
+				rm "${BINPKG}" || gen_die "Failed to remove stale binpkg '${BINPKG}'!"
+				break
+			fi
+
+			print_info 3 "${CHECK_LEVEL_PREFIX}Existing ${P} binpkg is newer than '${GKBUILD}'; Skipping ..."
+		done
+	fi
+
+	if [[ -f "${BINPKG}" ]]
+	then
+		local required_binpkg=
+		for required_binpkg in "${!REQUIRED_BINPKGS_CURRENT_VARNAME_SEPARATE_WORD}"
+		do
+			# Create shorter variable value so we do not clutter output
+			local required_binpkg_filename=$(basename "${required_binpkg}")
+
+			if [[ "${BINPKG}" -ot "${required_binpkg}" ]]
+			then
+				print_info 3 "${CHECK_LEVEL_PREFIX}Required binpkg '${required_binpkg_filename}' is newer than us; Removing stale ${P} binpkg ..."
+				rm "${BINPKG}" || gen_die "Failed to remove stale binpkg '${BINPKG}'!"
+				break
+			fi
+
+			print_info 3 "${CHECK_LEVEL_PREFIX}Existing ${P} binpkg is newer than '${required_binpkg_filename}'; Skipping ..."
+		done
+		unset required_binpkg REQUIRED_BINPKGS_CURRENT_VARNAME_SEPARATE_WORD required_binpkg_filename
+	fi
+
+	if [[ -f "${BINPKG}" ]]
+	then
+		local patchdir="${GK_SHARE}/patches/${PN}/${PV}"
+		local patch
+		for patch in "${patchdir}"/*{diff,patch}
+		do
+			[ -f "${patch}" ] || continue
+			if [[ "${BINPKG}" -ot "${patch}" ]]
+			then
+				print_info 3 "${CHECK_LEVEL_PREFIX}Patch '${patch}' is newer than us; Removing stale ${P} binpkg ..."
+				rm "${BINPKG}" || gen_die "Failed to remove stale binpkg '${BINPKG}'!"
+				break
+			fi
+
+			print_info 3 "${CHECK_LEVEL_PREFIX}Existing ${P} binpkg is newer than '${patch}'; Skipping ..."
+		done
+		unset patch patchdir
+	fi
+
+	if [[ ! -f "${BINPKG}" ]]
+	then
+		print_info 3 "${CHECK_LEVEL_PREFIX}Binpkg '${BINPKG}' does NOT exist; Need to build ${P} ..."
+		gkbuild \
+			${PN} \
+			${PV} \
+			$(get_gkpkg_srcdir "${PN}") \
+			$(get_gkpkg_srctar "${PN}") \
+			"${BINPKG}" \
+			"${!REQUIRED_BINPKGS_CURRENT_VARNAME_SINGLE_WORD}"
+	else
+		print_info 3 "${CHECK_LEVEL_PREFIX}Can keep using existing ${P} binpkg from '${BINPKG}'!"
+		[[ ${CHECK_LEVEL_CURRENT} -eq 0 ]] && print_info 2 "$(get_indent 2)${PN}: >> Using ${P} binpkg ..."
+	fi
+
+	if [[ ${CHECK_LEVEL_CURRENT} -eq 0 ]]
+	then
+		# Fertig
+		# REQUIRED_BINPKGS_PARENT_VARNAME
+		unset CHECK_L${CHECK_LEVEL_PARENT}_REQUIRED_BINPKGS
+	else
+		print_info 3 "${CHECK_LEVEL_PREFIX}Binpkg of ${P} is ready; Adding to list '${REQUIRED_BINPKGS_PARENT_VARNAME}' ..."
+		eval ${REQUIRED_BINPKGS_PARENT_VARNAME}+=\( "${BINPKG}" \)
+	fi
+
+	# REQUIRED_BINPKGS_CURRENT_VARNAME
+	unset CHECK_L${CHECK_LEVEL_CURRENT}_REQUIRED_BINPKGS
+}
