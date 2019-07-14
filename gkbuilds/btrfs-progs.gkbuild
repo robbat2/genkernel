@@ -1,0 +1,31 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	local myconf=(
+		--bindir="/sbin"
+		--disable-shared
+		--disable-convert
+		--disable-python
+		--disable-documentation
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_compile() {
+	gkmake V=1 static
+}
+
+src_install() {
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	cp -a btrfs.static "${D}"/sbin/btrfs \
+		|| die "Failed to copy '${S}/btrfs.static' to '${D}/sbin/btrfs'!"
+
+	"${STRIP}" --strip-all "${D}"/sbin/btrfs \
+		|| die "Failed to strip '${D}/sbin/btrfs'!"
+
+	ln -s btrfs "${D}"/sbin/btrfsck \
+		|| die "Failed to create symlink '${D}/sbin/btrfsck' to '${D}/sbin/btrfs'!"
+}

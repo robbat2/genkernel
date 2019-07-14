@@ -1,0 +1,24 @@
+diff --git a/configure.ac b/configure.ac
+index cf792eb..3ca0806 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -256,17 +256,8 @@ if ${PKG_CONFIG} udev --atleast-version 190; then
+ fi
+ AC_SUBST(UDEVDIR)
+ 
+-dnl lzo library does not provide pkg-config, let use classic way
+-AC_CHECK_LIB([lzo2], [lzo_version], [
+-	LZO2_LIBS="-llzo2"
+-	LZO2_CFLAGS=""
+-	LZO2_LIBS_STATIC="-llzo2"],[
+-	AC_MSG_ERROR([cannot find lzo2 library])
+-])
+-AC_SUBST([LZO2_LIBS])
+-AC_SUBST([LZO2_LIBS_STATIC])
+-AC_SUBST([LZO2_CFLAGS])
+-
++PKG_CHECK_MODULES(LZO2, [lzo2])
++PKG_STATIC(LZO2_LIBS_STATIC, [lzo2])
+ 
+ dnl library stuff
+ AC_SUBST([LIBBTRFS_MAJOR])

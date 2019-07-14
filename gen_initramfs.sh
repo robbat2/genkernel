@@ -589,22 +589,24 @@ append_zfs(){
 }
 
 append_btrfs() {
-	if [ -d "${TEMP}/initramfs-btrfs-temp" ]
+	local PN=btrfs-progs
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-btrfs-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-btrfs-temp"
+	populate_binpkg ${PN}
 
-	# Copy binaries
-	copy_binaries "${TEMP}/initramfs-btrfs-temp" /sbin/btrfs
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 
-	cd "${TEMP}/initramfs-btrfs-temp/"
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing btrfs cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-btrfs-temp" > /dev/null
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 append_libgcc_s() {
