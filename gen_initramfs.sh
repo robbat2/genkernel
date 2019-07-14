@@ -828,6 +828,26 @@ append_splash() {
 		|| gen_die "Failed to append splash to cpio!"
 }
 
+append_strace() {
+	local PN=strace
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+	log_future_cpio_content
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
+}
+
 append_overlay() {
 	cd "${INITRAMFS_OVERLAY}"  || gen_die "Failed to chdir to '${INITRAMFS_OVERLAY}'!"
 
@@ -1482,6 +1502,7 @@ create_initramfs() {
 	append_data 'modprobed'
 	append_data 'multipath' "${MULTIPATH}"
 	append_data 'splash' "${SPLASH}"
+	append_data 'strace' "${STRACE}"
 	append_data 'unionfs_fuse' "${UNIONFS}"
 	append_data 'xfsprogs' "${XFSPROGS}"
 	append_data 'zfs' "${ZFS}"
