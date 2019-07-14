@@ -277,23 +277,28 @@ determine_real_args() {
 	BOOTDIR=${BOOTDIR%/}    # Remove any trailing slash
 	MODPROBEDIR=${MODPROBEDIR%/}    # Remove any trailing slash
 
-	__VARS_BINCACHE=(
-		BLKID_BINCACHE
-		BUSYBOX_BINCACHE
-		DMRAID_BINCACHE
-		FUSE_BINCACHE
-		GPG_BINCACHE
-		ISCSI_BINCACHE
-		ISCSI_ISNS_BINCACHE
-		LIBAIO_BINCACHE
-		LVM_BINCACHE
-		MDADM_BINCACHE
-		UNIONFS_FUSE_BINCACHE
-	)
-	for v in CACHE_DIR BUSYBOX_CONFIG DEFAULT_KERNEL_CONFIG "${__VARS_BINCACHE[@]}"; do
+	local -a pkg_prefixes=()
+	local -a vars_to_initialize=()
+	vars_to_initialize+=( "CACHE_DIR" )
+	vars_to_initialize+=( "BUSYBOX_CONFIG" )
+	vars_to_initialize+=( "DEFAULT_KERNEL_CONFIG" )
+
+	local binpkgs=( $(compgen -A variable |grep '^GKPKG_.*BINPKG$') )
+	local binpkg=
+	for binpkg in "${binpkgs[@]}"
+	do
+		pkg_prefixes+=( "${binpkg%_BINPKG}" )
+		vars_to_initialize+=( "${binpkg}" )
+	done
+	unset binpkg binpkgs
+
+	local v=
+	for v in "${vars_to_initialize[@]}"
+	do
 		eval "$v='$(arch_replace "${!v}")'"
 		eval "$v='$(cache_replace "${!v}")'"
 	done
+	unset v vars_to_initialize
 
 	declare -gA GKPKG_LOOKUP_TABLE=
 	local pn_varname= pn=
