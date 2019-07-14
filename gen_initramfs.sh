@@ -1358,7 +1358,7 @@ append_data() {
 }
 
 create_initramfs() {
-	local lddtree_testfile=`which cpio 2>/dev/null`
+	local lddtree_testfile=$(which cpio 2>/dev/null)
 	if [[ -z "${lddtree_testfile}" || ! -e "${lddtree_testfile}" ]]; then
 		print_warning 1 "cpio binary not found -- cannot check if lddtree is working!"
 	elif ! lddtree "${lddtree_testfile}" 1>/dev/null 2>&1; then
@@ -1366,42 +1366,29 @@ create_initramfs() {
 	fi
 
 	local compress_ext=""
-	print_info 1 "initramfs: >> Initializing..."
+	print_info 1 "initramfs: >> Initializing ..."
 
 	# Create empty cpio
 	CPIO="${TMPDIR}/initramfs-${KV}"
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
-	append_data 'busybox' "${BUSYBOX}"
-	isTrue "${CMD_E2FSPROGS}" && append_data 'e2fsprogs'
-	append_data 'lvm' "${LVM}"
-	append_data 'dmraid' "${DMRAID}"
-	append_data 'iscsi' "${ISCSI}"
-	append_data 'mdadm' "${MDADM}"
-	append_data 'luks' "${LUKS}"
-	append_data 'dropbear' "${SSH}"
-	append_data 'multipath' "${MULTIPATH}"
-	append_data 'gpg' "${GPG}"
-
-	if isTrue "${RAMDISKMODULES}"
-	then
-		append_data 'modules'
-	else
-		print_info 1 "initramfs: Not copying modules..."
-	fi
-
-	append_data 'zfs' "${ZFS}"
-
-	append_data 'btrfs' "${BTRFS}"
-
 	append_data 'blkid' "${DISKLABEL}"
-
-	append_data 'unionfs_fuse' "${UNIONFS}"
-
-	append_data 'splash' "${SPLASH}"
-
+	append_data 'btrfs' "${BTRFS}"
+	append_data 'busybox' "${BUSYBOX}"
+	append_data 'dmraid' "${DMRAID}"
+	append_data 'dropbear' "${SSH}"
+	append_data 'e2fsprogs' "${E2FSPROGS}"
+	append_data 'gpg' "${GPG}"
+	append_data 'iscsi' "${ISCSI}"
+	append_data 'luks' "${LUKS}"
+	append_data 'lvm' "${LVM}"
+	append_data 'mdadm' "${MDADM}"
 	append_data 'modprobed'
+	append_data 'multipath' "${MULTIPATH}"
+	append_data 'splash' "${SPLASH}"
+	append_data 'unionfs_fuse' "${UNIONFS}"
+	append_data 'zfs' "${ZFS}"
 
 	if isTrue "${ZFS}"
 	then
@@ -1413,8 +1400,15 @@ create_initramfs() {
 		append_data 'firmware'
 	fi
 
+	if isTrue "${RAMDISKMODULES}"
+	then
+		append_data 'modules'
+	else
+		print_info 1 "$(get_indent 1)>> Not copying modules due to --no-ramdisk-modules ..."
+	fi
+
 	# This should always be appended last
-	if [ "${INITRAMFS_OVERLAY}" != '' ]
+	if [ -n "${INITRAMFS_OVERLAY}" ]
 	then
 		append_data 'overlay'
 	fi
@@ -1423,40 +1417,51 @@ create_initramfs() {
 	then
 		append_data 'linker'
 	else
-		print_info 2 "initramfs: Not appending linker because no binaries have been copied ..."
+		print_info 2 "$(get_indent 1)>> Not appending linker because no binaries have been copied ..."
 	fi
 
 	# Finalize cpio by removing duplicate files
 	# TODO: maybe replace this with:
 	# http://search.cpan.org/~pixel/Archive-Cpio-0.07/lib/Archive/Cpio.pm
 	# as then we can dedupe ourselves...
-	if [[ $UID -eq 0 ]]; then
-		print_info 1 "$(getIndent 1)>> Deduping cpio..."
+	if [[ $UID -eq 0 ]]
+	then
+		print_info 1 "$(get_indent 1)>> Deduping cpio ..."
 		local TDIR="${TEMP}/initramfs-final"
-		mkdir -p "${TDIR}"
-		cd "${TDIR}"
+		mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+		cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
-		cpio --quiet -i -F "${CPIO}" 2> /dev/null \
-			|| gen_die "extracting cpio for dedupe"
+		cpio --quiet -i -F "${CPIO}" 2>/dev/null \
+			|| gen_die "Failed to extract cpio '${CPIO}' for dedupe"
+
+		if [ -e etc/ld.so.cache ] && ! isTrue "$(tc-is-cross-compiler)"
+		then
+			# We can update /etc/ld.so.cache which was copied from host
+			# to actually match initramfs' content.
+			print_info 1 "$(get_indent 1)>> Pre-generating initramfs' /etc/ld.so.cache ..."
+			ldconfig -r . 2>/dev/null \
+				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
+		fi
+
 		find . -print | cpio ${CPIO_ARGS} -F "${CPIO}" 2>/dev/null \
 			|| gen_die "rebuilding cpio for dedupe"
-		cd "${TEMP}"
-		rm -rf "${TDIR}"
 	else
-		print_info 1 "$(getIndent 1)>> Cannot deduping cpio contents without root; skipping"
+		print_info 1 "$(get_indent 1)>> Cannot deduping cpio contents without root; Skipping ..."
 	fi
 
-	cd "${TEMP}"
+	cd "${TEMP}" || gen_die "Failed to chdir to '${TEMP}'"
 
 	# NOTE: We do not work with ${KERNEL_CONFIG} here, since things like
 	#       "make oldconfig" or --noclean could be in effect.
-	if [ -f "${KERNEL_OUTPUTDIR}"/.config ]; then
+	if [ -f "${KERNEL_OUTPUTDIR}"/.config ]
+	then
 		local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}"/.config
 	else
 		local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
 	fi
 
-	if [[ "$(file --brief --mime-type "${ACTUAL_KERNEL_CONFIG}")" == application/x-gzip ]]; then
+	if [[ "$(file --brief --mime-type "${ACTUAL_KERNEL_CONFIG}")" == application/x-gzip ]]
+	then
 		# Support --kernel-config=/proc/config.gz, mainly
 		local CONFGREP=zgrep
 	else
@@ -1468,10 +1473,10 @@ create_initramfs() {
 		# Explicitly do not compress if we are integrating into the kernel.
 		# The kernel will do a better job of it than us.
 		mv ${TMPDIR}/initramfs-${KV} ${TMPDIR}/initramfs-${KV}.cpio
-		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" ||
-			gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
+		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" \
+			|| gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
 
-		compress_config='INITRAMFS_COMPRESSION_NONE'
+		local compress_config='INITRAMFS_COMPRESSION_NONE'
 		case ${compress_ext} in
 			gz)   compress_config='INITRAMFS_COMPRESSION_GZIP' ;;
 			bz2)  compress_config='INITRAMFS_COMPRESSION_BZIP2' ;;
@@ -1481,6 +1486,7 @@ create_initramfs() {
 			lz4)  compress_config='INITRAMFS_COMPRESSION_LZ4' ;;
 			*)    compress_config='INITRAMFS_COMPRESSION_NONE' ;;
 		esac
+
 		# All N default except XZ, so there it gets used if the kernel does
 		# compression on it's own.
 		cat >>${KERNEL_OUTPUTDIR}/.config	<<-EOF
@@ -1499,23 +1505,24 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			cmd_xz=$(type -p xz)
-			cmd_lzma=$(type -p lzma)
-			cmd_bzip2=$(type -p bzip2)
-			cmd_gzip=$(type -p gzip)
-			cmd_lzop=$(type -p lzop)
-			cmd_lz4=$(type -p lz4)
-			pkg_xz='app-arch/xz-utils'
-			pkg_lzma='app-arch/xz-utils'
-			pkg_bzip2='app-arch/bzip2'
-			pkg_gzip='app-arch/gzip'
-			pkg_lzop='app-arch/lzop'
-			pkg_lz4='app-arch/lz4'
+			local cmd_xz=$(type -p xz)
+			local cmd_lzma=$(type -p lzma)
+			local cmd_bzip2=$(type -p bzip2)
+			local cmd_gzip=$(type -p gzip)
+			local cmd_lzop=$(type -p lzop)
+			local cmd_lz4=$(type -p lz4)
+			local pkg_xz='app-arch/xz-utils'
+			local pkg_lzma='app-arch/xz-utils'
+			local pkg_bzip2='app-arch/bzip2'
+			local pkg_gzip='app-arch/gzip'
+			local pkg_lzop='app-arch/lzop'
+			local pkg_lz4='app-arch/lz4'
 			local compression
 			case ${COMPRESS_INITRD_TYPE} in
 				xz|lzma|bzip2|gzip|lzop|lz4) compression=${COMPRESS_INITRD_TYPE} ;;
 				lzo) compression=lzop ;;
 				best|fastest)
+					local tuple
 					for tuple in \
 							'CONFIG_RD_XZ    cmd_xz    xz' \
 							'CONFIG_RD_LZMA  cmd_lzma  lzma' \
@@ -1525,10 +1532,10 @@ create_initramfs() {
 							'CONFIG_RD_LZ4   cmd_lz4   lz4' \
 							; do
 						set -- ${tuple}
-						kernel_option=$1
-						cmd_variable_name=$2
+						local kernel_option=${1}
+						local cmd_variable_name=${2}
 						if ${CONFGREP} -q "^${kernel_option}=y" "${ACTUAL_KERNEL_CONFIG}" && test -n "${!cmd_variable_name}" ; then
-							compression=$3
+							compression=${3}
 							[[ ${COMPRESS_INITRD_TYPE} == best ]] && break
 						fi
 					done
@@ -1540,11 +1547,12 @@ create_initramfs() {
 			esac
 
 			# Check for actual availability
-			cmd_variable_name=cmd_${compression}
-			pkg_variable_name=pkg_${compression}
+			local cmd_variable_name=cmd_${compression}
+			local pkg_variable_name=pkg_${compression}
 			[[ -z "${!cmd_variable_name}" ]] && gen_die "Compression '${compression}' is not available. Please install package '${!pkg_variable_name}'."
 
-			case $compression in
+			local compress_ext compress_cmd
+			case ${compression} in
 				xz) compress_ext='.xz' compress_cmd="${cmd_xz} -e --check=none -z -f -9" ;;
 				lzma) compress_ext='.lzma' compress_cmd="${cmd_lzma} -z -f -9" ;;
 				bzip2) compress_ext='.bz2' compress_cmd="${cmd_bzip2} -z -f -9" ;;
@@ -1553,13 +1561,14 @@ create_initramfs() {
 				lz4) compress_ext='.lz4' compress_cmd="${cmd_lz4} -f -9 -l -q" ;;
 			esac
 
-			if [ -n "${compression}" ]; then
-				print_info 1 "$(getIndent 1)>> Compressing cpio data (${compress_ext})..."
-				print_info 5 "$(getIndent 1)>> Compression command (${compress_cmd} $CPIO)..."
+			if [ -n "${compression}" ]
+			then
+				print_info 1 "$(get_indent 1)>> Compressing cpio data (${compress_ext}) ..."
+				print_info 2 "COMMAND: ${compress_cmd} $CPIO" 1 0 1
 				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
 				mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
 			else
-				print_info 1 "$(getIndent 1)>> Not compressing cpio data ..."
+				print_info 1 "$(get_indent 1)>> Not compressing cpio data ..."
 			fi
 		fi
 
@@ -1567,55 +1576,66 @@ create_initramfs() {
 		## mostly laid out in linux/Documentation/x86/early-microcode.txt
 		## It only loads monolithic ucode from an uncompressed cpio, which MUST
 		## be before the other cpio archives in the stream.
-		cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
-		if isTrue "${MICROCODE_INITRAMFS}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]; then
-			if [[ "${MICROCODE}" == intel ]]; then
+		local cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
+		if isTrue "${MICROCODE_INITRAMFS}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]
+		then
+			if [[ "${MICROCODE}" == intel ]]
+			then
 				# Only show this information for Intel users because we have no mechanism yet
 				# to generate amd-*.img in /boot after sys-kernel/linux-firmware update
 				print_info 1 "MICROCODE_INITRAMFS option is enabled by default for compatability but made obsolete by >=sys-boot/grub-2.02-r1"
 			fi
 
-			cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
-			cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
-			print_info 1 "$(getIndent 1)>> Adding early-microcode support..."
-			UCODEDIR="${TEMP}/ucode_tmp/kernel/x86/microcode/"
-			mkdir -p "${UCODEDIR}"
-			if [ "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]; then
-				if [ -d /lib/firmware/intel-ucode ]; then
-					print_info 1 "$(getIndent 2)early-microcode: Adding GenuineIntel.bin..."
+			local cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
+			local cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
+			print_info 1 "$(get_indent 1)>> Adding early-microcode support ..."
+			local UCODEDIR="${TEMP}/ucode_tmp/kernel/x86/microcode/"
+			mkdir -p "${UCODEDIR}" || gen_die "Failed to create '${UCODEDIR}'!"
+
+			if [[ "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]]
+			then
+				if [ -d /lib/firmware/intel-ucode ]
+				then
+					print_info 1 "$(get_indent 2)early-microcode: Adding GenuineIntel.bin ..."
 					cat /lib/firmware/intel-ucode/* > "${UCODEDIR}/GenuineIntel.bin" || gen_die "Failed to concat intel cpu ucode"
 				else
-					print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
+					print_info 1 "$(get_indent 2)early-microcode: CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
 				fi
 			fi
-			if [ "${cfg_CONFIG_MICROCODE_AMD}" == "y" ]; then
-				if [ -d /lib/firmware/amd-ucode ]; then
-					print_info 1 "$(getIndent 2)early-microcode: Adding AuthenticAMD.bin..."
+
+			if [[ "${cfg_CONFIG_MICROCODE_AMD}" == "y" ]]
+			then
+				if [ -d /lib/firmware/amd-ucode ]
+				then
+					print_info 1 "$(get_indent 2)early-microcode: Adding AuthenticAMD.bin ..."
 					cat /lib/firmware/amd-ucode/*.bin > "${UCODEDIR}/AuthenticAMD.bin" || gen_dir "Failed to concat amd cpu ucode"
 				else
-					print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE_AMD=y set but no ucode available. Please install sys-firmware/linux-firmware"
+					print_info 1 "$(get_indent 2)early-microcode: CONFIG_MICROCODE_AMD=y set but no ucode available. Please install sys-firmware/linux-firmware"
 				fi
 			fi
-			if [ -f "${UCODEDIR}/AuthenticAMD.bin" -o -f "${UCODEDIR}/GenuineIntel.bin" ]; then
-				print_info 1 "$(getIndent 2)early-microcode: Creating cpio..."
+
+			if [ -f "${UCODEDIR}/AuthenticAMD.bin" -o -f "${UCODEDIR}/GenuineIntel.bin" ]
+			then
+				print_info 1 "$(get_indent 2)early-microcode: Creating cpio ..."
 				pushd "${TEMP}/ucode_tmp" > /dev/null
 				find . | cpio -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
 				popd > /dev/null
-				print_info 1 "$(getIndent 2)early-microcode: Prepending early-microcode to initramfs..."
+				print_info 1 "$(get_indent 2)early-microcode: Prepending early-microcode to initramfs ..."
 				cat "${TEMP}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
 				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
 			else
-				print_info 1 "$(getIndent 2)early-microcode: CONFIG_MICROCODE=y is set but no microcode found"
-				print_info 1 "$(getIndent 2)early-microcode: You can disable MICROCODE_INITRAMFS option if you use your bootloader to load AMD/Intel ucode initrd"
+				print_info 1 "$(get_indent 2)early-microcode: CONFIG_MICROCODE=y is set but no microcode found"
+				print_info 1 "$(get_indent 2)early-microcode: You can disable MICROCODE_INITRAMFS option if you use your bootloader to load AMD/Intel ucode initrd"
 			fi
 		fi
+
 		if isTrue "${WRAP_INITRD}"
 		then
 			local mkimage_cmd=$(type -p mkimage)
 			[[ -z ${mkimage_cmd} ]] && gen_die "mkimage is not available. Please install package 'dev-embedded/u-boot-tools'."
 			local mkimage_args="-A ${ARCH} -O linux -T ramdisk -C ${compression:-none} -a 0x00000000 -e 0x00000000"
-			print_info 1 "$(getIndent 1)>> Wrapping initramfs using mkimage..."
-			print_info 2 "$(getIndent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KV} -d ${CPIO} ${CPIO}.uboot"
+			print_info 1 "$(get_indent 1)>> Wrapping initramfs using mkimage ..."
+			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KV} -d ${CPIO} ${CPIO}.uboot"
 			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KV}" -d "${CPIO}" "${CPIO}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
 			mv -f "${CPIO}.uboot" "${CPIO}" || gen_die "Rename failed"
 		fi
@@ -1625,7 +1645,8 @@ create_initramfs() {
 	then
 		if ! isTrue "${INTEGRATED_INITRAMFS}"
 		then
-			copy_image_with_preserve "initramfs" \
+			copy_image_with_preserve \
+				"initramfs" \
 				"${TMPDIR}/initramfs-${KV}" \
 				"initramfs-${KNAME}-${ARCH}-${KV}"
 		fi
