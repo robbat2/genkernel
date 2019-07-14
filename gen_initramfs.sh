@@ -22,35 +22,44 @@ CPIO_ARGS="--quiet -o -H newc --owner root:root --force-local"
 # Usage:
 # copy_binaries DESTDIR BINARIES...
 copy_binaries() {
-	local destdir=$1
+	local destdir=${1}
 	shift
 
-	COPY_BINARIES=true
+	if [ ! -f "${TEMP}/.binaries_copied" ]
+	then
+		touch "${TEMP}/.binaries_copied" \
+			|| gen_die "Failed to set '${TEMP}/.binaries_copied' marker!"
+	fi
 
-	for binary in "$@"; do
+	local binary
+	for binary in "$@"
+	do
 		[[ -e "${binary}" ]] \
-				|| gen_die "Binary ${binary} could not be found"
+			|| gen_die "Binary ${binary} could not be found"
 
-		if LC_ALL=C lddtree "${binary}" 2>&1 | fgrep -q 'not found'; then
+		if LC_ALL=C lddtree "${binary}" 2>&1 | fgrep -q 'not found'
+		then
 			gen_die "Binary ${binary} is linked to missing libraries and may need to be re-built"
 		fi
 	done
 	# This must be OUTSIDE the for loop, we only want to run lddtree etc ONCE.
 	# lddtree does not have the -V (version) nor the -l (list) options prior to version 1.18
 	(
-	if lddtree -V > /dev/null 2>&1 ; then
-		lddtree -l "$@" \
-			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
-	else
-		lddtree "$@" \
-			| tr ')(' '\n' \
-			| awk '/=>/{ if($3 ~ /^\//){print $3}}' \
-			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
-	fi ) \
-			| sort \
-			| uniq \
-			| cpio -p --make-directories --dereference --quiet "${destdir}" \
-			|| gen_die "Binary ${f} or some of its library dependencies could not be copied"
+		if lddtree -V > /dev/null 2>&1
+		then
+			lddtree -l "$@" \
+				|| gen_die "Binary '${binary}' or some of its library dependencies could not be copied!"
+		else
+			lddtree "$@" \
+				| tr ')(' '\n' \
+				| awk '/=>/{ if($3 ~ /^\//){print $3}}' \
+				|| gen_die "Binary '${binary}' or some of its library dependencies could not be copied!"
+		fi
+	) \
+		| sort \
+		| uniq \
+		| cpio -p --make-directories --dereference --quiet "${destdir}" \
+		|| gen_die "Binary '${binary}' or some of its library dependencies could not be copied!"
 }
 
 log_future_cpio_content() {
@@ -1077,9 +1086,11 @@ create_initramfs() {
 		append_data 'overlay'
 	fi
 
-	if ${COPY_BINARIES}
+	if [ -f "${TEMP}/.binaries_copied" ]
 	then
 		append_data 'linker'
+	else
+		print_info 2 "initramfs: Not appending linker because no binaries have been copied ..."
 	fi
 
 	# Finalize cpio by removing duplicate files
