@@ -62,6 +62,114 @@ copy_binaries() {
 		|| gen_die "Binary '${binary}' or some of its library dependencies could not be copied!"
 }
 
+# @FUNCTION: copy_system_binaries
+# @USAGE: <DESTDIR> <system binaries to copy>
+# @DESCRIPTION:
+# Copies system binaries into dest dir.
+#
+# Difference to copy_binaries() is, that copy_system_binaries() does NOT
+# try to recreate directory structure. Any system binary to copy will be
+# placed into same DESTination DIRectory.
+# Because we focus on *system* binaries, it's safe to assume that everything
+# belongs to the same directory. This assumption will allow us to copy from
+# crossdev environments (i.e. /usr/$CHOST).
+copy_system_binaries() {
+	[[ ${#} -lt 2 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at least two arguments (${#} given)!"
+
+	local destdir=${1}
+	shift
+
+	[[ ! -d "${destdir}" ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Destdir '${destdir}' does NOT exist!"
+
+	if [ ! -f "${TEMP}/.system_binaries_copied" ]
+	then
+		touch "${TEMP}/.system_binaries_copied" \
+			|| gen_die "Failed to set '${TEMP}/.system_binaries_copied' marker!"
+	fi
+
+	local binary binary_realpath binary_basename base_dir
+	local binary_dependency binary_dependency_basename
+	for binary in "$@"
+	do
+		[[ -e "${binary}" ]] \
+			|| gen_die "$(get_useful_function_stack)System binary '${binary}' could not be found!"
+
+		print_info 5 "System binary '${binary}' should be copied to '${destdir}' ..."
+
+		binary_basename=$(basename "${binary}")
+		if [[ -z "${binary_basename}" ]]
+		then
+			gen_die "$(get_useful_function_stack)Failed to determine basename of '${binary}'!"
+		else
+			print_info 5 "System binary's basename is '${binary_basename}'."
+		fi
+
+		if [[ -e "${destdir}/${binary_basename}" ]]
+		then
+			print_info 5 "System binary '${binary_basename}' already exists in '${destdir}'; Skipping ..."
+			continue
+		fi
+
+		if [[ -L "${binary}" ]]
+		then
+			binary_realpath=$(realpath "${binary}")
+			if [[ -z "${binary_realpath}" ]]
+			then
+				gen_die "$(get_useful_function_stack)Failed to resolve path to '${binary}'!"
+			elif [[ ! -e "${binary_realpath}" ]]
+			then
+				gen_die "$(get_useful_function_stack)System binary '${binary}' was resolved to '${binary_realpath}' but file does NOT exist!"
+			else
+				print_info 5 "System binary '${binary}' resolved to '${binary_realpath}'."
+				binary=${binary_realpath}
+			fi
+		fi
+
+		base_dir=$(dirname "${binary}")
+		if [[ -z "${base_dir}" ]]
+		then
+			gen_die "$(get_useful_function_stack)Failed to determine directory of '${binary}'!"
+		else
+			print_info 5 "System binary dirname set to '${base_dir}'."
+		fi
+
+		if LC_ALL=C lddtree "${binary}" 2>&1 | fgrep -q 'not found'
+		then
+			gen_die "$(get_useful_function_stack)System binary '${binary}' is linked to missing libraries and may need to be re-built!"
+		fi
+
+		local is_first=1
+		while IFS= read -r -u 3 binary_dependency
+		do
+			binary_dependency_basename=$(basename "${binary_dependency}")
+			if [[ -z "${binary_dependency_basename}" ]]
+			then
+				gen_die "$(get_useful_function_stack)Failed to determine basename of '${binary_dependency}'!"
+			fi
+
+			if [[ ${is_first} -eq 1 ]]
+			then
+				# `lddtree --list` first line is always the binary itself
+				print_info 5 "Copying '${base_dir}/${binary_dependency_basename}' to '${destdir}/' ..."
+				cp -aL "${base_dir}/${binary_dependency_basename}" "${destdir}/${binary_basename}" \
+					|| gen_die "$(get_useful_function_stack)Failed to copy '${base_dir}/${binary_dependency_basename}' to '${destdir}'!"
+
+				is_first=0
+			elif [[ -e "${destdir}/${binary_dependency_basename}" ]]
+			then
+				print_info 5 "System binary '${binary_basename}' already exists in '${destdir}'; Skipping ..."
+				continue
+			else
+				print_info 5 "Need to copy dependency '${base_dir}/${binary_dependency_basename}' ..."
+				"${FUNCNAME}" "${destdir}" "${base_dir}/${binary_dependency_basename}"
+			fi
+		done 3< <(lddtree --list "${binary}" 2>/dev/null)
+		IFS="${GK_DEFAULT_IFS}"
+	done
+}
+
 log_future_cpio_content() {
 	print_info 2 "=================================================================" 1 0 1
 	print_info 2 "About to add these files from '${PWD}' to cpio archive:" 1 0 1
@@ -1413,7 +1521,7 @@ create_initramfs() {
 		append_data 'overlay'
 	fi
 
-	if [ -f "${TEMP}/.binaries_copied" ]
+	if [[ -f "${TEMP}/.binaries_copied" || -f "${TEMP}/.system_binaries_copied" ]]
 	then
 		append_data 'linker'
 	else
