@@ -1,0 +1,33 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	export ac_cv_header_security_pam_misc_h=no
+	export ac_cv_header_security_pam_appl_h=no
+
+	local myconf=(
+		--enable-internal-argon2
+		--sbindir=/sbin
+		--disable-nls
+		--enable-static=yes
+		--enable-shared=no
+		--enable-static-cryptsetup
+		--with-crypto_backend=gcrypt
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	rm -rf \
+		"${D}"/sbin/* \
+		"${D}"/usr/share/
+
+	cp -a cryptsetup.static "${D}"/sbin/cryptsetup \
+		|| die "Failed to copy '${S}/cryptsetup.static' to '${D}/sbin/cryptsetup'!"
+
+	"${STRIP}" --strip-all "${D}"/sbin/cryptsetup \
+		|| die "Failed to strip '${D}/sbin/cryptsetup'!"
+}

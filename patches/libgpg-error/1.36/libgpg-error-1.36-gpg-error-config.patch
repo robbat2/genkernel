@@ -1,0 +1,38 @@
+diff --git a/configure.ac b/configure.ac
+index e46b240..4606c31 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -531,16 +531,6 @@ fi
+ GPG_ERROR_CONFIG_HOST="$host"
+ 
+ case "$includedir" in
+-  /usr/include|/include) ;;
+-  '${prefix}/include')
+-    if test "$prefix" != / -a "$prefix" != /usr; then
+-      if test -z "$GPG_ERROR_CONFIG_CFLAGS"; then
+-        GPG_ERROR_CONFIG_CFLAGS="-I$includedir"
+-      else
+-        GPG_ERROR_CONFIG_CFLAGS="-I$includedir $GPG_ERROR_CONFIG_CFLAGS"
+-      fi
+-    fi
+-    ;;
+   *)
+     if test -z "$GPG_ERROR_CONFIG_CFLAGS"; then
+       GPG_ERROR_CONFIG_CFLAGS="-I$includedir"
+@@ -550,16 +540,6 @@ case "$includedir" in
+     ;;
+ esac
+ case "$libdir" in
+-  /usr/lib|/usr/lib64|/lib|/lib64) ;;
+-  '${exec_prefix}/lib')
+-    if test "$exec_prefix" = "NONE"; then
+-      if test "$prefix" != / -a "$prefix" != /usr; then
+-        GPG_ERROR_CONFIG_LIBS="-L$libdir $GPG_ERROR_CONFIG_LIBS"
+-      fi
+-    elif test "$exec_prefix" != / -a "$exec_prefix" != /usr; then
+-      GPG_ERROR_CONFIG_LIBS="-L$libdir $GPG_ERROR_CONFIG_LIBS"
+-    fi
+-    ;;
+   *) GPG_ERROR_CONFIG_LIBS="-L$libdir $GPG_ERROR_CONFIG_LIBS" ;;
+ esac
+ 

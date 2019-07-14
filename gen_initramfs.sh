@@ -724,34 +724,27 @@ append_overlay(){
 }
 
 append_luks() {
-	local _luks_error_format="LUKS support cannot be included: %s. Please emerge sys-fs/cryptsetup."
-	local _luks_source=/sbin/cryptsetup
-	local _luks_dest=/sbin/cryptsetup
-
-	if [ -d "${TEMP}/initramfs-luks-temp" ]
+	local PN=cryptsetup
+	local TDIR="${TEMP}/initramfs-luks-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-luks-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-luks-temp/lib/luks/"
-	mkdir -p "${TEMP}/initramfs-luks-temp/sbin"
-	cd "${TEMP}/initramfs-luks-temp"
+	populate_binpkg ${PN}
 
-	if isTrue "${LUKS}"
-	then
-		[ -x "${_luks_source}" ] \
-				|| gen_die "$(printf "${_luks_error_format}" "no file ${_luks_source}")"
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 
-		print_info 1 "$(getIndent 2)LUKS: Adding support (using system binaries)..."
-		copy_binaries "${TEMP}/initramfs-luks-temp/" /sbin/cryptsetup
-	fi
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	# Delete unneeded files
+	rm -rf usr/
 
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-		|| gen_die "appending cryptsetup to cpio"
-
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-luks-temp/"
+		|| gen_die "Failed to append luks to cpio!"
 }
 
 append_dropbear() {
@@ -1382,7 +1375,7 @@ create_initramfs() {
 
 	append_data 'modprobed'
 
-	if isTrue "${ZFS}" || isTrue "${LUKS}"
+	if isTrue "${ZFS}"
 	then
 		append_data 'libgcc_s'
 	fi

@@ -1,0 +1,16 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	local myconf=(
+		--disable-nls
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	rm -rf "${D}"/usr/share
+}

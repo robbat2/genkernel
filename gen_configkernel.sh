@@ -270,6 +270,71 @@ config_kernel() {
 			&& required_kernel_options+=( 'CONFIG_FILE_LOCKING' )
 	fi
 
+	# Make sure all modules required for cryptsetup/LUKS are enabled in the kernel, if --luks
+	if isTrue "${CMD_LUKS}"
+	then
+		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for LUKS support are set ..."
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" &&
+			required_kernel_options+=( 'CONFIG_BLK_DEV_DM' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_CRYPT" "${cfg_CONFIG_BLK_DEV_DM}" &&
+			required_kernel_options+=( 'CONFIG_DM_CRYPT' )
+
+		local cfg_CONFIG_CRYPTO_AES=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES")
+		case "${cfg_CONFIG_CRYPTO_AES}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_CRYPTO_AES=${newcfg_setting}
+		esac
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_XTS" "${cfg_CONFIG_CRYPTO_AES}" &&
+			required_kernel_options+=( 'CONFIG_CRYPTO_XTS' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256" "${cfg_CONFIG_CRYPTO_AES}" &&
+			required_kernel_options+=( 'CONFIG_CRYPTO_SHA256' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES" "${cfg_CONFIG_CRYPTO_AES}" &&
+			required_kernel_options+=( 'CONFIG_CRYPTO_AES' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_HASH" "${cfg_CONFIG_CRYPTO_AES}" &&
+			required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_HASH' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_SKCIPHER" "${cfg_CONFIG_CRYPTO_AES}" &&
+			required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_SKCIPHER' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_AEAD" "${cfg_CONFIG_CRYPTO_AES}"
+
+		local cfg_CONFIG_X86=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_X86")
+		case "${cfg_CONFIG_X86}" in
+			y|m)
+				cfg_CONFIG_X86=yes
+				;;
+			*)
+				cfg_CONFIG_X86=no
+				;;
+		esac
+
+		local cfg_CONFIG_64BIT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_64BIT")
+		case "${cfg_CONFIG_64BIT}" in
+			y|m)
+				cfg_CONFIG_64BIT=yes
+				;;
+			*)
+				cfg_CONFIG_64BIT=no
+				;;
+		esac
+
+		if isTrue "${cfg_CONFIG_X86}"
+		then
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_NI_INTEL" "${cfg_CONFIG_CRYPTO_AES}"
+
+			if isTrue "${cfg_CONFIG_64BIT}"
+			then
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA1_SSSE3" "${cfg_CONFIG_CRYPTO_AES}"
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256_SSSE3" "${cfg_CONFIG_CRYPTO_AES}"
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_X86_64" "${cfg_CONFIG_CRYPTO_AES}"
+			else
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_586" "${cfg_CONFIG_CRYPTO_AES}"
+			fi
+		fi
+	fi
+
 	# Make sure multipath modules are enabled in the kernel, if --multipath
 	if isTrue "${CMD_MULTIPATH}"
 	then
