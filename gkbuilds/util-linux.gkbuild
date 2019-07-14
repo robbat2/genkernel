@@ -1,0 +1,41 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	export ac_cv_header_security_pam_misc_h=no
+	export ac_cv_header_security_pam_appl_h=no
+
+	local myconf=(
+		--disable-libtool-lock
+		--enable-libmount
+		--disable-libsmartcols
+		--disable-libfdisk
+		--enable-libuuid
+		--without-ncursesw
+		--without-ncurses
+		--disable-widechar
+		--disable-pylibmount
+		--enable-static-programs=blkid
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	local MYMAKEOPTS=( "V=1" )
+	MYMAKEOPTS+=( "DESTDIR=${DESTDIR}" )
+	MYMAKEOPTS+=( "install-pkgconfigDATA" )
+	MYMAKEOPTS+=( "install-nodist_blkidincHEADERS" )
+	MYMAKEOPTS+=( "install-nodist_mountincHEADERS" )
+	MYMAKEOPTS+=( "install-usrlib_execLTLIBRARIES" )
+	MYMAKEOPTS+=( "install-uuidincHEADERS" )
+	gkmake "${MYMAKEOPTS[@]}"
+
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	cp -a blkid.static "${DESTDIR}"/sbin/blkid \
+		|| die "Failed to copy '${S}/blkid.static' to '${DESTDIR}/sbin/blkid'!"
+
+	"${STRIP}" --strip-all "${DESTDIR}"/sbin/blkid \
+		|| die "Failed to strip '${DESTDIR}/sbin/blkid'!"
+}

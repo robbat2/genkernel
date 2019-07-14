@@ -262,24 +262,28 @@ append_e2fsprogs(){
 	rm -rf "${TEMP}"/initramfs-e2fsprogs-temp > /dev/null
 }
 
-append_blkid(){
-	if [ -d "${TEMP}/initramfs-blkid-temp" ]
+append_blkid() {
+	local PN="util-linux"
+	local TDIR="${TEMP}/initramfs-blkid-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-blkid-temp/"
-	fi
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-blkid-temp/"
-
-	if isTrue "${DISKLABEL}"; then
-		copy_binaries "${TEMP}"/initramfs-blkid-temp/ /sbin/blkid
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	cd "${TEMP}/initramfs-blkid-temp/"
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	# Delete unneeded files
+	rm -rf usr/
+
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing blkid cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-blkid-temp" > /dev/null
+		|| gen_die "Failed to append blkid to cpio!"
 }
 
 #append_fuse() {
