@@ -407,6 +407,11 @@ determine_real_args() {
 	if ! isTrue "${BUILD_RAMDISK}"
 	then
 		INTEGRATED_INITRAMFS=0
+	else
+		if isTrue "${CMD_DOKEYMAPAUTO}" && ! isTrue "${CMD_KEYMAP}"
+		then
+			gen_die "--do-keymap-auto requires --keymap but --no-keymap is set!"
+		fi
 	fi
 
 	MICROCODE=${MICROCODE,,}

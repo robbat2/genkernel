@@ -921,95 +921,132 @@ is_static() {
 }
 
 append_auxilary() {
-	if [ -d "${TEMP}/initramfs-aux-temp" ]
+	local TDIR="${TEMP}/initramfs-aux-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-aux-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	mkdir -p "${TEMP}/initramfs-aux-temp/etc"
-	mkdir -p "${TEMP}/initramfs-aux-temp/sbin"
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	local mydir=
+	for mydir in \
+		etc \
+		sbin \
+	; do
+		mkdir -p "${TDIR}"/${mydir} || gen_die "Failed to create '${TDIR}/${mydir}'!"
+	done
+
+	local mylinuxrc=
 	if [ -f "${CMD_LINUXRC}" ]
 	then
-		cp "${CMD_LINUXRC}" "${TEMP}/initramfs-aux-temp/init"
-		print_info 2 "$(getIndent 1)>> Copying user specified linuxrc: ${CMD_LINUXRC} to init"
+		mylinuxrc="${CMD_LINUXRC}"
+		print_info 2 "$(get_indent 2)>> Copying user specified linuxrc '${mylinuxrc}' to '/init' ..."
+		cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
+			|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
+	elif isTrue "${NETBOOT}"
+	then
+		mylinuxrc="${GK_SHARE}/netboot/linuxrc.x"
+		print_info 2 "$(get_indent 2)>> Copying netboot specific linuxrc '${mylinuxrc}' to '/init' ..."
+		cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
+			|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
 	else
-		if isTrue "${NETBOOT}"
+		if [ -f "${GK_SHARE}/arch/${ARCH}/linuxrc" ]
 		then
-			cp "${GK_SHARE}/netboot/linuxrc.x" "${TEMP}/initramfs-aux-temp/init"
+			mylinuxrc="${GK_SHARE}/arch/${ARCH}/linuxrc"
 		else
-			if [ -f "${GK_SHARE}/arch/${ARCH}/linuxrc" ]
-			then
-				cp "${GK_SHARE}/arch/${ARCH}/linuxrc" "${TEMP}/initramfs-aux-temp/init"
-			else
-				cp "${GK_SHARE}/defaults/linuxrc" "${TEMP}/initramfs-aux-temp/init"
-			fi
+			mylinuxrc="${GK_SHARE}/defaults/linuxrc"
 		fi
+
+		print_info 2 "$(get_indent 2)>> Copying '${mylinuxrc}' to '/init' ..."
+		cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
+			|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
 	fi
 
 	# Make sure it's executable
-	chmod 0755 "${TEMP}/initramfs-aux-temp/init"
+	chmod 0755 "${TDIR}"/init || gen_die "Failed to chmod of '${TDIR}/init' to 0755!"
 
-	# Make a symlink to init .. incase we are bundled inside the kernel as one
+	# Make a symlink to init .. in case we are bundled inside the kernel as one
 	# big cpio.
-	cd ${TEMP}/initramfs-aux-temp
-	ln -s init linuxrc
-#	ln ${TEMP}/initramfs-aux-temp/init ${TEMP}/initramfs-aux-temp/linuxrc
+	pushd "${TDIR}" &>/dev/null || gen_die "Failed to chdir to '${TDIR}'!"
+	ln -s init linuxrc || gen_die "Failed to create symlink 'linuxrc' to 'init'!"
+	popd &>/dev/null || gen_die "Failed to chdir!"
 
+	local myinitrd_script=
 	if [ -f "${GK_SHARE}/arch/${ARCH}/initrd.scripts" ]
 	then
-		cp "${GK_SHARE}/arch/${ARCH}/initrd.scripts" "${TEMP}/initramfs-aux-temp/etc/initrd.scripts"
+		myinitrd_script="${GK_SHARE}/arch/${ARCH}/initrd.scripts"
 	else
-		cp "${GK_SHARE}/defaults/initrd.scripts" "${TEMP}/initramfs-aux-temp/etc/initrd.scripts"
+		myinitrd_script="${GK_SHARE}/defaults/initrd.scripts"
 	fi
+	print_info 2 "$(get_indent 2)>> Copying '${myinitrd_script}' to '/etc/initrd.scripts' ..."
+	cp -aL "${myinitrd_script}" "${TDIR}"/etc/initrd.scripts 2>/dev/null \
+		|| gen_die "Failed to copy '${myinitrd_script}' to '${TDIR}/etc/initrd.scripts'!"
 
+	local myinitrd_default=
 	if [ -f "${GK_SHARE}/arch/${ARCH}/initrd.defaults" ]
 	then
-		cp "${GK_SHARE}/arch/${ARCH}/initrd.defaults" "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+		myinitrd_default="${GK_SHARE}/arch/${ARCH}/initrd.defaults"
 	else
-		cp "${GK_SHARE}/defaults/initrd.defaults" "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+		myinitrd_default="${GK_SHARE}/defaults/initrd.defaults"
 	fi
+	print_info 2 "$(get_indent 2)>> Copying '${myinitrd_default}' to '/etc/initrd.defaults' ..."
+	cp -aL "${myinitrd_default}" "${TDIR}"/etc/initrd.defaults 2>/dev/null \
+		|| gen_die "Failed to copy '${myinitrd_default}' to '${TDIR}/etc/initrd.defaults'!"
 
 	if [ -n "${REAL_ROOT}" ]
 	then
-		sed -i "s:^REAL_ROOT=.*$:REAL_ROOT='${REAL_ROOT}':" "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+		print_info 2 "$(get_indent 2)>> Setting REAL_ROOT to '${REAL_ROOT}' in '/etc/initrd.defaults' ..."
+		sed -i "s:^REAL_ROOT=.*$:REAL_ROOT='${REAL_ROOT}':" \
+			"${TDIR}"/etc/initrd.defaults \
+			|| gen_die "Failed to set REAL_ROOT in '${TDIR}/etc/initrd.defaults'!"
 	fi
 
-	printf "%s" 'HWOPTS="$HWOPTS ' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+	printf "%s" 'HWOPTS="$HWOPTS ' >> "${TDIR}"/etc/initrd.defaults \
+		|| gen_die "Failed to add HWOPTS to '${TDIR}/etc/initrd.defaults'!"
+
+	local group_modules group
 	for group_modules in ${!MODULES_*}; do
-		group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
-		printf "%s" "${group} " >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+		group="$(echo ${group_modules} | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
+		printf "%s" "${group} " >> "${TDIR}"/etc/initrd.defaults \
+			|| gen_die "Failed to add MODULES_* to '${TDIR}/etc/initrd.defaults'!"
 	done
-	echo '"' >> "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
 
-	if isTrue "${CMD_DOKEYMAPAUTO}"
-	then
-		echo 'MY_HWOPTS="${MY_HWOPTS} keymap"' >> ${TEMP}/initramfs-aux-temp/etc/initrd.defaults
-	fi
+	echo '"' >> "${TDIR}"/etc/initrd.defaults \
+		|| gen_die "Failed to add closing '\"' to '${TDIR}/etc/initrd.defaults'!"
+
 	if isTrue "${CMD_KEYMAP}"
 	then
-		print_info 1 "$(getIndent 1)>> Copying keymaps"
-		mkdir -p "${TEMP}/initramfs-aux-temp/lib/"
-		cp -R "${GK_SHARE}/defaults/keymaps" "${TEMP}/initramfs-aux-temp/lib/" \
-				|| gen_die "Error while copying keymaps"
+		print_info 2 "$(get_indent 2)>> Copying keymaps ..."
+		mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
+		cp -R "${GK_SHARE}/defaults/keymaps" "${TDIR}"/lib/ 2>/dev/null \
+			|| gen_die "Failed to copy '${GK_SHARE}/defaults/keymaps' to '${TDIR}/lib'!"
+
+		if isTrue "${CMD_DOKEYMAPAUTO}"
+		then
+			print_info 2 "$(get_indent 2)>> Forcing keymap selection in initrd script due to DOKEYMAPAUTO setting ..."
+			echo 'MY_HWOPTS="${MY_HWOPTS} keymap"' >> "${TDIR}"/etc/initrd.defaults \
+				|| gen_die "Failed to add keymap to MY_HWOPTS in '${TDIR}/etc/initrd.defaults'!"
+		fi
 	fi
 
-	cd ${TEMP}/initramfs-aux-temp/sbin && ln -s ../init init
-	cd ${TEMP}
-	chmod +x "${TEMP}/initramfs-aux-temp/init"
-	chmod +x "${TEMP}/initramfs-aux-temp/etc/initrd.scripts"
-	chmod +x "${TEMP}/initramfs-aux-temp/etc/initrd.defaults"
+	pushd "${TDIR}"/sbin &>/dev/null || gen_die "Failed to chdir to '${TDIR}/sbin'!"
+	ln -s ../init init || gen_die "Failed to create symlink 'init' to '../init'!"
+	popd &>/dev/null || gen_die "Failed to chdir!"
 
 	if isTrue "${NETBOOT}"
 	then
-		cd "${GK_SHARE}/netboot/misc"
-		cp -pPRf * "${TEMP}/initramfs-aux-temp/"
+		pushd "${GK_SHARE}/netboot/misc" &>/dev/null || gen_die "Failed to chdir to '${GK_SHARE}/netboot/misc'!"
+		cp -pPRf * "${TDIR}"/ 2>/dev/null \
+			|| gen_die "Failed to copy '${GK_SHARE}/netboot/misc' to '${TDIR}'!"
+		popd &>/dev/null || gen_die "Failed to chdir!"
 	fi
 
-	cd "${TEMP}/initramfs-aux-temp/"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing auxilary cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-aux-temp/"
+		|| gen_die "Failed to append auxilary to cpio!"
 }
 
 append_data() {
