@@ -58,6 +58,8 @@ fi
 TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
 [ -z "${TEMP}" ] && gen_die "mktemp failed!"
 
+export GK_MASTER_PID=${BASHPID}
+
 set_default_gk_trap
 
 BUILD_KERNEL="no"

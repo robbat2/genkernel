@@ -284,6 +284,7 @@ gen_die() {
 	# Cleanup temp dirs and caches if requested
 	cleanup
 
+	[[ -n "${GK_MASTER_PID}" && ${BASHPID} != ${GK_MASTER_PID} ]] && kill -s SIGTERM ${GK_MASTER_PID}
 	exit 1
 }
 
