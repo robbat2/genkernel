@@ -1096,21 +1096,29 @@ print_list()
 }
 
 append_modules() {
-	local group
-	local group_modules
-	local MOD_EXT="$(modules_kext)"
-
-	if [ -d "${TEMP}/initramfs-modules-${KV}-temp" ]
+	local TDIR="${TEMP}/initramfs-modules-${KV}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-modules-${KV}-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	print_info 2 "$(getIndent 2)modules: >> Copying modules to initramfs..."
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	local mydir=
+	for mydir in \
+		etc/modules \
+		lib/modules/${KV} \
+	; do
+		mkdir -p "${TDIR}"/${mydir} || gen_die "Failed to create '${TDIR}/${mydir}'!"
+	done
+
+	print_info 2 "$(get_indent 2)modules: >> Copying modules to initramfs ..."
 	if [ "${INSTALL_MOD_PATH}" != '' ]
 	then
-		cd ${INSTALL_MOD_PATH} || gen_die "Failed to chdir into '${INSTALL_MOD_PATH}'!"
+		cd "${INSTALL_MOD_PATH}" || gen_die "Failed to chdir to '${INSTALL_MOD_PATH}'!"
 	else
-		cd / || gen_die "Failed to chdir into '/'!"
+		cd / || gen_die "Failed to chdir to '/'!"
 	fi
 
 	local _MODULES_DIR="${PWD%/}/lib/modules/${KV}"
@@ -1122,45 +1130,45 @@ append_modules() {
 		gen_die "${error_message}"
 	fi
 
-	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/lib/modules/${KV}"
-
+	local i= mymod=
+	local MOD_EXT="$(modules_kext)"
 	local n_copied_modules=0
-	for i in `gen_dep_list`
+	for i in $(gen_dep_list)
 	do
-		mymod=`find "${_MODULES_DIR}" -name "${i}${MOD_EXT}" 2>/dev/null| head -n 1 `
+		mymod=$(find "${_MODULES_DIR}" -name "${i}${MOD_EXT}" 2>/dev/null | head -n 1)
 		if [ -z "${mymod}" ]
 		then
-			print_warning 2 "$(getIndent 3) - ${i}${MOD_EXT} not found; skipping..."
+			print_warning 2 "$(get_indent 3) - ${i}${MOD_EXT} not found; Skipping ..."
 			continue;
 		fi
 
-		print_info 2 "$(getIndent 3) - Copying ${i}${MOD_EXT}..."
-		cp -ax --parents "${mymod}" "${TEMP}/initramfs-modules-${KV}-temp" ||
-			gen_die "failed to copy '${mymod}' to '${TEMP}/initramfs-modules-${KV}-temp'"
+		print_info 2 "$(get_indent 3) - Copying ${i}${MOD_EXT} ..."
+		cp -ax --parents "${mymod}" "${TDIR}"/ 2>/dev/null \
+			|| gen_die "Failed to copy '${mymod}' to '${TDIR}/'!"
 		n_copied_modules=$[$n_copied_modules+1]
 	done
 
 	if [ ${n_copied_modules} -eq 0 ]
 	then
-		print_warning 1 "$(getIndent 2)modules: ${n_copied_modules} modules copied. Is that correct?"
+		print_warning 1 "$(get_indent 2)modules: ${n_copied_modules} modules copied. Is that correct?"
 	else
-		print_info 2 "$(getIndent 2)modules: ${n_copied_modules} modules copied!"
+		print_info 2 "$(get_indent 2)modules: ${n_copied_modules} modules copied!"
 	fi
 
-	cp -ax --parents "${_MODULES_DIR}"/modules* ${TEMP}/initramfs-modules-${KV}-temp ||
-		gen_die "failed to copy '${_MODULES_DIR}/modules*' to '${TEMP}/initramfs-modules-${KV}-temp'"
+	cp -ax --parents "${_MODULES_DIR}"/modules* "${TDIR}"/ 2>/dev/null \
+		|| gen_die "Failed to copy '${_MODULES_DIR}/modules*' to '${TDIR}/'!"
 
-	mkdir -p "${TEMP}/initramfs-modules-${KV}-temp/etc/modules"
+	local group_modules= group=
 	for group_modules in ${!MODULES_*}; do
-		group="$(echo $group_modules | cut -d_ -f2- | tr "[:upper:]" "[:lower:]")"
-		print_list ${!group_modules} > "${TEMP}/initramfs-modules-${KV}-temp/etc/modules/${group}"
+		group="$(echo ${group_modules} | cut -d_ -f2- | tr "[:upper:]" "[:lower:]")"
+		print_list ${!group_modules} > "${TDIR}"/etc/modules/${group} \
+			|| gen_die "Failed to create '${TDIR}/etc/modules/${group}'!"
 	done
-	cd "${TEMP}/initramfs-modules-${KV}-temp/"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing modules cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-modules-${KV}-temp/"
+	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+		|| gen_die "Failed to append modules-${KV} to cpio!"
 }
 
 append_modprobed() {
