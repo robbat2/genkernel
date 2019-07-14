@@ -297,24 +297,23 @@ append_blkid(){
 #}
 
 append_unionfs_fuse() {
-	if [ -d "${TEMP}/initramfs-unionfs-fuse-temp" ]
+	local PN=unionfs-fuse
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-unionfs-fuse-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	compile_unionfs_fuse
+	populate_binpkg ${PN}
 
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-unionfs-fuse-temp/sbin/"
-	bzip2 -dc "${UNIONFS_FUSE_BINCACHE}" > "${TEMP}/initramfs-unionfs-fuse-temp/sbin/unionfs" ||
-		gen_die 'Could not extract unionfs-fuse binary cache!'
-	chmod a+x "${TEMP}/initramfs-unionfs-fuse-temp/sbin/unionfs"
-	cd "${TEMP}/initramfs-unionfs-fuse-temp/"
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing unionfs fuse cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-unionfs-fuse-temp" > /dev/null
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 #append_suspend(){
