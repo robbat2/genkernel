@@ -404,20 +404,6 @@ append_blkid() {
 		|| gen_die "Failed to append blkid to cpio!"
 }
 
-#append_fuse() {
-#	if [ -d "${TEMP}/initramfs-fuse-temp" ]
-#	then
-#		rm -r "${TEMP}/initramfs-fuse-temp"
-#	fi
-#	cd ${TEMP}
-#	mkdir -p "${TEMP}/initramfs-fuse-temp/lib/"
-#	tar -C "${TEMP}/initramfs-fuse-temp/lib/" -xf "${FUSE_BINCACHE}"
-#	cd "${TEMP}/initramfs-fuse-temp/"
-#	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-#			|| gen_die "compressing fuse cpio"
-#	rm -rf "${TEMP}/initramfs-fuse-temp" > /dev/null
-#}
-
 append_unionfs_fuse() {
 	local PN=unionfs-fuse
 	local TDIR="${TEMP}/initramfs-${PN}-temp"
@@ -437,26 +423,6 @@ append_unionfs_fuse() {
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
-
-#append_suspend(){
-#	if [ -d "${TEMP}/initramfs-suspend-temp" ];
-#	then
-#		rm -r "${TEMP}/initramfs-suspend-temp/"
-#	fi
-#	print_info 1 "$(getIndent 2)SUSPEND: Adding support (compiling binaries)..."
-#	compile_suspend
-#	mkdir -p "${TEMP}/initramfs-suspend-temp/"
-#	/bin/tar -xpf "${SUSPEND_BINCACHE}" -C "${TEMP}/initramfs-suspend-temp" ||
-#		gen_die "Could not extract suspend binary cache!"
-#	mkdir -p "${TEMP}/initramfs-suspend-temp/etc"
-#	cp -f /etc/suspend.conf "${TEMP}/initramfs-suspend-temp/etc" ||
-#		gen_die 'Could not copy /etc/suspend.conf'
-#	cd "${TEMP}/initramfs-suspend-temp/"
-#	log_future_cpio_content
-#	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-#			|| gen_die "compressing suspend cpio"
-#	rm -r "${TEMP}/initramfs-suspend-temp/"
-#}
 
 append_multipath() {
 	local PN=multipath-tools
