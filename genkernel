@@ -96,6 +96,8 @@ do
 	eval "${newvar}='${!v}'"
 done
 
+determine_real_args
+
 print_info 2 "Sourcing default modules_load from '${GK_SHARE}/defaults/modules_load' ..."
 source "${GK_SHARE}/defaults/modules_load" || gen_die "Could not read '${GK_SHARE}/defaults/modules_load'!"
 
@@ -130,11 +132,6 @@ do
 	print_info 2 "<config> Merged AMODULES_${group}:'${cmodules}' into MODULES_${group}"
 done
 unset group group_modules
-
-
-# Based on genkernel.conf, arch-specific configs, and commandline options,
-# get the real arguments for usage...
-determine_real_args
 
 determine_KV
 # $KV is now either set to the version from previous compilation,
