@@ -415,6 +415,11 @@ determine_real_args() {
 		then
 			gen_die "--do-keymap-auto requires --keymap but --no-keymap is set!"
 		fi
+
+		if isTrue "${MULTIPATH}" && ! isTrue "${LVM}"
+		then
+			gen_die "--multipath requires --lvm but --no-lvm is set!"
+		fi
 	fi
 
 	MICROCODE=${MICROCODE,,}

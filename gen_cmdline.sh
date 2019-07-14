@@ -399,18 +399,6 @@ parse_cmdline() {
 			;;
 		--multipath|--no-multipath)
 			CMD_MULTIPATH=$(parse_optbool "$*")
-			if isTrue "${CMD_MULTIPATH}" && [ ! -e /sbin/multipath ]
-			then
-				echo 'Error: --multipath requires sys-fs/multipath-tools' \
-					'to be installed on the host system.'
-				exit 1
-			fi
-			if isTrue "${CMD_MULTIPATH}" && [ ! -e /usr/include/libdevmapper.h ]
-			then
-				echo 'Error: --multipath requires sys-fs/lvm2' \
-					'to be installed on the host system.'
-				exit 1
-			fi
 			print_info 2 "CMD_MULTIPATH: ${CMD_MULTIPATH}"
 			;;
 		--bootloader=*)

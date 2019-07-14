@@ -350,43 +350,40 @@ append_unionfs_fuse() {
 #	rm -r "${TEMP}/initramfs-suspend-temp/"
 #}
 
-append_multipath(){
-	if [ -d "${TEMP}/initramfs-multipath-temp" ]
+append_multipath() {
+	local PN=multipath-tools
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-multipath-temp"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	print_info 1 "$(getIndent 2)Multipath: Adding support (using system binaries)..."
-	mkdir -p "${TEMP}"/initramfs-multipath-temp/{bin,etc,sbin,lib}/
 
-	# Copy files
-	copy_binaries "${TEMP}/initramfs-multipath-temp" \
-		/bin/mountpoint \
-		/sbin/{multipath,kpartx,dmsetup} \
-		/{lib,lib64}/{udev/scsi_id,multipath/*so}
+	populate_binpkg ${PN}
 
-	# Support multipath-tools-0.4.8 and previous
-	if [ -x /sbin/mpath_prio_* ]
-	then
-		copy_binaries "${TEMP}/initramfs-multipath-temp" \
-			/sbin/mpath_prio_*
-	fi
+	mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	if [ -x /sbin/multipath ]
 	then
-		cp /etc/multipath.conf "${TEMP}/initramfs-multipath-temp/etc/" || gen_die 'could not copy /etc/multipath.conf please check this'
+		cp -aL /etc/multipath.conf "${TDIR}"/etc/multipath.conf 2>/dev/null \
+			|| gen_die "Failed to copy '/etc/multipath.conf'!"
 	fi
+
 	# /etc/scsi_id.config does not exist in newer udevs
 	# copy it optionally.
-	if [ -x /sbin/scsi_id -a -f /etc/scsi_id.config ]
+	if [ -f /etc/scsi_id.config ]
 	then
-		cp /etc/scsi_id.config "${TEMP}/initramfs-multipath-temp/etc/" || gen_die 'could not copy scsi_id.config'
+		cp -aL /etc/scsi_id.config "${TDIR}"/etc/scsi_id.config 2>/dev/null \
+			|| gen_die "Failed to copy '/etc/scsi_id.config'!"
 	fi
-	cd "${TEMP}/initramfs-multipath-temp"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing multipath cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-multipath-temp/"
+		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
 append_dmraid() {

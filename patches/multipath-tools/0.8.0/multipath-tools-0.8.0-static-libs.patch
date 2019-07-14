@@ -1,0 +1,159 @@
+diff --git a/Makefile.inc b/Makefile.inc
+index 76c81fc..6f3bc6d 100644
+--- a/Makefile.inc
++++ b/Makefile.inc
+@@ -101,7 +101,7 @@ BIN_CFLAGS	= -fPIE -DPIE
+ LIB_CFLAGS	= -fPIC
+ SHARED_FLAGS	= -shared
+ LDFLAGS		+= -Wl,-z,relro -Wl,-z,now
+-BIN_LDFLAGS	= -pie
++BIN_LDFLAGS	= -pie -static
+ 
+ # Check whether a function with name $1 has been declared in header file $2.
+ check_func = $(shell \
+diff --git a/kpartx/Makefile b/kpartx/Makefile
+index 0a3827b..f26101d 100644
+--- a/kpartx/Makefile
++++ b/kpartx/Makefile
+@@ -6,7 +6,7 @@ include ../Makefile.inc
+ CFLAGS += $(BIN_CFLAGS) -I. -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+ LDFLAGS += $(BIN_LDFLAGS)
+ 
+-LIBDEPS += -ldevmapper
++LIBDEPS += -ldevmapper -lm -lpthread
+ 
+ ifneq ($(call check_func,dm_task_set_cookie,$(sysroot)/usr/include/libdevmapper.h),0)
+ 	CFLAGS += -DLIBDM_API_COOKIE
+diff --git a/libmpathcmd/Makefile b/libmpathcmd/Makefile
+index 0f6b816..2fb81e4 100644
+--- a/libmpathcmd/Makefile
++++ b/libmpathcmd/Makefile
+@@ -1,19 +1,23 @@
+ include ../Makefile.inc
+ 
++LIBNAME = libmpathcmd
+ SONAME = 0
+-DEVLIB = libmpathcmd.so
++DEVLIB = $(LIBNAME).so
+ LIBS = $(DEVLIB).$(SONAME)
+ 
+ CFLAGS += $(LIB_CFLAGS)
+ 
+ OBJS = mpath_cmd.o
+ 
+-all: $(LIBS)
++all: $(LIBS) $(LIBNAME).a
+ 
+ $(LIBS): $(OBJS)
+ 	$(CC) $(LDFLAGS) $(SHARED_FLAGS) -Wl,-soname=$@ -o $@ $(OBJS) $(LIBDEPS)
+ 	$(LN) $@ $(DEVLIB)
+ 
++$(LIBNAME).a: $(OBJS) $(LIBDEPS)
++	$(AR) $(ARFLAGS) $@ $^
++
+ install: $(LIBS)
+ 	$(INSTALL_PROGRAM) -d $(DESTDIR)$(syslibdir)
+ 	$(INSTALL_PROGRAM) -m 755 $(LIBS) $(DESTDIR)$(syslibdir)/$(LIBS)
+diff --git a/libmpathpersist/Makefile b/libmpathpersist/Makefile
+index 21fdad8..647176f 100644
+--- a/libmpathpersist/Makefile
++++ b/libmpathpersist/Makefile
+@@ -6,7 +6,7 @@ LIBS = $(DEVLIB).$(SONAME)
+ 
+ CFLAGS += $(LIB_CFLAGS) -I$(multipathdir) -I$(mpathpersistdir) -I$(mpathcmddir)
+ 
+-LIBDEPS += -lpthread -ldevmapper -ldl -L$(multipathdir) -lmultipath \
++LIBDEPS += -lm -lpthread -ldevmapper -ldl -L$(multipathdir) -lmultipath \
+ 	   -L$(mpathcmddir) -lmpathcmd
+ 
+ OBJS = mpath_persist.o mpath_updatepr.o mpath_pr_ioctl.o
+diff --git a/libmultipath/Makefile b/libmultipath/Makefile
+index becaef3..5d3a09c 100644
+--- a/libmultipath/Makefile
++++ b/libmultipath/Makefile
+@@ -3,13 +3,14 @@
+ #
+ include ../Makefile.inc
+ 
++LIBNAME = libmultipath
+ SONAME = 0
+-DEVLIB = libmultipath.so
++DEVLIB = $(LIBNAME).so
+ LIBS = $(DEVLIB).$(SONAME)
+ 
+ CFLAGS += $(LIB_CFLAGS) -I$(mpathcmddir) -I$(mpathpersistdir) -I$(nvmedir)
+ 
+-LIBDEPS += -lpthread -ldl -ldevmapper -ludev -L$(mpathcmddir) -lmpathcmd -lurcu -laio
++LIBDEPS += -lm -lpthread -ldl -ldevmapper -ludev -L$(mpathcmddir) -lmpathcmd -lurcu -laio
+ 
+ ifdef SYSTEMD
+ 	CFLAGS += -DUSE_SYSTEMD=$(SYSTEMD)
+@@ -45,7 +46,7 @@ OBJS = memory.o parser.o vector.o devmapper.o callout.o \
+ 	lock.o file.o wwids.o prioritizers/alua_rtpg.o prkey.o \
+ 	io_err_stat.o dm-generic.o generic.o foreign.o nvme-lib.o
+ 
+-all: $(LIBS)
++all: $(LIBS) $(LIBNAME).a
+ 
+ nvme-lib.o: nvme-lib.c nvme-ioctl.c nvme-ioctl.h
+ 	$(CC) $(CFLAGS) -Wno-unused-function -c -o $@ $<
+@@ -62,6 +63,9 @@ $(LIBS): $(OBJS)
+ 	$(CC) $(LDFLAGS) $(SHARED_FLAGS) -Wl,-soname=$@ -o $@ $(OBJS) $(LIBDEPS)
+ 	$(LN) $@ $(DEVLIB)
+ 
++$(LIBNAME).a: $(OBJS)
++	$(AR) $(ARFLAGS) $@ $^
++
+ install:
+ 	$(INSTALL_PROGRAM) -d $(DESTDIR)$(syslibdir)
+ 	$(INSTALL_PROGRAM) -m 755 $(LIBS) $(DESTDIR)$(syslibdir)/$(LIBS)
+diff --git a/libmultipath/log.c b/libmultipath/log.c
+index debd36d..03d54b5 100644
+--- a/libmultipath/log.c
++++ b/libmultipath/log.c
+@@ -91,7 +91,7 @@ void free_logarea (void)
+ 	return;
+ }
+ 
+-void log_close (void)
++void mpt_log_close (void)
+ {
+ 	free_logarea();
+ 	closelog();
+diff --git a/libmultipath/log.h b/libmultipath/log.h
+index 6551b5c..f0ed15c 100644
+--- a/libmultipath/log.h
++++ b/libmultipath/log.h
+@@ -32,7 +32,7 @@ struct logarea {
+ extern struct logarea* la;
+ 
+ int log_init (char * progname, int size);
+-void log_close (void);
++void mpt_log_close (void);
+ void log_reset (char * progname);
+ int log_enqueue (int prio, const char * fmt, va_list ap);
+ int log_dequeue (void *);
+diff --git a/libmultipath/log_pthread.c b/libmultipath/log_pthread.c
+index be57bb1..10f7228 100644
+--- a/libmultipath/log_pthread.c
++++ b/libmultipath/log_pthread.c
+@@ -131,5 +131,5 @@ void log_thread_stop (void)
+ 	pthread_mutex_destroy(&logev_lock);
+ 	pthread_cond_destroy(&logev_cond);
+ 
+-	log_close();
++	mpt_log_close();
+ }
+diff --git a/multipath/Makefile b/multipath/Makefile
+index 0828a8f..8bd6ce4 100644
+--- a/multipath/Makefile
++++ b/multipath/Makefile
+@@ -6,7 +6,7 @@ include ../Makefile.inc
+ CFLAGS += $(BIN_CFLAGS) -I$(multipathdir) -I$(mpathcmddir)
+ LDFLAGS += $(BIN_LDFLAGS)
+ LIBDEPS += -L$(multipathdir) -lmultipath -L$(mpathcmddir) -lmpathcmd \
+-	-lpthread -ldevmapper -ldl -ludev
++	-lpthread -ldevmapper -laio -ldl -ludev -lm
+ 
+ EXEC = multipath
+ 
