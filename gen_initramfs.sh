@@ -1167,19 +1167,21 @@ append_modprobed() {
 	local TDIR="${TEMP}/initramfs-modprobe.d-temp"
 	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TDIR}"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	mkdir -p "${TDIR}/etc"
-	cp -r "/etc/modprobe.d" "${TDIR}/etc/modprobe.d"
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
-	cd "${TDIR}"
+	mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
+
+	cp -rL "/etc/modprobe.d" "${TDIR}"/etc/ 2>/dev/null \
+		|| gen_die "Failed to copy '/etc/modprobe.d'!"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing modprobe.d cpio"
-
-	cd "${TEMP}"
-	rm -rf "${TDIR}" > /dev/null
+		|| gen_die "Failed to append modprobe.d to cpio!"
 }
 
 # check for static linked file with objdump
