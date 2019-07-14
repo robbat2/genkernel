@@ -1309,8 +1309,8 @@ append_data() {
 	[ $# -eq 0 ] && gen_die "append_data() called with zero arguments"
 	if [ $# -eq 1 ] || isTrue "${var}"
 	then
-		print_info 1 "$(getIndent 1)>> Appending ${name} cpio data..."
-		${func} || gen_die "${func}() failed"
+		print_info 1 "$(get_indent 1)>> Appending ${name} cpio data ..."
+		${func} || gen_die "${func}() failed!"
 	fi
 }
 
