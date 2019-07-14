@@ -1264,6 +1264,27 @@ start_volumes() {
 		fi
 	fi
 
+	if [ "${USE_BCACHE}" = '1' ]
+	then
+		if [ ! -e /sys/fs/bcache/register_quiet ]
+		then
+			warn_msg "'/sys/fs/bcache/register_quiet' does not exist. Missing kernel driver? Skipping dobcache ..."
+		else
+			local i=
+			for i in $(awk '$4 !~ /^(name$|$)/ { print $4 }' /proc/partitions)
+			do
+				if [ -e "/dev/${i}" ]
+				then
+					# Push all the block devices to register_quiet
+					# If its bcache, it will bring it up, if not, it will simply ignore it.
+					echo "/dev/${i}" >/sys/fs/bcache/register_quiet 2>/dev/null
+				else
+					warn_msg "'/dev/${i}' should exist but is missing; Ignoring ..."
+				fi
+			done
+		fi
+	fi
+
 	if [ "${USE_BTRFS}" = '1' ]
 	then
 		if [ -x '/sbin/btrfs' ]
@@ -1314,27 +1335,6 @@ start_volumes() {
 					bad_msg "Import of ${ZFS_POOL} failed"
 				fi
 			fi
-		fi
-	fi
-
-	if [ "${USE_BCACHE}" = '1' ]
-	then
-		if [ ! -e /sys/fs/bcache/register_quiet ]
-		then
-			warn_msg "'/sys/fs/bcache/register_quiet' does not exist. Missing kernel driver? Skipping dobcache ..."
-		else
-			local i=
-			for i in $(awk '$4 !~ /^(name$|$)/ { print $4 }' /proc/partitions)
-			do
-				if [ -e "/dev/${i}" ]
-				then
-					# Push all the block devices to register_quiet
-					# If its bcache, it will bring it up, if not, it will simply ignore it.
-					echo "/dev/${i}" >/sys/fs/bcache/register_quiet 2>/dev/null
-				else
-					warn_msg "'/dev/${i}' should exist but is missing; Ignoring ..."
-				fi
-			done
 		fi
 	fi
 }
