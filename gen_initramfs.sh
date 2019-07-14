@@ -412,24 +412,24 @@ append_dmraid(){
 	rm -r "${TEMP}/initramfs-dmraid-temp/"
 }
 
-append_iscsi(){
-	if [ -d "${TEMP}/initramfs-iscsi-temp" ]
+append_iscsi() {
+	local PN=open-iscsi
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-iscsi-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	print_info 1 "$(getIndent 2)iSCSI: Adding support (compiling binaries)..."
-	compile_iscsi
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-iscsi-temp/bin/"
-	/bin/bzip2 -dc "${ISCSI_BINCACHE}" > "${TEMP}/initramfs-iscsi-temp/bin/iscsistart" ||
-		gen_die "Could not extract iscsi binary cache!"
-	chmod a+x "${TEMP}/initramfs-iscsi-temp/bin/iscsistart"
-	cd "${TEMP}/initramfs-iscsi-temp/"
+
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing iscsi cpio"
-	cd "${TEMP}"
-	rm -rf "${TEMP}/initramfs-iscsi-temp" > /dev/null
+		|| gen_die "Failed to append iscsi to cpio!"
 }
 
 append_lvm(){
