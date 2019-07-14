@@ -432,88 +432,74 @@ append_iscsi() {
 		|| gen_die "Failed to append iscsi to cpio!"
 }
 
-append_lvm(){
-	if [ -d "${TEMP}/initramfs-lvm-temp" ]
+append_lvm() {
+	local PN=lvm
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
 	then
-		rm -r "${TEMP}/initramfs-lvm-temp/"
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
-	cd ${TEMP}
-	mkdir -p "${TEMP}/initramfs-lvm-temp/bin/"
-	mkdir -p "${TEMP}/initramfs-lvm-temp/sbin/"
-	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/"
-	mkdir -p "${TEMP}/initramfs-lvm-temp/etc/lvm/cache"
-	if false && [ -e '/sbin/lvm.static' ]
-	then
-		print_info 1 "$(getIndent 2)LVM: Adding support (using local static binary /sbin/lvm.static)..."
-		cp /sbin/lvm.static "${TEMP}/initramfs-lvm-temp/sbin/lvm" ||
-			gen_die 'Could not copy over lvm!'
-		# See bug 382555
-		if [ -e '/sbin/dmsetup.static' ]
-		then
-			cp /sbin/dmsetup.static "${TEMP}/initramfs-lvm-temp/bin/dmsetup"
-		fi
-	elif false && [ -e '/sbin/lvm' ] && LC_ALL="C" ldd /sbin/lvm|grep -q 'not a dynamic executable'
-	then
-		print_info 1 "$(getIndent 2)LVM: Adding support (using local static binary /sbin/lvm)..."
-		cp /sbin/lvm "${TEMP}/initramfs-lvm-temp/sbin/lvm" ||
-			gen_die 'Could not copy over lvm!'
-		# See bug 382555
-		if [ -e '/sbin/dmsetup' ] && LC_ALL="C" ldd /sbin/dmsetup | grep -q 'not a dynamic executable'
-		then
-			cp /sbin/dmsetup "${TEMP}/initramfs-lvm-temp/bin/dmsetup"
-		fi
-	else
-		print_info 1 "$(getIndent 2)LVM: Adding support (compiling binaries)..."
-		compile_lvm || gen_die "Could not compile LVM"
-		/bin/tar -xpf "${LVM_BINCACHE}" -C "${TEMP}/initramfs-lvm-temp" ||
-			gen_die "Could not extract lvm binary cache!";
-		# Remove any dynamic binaries that exist, so the rest of the code will
-		# fail better if something is missing
-		for f in ${TEMP}/initramfs-lvm-temp/{bin,sbin}/* ; do
-			[ -x "$f" ] && LC_ALL="C" ldd $f | grep -sq '(' && rm -f "$f"
-		done
-		# Now move the static binaries into good places.
-		mv ${TEMP}/initramfs-lvm-temp/sbin/lvm.static ${TEMP}/initramfs-lvm-temp/sbin/lvm ||
-			gen_die 'LVM error: Could not move lvm.static to lvm!'
-		# See bug 382555; use /sbin/dmsetup to match multipath code
-		mv ${TEMP}/initramfs-lvm-temp/sbin/dmsetup.static ${TEMP}/initramfs-lvm-temp/sbin/dmsetup ||
-			gen_die 'LVM error: Could not move dmsetup.static to dmsetup!'
-		# Clean up other stuff we don't need
-		rm -rf ${TEMP}/initramfs-lvm-temp/{lib*,share,man,include,sbin/dmeventd.static}
-	fi
-	# Include a symlink in the old location, for people with other appended
-	# scripts that might look for it in the old location.
-	ln -s ../sbin/lvm "${TEMP}/initramfs-lvm-temp/bin/lvm"
-	# Include the LVM config now
+
+	populate_binpkg ${PN}
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	local mydir=
+	for mydir in \
+		etc/lvm/cache \
+		sbin \
+	; do
+		mkdir -p ${mydir} || gen_die "Failed to create '${TDIR}/${mydir}'!"
+	done
+
+	# Delete unneeded files
+	rm -rf \
+		usr/lib \
+		usr/share \
+		usr/include
+
+	# Include the LVM config
 	if [ -x /sbin/lvm -o -x /bin/lvm ]
 	then
-#		lvm dumpconfig 2>&1 > /dev/null || gen_die 'Could not copy over lvm.conf!'
-#		ret=$?
-#		if [ ${ret} != 0 ]
-#		then
-			cp /etc/lvm/lvm.conf "${TEMP}/initramfs-lvm-temp/etc/lvm/" || \
-				gen_die 'Could not copy over lvm.conf!'
-#		else
-#			gen_die 'Could not copy over lvm.conf!'
-#		fi
+		local ABORT_ON_ERRORS=$(kconfig_get_opt "/etc/lvm/lvm.conf" "abort_on_errors")
+		if isTrue "${ABORT_ON_ERRORS}" && [[ ${CBUILD} == ${CHOST} ]]
+		then
+			# Make sure the LVM binary we created is able to handle
+			# system's lvm.conf
+			"${TDIR}"/sbin/lvm dumpconfig 1>"${TDIR}"/etc/lvm/lvm.conf 2>/dev/null \
+				|| gen_die "Bundled LVM version does NOT support system's lvm.conf!"
+
+			# Sanity check
+			if [ ! -s "${TDIR}/etc/lvm/lvm.conf" ]
+			then
+				gen_die "Sanity check failed: '${TDIR}/etc/lvm/lvm.conf' looks empty?!"
+			fi
+		else
+			cp -aL /etc/lvm/lvm.conf "${TDIR}"/etc/lvm/lvm.conf 2>/dev/null \
+				|| gen_die "Failed to copy '/etc/lvm/lvm.conf'!"
+		fi
 
 		# Some LVM config options need changing, because the functionality is
 		# not compiled in:
 		sed -r -i \
 			-e '/^[[:space:]]*obtain_device_list_from_udev/s,=.*,= 0,g' \
 			-e '/^[[:space:]]*use_lvmetad/s,=.*,= 0,g' \
+			-e '/^[[:space:]]*use_lvmlockd/s,=.*,= 0,g' \
+			-e '/^[[:space:]]*use_lvmpolld/s,=.*,= 0,g' \
 			-e '/^[[:space:]]*monitoring/s,=.*,= 0,g' \
 			-e '/^[[:space:]]*external_device_info_source/s,=.*,= "none",g' \
 			-e '/^[[:space:]]*units/s,=.*"r",= "h",g' \
-			"${TEMP}/initramfs-lvm-temp/etc/lvm/lvm.conf" || \
-				gen_die 'Could not sed lvm.conf!'
+			"${TDIR}"/etc/lvm/lvm.conf \
+				|| gen_die 'Could not sed lvm.conf!'
 	fi
-	cd "${TEMP}/initramfs-lvm-temp/"
+
 	log_future_cpio_content
 	find . -print | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
-			|| gen_die "compressing lvm cpio"
-	cd "${TEMP}"
-	rm -r "${TEMP}/initramfs-lvm-temp/"
+		|| gen_die "Failed to append lvm to cpio!"
 }
 
 append_mdadm(){
@@ -1432,12 +1418,6 @@ create_initramfs() {
 		local CONFGREP=zgrep
 	else
 		local CONFGREP=grep
-	fi
-
-	if isTrue "${LVM}" ; then
-		if ! ${CONFGREP} -q "^CONFIG_FILE_LOCKING=y" "${ACTUAL_KERNEL_CONFIG}" ; then
-			gen_die "LVM will require a kernel with CONFIG_FILE_LOCKING=y set!"
-		fi
 	fi
 
 	if isTrue "${INTEGRATED_INITRAMFS}"

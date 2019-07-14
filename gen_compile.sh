@@ -529,120 +529,6 @@ compile_kernel() {
 	fi
 }
 
-compile_libaio() {
-	if [ -f "${LIBAIO_BINCACHE}" ]
-	then
-		print_info 1 "$(getIndent 2)libaio: >> Using cache ..."
-	else
-		[ -f "${LIBAIO_SRCTAR}" ] ||
-			gen_die "Could not find libaio source tarball: ${LIBAIO_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
-		cd "${TEMP}"
-		rm -rf ${LIBAIO_DIR} > /dev/null
-		/bin/tar -xpf ${LIBAIO_SRCTAR} ||
-			gen_die 'Could not extract libaio source tarball!'
-		[ -d "${LIBAIO_DIR}" ] ||
-			gen_die "libaio directory ${LIBAIO_DIR} is invalid!"
-
-		cd "${LIBAIO_DIR}" || gen_die "cannot chdir into '${LIBAIO_DIR}'"
-		apply_patches libaio ${LIBAIO_VER}
-
-		print_info 1 "$(getIndent 2)libaio: >> Compiling ..."
-		CFLAGS="-fPIC" \
-		LDFLAGS='-Wl,--no-as-needed' \
-		compile_generic '' utils || gen_die "failed to build libaio"
-
-		print_info 1 "$(getIndent 2)libaio: >> Installing to DESTDIR ..."
-		compile_generic "prefix=${TEMP}/libaio install" utils || gen_die "failed to install libaio"
-
-		print_info 1 "$(getIndent 2)libaio: >> Copying to bincache ..."
-		cd "${TEMP}/libaio" || gen_die "cannot chdir into '${TEMP}/libaio'"
-		/bin/tar -cjf "${LIBAIO_BINCACHE}" . ||
-			gen_die 'Could not create libaio binary cache'
-
-		cd "${TEMP}"
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${LIBAIO_DIR}" libaio
-		return 0
-	fi
-}
-
-compile_lvm() {
-	compile_libaio
-
-	if [[ -f "${LVM_BINCACHE}" && "${LVM_BINCACHE}" -nt "${LIBAIO_BINCACHE}" ]]
-	then
-		print_info 1 "$(getIndent 2)lvm: >> Using cache ..."
-	else
-		[ -f "${LVM_SRCTAR}" ] ||
-			gen_die "Could not find LVM source tarball: ${LVM_SRCTAR}! Please place it there, or place another version, changing /etc/genkernel.conf as necessary!"
-		cd "${TEMP}"
-		rm -rf ${LVM_DIR} > /dev/null
-		/bin/tar -xpf ${LVM_SRCTAR} ||
-			gen_die 'Could not extract LVM source tarball!'
-		[ -d "${LVM_DIR}" ] ||
-			gen_die "LVM directory ${LVM_DIR} is invalid!"
-
-		rm -rf "${TEMP}/libaio" > /dev/null
-		mkdir -p "${TEMP}/libaio"
-		/bin/tar -xpf "${LIBAIO_BINCACHE}" -C "${TEMP}/libaio" ||
-			gen_die "Could not extract libaio binary cache!";
-
-		cd "${LVM_DIR}"
-		apply_patches lvm ${LVM_VER}
-		# we currently have a patch that changes configure.ac
-		# once given patch is dropped, drop autoconf too
-		print_info 1 "$(getIndent 2)lvm: >> Autoconf ..."
-		autoconf || gen_die 'Autoconf failed for LVM2'
-		print_info 1 "$(getIndent 2)lvm: >> Configuring ..."
-		LVM_CONF=(
-			--enable-static_link
-			--prefix=/
-			--enable-dmeventd
-			--enable-cmdlib
-			--enable-applib
-			--disable-lvmetad
-			--with-lvm1=internal
-			--with-clvmd=none
-			--with-cluster=none
-			--disable-readline
-			--disable-selinux
-			--with-mirrors=internal
-			--with-snapshots=internal
-			--with-pool=internal
-			--with-thin=internal
-			--with-cache=internal
-			--with-raid=internal
-		)
-		CFLAGS="-fPIC" \
-		LDFLAGS="-L${TEMP}/libaio/lib" \
-		./configure "${LVM_CONF[@]}" \
-			>> ${LOGFILE} 2>&1 || \
-			gen_die 'Configure of lvm failed!'
-		print_info 1 "$(getIndent 2)lvm: >> Compiling ..."
-		compile_generic '' utils || gen_die "failed to build LVM"
-
-		print_info 1 "$(getIndent 2)lvm: >> Installing to DESTDIR ..."
-		mkdir -p "${TEMP}/lvm/sbin"
-		compile_generic "install DESTDIR=${TEMP}/lvm/" utils || gen_die "failed to install LVM"
-		# Upstream does u-w on files, and this breaks stuff.
-		chmod -R u+w "${TEMP}/lvm/"
-
-		print_info 1 "$(getIndent 2)lvm: >> Copying to bincache ..."
-		cd "${TEMP}/lvm" || gen_die "cannot chdir into '${TEMP}/lvm'"
-		${UTILS_CROSS_COMPILE}strip "sbin/lvm.static" ||
-			gen_die 'Could not strip lvm.static!'
-		# See bug 382555
-		${UTILS_CROSS_COMPILE}strip "sbin/dmsetup.static" ||
-			gen_die 'Could not strip dmsetup.static'
-		/bin/tar -cjf "${LVM_BINCACHE}" . ||
-			gen_die 'Could not create binary cache'
-
-		cd "${TEMP}"
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${TEMP}/lvm" > /dev/null
-		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${LVM_DIR}" libaio lvm
-		return 0
-	fi
-}
-
 compile_mdadm() {
 	if [ -f "${MDADM_BINCACHE}" ]
 	then
@@ -739,10 +625,6 @@ compile_dmraid() {
 		isTrue "${CMD_DEBUGCLEANUP}" && rm -rf "${DMRAID_DIR}" dmraid
 		return 0
 	fi
-}
-
-compile_device_mapper() {
-	compile_lvm
 }
 
 determine_busybox_config_file() {

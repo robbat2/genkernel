@@ -1,0 +1,67 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+
+	append-ldflags -Wl,-rpath-link,${BROOT}/usr/lib
+
+	export ac_cv_header_security_pam_misc_h=no
+	export ac_cv_header_security_pam_appl_h=no
+
+	local myconf=(
+		--enable-static_link
+		--enable-pkgconfig
+		--enable-dmeventd
+		--enable-cmdlib
+		--disable-lvmetad
+		--with-clvmd=none
+		--with-cluster=none
+		--disable-readline
+		--disable-selinux
+		--with-mirrors=internal
+		--with-snapshots=internal
+		--with-thin=internal
+		--with-cache=internal
+		--disable-udev-systemd-background-jobs
+		--disable-udev_sync
+		--disable-udev_rules
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	rm -rf \
+		"${D}"/etc \
+		"${D}"/usr/sbin/* \
+		"${D}"/share
+
+	cp -a tools/lvm.static "${D}"/usr/sbin/lvm \
+		|| die "Failed to copy '${S}/tools/lvm.static' to '${D}/usr/sbin/lvm'!"
+
+	"${STRIP}" --strip-all "${D}"/usr/sbin/lvm \
+		|| die "Failed to strip '${D}/usr/sbin/lvm'!"
+
+	cp -a tools/dmsetup.static "${D}"/usr/sbin/dmsetup \
+		|| die "Failed to copy '${S}/tools/dmsetup.static' to '${D}/usr/sbin/dmsetup'!"
+
+	"${STRIP}" --strip-all "${D}"/usr/sbin/dmsetup \
+		|| die "Failed to strip '${D}/usr/sbin/dmsetup'!"
+
+	ln -s dmsetup "${D}"/usr/sbin/dmstats \
+		|| die "Failed to create symlink '${D}/usr/sbin/dmstats' to '${D}/usr/sbin/dmsetup'!"
+
+	# For backward compatibility
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	ln -s ../usr/sbin/dmsetup "${D}"/sbin/dmsetup \
+		|| die "Failed to create symlink '${D}/sbin/dmstats' to '${D}/usr/sbin/dmstats'!"
+
+	ln -s ../usr/sbin/dmstats "${D}"/sbin/dmstats \
+		|| die "Failed to create symlink '${D}/sbin/dmstats' to '${D}/usr/sbin/dmstats'!"
+
+	ln -s ../usr/sbin/lvm "${D}"/sbin/lvm \
+		|| die "Failed to create symlink '${D}/sbin/lvm' to '${D}/usr/sbin/lvm'!"
+}
