@@ -140,6 +140,9 @@ case "${1}" in
 	build)
 		MODULE="${GK_SHARE}/worker_modules/gkbuild.sh"
 		;;
+	dropbear)
+		MODULE="${GK_SHARE}/worker_modules/dropbear.sh"
+		;;
 	unpack)
 		MODULE="${GK_SHARE}/worker_modules/unpack.sh"
 		;;
