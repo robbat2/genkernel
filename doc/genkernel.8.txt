@@ -107,6 +107,10 @@ KERNEL CONFIGURATION
     Saves, or does not save the kernel configuration to '/etc/kernels'
     if the kernel is successfully compiled.
 
+*--*[*no-*]*bcache*::
+    Adds, or skip adding block layer cache (bcache) support to kernel
+    configuration.
+
 *--*[*no-*]*hyperv*::
     Adds, or skip adding Microsoft Hyper-V support to kernel configuration.
 

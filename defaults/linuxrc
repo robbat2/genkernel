@@ -136,6 +136,9 @@ do
 				;;
 			esac
 		;;
+		dobcache)
+			USE_BCACHE=1
+		;;
 		dobtrfs)
 			USE_BTRFS=1
 		;;

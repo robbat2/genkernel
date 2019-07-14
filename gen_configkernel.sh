@@ -246,6 +246,15 @@ config_kernel() {
 		*) cfg_CONFIG_BLK_DEV_DM=${newcfg_setting}
 	esac
 
+	# Make sure all modules required bcache are enabled in the kernel, if --bcache
+	if isTrue "${CMD_BCACHE}"
+	then
+		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for bcache support are set ..."
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BCACHE" "${newcfg_setting}" &&
+			required_kernel_options+=( 'CONFIG_BCACHE' )
+	fi
+
 	# Make sure lvm modules are enabled in the kernel, if --lvm
 	if isTrue "${CMD_LVM}"
 	then

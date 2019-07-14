@@ -35,6 +35,8 @@ longusage() {
   echo "	--no-xconfig		Don't run xconfig after oldconfig"
   echo "	--save-config		Save the configuration to /etc/kernels"
   echo "	--no-save-config	Don't save the configuration to /etc/kernels"
+  echo "	--bcache		Enable block layer cache (bcache) support in kernel"
+  echo "	--no-bcache		Don't enable block layer cache (bcache) support in kernel"
   echo "	--hyperv		Enable Microsoft Hyper-V kernel options in kernel"
   echo "	--no-hyperv		Don't enable Microsoft Hyper-V kernel options in kernel"
   echo "	--microcode=(all,amd,intel)"
@@ -321,6 +323,10 @@ parse_cmdline() {
 		--keymap|--no-keymap)
 			CMD_KEYMAP=$(parse_optbool "$*")
 			print_info 2 "CMD_KEYMAP: ${CMD_KEYMAP}"
+			;;
+		--bcache|--no-bcache)
+			CMD_BCACHE=$(parse_optbool "$*")
+			print_info 2 "CMD_BCACHE: ${CMD_BCACHE}"
 			;;
 		--lvm|--no-lvm)
 			CMD_LVM=$(parse_optbool "$*")
