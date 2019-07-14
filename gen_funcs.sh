@@ -1198,24 +1198,27 @@ rootfs_type_is() {
 }
 
 check_distfiles() {
-	for i in \
-		$BUSYBOX_SRCTAR \
-		$DMRAID_SRCTAR \
-		$FUSE_SRCTAR \
-		$GPG_SRCTAR \
-		$ISCSI_SRCTAR \
-		$ISCSI_ISNS_SRCTAR \
-		$LIBAIO_SRCTAR \
-		$LVM_SRCTAR \
-		$MDADM_SRCTAR \
-		$MULTIPATH_SRCTAR \
-		$UNIONFS_FUSE_SRCTAR
+	local source_files=( $(compgen -A variable |grep '^GKPKG_.*SRCTAR$') )
+
+	local -a missing_sources
+	local source_file=
+	for source_file in "${source_files[@]}"
 	do
-		if [ ! -f "${i}" ]
+		if [ ! -f "${!source_file}" ]
 		then
-			small_die "Could not find source tarball ${i}. Please refetch."
+			missing_sources+=( "${!source_file}" )
 		fi
 	done
+
+	if [[ ${#missing_sources[@]} -gt 0 ]]
+	then
+		for source_file in "${missing_sources[@]}"
+		do
+			print_error 1 "Could not find source file '${source_file}'!"
+		done
+
+		gen_die "Please add missing source file(s) or re-install genkernel!"
+	fi
 }
 
 expand_file() {
