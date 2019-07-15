@@ -623,13 +623,9 @@ do
 					if [ ${retval} -eq 0 ] && [ -n "${ROOT_DEV}" ]
 					then
 						got_good_root=1
-						good_msg "Detected real_root=${ROOT_DEV}"
 						REAL_ROOT="${ROOT_DEV}"
+						good_msg "Detected real_root=${ROOT_DEV}"
 						break
-					else
-						prompt_user "REAL_ROOT" "root block device"
-						got_good_root=0
-						continue
 					fi
 				;;
 				ZFS*)
@@ -647,10 +643,10 @@ do
 							got_good_root=1
 							REAL_ROOT=${ROOT_DEV}
 							ROOTFSTYPE=zfs
+							good_msg "Detected real_root=${ROOT_DEV}"
+							break
 						else
 							bad_msg "${ROOT_DEV} is not a filesystem"
-							prompt_user "REAL_ROOT" "root block device"
-							got_good_root=0
 							continue
 						fi
 					else
@@ -660,28 +656,17 @@ do
 							for i in ${BOOTFS}
 							do
 								zfs get type ${i} > /dev/null 2>&1
-								retval=$?
-
-								if [ ${retval} -eq 0 ]
+								if [ $? -eq 0 ]
 								then
 									got_good_root=1
 									REAL_ROOT=${i}
 									ROOTFSTYPE=zfs
+									good_msg "Detected real_root=${ROOT_DEV}"
 									break
 								fi
 							done
-						else
-							got_good_root=0
 						fi
 					fi
-
-					if [ ${got_good_root} -ne 1 ]
-					then
-						prompt_user "REAL_ROOT" "root block device"
-						got_good_root=0
-					fi
-
-					continue
 				;;
 			esac
 
@@ -692,7 +677,7 @@ do
 			fi
 		done  # End of sleep loop waiting on root
 
-		if [ "${REAL_ROOT}" = '' ]
+		if [ -z "${REAL_ROOT}" ]
 		then
 			# No REAL_ROOT determined/specified. Prompt user for root block device.
 			prompt_user "REAL_ROOT" "root block device"
