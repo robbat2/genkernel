@@ -790,7 +790,9 @@ do
 		# else not a good root and start over.
 		if [ "${mountret}" = '0' ]
 		then
-			if [ -d ${NEW_ROOT}/dev -a -x "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ]
+			if [ -x "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ] \
+				|| [ -L "${NEW_ROOT}${REAL_INIT:-/sbin/init}" -o -x "${NEW_ROOT}/bin/sh" ] \
+				|| [ "${REAL_ROOT}" = "/dev/nfs" ]
 			then
 				break
 			else
