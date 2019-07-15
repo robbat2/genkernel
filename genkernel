@@ -409,6 +409,8 @@ then
 	isTrue "${DMRAID}"    && print_warning 1 '- Add "dodmraid" for dmraid support or "dodmraid=<additional options>"'
 	isTrue "${MDADM}"     && print_warning 1 '- Add "domdadm" for MDRAID support'
 	isTrue "${LVM}"       && print_warning 1 '- Add "dolvm" for LVM support'
+	isTrue "${LUKS}"      && print_warning 1 '- Add "crypt_root=<device>" for LUKS-encrypted root'
+	isTrue "${LUKS}"      && print_warning 1 '- Add "crypt_swap=<device>" for LUKS-encrypted swap'
 	isTrue "${SSH}"       && print_warning 1 '- Add "dosshd" to start SSH daemon in initramfs'
 
 	if isTrue "${ZFS}"
