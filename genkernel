@@ -358,11 +358,16 @@ then
 	else
 		print_info 1 ''
 		print_info 1 "You will find the kernel image in '${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}'."
+
 		if isTrue "${GENZIMAGE}"
 		then
 			print_info 1 "You will find the kernelz binary in '${TMPDIR}/kernelz-${KV}'."
 		fi
-		print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
+
+		if isTrue "${BUILD_RAMDISK}"
+		then
+			print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
+		fi
 	fi
 
 	print_info 1 ''
@@ -377,7 +382,7 @@ then
 	then
 		echo
 		print_warning 1 "If you require Genkernel's hardware detection features, you ${BOLD}MUST${NORMAL}"
-		print_warning 1 'tell your bootloader to use the provided initramfs file.'
+		print_warning 1 "tell your bootloader to use the provided initramfs file (${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV})."
 	fi
 	unset show_warning_initramfs_is_required
 fi
