@@ -389,6 +389,12 @@ fi
 
 if isTrue "${BUILD_RAMDISK}"
 then
+	if ! isTrue "${BUILD_KERNEL}" && ! isTrue "${CMD_INSTALL}"
+	then
+		print_info 1 ''
+		print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
+	fi
+
 	echo
 	print_warning 1 "${BOLD}WARNING... WARNING... WARNING...${NORMAL}"
 	print_warning 1 'Additional kernel parameters that *may* be required to boot properly:'
