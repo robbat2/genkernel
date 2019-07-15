@@ -163,7 +163,6 @@ config_kernel() {
 	then
 		print_info 1 "$(get_indent 1)>> Invoking ${add_config} ..."
 		compile_generic ${add_config} kernelruntask
-		[ $? -eq 0 ] || gen_die "Error: ${add_config} failed!"
 	fi
 
 	local -a required_kernel_options
