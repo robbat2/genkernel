@@ -151,7 +151,7 @@ copy_system_binaries() {
 
 			if [[ ${is_first} -eq 1 ]]
 			then
-				# `lddtree --list` first line is always the binary itself
+				# `lddtree -l` first line is always the binary itself
 				print_info 5 "Copying '${base_dir}/${binary_dependency_basename}' to '${destdir}/' ..."
 				cp -aL "${base_dir}/${binary_dependency_basename}" "${destdir}/${binary_basename}" \
 					|| gen_die "$(get_useful_function_stack)Failed to copy '${base_dir}/${binary_dependency_basename}' to '${destdir}'!"
@@ -165,7 +165,7 @@ copy_system_binaries() {
 				print_info 5 "Need to copy dependency '${base_dir}/${binary_dependency_basename}' ..."
 				"${FUNCNAME}" "${destdir}" "${base_dir}/${binary_dependency_basename}"
 			fi
-		done 3< <(lddtree --list "${binary}" 2>/dev/null)
+		done 3< <(lddtree -l "${binary}" 2>/dev/null)
 		IFS="${GK_DEFAULT_IFS}"
 	done
 }
