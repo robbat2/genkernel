@@ -779,12 +779,6 @@ find_real_device() {
 
 			if [ ${retval} -ne 0 ]
 			then
-				REAL_DEVICE=$(busybox findfs "${DEVICE}" 2>/dev/null)
-				retval=$?
-			fi
-
-			if [ ${retval} -ne 0 ]
-			then
 				REAL_DEVICE=$(blkid -o device -l -t "${DEVICE}" 2>/dev/null)
 				retval=$?
 			fi

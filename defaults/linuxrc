@@ -616,12 +616,6 @@ do
 
 					if [ ${retval} -ne 0 ]
 					then
-						ROOT_DEV=$(busybox findfs "${REAL_ROOT}" 2>/dev/null)
-						retval=$?
-					fi
-
-					if [ ${retval} -ne 0 ]
-					then
 						ROOT_DEV=$(blkid -o device -l -t "${REAL_ROOT}" 2>/dev/null)
 						retval=$?
 					fi
@@ -694,7 +688,7 @@ do
 			if [ "${got_good_root}" != '1' ]
 			then
 				let ROOTDELAY_100MSEC=${ROOTDELAY_100MSEC}-1
-				usleep 100
+				sleep 0.1s
 			fi
 		done  # End of sleep loop waiting on root
 
