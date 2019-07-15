@@ -944,12 +944,12 @@ prompt_user() {
 	bad_msg '- type "shell" for a shell'
 	bad_msg '- type "q" to skip ...'
 	printf "%s" "${2}(${oldvalue}) :: "
-	read -t 10 ${1}
-	if [ $? -gt 0 ]
-	then
-		# prompt timed out
-		printf "\n"
-	fi
+	read ${1}
+	#if [ $? -gt 0 ]
+	#then
+	#	# prompt timed out
+	#	printf "\n"
+	#fi
 
 	case $(eval echo '$'${1}) in
 		'q')
