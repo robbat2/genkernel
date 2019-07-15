@@ -1447,16 +1447,16 @@ kconfig_set_opt() {
 	local curropt=$(grep -E "^#? ?${optname}[ =].*$" "${kconfig}")
 	if [[ -z "${curropt}" ]]
 	then
-		print_info 2 "$(get_indent ${indentlevel}) - Adding option '${optname}' with value '${optval}' to '${kconfig}'..."
+		print_info 3 "$(get_indent ${indentlevel}) - Adding option '${optname}' with value '${optval}' to '${kconfig}'..."
 		echo "${optname}=${optval}" >> "${kconfig}" \
 			|| gen_die "Failed to add '${optname}=${optval}' to '$kconfig'"
 
 		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
 	elif [[ "${curropt}" != "*#*" && "${curropt#*=}" == "${optval}" ]]
 	then
-		print_info 2 "$(get_indent ${indentlevel}) - Option '${optname}=${optval}' already set in '${kconfig}'; Skipping ..."
+		print_info 3 "$(get_indent ${indentlevel}) - Option '${optname}=${optval}' already set in '${kconfig}'; Skipping ..."
 	else
-		print_info 2 "$(get_indent ${indentlevel}) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
+		print_info 3 "$(get_indent ${indentlevel}) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
 		sed -i "${kconfig}" \
 			-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
 			|| gen_die "Failed to set '${optname}=${optval}' in '$kconfig'"

@@ -1268,7 +1268,7 @@ append_modules() {
 			continue;
 		fi
 
-		print_info 2 "$(get_indent 3) - Copying ${i}${MOD_EXT} ..."
+		print_info 3 "$(get_indent 3) - Copying ${i}${MOD_EXT} ..."
 		cp -ax --parents "${mymod}" "${TDIR}"/ 2>/dev/null \
 			|| gen_die "Failed to copy '${mymod}' to '${TDIR}/'!"
 		n_copied_modules=$[$n_copied_modules+1]
