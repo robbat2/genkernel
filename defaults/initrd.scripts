@@ -882,6 +882,14 @@ good_msg() {
 	[ "$2" != '1' ] && printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
+good_msg_n() {
+	[ -n "${QUIET}" ] && [ -z "${DEBUG}" ] && return 0
+
+	msg_string=${1}
+	msg_string="${msg_string:-...}"
+	[ "$2" != '1' ] && printf "%b" "${GOOD}>>${NORMAL}${BOLD} ${msg_string}"
+}
+
 bad_msg() {
 	msg_string=${1}
 	msg_string="${msg_string:-...}"

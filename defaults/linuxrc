@@ -593,11 +593,12 @@ then
 fi
 
 # Determine root device
-good_msg 'Determining root device ...'
 ROOTDELAY_100MSEC=1
 [ -n "${ROOTDELAY}" ] && ROOTDELAY_100MSEC=$((${ROOTDELAY} * 10))
 while true
 do
+	good_msg_n 'Determining root device ...'
+
 	while [ "${got_good_root}" != '1' ]
 	do
 		# Start of sleep loop waiting on root
@@ -624,6 +625,7 @@ do
 					then
 						got_good_root=1
 						REAL_ROOT="${ROOT_DEV}"
+						echo
 						good_msg "Detected real_root=${ROOT_DEV}"
 						break
 					fi
@@ -643,6 +645,7 @@ do
 							got_good_root=1
 							REAL_ROOT=${ROOT_DEV}
 							ROOTFSTYPE=zfs
+							echo
 							good_msg "Detected real_root=${ROOT_DEV}"
 							break
 						else
@@ -661,6 +664,7 @@ do
 									got_good_root=1
 									REAL_ROOT=${i}
 									ROOTFSTYPE=zfs
+									echo
 									good_msg "Detected real_root=${ROOT_DEV}"
 									break
 								fi
@@ -682,6 +686,12 @@ do
 			then
 				let ROOTDELAY_100MSEC=${ROOTDELAY_100MSEC}-1
 				sleep 0.1s
+
+				let ROOTDELAY_100MSEC_MODULO=${ROOTDELAY_100MSEC}%10
+				if [ ${ROOTDELAY_100MSEC_MODULO} = 0 ]
+				then
+					printf "."
+				fi
 			fi
 		done  # End of sleep loop waiting on root
 
