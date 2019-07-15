@@ -633,8 +633,8 @@ do
 				ZFS*)
 					if [ "${USE_ZFS}" = '0' ]
 					then
-						prompt_user "REAL_ROOT" "root block device"
-						continue
+						bad_msg "Cannot use ZFS when started without 'dozfs' kernel command-line parameter!"
+						break
 					fi
 
 					ROOT_DEV="${REAL_ROOT#*=}"
