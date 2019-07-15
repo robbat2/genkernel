@@ -695,14 +695,13 @@ do
 			fi
 		done  # End of sleep loop waiting on root
 
-		if [ -z "${REAL_ROOT}" ]
+		if [ ${ROOTDELAY_100MSEC} -le 0 ]
 		then
-			# No REAL_ROOT determined/specified. Prompt user for root block device.
-			prompt_user "REAL_ROOT" "root block device"
-			got_good_root=0
+			echo
+		fi
 
 		# Check for a block device or /dev/nfs or zfs encryption
-		elif [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ]
+		if [ -n "${REAL_ROOT}" ] && [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ]
 		then
 			if [ "${ROOTFSTYPE}" = "zfs" ]
 			then
@@ -718,37 +717,33 @@ do
 						zfs load-key "${ZFS_ENCRYPTIONROOT}"
 						retval=$?
 						# if the key loaded fine, confirm got_good_root to exit second while loop
-						if [ ${retval} -eq 0 ]
+						if [ ${retval} -ne 0 ]
 						then
-							got_good_root=1
-						else
 							bad_msg "${ROOT_DEV} is encrypted and not mountable without key"
-							prompt_user "REAL_ROOT" "root block device"
 							got_good_root=0
+							break
 						fi
 					fi
 				fi
 			else
 				got_good_root=1
 			fi
-		else
-			bad_msg "Block device ${REAL_ROOT} is not a valid root device ..."
-			REAL_ROOT=""
-			got_good_root=0
 		fi
+
+		break
 	done
 
-
-	if [ "${CDROOT}" = 1 -a "${got_good_root}" = '1' -a "${REAL_ROOT}" != "/dev/nfs" ]
+	if [ "${got_good_root}" = '1' -a "${CDROOT}" = 1 -a "${REAL_ROOT}" != "/dev/nfs" ]
 	then
 		# CD already mounted; no further checks necessary
 		break
-	elif [ "${LOOPTYPE}" = 'sgimips' ]
+	elif [ "${got_good_root}" = '1' -a "${LOOPTYPE}" = 'sgimips' ]
 	then
 		# sgimips mounts the livecd root partition directly
 		# there is no isofs filesystem to worry about
 		break
-	else
+	elif [ "${got_good_root}" = '1' ]
+	then
 		good_msg "Mounting ${REAL_ROOT} as root ..."
 
 		if [ "${ROOTFSTYPE}" = 'zfs' ]
@@ -797,13 +792,17 @@ do
 			else
 				bad_msg "The filesystem mounted at ${REAL_ROOT} does not appear to be a valid /, try again"
 				got_good_root=0
-				REAL_ROOT=''
 			fi
 		else
 			bad_msg "Could not mount specified ROOT, try again"
 			got_good_root=0
-			REAL_ROOT=''
 		fi
+	fi
+
+	if [ "${got_good_root}" = '0' ]
+	then
+		bad_msg "Block device ${REAL_ROOT} is not a valid root device ..."
+		prompt_user "REAL_ROOT" "root block device"
 	fi
 done
 # End determine root device
