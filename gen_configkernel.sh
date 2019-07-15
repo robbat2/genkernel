@@ -724,20 +724,20 @@ config_kernel() {
 			print_info 1 "$(get_indent 1)>> Running 'make olddefconfig' due to changed kernel options ..."
 			compile_generic olddefconfig kernel 2>/dev/null
 		fi
+
+		print_info 2 "$(get_indent 1)>> Checking if required kernel options are still present ..."
+		local required_kernel_option=
+		for required_kernel_option in "${required_kernel_options[@]}"
+		do
+			local optval=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "${required_kernel_option}")
+			if [ -z "${optval}" ]
+			then
+				gen_die "Something went wrong: Required kernel option '${required_kernel_option}' which genkernel tried to set is missing!"
+			else
+				print_info 3 "$(get_indent 2) - '${required_kernel_option}' is set to '${optval}'"
+			fi
+		done
 	else
 		print_info 2 "$(get_indent 1)>> genkernel did not need to add/modify any kernel options."
 	fi
-
-	print_info 2 "$(get_indent 1)>> Checking if required kernel options are still present ..."
-	local required_kernel_option=
-	for required_kernel_option in "${required_kernel_options[@]}"
-	do
-		local optval=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "${required_kernel_option}")
-		if [ -z "${optval}" ]
-		then
-			gen_die "Something went wrong: Required kernel option '${required_kernel_option}' which genkernel tried to set is missing!"
-		else
-			print_info 3 "$(get_indent 2) - '${required_kernel_option}' is set to '${optval}'"
-		fi
-	done
 }
