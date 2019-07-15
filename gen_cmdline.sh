@@ -62,6 +62,9 @@ longusage() {
   echo "	--ramdisk-modules	Copy required modules to the initramfs"
   echo "	--no-ramdisk-modules	Don't copy any modules to the initramfs"
   echo "	--all-ramdisk-modules	Copy all kernel modules to the initramfs"
+  echo "	--module-rebuild	Automatically run 'emerge @module-rebuild' when"
+  echo "				necessary (and possible)"
+  echo "	--no-module-rebuild	Don't automatically run 'emerge @module-rebuild'"
   echo "	--callback=<...>	Run the specified arguments after the"
   echo "				kernel and modules have been compiled"
   echo "	--static		Build a static (monolithic kernel)"
@@ -568,6 +571,10 @@ parse_cmdline() {
 		--all-ramdisk-modules|--no-all-ramdisk-modules)
 			CMD_ALLRAMDISKMODULES=$(parse_optbool "$*")
 			print_info 2 "CMD_ALLRAMDISKMODULES: ${CMD_ALLRAMDISKMODULES}"
+			;;
+		--module-rebuild|--no-module-rebuild)
+			CMD_MODULEREBUILD=$(parse_optbool "$*")
+			print_info 2 "CMD_MODULEREBUILD: ${CMD_MODULEREBUILD}"
 			;;
 		--callback=*)
 			CMD_CALLBACK="${*#*=}"

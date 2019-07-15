@@ -133,6 +133,7 @@ determine_real_args() {
 
 	set_config_with_override STRING MINKERNPACKAGE           CMD_MINKERNPACKAGE
 	set_config_with_override STRING MODULESPACKAGE           CMD_MODULESPACKAGE
+	set_config_with_override BOOL   MODULEREBUILD            CMD_MODULEREBUILD            "yes"
 	set_config_with_override STRING KERNCACHE                CMD_KERNCACHE
 	set_config_with_override BOOL   RAMDISKMODULES           CMD_RAMDISKMODULES           "yes"
 	set_config_with_override BOOL   ALLRAMDISKMODULES        CMD_ALLRAMDISKMODULES        "no"

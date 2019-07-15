@@ -170,6 +170,12 @@ KERNEL COMPILATION
 *--*[*no-*]*all-ramdisk-modules*::
     Copies or does not copy all kernel modules to the initrd.
 
+*--*[*no-*]*module-rebuild*::
+    Runs, or does not run "emerge @module-rebuild" to build out-of-tree
+    modules when possible, i.e. when non-static kernel and modules will be
+    build, installed, no custom INSTALL_MOD_PATH is set,
+    '/var/lib/module-rebuild/moduledb' exists and is not empty.
+
 *--callback*=<...>::
     Run the specified arguments in the current environment after the
     kernel and modules have been compiled.

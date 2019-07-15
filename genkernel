@@ -238,6 +238,7 @@ then
 	if isTrue "${BUILD_MODULES}" && ! isTrue "${BUILD_STATIC}"
 	then
 		compile_modules
+		compile_external_modules
 	fi
 
 	if isTrue "${SAVE_CONFIG}"
