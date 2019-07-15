@@ -1041,8 +1041,21 @@ trap_cleanup() {
 		exec &> /dev/tty
 	fi
 
+	local signal_msg=
+	if [ -n "${GK_TRAP_SIGNAL}" ]
+	then
+		case "${GK_TRAP_SIGNAL}" in
+			SIGABRT|SIGHUP|SIGQUIT|SIGINT|SIGTERM)
+				signal_msg=" (signal ${GK_TRAP_SIGNAL} received)"
+				;;
+			*)
+				signal_msg=" (unknown signal ${GK_TRAP_SIGNAL} received)"
+				;;
+		esac
+	fi
+
 	echo ''
-	print_error 1 "Genkernel was unexpectedly terminated."
+	print_error 1 "Genkernel was unexpectedly terminated${signal_msg}."
 	print_error 1 "Please consult '${LOGFILE}' for more information and any"
 	print_error 1 "errors that were reported above."
 	cleanup
@@ -1236,7 +1249,11 @@ unpack() {
 }
 
 set_default_gk_trap() {
-	trap trap_cleanup SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+	local signal
+	for signal in SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
+	do
+		trap "GK_TRAP_SIGNAL=${signal}; trap_cleanup" ${signal}
+	done
 }
 
 #
