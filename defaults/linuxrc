@@ -628,8 +628,10 @@ do
 
 					if [ ${retval} -eq 0 ] && [ -n "${ROOT_DEV}" ]
 					then
+						got_good_root=1
 						good_msg "Detected real_root=${ROOT_DEV}"
 						REAL_ROOT="${ROOT_DEV}"
+						break
 					else
 						prompt_user "REAL_ROOT" "root block device"
 						got_good_root=0
