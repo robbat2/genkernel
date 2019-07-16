@@ -379,11 +379,11 @@ then
 	print_info 1 'Where $ROOT is the device node for your root partition as the'
 	print_info 1 'one specified in /etc/fstab'
 
-	if isTrue "${show_warning_initramfs_is_required}"
+	if isTrue "${show_warning_initramfs_is_required}" && isTrue "${BUILD_RAMDISK}"
 	then
 		echo
 		print_warning 1 "If you require Genkernel's hardware detection features, you ${BOLD}MUST${NORMAL}"
-		print_warning 1 "tell your bootloader to use the provided initramfs file (${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV})."
+		print_warning 1 "tell your bootloader to use the provided initramfs file (${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV})."
 	fi
 	unset show_warning_initramfs_is_required
 fi
@@ -394,6 +394,10 @@ then
 	then
 		print_info 1 ''
 		print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
+	elif ! isTrue "${BUILD_KERNEL}" && isTrue "${CMD_INSTALL}"
+	then
+		print_info 1 ''
+		print_info 1 "You will find the initramfs in '${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
 	fi
 
 	echo
