@@ -593,8 +593,9 @@ then
 fi
 
 # Determine root device
-ROOTDELAY_100MSEC=1
-[ -n "${ROOTDELAY}" ] && ROOTDELAY_100MSEC=$((${ROOTDELAY} * 10))
+let ROOTDELAY_TIMEOUT=$(date +%s)+1
+ROOTDELAY_TIME_WAITED=0
+[ -n "${ROOTDELAY}" -a ${ROOTDELAY} -gt 0 ] && let ROOTDELAY_TIMEOUT=${ROOTDELAY_TIMEOUT}+${ROOTDELAY}-1
 while true
 do
 	good_msg_n 'Determining root device ...'
@@ -602,7 +603,7 @@ do
 	while [ "${got_good_root}" != '1' ]
 	do
 		# Start of sleep loop waiting on root
-		while [ ${ROOTDELAY_100MSEC} -ge 0 -a "${got_good_root}" != '1' ]
+		while [ "${got_good_root}" != '1' -a $(date +%s) -le ${ROOTDELAY_TIMEOUT} ]
 		do
 			case "${REAL_ROOT}" in
 				LABEL=*|UUID=*|PARTUUID=*)
@@ -676,6 +677,7 @@ do
 					if [ -b "${REAL_ROOT}" ]
 					then
 						got_good_root=1
+						echo
 						good_msg "Detected real_root=${REAL_ROOT}"
 						break
 					fi
@@ -684,10 +686,10 @@ do
 
 			if [ "${got_good_root}" != '1' ]
 			then
-				let ROOTDELAY_100MSEC=${ROOTDELAY_100MSEC}-1
+				let ROOTDELAY_TIME_WAITED=${ROOTDELAY_TIME_WAITED}+1
 				sleep 0.1s
 
-				let ROOTDELAY_100MSEC_MODULO=${ROOTDELAY_100MSEC}%10
+				let ROOTDELAY_100MSEC_MODULO=${ROOTDELAY_TIME_WAITED}%10
 				if [ ${ROOTDELAY_100MSEC_MODULO} = 0 ]
 				then
 					printf "."
@@ -695,13 +697,13 @@ do
 			fi
 		done  # End of sleep loop waiting on root
 
-		if [ ${ROOTDELAY_100MSEC} -le 0 ]
+		if [ $(date +%s) -gt ${ROOTDELAY_TIMEOUT} ]
 		then
 			echo
 		fi
 
 		# Check for a block device or /dev/nfs or zfs encryption
-		if [ -n "${REAL_ROOT}" ] && [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ]
+		if [ -n "${REAL_ROOT}" ] && [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ] || [ -b "${REAL_ROOT}" ]
 		then
 			if [ "${ROOTFSTYPE}" = "zfs" ]
 			then
@@ -803,6 +805,8 @@ do
 	then
 		bad_msg "Block device ${REAL_ROOT} is not a valid root device ..."
 		prompt_user "REAL_ROOT" "root block device"
+		ROOTDELAY_TIME_WAITED=0
+		let ROOTDELAY_TIMEOUT=$(date +%s)+1
 	fi
 done
 # End determine root device
