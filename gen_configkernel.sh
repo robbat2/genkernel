@@ -250,8 +250,8 @@ config_kernel() {
 	then
 		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for bcache support are set ..."
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BCACHE" "${newcfg_setting}" &&
-			required_kernel_options+=( 'CONFIG_BCACHE' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BCACHE" "${newcfg_setting}" \
+			&& required_kernel_options+=( 'CONFIG_BCACHE' )
 	fi
 
 	# Make sure lvm modules are enabled in the kernel, if --lvm
@@ -286,26 +286,26 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" &&
-			required_kernel_options+=( 'CONFIG_BLK_DEV_DM' )
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_CRYPT" "${cfg_CONFIG_BLK_DEV_DM}" &&
-			required_kernel_options+=( 'CONFIG_DM_CRYPT' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" \
+			&& required_kernel_options+=( 'CONFIG_BLK_DEV_DM' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_DM_CRYPT" "${cfg_CONFIG_BLK_DEV_DM}" \
+			&& required_kernel_options+=( 'CONFIG_DM_CRYPT' )
 
 		local cfg_CONFIG_CRYPTO_AES=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES")
 		case "${cfg_CONFIG_CRYPTO_AES}" in
 			y|m) ;; # Do nothing
 			*) cfg_CONFIG_CRYPTO_AES=${newcfg_setting}
 		esac
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_XTS" "${cfg_CONFIG_CRYPTO_AES}" &&
-			required_kernel_options+=( 'CONFIG_CRYPTO_XTS' )
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256" "${cfg_CONFIG_CRYPTO_AES}" &&
-			required_kernel_options+=( 'CONFIG_CRYPTO_SHA256' )
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES" "${cfg_CONFIG_CRYPTO_AES}" &&
-			required_kernel_options+=( 'CONFIG_CRYPTO_AES' )
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_HASH" "${cfg_CONFIG_CRYPTO_AES}" &&
-			required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_HASH' )
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_SKCIPHER" "${cfg_CONFIG_CRYPTO_AES}" &&
-			required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_SKCIPHER' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_XTS" "${cfg_CONFIG_CRYPTO_AES}" \
+			&& required_kernel_options+=( 'CONFIG_CRYPTO_XTS' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256" "${cfg_CONFIG_CRYPTO_AES}" \
+			&& required_kernel_options+=( 'CONFIG_CRYPTO_SHA256' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES" "${cfg_CONFIG_CRYPTO_AES}" \
+			&& required_kernel_options+=( 'CONFIG_CRYPTO_AES' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_HASH" "${cfg_CONFIG_CRYPTO_AES}" \
+			&& required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_HASH' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_SKCIPHER" "${cfg_CONFIG_CRYPTO_AES}" \
+			&& required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_SKCIPHER' )
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_AEAD" "${cfg_CONFIG_CRYPTO_AES}"
 
 		local cfg_CONFIG_X86=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_X86")
