@@ -289,6 +289,15 @@ append_base_layout() {
 		|| gen_die "Failed to create '${TDIR}/lib/dracut/dracut-gk-version.info'!"
 
 	local -a build_parameters
+
+	if isTrue "${KEYMAP}"
+	then
+		build_parameters+=( --keymap )
+		isTrue "${DOKEYMAPAUTO}" && build_parameters+=( --do-keymap-auto )
+	else
+		build_parameters+=( --no-keymap )
+	fi
+
 	isTrue "${COMPRESS_INITRD}" && build_parameters+=( --compress-initramfs ) || build_parameters+=( --no-compress-initramfs )
 	isTrue "${MICROCODE_INITRAMFS}" && build_parameters+=( --microcode-initramfs ) || build_parameters+=( --no-microcode-initramfs )
 	isTrue "${RAMDISKMODULES}" && build_parameters+=( --ramdisk-modules ) || build_parameters+=( --no-ramdisk-modules )
