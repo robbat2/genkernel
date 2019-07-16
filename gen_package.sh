@@ -79,7 +79,7 @@ gen_minkernpackage() {
 	local -a tar_cmd=( "$(get_tar_cmd "${MINKERNPACKAGE}")" )
 	tar_cmd+=( '*' )
 
-	print_info 2 "COMMAND: ${tar_cmd[*]}" 1 0 1
+	print_info 3 "COMMAND: ${tar_cmd[*]}" 1 0 1
 	eval "${tar_cmd[@]}" || gen_die "Failed to create compressed min kernel package '${MINKERNPACKAGE}'!"
 }
 
@@ -99,7 +99,7 @@ gen_modulespackage() {
 		local -a tar_cmd=( "$(get_tar_cmd "${MODULESPACKAGE}")" )
 		tar_cmd+=( '*' )
 
-		print_info 2 "COMMAND: ${tar_cmd[*]}" 1 0 1
+		print_info 3 "COMMAND: ${tar_cmd[*]}" 1 0 1
 		eval "${tar_cmd[@]}" || gen_die "Failed to create compressed modules package '${MODULESPACKAGE}'!"
 	else
 		print_info 1 "'${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found; Skipping creation of modules package in '${MODULESPACKAGE}' ..."
@@ -171,7 +171,7 @@ gen_kerncache() {
 	local -a tar_cmd=( "$(get_tar_cmd "${KERNCACHE}")" )
 	tar_cmd+=( '*' )
 
-	print_info 2 "COMMAND: ${tar_cmd[*]}" 1 0 1
+	print_info 3 "COMMAND: ${tar_cmd[*]}" 1 0 1
 	eval "${tar_cmd[@]}" || gen_die "Failed to create compressed kernel package '${KERNCACHE}'!"
 }
 

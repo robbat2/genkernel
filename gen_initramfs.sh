@@ -171,10 +171,10 @@ copy_system_binaries() {
 }
 
 log_future_cpio_content() {
-	print_info 2 "=================================================================" 1 0 1
-	print_info 2 "About to add these files from '${PWD}' to cpio archive:" 1 0 1
-	print_info 2 "$(find . | xargs ls -ald)" 1 0 1
-	print_info 2 "=================================================================" 1 0 1
+	print_info 3 "=================================================================" 1 0 1
+	print_info 3 "About to add these files from '${PWD}' to cpio archive:" 1 0 1
+	print_info 3 "$(find . | xargs ls -ald)" 1 0 1
+	print_info 3 "=================================================================" 1 0 1
 }
 
 append_devices() {
@@ -199,10 +199,10 @@ append_devices() {
 	nod /dev/ttyS0 600 0 0 c 4 64
 	EOF
 
-	print_info 2 "=================================================================" 1 0 1
-	print_info 2 "Adding the following devices to cpio:" 1 0 1
-	print_info 2 "$(cat "${TFILE}")" 1 0 1
-	print_info 2 "=================================================================" 1 0 1
+	print_info 3 "=================================================================" 1 0 1
+	print_info 3 "Adding the following devices to cpio:" 1 0 1
+	print_info 3 "$(cat "${TFILE}")" 1 0 1
+	print_info 3 "=================================================================" 1 0 1
 
 	"${KERNEL_OUTPUTDIR}"/usr/gen_init_cpio "${TFILE}" >"${CPIO}" \
 		|| gen_die "Failed to append devices to cpio!"
@@ -1264,7 +1264,7 @@ append_modules() {
 		mymod=$(find "${_MODULES_DIR}" -name "${i}${MOD_EXT}" 2>/dev/null | head -n 1)
 		if [ -z "${mymod}" ]
 		then
-			print_warning 2 "$(get_indent 3) - ${i}${MOD_EXT} not found; Skipping ..."
+			print_warning 3 "$(get_indent 3) - ${i}${MOD_EXT} not found; Skipping ..."
 			continue;
 		fi
 
@@ -1674,7 +1674,7 @@ create_initramfs() {
 			if [ -n "${compression}" ]
 			then
 				print_info 1 "$(get_indent 1)>> Compressing cpio data (${compress_ext}) ..."
-				print_info 2 "COMMAND: ${compress_cmd} $CPIO" 1 0 1
+				print_info 3 "COMMAND: ${compress_cmd} $CPIO" 1 0 1
 				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
 				mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
 			else

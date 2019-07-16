@@ -62,7 +62,7 @@ gkexec() {
 	local -a command=( "${1}" )
 	local pipes=${2:-0}
 
-	print_info 2 "COMMAND: ${command[@]}" 1 0 1
+	print_info 3 "COMMAND: ${command[@]}" 1 0 1
 
 	command+=( "$(catch_output_and_failures "Command '${command[@]}' failed!" ${pipes})" )
 	eval "${command[@]}"

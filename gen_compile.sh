@@ -37,7 +37,7 @@ compile_external_modules() {
 	fi
 
 	print_info 1 "$(get_indent 1)>> Compiling out-of-tree module(s) ..."
-	print_info 2 "COMMAND: ${command}" 1 0 1
+	print_info 3 "COMMAND: ${command}" 1 0 1
 
 	if [ "${LOGLEVEL}" -gt 3 ]
 	then
@@ -199,18 +199,18 @@ compile_generic() {
 	if [ "${argstype}" == 'kernelruntask' ]
 	then
 		# Silent operation, forced -j1
-		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
+		print_info 3 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
 		eval ${NICEOPTS}${MAKE} -s ${MAKEOPTS} -j1 ${ARGS} ${target} $*
 		RET=$?
 	elif [ "${LOGLEVEL}" -gt 3 ]
 	then
 		# Output to stdout and logfile
-		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
+		print_info 3 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
 		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* 2>&1 | tee -a "${LOGFILE}"
 		RET=${PIPESTATUS[0]}
 	else
 		# Output to logfile only
-		print_info 2 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
+		print_info 3 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
 		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> "${LOGFILE}" 2>&1
 		RET=$?
 	fi
@@ -340,7 +340,7 @@ compile_kernel() {
 }
 
 determine_busybox_config_file() {
-	print_info 2 "$(get_indent 3)busybox: >> Checking for suitable busybox configuration ..."
+	print_info 2 "$(get_indent 2)busybox: >> Checking for suitable busybox configuration ..."
 
 	if [ -n "${CMD_BUSYBOX_CONFIG}" ]
 	then
@@ -378,7 +378,7 @@ determine_busybox_config_file() {
 				BUSYBOX_CONFIG="$f"
 				break
 			else
-				print_info 3 "$(get_indent 1)- '${f}' not found; Skipping ..."
+				print_info 3 "$(get_indent 3)- '${f}' not found; Skipping ..."
 			fi
 		done
 
