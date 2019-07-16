@@ -1586,7 +1586,7 @@ create_initramfs() {
 				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
 		fi
 
-		find . -print0 | cpio ${CPIO_ARGS} -F "${CPIO}" 2>/dev/null \
+		find . -print0 | sort -z | cpio ${CPIO_ARGS} --reproducible -F "${CPIO}" 2>/dev/null \
 			|| gen_die "rebuilding cpio for dedupe"
 	else
 		print_info 1 "$(get_indent 1)>> Cannot deduping cpio contents without root; Skipping ..."
