@@ -1906,8 +1906,14 @@ sdelay() {
 	# Sleep a specific number of seconds if SDELAY is set
 	if [ -n "${SDELAY}" ]
 	then
-		good_msg "Waiting ${SDELAY} seconds ..."
-		sleep ${SDELAY}
+		good_msg_n "Waiting ${SDELAY} seconds ..."
+		while [ ${SDELAY} -gt 0 ]
+		do
+			let SDELAY=${SDELAY}-1
+			sleep 1
+			printf "."
+		done
+		echo
 	elif [ "${CDROOT}" = '1' ]
 	then
 		good_msg 'Hint: Use scandelay[=seconds] if your live medium is slow and boot fails'
