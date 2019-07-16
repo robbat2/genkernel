@@ -238,6 +238,17 @@ config_kernel() {
 		fi
 	fi
 
+	if isTrue "${BUILD_RAMDISK}"
+	then
+		# We really need this or we will fail to boot
+		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for genkernel's initramfs usage are set ..."
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TTY" "y" \
+			&& required_kernel_options+=( 'CONFIG_TTY' )
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UNIX98_PTYS" "y" \
+			&& required_kernel_options+=( 'CONFIG_UNIX98_PTYS' )
+	fi
+
 	# If the user has configured DM as built-in, we need to respect that.
 	local cfg_CONFIG_BLK_DEV_DM=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM")
 	case "${cfg_CONFIG_BLK_DEV_DM}" in
