@@ -1727,9 +1727,10 @@ create_initramfs() {
 			if [ -f "${UCODEDIR}/AuthenticAMD.bin" -o -f "${UCODEDIR}/GenuineIntel.bin" ]
 			then
 				print_info 1 "$(get_indent 2)early-microcode: Creating cpio ..."
-				pushd "${TEMP}/ucode_tmp" > /dev/null
-				find . -print0 | cpio --null -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
-				popd > /dev/null
+				pushd "${TEMP}/ucode_tmp" &>/dev/null || gen_die "Failed to chdir to '${TEMP}/ucode_tmp'!"
+				log_future_cpio_content
+				find . -print0 | cpio --quiet --null -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
+				popd &>/dev/null || gen_die "Failed to chdir!"
 				print_info 1 "$(get_indent 2)early-microcode: Prepending early-microcode to initramfs ..."
 				cat "${TEMP}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
 				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
