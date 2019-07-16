@@ -87,7 +87,7 @@ NORMAL=${GOOD} print_info 1 "Gentoo Linux Genkernel; Version ${GK_V}${NORMAL}"
 print_info 1 "Using genkernel configuration from '${_GENKERNEL_CONF}' ..."
 unset _GENKERNEL_CONF
 print_info 1 "Running with options: ${GK_OPTIONS}"
-echo
+print_info 1 '' 1 0
 
 # Save any customizations of MODULES_* first.
 override_module_vars="$(compgen -A variable |grep '^MODULES_')"
@@ -182,14 +182,14 @@ else
 				if ! mount ${BOOTDIR}
 				then
 					print_warning 1 "${BOLD}WARNING${NORMAL}: Failed to mount ${BOOTDIR}!"
-					echo
+					print_warning 1 '' 1 0
 				else
 					print_info 1 "mount: ${BOOTDIR} mounted successfully!"
 				fi
 			else
 				print_warning 1 "${BOLD}WARNING${NORMAL}: No mounted ${BOOTDIR} partition detected!"
 				print_warning 1 "$(get_indent 1)Run ``mount ${BOOTDIR}`` to mount it!"
-				echo
+				print_warning 1 '' 1 0
 			fi
 		fi
 	elif is_boot_ro
@@ -199,7 +199,7 @@ else
 			if ! mount -o remount,rw ${BOOTDIR}
 			then
 				print_warning 1 "${BOLD}WARNING${NORMAL}: Failed to remount ${BOOTDIR} RW!"
-				echo
+				print_warning 1 '' 1 0
 			else
 				print_info 1 "mount: ${BOOTDIR} remounted read/write successfully!"
 				BOOTRW="yes"
@@ -283,16 +283,16 @@ then
 
 	if [ "${CALLBACK_ESCAPE}" -eq 0 ]
 	then
-		echo
-		echo
+		print_info 1 '' 1 0
+		print_info 1 '' 1 0
 		eval ${CMD_CALLBACK} | tee -a "${LOGFILE}"
 		CMD_STATUS="${PIPESTATUS[0]}"
-		echo
+		print_info 1 '' 1 0
 		print_info 1 "<<< Callback exit status: ${CMD_STATUS}"
 		[ "${CMD_STATUS}" -ne 0 ] && gen_die '--callback failed!'
 	else
-		echo
-		print_info 1 ">>> Callback cancelled ..."
+		print_warning 1 '' 1 0
+		print_warning 1 ">>> Callback cancelled ..."
 	fi
 
 	# restore default trap
@@ -381,7 +381,7 @@ then
 
 	if isTrue "${show_warning_initramfs_is_required}" && isTrue "${BUILD_RAMDISK}"
 	then
-		echo
+		print_warning 1 '' 1 0
 		print_warning 1 "If you require Genkernel's hardware detection features, you ${BOLD}MUST${NORMAL}"
 		print_warning 1 "tell your bootloader to use the provided initramfs file (${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV})."
 	fi
@@ -400,7 +400,7 @@ then
 		print_info 1 "You will find the initramfs in '${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
 	fi
 
-	echo
+	print_warning 1 '' 1 0
 	print_warning 1 "${BOLD}WARNING... WARNING... WARNING...${NORMAL}"
 	print_warning 1 'Additional kernel parameters that *may* be required to boot properly:'
 	isTrue "${SPLASH}"    && print_warning 1 "- Add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
@@ -458,7 +458,7 @@ fi
 
 isTrue "${BOOTRW}" && mount -o remount,ro ${BOOTDIR}
 
-echo
+print_info 1 '' 1 0
 print_info 1 'Do NOT report kernel bugs as genkernel bugs unless your bug'
 print_info 1 'is about the default genkernel configuration...'
 print_info 1 ''
