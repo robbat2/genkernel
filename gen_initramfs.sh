@@ -226,6 +226,7 @@ append_base_layout() {
 		etc \
 		etc/mdev/helpers \
 		lib \
+		lib/dracut \
 		mnt \
 		proc \
 		run \
@@ -282,6 +283,38 @@ append_base_layout() {
 
 	echo "Genkernel $GK_V" > "${TDIR}"/etc/build_id \
 		|| gen_die "Failed to create '${TDIR}/etc/build_id'!"
+
+	# Allow lsinitrd from dracut to process our initramfs
+	echo "$(cat "${TDIR}/etc/build_id") ($(cat "${TDIR}/etc/build_date"))" > "${TDIR}"/lib/dracut/dracut-gk-version.info \
+		|| gen_die "Failed to create '${TDIR}/lib/dracut/dracut-gk-version.info'!"
+
+	local -a build_parameters
+	isTrue "${COMPRESS_INITRD}" && build_parameters+=( --compress-initramfs ) || build_parameters+=( --no-compress-initramfs )
+	isTrue "${MICROCODE_INITRAMFS}" && build_parameters+=( --microcode-initramfs ) || build_parameters+=( --no-microcode-initramfs )
+	isTrue "${RAMDISKMODULES}" && build_parameters+=( --ramdisk-modules ) || build_parameters+=( --no-ramdisk-modules )
+	isTrue "${BUSYBOX}" && build_parameters+=( --busybox ) || build_parameters+=( --no-busybox )
+	isTrue "${DISKLABEL}" && build_parameters+=( --disklabel ) || build_parameters+=( --no-disklabel )
+	isTrue "${BTRFS}" && build_parameters+=( --btrfs ) || build_parameters+=( --no-btrfs )
+	isTrue "${ISCSI}" && build_parameters+=( --iscsi ) || build_parameters+=( --no-iscsi )
+	isTrue "${MULTIPATH}" && build_parameters+=( --multipath ) || build_parameters+=( --no-multipath )
+	isTrue "${DMRAID}" && build_parameters+=( --dmraid ) || build_parameters+=( --no-dmraid )
+	isTrue "${MDADM}" && build_parameters+=( --mdadm ) || build_parameters+=( --no-mdadm )
+	isTrue "${LVM}" && build_parameters+=( --lvm ) || build_parameters+=( --no-lvm )
+	isTrue "${UNIONFS}" && build_parameters+=( --unionfs ) || build_parameters+=( --no-unionfs )
+	isTrue "${ZFS}" && build_parameters+=( --zfs ) || build_parameters+=( --no-zfs )
+	isTrue "${SPLASH}" && build_parameters+=( --splash ) || build_parameters+=( --no-splash )
+	isTrue "${STRACE}" && build_parameters+=( --strace ) || build_parameters+=( --no-strace )
+	isTrue "${GPG}" && build_parameters+=( --gpg ) || build_parameters+=( --no-gpg )
+	isTrue "${LUKS}" && build_parameters+=( --luks ) || build_parameters+=( --no-luks )
+	isTrue "${FIRMWARE}" && build_parameters+=( --firmware ) || build_parameters+=( --no-firmware )
+	[ -n "${FIRMWARE_DIR}" ] && build_parameters+=( --firmware-dir="${FIRMWARE_DIR}" )
+	[ -n "${FIRMWARE_FILES}" ] && build_parameters+=( --firmware-files="${FIRMWARE_FILES}" )
+	isTrue "${SSH}" && build_parameters+=( --ssh ) || build_parameters+=( --no-ssh )
+	isTrue "${E2FSPROGS}" && build_parameters+=( --e2fsprogs ) || build_parameters+=( --no-e2fsprogs )
+	isTrue "${XFSPROGS}" && build_parameters+=( --xfsprogs ) || build_parameters+=( --no-xfsprogs )
+
+	echo "${build_parameters[@]}" > "${TDIR}"/lib/dracut/build-parameter.txt \
+		|| gen_die "Failed to create '${TDIR}/lib/dracut/build-parameter.txt'!"
 
 	dd if=/dev/zero of="${TDIR}/var/log/lastlog" bs=1 count=0 seek=0 &>/dev/null \
 		|| die "Failed to create '${TDIR}/var/log/lastlog'!"
@@ -1701,6 +1734,7 @@ create_initramfs() {
 			print_info 1 "$(get_indent 1)>> Adding early-microcode support ..."
 			local UCODEDIR="${TEMP}/ucode_tmp/kernel/x86/microcode/"
 			mkdir -p "${UCODEDIR}" || gen_die "Failed to create '${UCODEDIR}'!"
+			echo 1 > "${TEMP}/ucode_tmp/early_cpio"
 
 			if [[ "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]]
 			then
