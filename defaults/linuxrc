@@ -827,6 +827,18 @@ do
 
 	if [ "${got_good_root}" = '0' ]
 	then
+		if mountpoint "${NEW_ROOT}" 1>/dev/null 2>&1
+		then
+			umount "${NEW_ROOT}" 1>/dev/null 2>&1
+			if [ $? -ne 0 ]
+			then
+				echo
+				bad_msg "Failed to umount ${REAL_ROOT} which was mounted as ${NEW_ROOT}!"
+				warn_msg "You probably need to open a shell and restore mountpoint before you are able to mount another device as ${NEW_ROOT}."
+				echo
+			fi
+		fi
+
 		bad_msg "Block device ${REAL_ROOT} is not a valid root device ..."
 		prompt_user "REAL_ROOT" "root block device"
 		ROOTDELAY_TIME_WAITED=0
