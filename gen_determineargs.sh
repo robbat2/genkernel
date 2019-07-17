@@ -204,6 +204,12 @@ determine_real_args() {
 			arm*)
 				ARCH="arm"
 				;;
+			hppa64*)
+				ARCH="parisc64"
+				;;
+			hppa*)
+				ARCH="parisc"
+				;;
 			i386)
 				ARCH="ia32"
 				;;

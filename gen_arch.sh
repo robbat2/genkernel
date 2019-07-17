@@ -8,6 +8,9 @@ determine_kernel_arch() {
 
 	KERNEL_ARCH=${ARCH}
 	case ${ARCH} in
+		parisc|parisc64)
+			KERNEL_ARCH=parisc
+			;;
 		ppc|ppc64*)
 			if [ "${VER}" -ge "3" ]
 			then
