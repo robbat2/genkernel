@@ -244,6 +244,8 @@ determine_real_args() {
 		if [ -z "${ARCH}" ]
 		then
 			gen_die "Was unable to determine machine hardware name using 'uname -m'!"
+		else
+			print_info 5 "Read '${ARCH}' from 'uname -m' ..."
 		fi
 
 		case "${ARCH}" in
@@ -276,14 +278,17 @@ determine_real_args() {
 	then
 		gen_die "Failed to determine CBUILD using '${build_cc} -dumpmachine' command!"
 	else
+		print_info 5 "CBUILD set to '${CBUILD}' ..."
 		CHOST="${CBUILD}"
 	fi
 	unset build_cc
 
-	if [ "${CMD_CROSS_COMPILE}" != '' ]
+	if [ -n "${CMD_CROSS_COMPILE}" ]
 	then
 		CHOST="${CMD_CROSS_COMPILE}"
 	fi
+
+	print_info 5 "CHOST set to '${CHOST}' ..."
 
 	# Initialize variables
 	BOOTDIR=$(arch_replace "${BOOTDIR}")
