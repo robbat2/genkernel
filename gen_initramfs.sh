@@ -1713,15 +1713,12 @@ create_initramfs() {
 				lz4) compress_ext='.lz4' compress_cmd="${cmd_lz4} -f -9 -l -q" ;;
 			esac
 
-			if [ -n "${compression}" ]
-			then
-				print_info 1 "$(get_indent 1)>> Compressing cpio data (${compress_ext}) ..."
-				print_info 3 "COMMAND: ${compress_cmd} $CPIO" 1 0 1
-				${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
-				mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
-			else
-				print_info 1 "$(get_indent 1)>> Not compressing cpio data ..."
-			fi
+			print_info 1 "$(get_indent 1)>> Compressing cpio data (${compress_ext}) ..."
+			print_info 3 "COMMAND: ${compress_cmd} $CPIO" 1 0 1
+			${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
+			mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
+		else
+			print_info 3 "$(get_indent 1)>> --no-compress-initramfs is set; Skipping compression of initramfs ..."
 		fi
 
 		## To early load microcode we need to follow some pretty specific steps
