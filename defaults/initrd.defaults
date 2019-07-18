@@ -80,6 +80,7 @@ GK_NET_ROUTES=
 GK_NET_TIMEOUT_DAD=10
 GK_NET_TIMEOUT_DECONFIGURATION=10
 GK_NET_TIMEOUT_DHCP=10
+GK_NET_TIMEOUT_INTERFACE=10
 GK_SHELL_LOCKFILE='/var/run/rescueshell.pid'
 GK_SSHD_LOCKFILE='/tmp/remote-rescueshell.lock'
 GK_SSHD_PIDFILE='/var/run/dropbear.pid'
@@ -119,8 +120,8 @@ DEFAULT_NFSOPTIONS="ro,nolock"
 # - modules
 HWOPTS_BLK='nvme pata sata scsi usb firewire waitscan'
 HWOPTS_OBSOLETE='pcmcia ataraid' # Obsolete stuff that might be useful on old hardware, do$X only.
-HWOPTS="keymap cache modules virtio hyperv ${HWOPTS_BLK} bcache lvm dmraid multipath mdadm zfs fs net iscsi crypto"
+HWOPTS="keymap cache modules virtio hyperv ${HWOPTS_BLK} bcache lvm dmraid multipath mdadm zfs fs iscsi crypto"
 
 # This is the set of default HWOPTS, in the order that they are loaded.
 # This is whitespace aligned with HWOPTS above.
-MY_HWOPTS="          modules virtio hyperv ${HWOPTS_BLK} bcache lvm dmraid           mdadm     fs net       crypto"
+MY_HWOPTS="          modules virtio hyperv ${HWOPTS_BLK} bcache lvm dmraid           mdadm     fs       crypto"

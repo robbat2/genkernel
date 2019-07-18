@@ -572,6 +572,9 @@ recognized by the kernel itself.
 *gk.net.timeout.dhcp*=<...>::
     By default we will wait up to 10 seconds for a DHCP server reply.
 
+*gk.net.timeout.interface*=<...>::
+    By default we will wait up to 10 seconds for interface to show up.
+
 *dosshd*::
     Will start an SSH daemon within initramfs allowing to remotely unlock
     encrypted devices or just for debugging purpose.

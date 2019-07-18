@@ -1597,6 +1597,10 @@ iface_name() {
 }
 
 start_network() {
+	# Load network modules only when we need them to avoid possible
+	# firmware problems for people not using network that early
+	MY_HWOPTS=net load_modules
+
 	# At least gk.net.iface can only be processed after sysfs was
 	# mounted.
 	local x=
@@ -1620,16 +1624,20 @@ start_network() {
 				GK_NET_GW=${x#*=}
 			;;
 			gk.net.iface=*)
-				local tmp_iface=$(iface_name "${x#*=}")
-				if [ -z "${tmp_iface}" ]
-				then
-					warn_msg "Interface specified by '${x}' not found, falling back to genkernel defaults ..."
-				else
-					GK_NET_IFACE=${tmp_iface}
-				fi
+				GK_NET_IFACE=${x#*=}
 			;;
 			gk.net.routes=*)
 				GK_NET_ROUTES=${x#*=}
+			;;
+			gk.net.timeout.interface=*)
+				local tmp_interface_timeout=${x#*=}
+				if is_int "${tmp_interface_timeout}"
+				then
+					GK_NET_TIMEOUT_INTERFACE=${tmp_interface_timeout}
+				else
+					warn_msg "'${x}' does not look like a valid number -- will keep using default value ${GK_NET_TIMEOUT_INTERFACE}!"
+				fi
+				unset tmp_interface_timeout
 			;;
 			gk.net.timeout.dad=*)
 				local tmp_dad_timeout=${x#*=}
@@ -1664,10 +1672,63 @@ start_network() {
 		esac
 	done
 
-	if [ ! -d "/sys/class/net/${GK_NET_IFACE}" ]
+	local interface_identifier=device
+	if echo "${GK_NET_IFACE}" | grep -qE ':|-'
 	then
-		warn_msg "Interface ${GK_NET_IFACE} not found; Will not try to start network ..."
-		return
+		interface_identifier=mac
+		good_msg_n "Waiting for interface with MAC address ${GK_NET_IFACE} ..."
+	else
+		good_msg_n "Waiting for interface ${GK_NET_IFACE} ..."
+	fi
+
+	local tmp_interface=
+	local have_interface=0
+	local interface_time_waited=0
+	local interface_timeout_100msec_modulo=
+	local interface_timeout && let interface_timeout=$(date +%s)+1
+	[ -n "${GK_NET_TIMEOUT_INTERFACE}" -a "${GK_NET_TIMEOUT_INTERFACE}" -gt 0 ] && let interface_timeout=${interface_timeout}+${GK_NET_TIMEOUT_INTERFACE}-1
+
+	while [ "${have_interface}" != '1' -a $(date +%s) -le ${interface_timeout} ]
+	do
+		tmp_interface=$(iface_name "${GK_NET_IFACE}")
+		if [ -n "${tmp_interface}" ]
+		then
+			# We got at least something to probe
+			if [ -d "/sys/class/net/${tmp_interface}" ]
+			then
+				GK_NET_IFACE="${tmp_interface}"
+				have_interface=1
+				break
+			fi
+		fi
+
+		if [ "${have_interface}" != '1' ]
+		then
+			let interface_time_waited=${interface_time_waited}+1
+			sleep 0.1s
+
+			let interface_timeout_100msec_modulo=${interface_time_waited}%10
+			if [ ${interface_timeout_100msec_modulo} = 0 ]
+			then
+				printf "."
+			fi
+		fi
+	done
+
+	echo
+
+	if [ "${have_interface}" != '1' ]
+	then
+		# Timeout!
+		if [ "${interface_identifier}" = 'mac' ]
+		then
+			bad_msg "Interface with MAC address ${GK_NET_IFACE} not found!"
+		else
+			bad_msg "Interface ${GK_NET_IFACE} not found!"
+		fi
+
+		warn_msg "Will not try to start network ..."
+		return 1
 	fi
 
 	if [ -z "${IP}" -o "${IP}" = 'dhcp' ]
@@ -1677,7 +1738,7 @@ start_network() {
 		if [ $? -ne 0 ]
 		then
 			bad_msg "Failed to start udhcpc for interface ${GK_NET_IFACE}!"
-			return
+			return 1
 		fi
 	else
 		good_msg "Bringing up interface ${GK_NET_IFACE} ..." ${QUIET}
