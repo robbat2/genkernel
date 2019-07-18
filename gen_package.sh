@@ -2,8 +2,7 @@
 # $Id$
 
 gen_minkernpackage() {
-	print_info 1 ''
-	print_info 1 "Creating minimal kernel package in '${MINKERNPACKAGE}' ..."
+	print_info 1 "minkernpkg: >> Creating minimal kernel package in '${MINKERNPACKAGE}' ..."
 	rm -rf "${TEMP}/minkernpackage" >/dev/null 2>&1
 	mkdir "${TEMP}/minkernpackage" || gen_die "Failed to create '${TEMP}/minkernpackage'!"
 	if [ -n "${KERNCACHE}" ]
@@ -86,8 +85,7 @@ gen_minkernpackage() {
 gen_modulespackage() {
 	if [ -d "${INSTALL_MOD_PATH}/lib/modules/${KV}" ]
 	then
-		print_info 1 ''
-		print_info 1 "Creating modules package in '${MODULESPACKAGE}' ..."
+		print_info 1 "modulespkg: >> Creating modules package in '${MODULESPACKAGE}' ..."
 		rm -rf "${TEMP}/modulespackage" >/dev/null 2>&1
 		mkdir "${TEMP}/modulespackage" || gen_die "Failed to create '${TEMP}/modulespackage'!"
 
@@ -102,13 +100,12 @@ gen_modulespackage() {
 		print_info 3 "COMMAND: ${tar_cmd[*]}" 1 0 1
 		eval "${tar_cmd[@]}" || gen_die "Failed to create compressed modules package '${MODULESPACKAGE}'!"
 	else
-		print_info 1 "'${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found; Skipping creation of modules package in '${MODULESPACKAGE}' ..."
+		print_info 1 "modulespkg: >> '${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found; Skipping creation of modules package in '${MODULESPACKAGE}' ..."
 	fi
 }
 
 gen_kerncache() {
-	print_info 1 ''
-	print_info 1 "Creating kernel cache in '${KERNCACHE}' ..."
+	print_info 1 "kerncache: >> Creating kernel cache in '${KERNCACHE}' ..."
 	rm -rf "${TEMP}/kerncache" >/dev/null 2>&1
 	mkdir "${TEMP}/kerncache" || gen_die "Failed to create '${TEMP}/kerncache'!"
 

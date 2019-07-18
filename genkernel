@@ -161,15 +161,16 @@ print_info 1 "Using kernel config file '${KERNEL_CONFIG}' ..."
 
 if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
-	print_info 1 ""
+	print_info 1 ''
 	print_info 1 "Note: The version above is subject to change (depends on config and status of kernel sources)."
-	print_info 1 ""
 fi
 
 isTrue "${CMD_INSTALL}" && make_bootdir_writable
 
 if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
+	print_info 1 '' 1 0
+
 	# Configure kernel
 	config_kernel
 
@@ -215,12 +216,14 @@ if isTrue "${CMD_INSTALL}"
 then
 	if isTrue "${KERNCACHE_IS_VALID}"
 	then
+		print_info 1 '' 1 0
 		gen_kerncache_extract_kernel
 	fi
 fi
 
 if isTrue "${KERNCACHE_IS_VALID}"
 then
+	print_info 1 '' 1 0
 	! isTrue "${BUILD_STATIC}" && gen_kerncache_extract_modules
 	gen_kerncache_extract_config
 fi
@@ -228,7 +231,7 @@ fi
 # Run callback
 if [ -n "${CMD_CALLBACK}" ]
 then
-	print_info 1 "" 1 0
+	print_info 1 '' 1 0
 	print_info 1 "Preparing to run callback: \"${CMD_CALLBACK}\"" 0
 
 	CALLBACK_ESCAPE=0
@@ -243,7 +246,6 @@ then
 
 	if [ "${CALLBACK_ESCAPE}" -eq 0 ]
 	then
-		print_info 1 '' 1 0
 		print_info 1 '' 1 0
 		eval ${CMD_CALLBACK} | tee -a "${LOGFILE}"
 		CMD_STATUS="${PIPESTATUS[0]}"
@@ -261,18 +263,18 @@ fi
 
 if isTrue "${BUILD_RAMDISK}"
 then
-	print_info 1 ''
+	print_info 1 '' 1 0
 
 	# Compile initramfs
 	create_initramfs
 else
-	print_info 1 ''
+	print_info 1 '' 1 0
 	print_info 1 "initramfs: >> Not building since only the kernel was requested ..."
 fi
 
 if isTrue "${INTEGRATED_INITRAMFS}"
 then
-	print_info 1 ''
+	print_info 1 '' 1 0
 
 	# We build the kernel a second time to include the initramfs
 	compile_kernel
@@ -285,20 +287,26 @@ then
 		# Only update KERNCACHE when KERNCACHE wasn't used because
 		# when it was used nothing has been changed so no update is
 		# necessary.
+		print_info 1 '' 1 0
 		gen_kerncache
 	else
-		print_info 3 "Kerncache was used and kernel/modules therefore didn't change; Skipping '${KERNCACHE}' generation ..."
+		print_info 3 '' 1 0
+		print_info 3 "kerncache: >> Existing kerncache was used and kernel/modules therefore didn't change; Skipping '${KERNCACHE}' generation ..."
 	fi
 fi
 
-[ -n "${MINKERNPACKAGE}" ] && gen_minkernpackage
-[ -n "${MODULESPACKAGE}" ] && gen_modulespackage
+if [ -n "${MINKERNPACKAGE}" -o -n "${MODULESPACKAGE}" ]
+then
+	print_info 1 '' 1 0
+	[ -n "${MINKERNPACKAGE}" ] && gen_minkernpackage
+	[ -n "${MODULESPACKAGE}" ] && gen_modulespackage
+fi
 
 if isTrue "${BUILD_KERNEL}"
 then
 	show_warning_initramfs_is_required=yes
 
-	print_info 1 ''
+	print_info 1 '' 1 0
 	print_info 1 'Kernel compiled successfully!'
 
 	if isTrue "${CMD_INSTALL}"
