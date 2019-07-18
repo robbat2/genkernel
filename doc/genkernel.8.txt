@@ -544,13 +544,13 @@ recognized by the kernel itself.
     By default, dhcp will be used. You can set a specific IP address using
     addr/CIDR notation, i.e. '1.2.3.4/24'.
 
+*gk.net.dhcp.retries*=<...>::
+    By default we will send up to 3 DHCP discovery requests.
+
 *gk.net.iface*=<interface,macaddr>::
     By default we will use the interface named eth0. Use this kernel
     parameter to specify another interface. You can also specify a MAC
     address (00:00:00:00:00:00 format) instead of an interface name.
-
-*gk.net.timeout.dhcp*=<...>::
-    By default we will send up to 3 DHCP discovery requests.
 
 *gk.net.gw*=<...>::
     Optional gateway. If *ip* is set to dhcp, this kernel parameter will
