@@ -1664,10 +1664,21 @@ start_network() {
 		esac
 	done
 
+	if [ ! -d "/sys/class/net/${GK_NET_IFACE}" ]
+	then
+		warn_msg "Interface ${GK_NET_IFACE} not found; Will not try to start network ..."
+		return
+	fi
+
 	if [ -z "${IP}" -o "${IP}" = 'dhcp' ]
 	then
 		good_msg "Bringing up interface ${GK_NET_IFACE} using dhcp ..." ${QUIET}
 		busybox udhcpc -i "${GK_NET_IFACE}" -n -t ${GK_NET_DHCP_RETRIES} -T ${GK_NET_TIMEOUT_DHCP} -R -p "${GK_NET_DHCP_PIDFILE}"
+		if [ $? -ne 0 ]
+		then
+			bad_msg "Failed to start udhcpc for interface ${GK_NET_IFACE}!"
+			return
+		fi
 	else
 		good_msg "Bringing up interface ${GK_NET_IFACE} ..." ${QUIET}
 		ip link set "${GK_NET_IFACE}" up
