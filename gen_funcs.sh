@@ -1410,13 +1410,13 @@ restore_boot_mount_state() {
 		if [ -f "${TEMP}/.bootdir.no_boot_partition" ]
 		then
 			msg="mount: >> '${BOOTDIR}' is not a mountpoint; Nothing to restore ..."
+
+			rm "${TEMP}/.bootdir.no_boot_partition" \
+				|| gen_die "Failed to remove bootdir state file '${TEMP}/.bootdir.no_boot_partition'!"
 		fi
 
 		print_info 5 '' 1 0
 		print_info 5 "${msg}"
-
-		rm "${TEMP}/.bootdir.no_boot_partition" \
-			|| gen_die "Failed to remove bootdir state file '${TEMP}/.bootdir.no_boot_partition'!"
 
 		return
 	fi
