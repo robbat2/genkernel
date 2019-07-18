@@ -16,7 +16,7 @@ MODULES_WAITSCAN="scsi_wait_scan"
 MODULES_BLOCK="sdhci_acpi sdhci_pci"
 
 # Hardware (Network)
-MODULES_NET="atl1c bnx2 e1000 igb pcnet32 r8169 sky2 tg3 broadcom bcm_phy_lib virtio_net vmxnet3 macvlan vxlan bonding vxge cxgb4 cxgb cxgb3 tulip samsung-sxgbe ixgbe ixgb virtio_net"
+MODULES_NET="atl1c bcm_phy_lib bnx2 bonding broadcom cxgb cxgb3 cxgb4 e1000 e1000e igb ixgb ixgbe macvlan pcnet32 r8169 samsung-sxgbe sky2 tg3 tulip virtio_net vmxnet3 vxge vxlan"
 
 # iSCSI support
 MODULES_ISCSI="scsi_transport_iscsi libiscsi iscsi_tcp"
