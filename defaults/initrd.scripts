@@ -1829,6 +1829,12 @@ start_sshd() {
 		return
 	fi
 
+	if [ ! -f "${GK_NET_LOCKFILE}" ]
+	then
+		warn_msg "Network not started; Not starting sshd ..."
+		return
+	fi
+
 	if [ ! -x "/usr/sbin/dropbear" ]
 	then
 		bad_msg "/usr/sbin/dropbear not found! Did you call genkernel with --ssh parameter?"
