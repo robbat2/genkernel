@@ -1728,16 +1728,9 @@ create_initramfs() {
 		## mostly laid out in linux/Documentation/x86/early-microcode.txt
 		## It only loads monolithic ucode from an uncompressed cpio, which MUST
 		## be before the other cpio archives in the stream.
-		local cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
-		if isTrue "${MICROCODE_INITRAMFS}" && [ "${cfg_CONFIG_MICROCODE}" == "y" ]
+		if isTrue "${MICROCODE_INITRAMFS}"
 		then
-			if [[ "${MICROCODE}" == intel ]]
-			then
-				# Only show this information for Intel users because we have no mechanism yet
-				# to generate amd-*.img in /boot after sys-kernel/linux-firmware update
-				print_info 1 "MICROCODE_INITRAMFS option is enabled by default for compatability but made obsolete by >=sys-boot/grub-2.02-r1"
-			fi
-
+			local cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
 			local cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
 			local cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
 			print_info 1 "$(get_indent 1)>> Adding early-microcode support ..."
@@ -1745,25 +1738,42 @@ create_initramfs() {
 			mkdir -p "${UCODEDIR}" || gen_die "Failed to create '${UCODEDIR}'!"
 			echo 1 > "${TEMP}/ucode_tmp/early_cpio"
 
-			if [[ "${cfg_CONFIG_MICROCODE_INTEL}" == "y" ]]
+			if [ "${cfg_CONFIG_MICROCODE}" != "y" ]
 			then
+				print_warning 1 "$(get_indent 2)early-microcode: Will add microcode(s) like requested but kernel has set CONFIG_MICROCODE=n"
+			fi
+
+			if [[ "${MICROCODE}" == 'all' || "${MICROCODE}" == 'intel' ]]
+			then
+				if [[ "${cfg_CONFIG_MICROCODE_INTEL}" != "y" ]]
+				then
+					print_warning 1 "$(get_indent 2)early-microcode: Will add Intel microcode(s) like requested (--microcode=${MICROCODE}) but kernel has set CONFIG_MICROCODE_INTEL=n"
+				fi
+
 				if [ -d /lib/firmware/intel-ucode ]
 				then
 					print_info 1 "$(get_indent 2)early-microcode: Adding GenuineIntel.bin ..."
 					cat /lib/firmware/intel-ucode/* > "${UCODEDIR}/GenuineIntel.bin" || gen_die "Failed to concat intel cpu ucode"
 				else
-					print_info 1 "$(get_indent 2)early-microcode: CONFIG_MICROCODE_INTEL=y set but no ucode available. Please install sys-firmware/intel-microcode[split-ucode]"
+					print_warning 1 "$(get_indent 2)early-microcode: Unable to add Intel microcode like requested (--microcode=${MICROCODE}); No ucode is available."
+					print_warning 1 "$(get_indent 2)                 Is sys-firmware/intel-microcode[split-ucode] installed?"
 				fi
 			fi
 
-			if [[ "${cfg_CONFIG_MICROCODE_AMD}" == "y" ]]
+			if [[ "${MICROCODE}" == 'all' || "${MICROCODE}" == 'amd' ]]
 			then
+				if [[ "${cfg_CONFIG_MICROCODE_AMD}" != "y" ]]
+				then
+					print_warning 1 "$(get_indent 2)early-microcode: Will add AMD microcode(s) like requested (--microcode=${MICROCODE}) but kernel has set CONFIG_MICROCODE_AMD=n"
+				fi
+
 				if [ -d /lib/firmware/amd-ucode ]
 				then
 					print_info 1 "$(get_indent 2)early-microcode: Adding AuthenticAMD.bin ..."
 					cat /lib/firmware/amd-ucode/*.bin > "${UCODEDIR}/AuthenticAMD.bin" || gen_dir "Failed to concat amd cpu ucode"
 				else
-					print_info 1 "$(get_indent 2)early-microcode: CONFIG_MICROCODE_AMD=y set but no ucode available. Please install sys-firmware/linux-firmware"
+					print_warning 1 "$(get_indent 2)early-microcode: Unable to add AMD microcode like requested (--microcode=${MICROCODE}); No ucode is available."
+					print_warning 1 "$(get_indent 2)                 Is sys-firmware/linux-firmware installed?"
 				fi
 			fi
 
@@ -1778,9 +1788,22 @@ create_initramfs() {
 				cat "${TEMP}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
 				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
 			else
-				print_info 1 "$(get_indent 2)early-microcode: CONFIG_MICROCODE=y is set but no microcode found"
-				print_info 1 "$(get_indent 2)early-microcode: You can disable MICROCODE_INITRAMFS option if you use your bootloader to load AMD/Intel ucode initrd"
+				print_warning 1 "$(get_indent 2)early-microcode: No microcode found; Will not prepend any microcode to initramfs ..."
+				print_info 1    "$(get_indent 2)                 ${BOLD}Note:${NORMAL} You can set --no-microcode-initramfs if you load microcode on your own"
 			fi
+
+			if ! isTrue "${WRAP_INITRD}" && [[ "${MICROCODE}" == intel ]]
+			then
+				# Only show this information for Intel users because we have no mechanism yet
+				# to generate amd-*.img in /boot after sys-kernel/linux-firmware update
+				print_info 1 ''
+				print_info 1 "${BOLD}Note:${NORMAL}"
+				print_info 1 '--microcode-initramfs option is enabled by default for backward compatability.'
+				print_info 1 'If your bootloader can load multiple initramfs it is recommended to load'
+				print_info 1 '/boot/intel-uc.img instead of embedding microcode into initramfs.'
+			fi
+		else
+			print_info 3 "$(get_indent 1)>> --no-microcode-initramfs is set; Skipping early-microcode support ..."
 		fi
 
 		if isTrue "${WRAP_INITRD}"

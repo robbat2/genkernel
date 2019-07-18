@@ -468,6 +468,19 @@ determine_real_args() {
 		*) gen_die "Invalid microcode '${MICROCODE}', --microcode=<type> requires one of: no, all, intel, amd" ;;
 	esac
 
+	if isTrue "${BUILD_RAMDISK}"  && isTrue "${MICROCODE_INITRAMFS}" && [[ -z "${MICROCODE}" ]]
+	then
+		print_warning 1 '--microcode=no implies --no-microcode-initramfs; Will not add any microcode to initramfs ...'
+		print_warning 1 '' 1 0
+		MICROCODE_INITRAMFS=no
+	fi
+
+	if isTrue "${BUILD_RAMDISK}"  && isTrue "${MICROCODE_INITRAMFS}" && isTrue "${INTEGRATED_INITRAMFS}"
+	then
+		# Force a user decision
+		gen_die "Cannot embed microcode in initramfs when --integrated-initramfs is set. Either change option to --no-integrated-initramfs or --no-microcode-initramfs!"
+	fi
+
 	if isTrue "${FIRMWARE}"
 	then
 		for ff in ${FIRMWARE_FILES}; do
