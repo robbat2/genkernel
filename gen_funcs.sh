@@ -325,10 +325,6 @@ get_indent() {
 	echo "${_indent}"
 }
 
-is_boot_ro() {
-	return $(awk '( $2 == "'${BOOTDIR}'" && $4 ~ /(^|,)ro(,|$)/){ I=1; exit }END{print !I }' /proc/mounts);
-}
-
 setup_cache_dir() {
 	if [ ! -d "${GK_V_CACHEDIR}" ]
 	then
@@ -1058,6 +1054,7 @@ trap_cleanup() {
 	print_error 1 "Genkernel was unexpectedly terminated${signal_msg}."
 	print_error 1 "Please consult '${LOGFILE}' for more information and any"
 	print_error 1 "errors that were reported above."
+	restore_boot_mount_state silent
 	cleanup
 	exit 1
 }
@@ -1343,6 +1340,88 @@ set_config_with_override() {
 	eval ${CfgVar}=\"${Result}\"
 }
 
+# @FUNCTION: restore_boot_mount_state
+# @USAGE: [<silent>]
+# @DESCRIPTION:
+# Restores mount state of boot partition to state before genkernel start.
+#
+# <silent> When set makes umount errors non-fatal and will use a loglevel
+#          of 5 for any output.
+restore_boot_mount_state() {
+	local silent=no
+	[ -n "${1}" ] && silent=yes
+
+	isTrue "${MOUNTBOOT}" || return
+
+	if [ -f "${TEMP}/.bootdir.remount" ]
+	then
+		local msg="mount: >> Automatically remounting boot partition as read-only on '${BOOTDIR}' as it was previously ..."
+		if isTrue "${silent}"
+		then
+			print_info 5 "${msg}"
+		else
+			print_info 1 '' 1 0
+			print_info 1 "${msg}"
+		fi
+
+		mount -o remount,ro "${BOOTDIR}" &>/dev/null
+		if [ $? -ne 0 ]
+		then
+			local error_msg="Failed to restore read-only state of boot partition on '${BOOTDIR}'!"
+			if isTrue "${silent}"
+			then
+				print_error 1 "${error_msg}"
+				return
+			else
+				gen_die "${error_msg}"
+			fi
+		else
+			rm "${TEMP}/.bootdir.remount" \
+				|| gen_die "Failed to remove bootdir state file '${TEMP}/.bootdir.remount'!"
+		fi
+	elif [ -f "${TEMP}/.bootdir.mount" ]
+	then
+		local msg="mount: >> Automatically unmounting boot partition from '${BOOTDIR}' as it was previously ..."
+		if isTrue "${silent}"
+		then
+			print_info 5 "${msg}"
+		else
+			print_info 1 '' 1 0
+			print_info 1 "${msg}"
+		fi
+
+		umount "${BOOTDIR}" &>/dev/null
+		if [ $? -ne 0 ]
+		then
+			local error_msg="Failed to restore mount state of boot partition on '${BOOTDIR}'!"
+			if isTrue "${silent}"
+			then
+				print_error 1 "${error_msg}"
+				return
+			else
+				gen_die "${error_msg}"
+			fi
+		else
+			rm "${TEMP}/.bootdir.mount" \
+				|| gen_die "Failed to remove bootdir state file '${TEMP}/.bootdir.mount'!"
+		fi
+	else
+		local msg="mount: >> Boot partition state on '${BOOTDIR}' was not changed; Skipping restore boot partition state ..."
+		if [ -f "${TEMP}/.bootdir.no_boot_partition" ]
+		then
+			msg="mount: >> '${BOOTDIR}' is not a mountpoint; Nothing to restore ..."
+		fi
+
+		print_info 5 '' 1 0
+		print_info 5 "${msg}"
+
+		rm "${TEMP}/.bootdir.no_boot_partition" \
+			|| gen_die "Failed to remove bootdir state file '${TEMP}/.bootdir.no_boot_partition'!"
+
+		return
+	fi
+}
+
 rootfs_type_is() {
 	local fstype=$1
 
@@ -1462,6 +1541,88 @@ kconfig_set_opt() {
 			|| gen_die "Failed to set '${optname}=${optval}' in '$kconfig'"
 
 		[ ! -f "${KCONFIG_MODIFIED_MARKER}" ] && touch "${KCONFIG_MODIFIED_MARKER}"
+	fi
+}
+
+make_bootdir_writable() {
+	[ -z "${BOOTDIR}" ] && gen_die "--bootdir is not set!"
+
+	local bootdir_status=unknown
+
+	# Based on mount-boot.eclass code
+	local fstabstate=$(awk "!/^#|^[[:blank:]]+#|^${BOOTDIR//\//\\/}/ {print \$2}" /etc/fstab 2>/dev/null | egrep "^${BOOTDIR}$" )
+	local procstate=$(awk "\$2 ~ /^${BOOTDIR//\//\\/}\$/ {print \$2}" /proc/mounts 2>/dev/null)
+	local proc_ro=$(awk '{ print $2 " ," $4 "," }' /proc/mounts 2>/dev/null | sed -n "/${BOOTDIR//\//\\/} .*,ro,/p")
+
+	if [ -n "${fstabstate}" ] && [ -n "${procstate}" ]
+	then
+		if [ -n "${proc_ro}" ]
+		then
+			bootdir_status=1
+		else
+			bootdir_status=0
+		fi
+	elif [ -n "${fstabstate}" ] && [ -z "${procstate}" ]
+	then
+		bootdir_status=2
+	else
+		bootdir_status=3
+	fi
+
+	case "${bootdir_status}" in
+		0)
+			# Nothing to do -- just pimp the logfile output
+			print_info 5 '' 1 0
+			print_info 5 "mount: >> Boot partition is already mounted in read-write mode on '${BOOTDIR}'."
+			;;
+		1)	# Remount it rw.
+			if ! isTrue "${MOUNTBOOT}"
+			then
+				gen_die "Boot partition is mounted read-only on '${BOOTDIR}' and I am not allowed to remount due to set --no-mountboot option!"
+			fi
+
+			mount -o remount,rw "${BOOTDIR}" &>/dev/null
+			if [ $? -eq 0 ]
+			then
+				print_info 1 "mount: >> Boot partition was temporarily remounted in read-write mode on '${BOOTDIR}' ..."
+
+				touch "${TEMP}"/.bootdir.remount
+			else
+				gen_die "Failed to remount boot partition in read-write mode on '${BOOTDIR}'!"
+			fi
+			;;
+		2)	# Mount it rw.
+			if ! isTrue "${MOUNTBOOT}"
+			then
+				gen_die "Boot partition is not mounted on '${BOOTDIR}' and I am not allowed to mount due to set --no-mountboot option!"
+			fi
+
+			mount "${BOOTDIR}" -o rw &>/dev/null
+			if [ $? -eq 0 ]
+			then
+				print_info 1 '' 1 0
+				print_info 1 "mount: >> Boot partition was temporarily mounted on '${BOOTDIR}' ..."
+
+				touch "${TEMP}"/.bootdir.mount
+			else
+				gen_die "Failed to mount set bootdir '${BOOTDIR}'!"
+			fi
+			;;
+		3)
+			# Nothing really to do
+			print_info 5 '' 1 0
+			print_info 5 "mount: >> '${BOOTDIR}' is not a mountpoint; Assuming no separate boot partition ..."
+
+			touch "${TEMP}"/.bootdir.no_boot_partition
+			;;
+		*)
+			gen_die "Internal error: BOOTDIR status ${bootdir_status} is unknown!"
+			;;
+	esac
+
+	if [ ! -w "${BOOTDIR}" ]
+	then
+		gen_die "Cannot write to bootdir '${BOOTDIR}'!"
 	fi
 }
 

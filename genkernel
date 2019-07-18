@@ -166,47 +166,7 @@ then
 	print_info 1 ""
 fi
 
-# Check if BOOTDIR is mounted
-if ! isTrue "${CMD_INSTALL}"
-then
-	isTrue "${MOUNTBOOT}" && print_info 2 'Skipping automatic mount of boot'
-else
-	[[ -d ${BOOTDIR} ]] || gen_die "${BOOTDIR} is not a directory"
-
-	if ! egrep -q "[[:space:]]${BOOTDIR}[[:space:]]" /proc/mounts
-	then
-		if egrep -q "^[^#].+[[:space:]]${BOOTDIR}[[:space:]]" /etc/fstab
-		then
-			if isTrue "${MOUNTBOOT}"
-			then
-				if ! mount ${BOOTDIR}
-				then
-					print_warning 1 "${BOLD}WARNING${NORMAL}: Failed to mount ${BOOTDIR}!"
-					print_warning 1 '' 1 0
-				else
-					print_info 1 "mount: ${BOOTDIR} mounted successfully!"
-				fi
-			else
-				print_warning 1 "${BOLD}WARNING${NORMAL}: No mounted ${BOOTDIR} partition detected!"
-				print_warning 1 "$(get_indent 1)Run ``mount ${BOOTDIR}`` to mount it!"
-				print_warning 1 '' 1 0
-			fi
-		fi
-	elif is_boot_ro
-	then
-		if isTrue "${MOUNTBOOT}"
-		then
-			if ! mount -o remount,rw ${BOOTDIR}
-			then
-				print_warning 1 "${BOLD}WARNING${NORMAL}: Failed to remount ${BOOTDIR} RW!"
-				print_warning 1 '' 1 0
-			else
-				print_info 1 "mount: ${BOOTDIR} remounted read/write successfully!"
-				BOOTRW="yes"
-			fi
-		fi
-	fi
-fi
+isTrue "${CMD_INSTALL}" && make_bootdir_writable
 
 if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
@@ -456,7 +416,7 @@ then
 	unset CONFGREP
 fi
 
-isTrue "${BOOTRW}" && mount -o remount,ro ${BOOTDIR}
+isTrue "${CMD_INSTALL}" && restore_boot_mount_state
 
 print_info 1 '' 1 0
 print_info 1 'Do NOT report kernel bugs as genkernel bugs unless your bug'
