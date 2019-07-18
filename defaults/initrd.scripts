@@ -1713,6 +1713,12 @@ kill_network() {
 		kill $(cat "${GK_NET_DHCP_PIDFILE}")
 	fi
 
+	if [ ! -d "/sys/class/net/${GK_NET_IFACE}" ]
+	then
+		warn_msg "Interface ${GK_NET_IFACE} not found. Already down?"
+		return
+	fi
+
 	# If we are too quick and interface is still configuring IPv6
 	# waiting for DAD to complete due to received IPv6 RA, we have to
 	# wait.
@@ -1752,7 +1758,7 @@ kill_network() {
 		ip addr flush dev "${GK_NET_IFACE}"
 		ip route flush dev "${GK_NET_IFACE}"
 		ip link set "${GK_NET_IFACE}" down
-		if grep -q "down" "/sys/class/net/${GK_NET_IFACE}/operstate"
+		if grep -q "down" "/sys/class/net/${GK_NET_IFACE}/operstate" 2>/dev/null
 		then
 			break
 		fi
