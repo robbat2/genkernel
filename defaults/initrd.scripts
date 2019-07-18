@@ -1780,7 +1780,7 @@ kill_network() {
 }
 
 ipv6_tentative() {
-	if ip -family inet6 addr show dev "${GK_NET_IFACE}" | grep -q " tentative "
+	if ip -family inet6 addr show dev "${GK_NET_IFACE}" 2>/dev/null | grep -q " tentative "
 	then
 		return 0
 	else
