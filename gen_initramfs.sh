@@ -1532,7 +1532,7 @@ create_initramfs() {
 	print_info 1 "initramfs: >> Initializing ..."
 
 	# Create empty cpio
-	CPIO="${TMPDIR}/initramfs-${KV}"
+	CPIO="${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}"
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
@@ -1637,7 +1637,7 @@ create_initramfs() {
 	then
 		# Explicitly do not compress if we are integrating into the kernel.
 		# The kernel will do a better job of it than us.
-		mv ${TMPDIR}/initramfs-${KV} ${TMPDIR}/initramfs-${KV}.cpio
+		mv "${CPIO}" "${CPIO}.cpio"
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" \
 			|| gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
 
@@ -1655,7 +1655,7 @@ create_initramfs() {
 		# All N default except XZ, so there it gets used if the kernel does
 		# compression on it's own.
 		cat >>${KERNEL_OUTPUTDIR}/.config	<<-EOF
-		CONFIG_INITRAMFS_SOURCE="${TMPDIR}/initramfs-${KV}.cpio${compress_ext}"
+		CONFIG_INITRAMFS_SOURCE="${CPIO}.cpio${compress_ext}"
 		CONFIG_INITRAMFS_ROOT_UID=0
 		CONFIG_INITRAMFS_ROOT_GID=0
 		CONFIG_INITRAMFS_COMPRESSION_NONE=n
@@ -1822,8 +1822,8 @@ create_initramfs() {
 			[[ -z ${mkimage_cmd} ]] && gen_die "mkimage is not available. Please install package 'dev-embedded/u-boot-tools'."
 			local mkimage_args="-A ${ARCH} -O linux -T ramdisk -C ${compression:-none} -a 0x00000000 -e 0x00000000"
 			print_info 1 "$(get_indent 1)>> Wrapping initramfs using mkimage ..."
-			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KV} -d ${CPIO} ${CPIO}.uboot"
-			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KV}" -d "${CPIO}" "${CPIO}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
+			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KNAME}-${ARCH}-${KV} -d ${CPIO} ${CPIO}.uboot"
+			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KNAME}-${ARCH}-${KV}" -d "${CPIO}" "${CPIO}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
 			mv -f "${CPIO}.uboot" "${CPIO}" || gen_die "Rename failed"
 		fi
 	fi
@@ -1834,7 +1834,7 @@ create_initramfs() {
 		then
 			copy_image_with_preserve \
 				"initramfs" \
-				"${TMPDIR}/initramfs-${KV}" \
+				"${CPIO}" \
 				"initramfs-${KNAME}-${ARCH}-${KV}"
 		fi
 	fi
