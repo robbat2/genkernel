@@ -112,6 +112,22 @@ done
 
 determine_real_args
 
+if isTrue "${BUILD_RAMDISK}" && ! isTrue "${SANDBOX}"
+then
+	print_warning 1 "${BOLD}WARNING:${NORMAL} Will build initramfs ${BOLD}without${NORMAL} sandbox support " 0
+
+	SANDBOX_WARNING_TIMER=0
+	while [[ ${SANDBOX_WARNING_TIMER} -lt 5 ]]
+	do
+		printf '.'
+		sleep 1
+		let SANDBOX_WARNING_TIMER=${SANDBOX_WARNING_TIMER}+1
+	done
+
+	print_warning 1 '' 1 0
+	print_warning 1 '' 1 0
+fi
+
 print_info 2 "Sourcing default modules_load from '${GK_SHARE}/defaults/modules_load' ..."
 source "${GK_SHARE}/defaults/modules_load" || gen_die "Could not read '${GK_SHARE}/defaults/modules_load'!"
 

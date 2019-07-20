@@ -327,6 +327,9 @@ INITIALIZATION
 *--*[*no-*]*iscsi*::
     Includes or excludes iSCSI support.
 
+*--*[*no-*]*sandbox*::
+    Enables or disables sandbox-ing when building initramfs.
+
 *--*[*no-*]*ssh*::
     Includes or excludes SSH (dropbear) support for remote LUKS keys.
 

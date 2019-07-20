@@ -145,6 +145,7 @@ determine_real_args() {
 	set_config_with_override BOOL   SYMLINK                  CMD_SYMLINK                  "no"
 	set_config_with_override STRING INSTALL_MOD_PATH         CMD_INSTALL_MOD_PATH
 	set_config_with_override BOOL   OLDCONFIG                CMD_OLDCONFIG                "yes"
+	set_config_with_override BOOL   SANDBOX                  CMD_SANDBOX                  "yes"
 	set_config_with_override BOOL   SSH                      CMD_SSH                      "no"
 	set_config_with_override STRING SSH_AUTHORIZED_KEYS_FILE CMD_SSH_AUTHORIZED_KEYS_FILE "/etc/dropbear/authorized_keys"
 	set_config_with_override STRING SSH_HOST_KEYS            CMD_SSH_HOST_KEYS            "create"
@@ -526,6 +527,16 @@ determine_real_args() {
 		elif ! lddtree -l "${lddtree_testfile}" 1>/dev/null 2>&1
 		then
 			gen_die "'lddtree -l ${lddtree_testfile}' failed -- cannot generate initramfs without working lddtree!"
+		fi
+
+		SANDBOX_COMMAND=
+		if isTrue "${SANDBOX}"
+		then
+			SANDBOX_COMMAND="$(which sandbox)"
+			if [ -z "${SANDBOX_COMMAND}" ]
+			then
+				gen_die "Sandbox not found. Is sys-apps/sandbox installed?"
+			fi
 		fi
 	fi
 

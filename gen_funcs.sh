@@ -543,38 +543,41 @@ dropbear_create_key() {
 	[[ ${#} -ne 2 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
 
-	if ! hash sandbox &>/dev/null
-	then
-		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
-	fi
-
 	local key_file=${1}
 	local command=${2}
 	local key_type=$(dropbear_get_key_type_from_filename "${key_file}")
 
 	local -a envvars=(
-		GK_SHARE="${GK_SHARE}"
-		LOGLEVEL="${LOGLEVEL}"
-		LOGFILE="${LOGFILE}"
-		NOCOLOR="${NOCOLOR}"
-		TEMP="${TEMP}"
-		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+		"GK_SHARE='${GK_SHARE}'"
+		"LOGLEVEL='${LOGLEVEL}'"
+		"LOGFILE='${LOGFILE}'"
+		"NOCOLOR='${NOCOLOR}'"
+		"TEMP='${TEMP}'"
 	)
 
 	envvars+=(
-		DROPBEAR_COMMAND="${command}"
-		DROPBEAR_KEY_FILE="${key_file}"
-		DROPBEAR_KEY_TYPE="${key_type}"
+		"DROPBEAR_COMMAND='${command}'"
+		"DROPBEAR_KEY_FILE='${key_file}'"
+		"DROPBEAR_KEY_TYPE='${key_type}'"
 	)
+
+	if isTrue "${SANDBOX}"
+	then
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}'" )
+	fi
 
 	# set up worker signal handler
 	local error_msg_detail="Failed to create dropbear key '${key_file}'!"
 	local error_msg="gen_worker.sh aborted: ${error_msg_detail}"
 	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
 
-	env -i \
-		"${envvars[@]}" \
-		sandbox "${GK_SHARE}"/gen_worker.sh dropbear 2>&1
+	local dropbear_command=( "env -i" )
+	dropbear_command+=( "${envvars[*]}" )
+	dropbear_command+=( "${SANDBOX_COMMAND}" )
+	dropbear_command+=( "${GK_SHARE}/gen_worker.sh" )
+	dropbear_command+=( "dropbear" )
+	dropbear_command+=( "2>&1" )
+	eval "${dropbear_command[@]}"
 
 	local RET=$?
 
@@ -613,11 +616,6 @@ dropbear_generate_key_info_file() {
 	[[ ${#} -ne 3 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly three arguments (${#} given)!"
 
-	if ! hash sandbox &>/dev/null
-	then
-		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
-	fi
-
 	local command=${1}
 	local key_info_file=${2}
 	local initramfs_dropbear_dir=${3}
@@ -625,29 +623,37 @@ dropbear_generate_key_info_file() {
 	local key_type=$(dropbear_get_key_type_from_filename "${key_file}")
 
 	local -a envvars=(
-		GK_SHARE="${GK_SHARE}"
-		LOGLEVEL="${LOGLEVEL}"
-		LOGFILE="${LOGFILE}"
-		NOCOLOR="${NOCOLOR}"
-		TEMP="${TEMP}"
-		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+		"GK_SHARE='${GK_SHARE}'"
+		"LOGLEVEL='${LOGLEVEL}'"
+		"LOGFILE='${LOGFILE}'"
+		"NOCOLOR='${NOCOLOR}'"
+		"TEMP='${TEMP}'"
 	)
 
 	envvars+=(
-		DROPBEAR_COMMAND="${command}"
-		DROPBEAR_KEY_FILE="${key_file}"
-		DROPBEAR_KEY_TYPE="${key_type}"
-		DROPBEAR_KEY_INFO_FILE="${key_info_file}"
+		"DROPBEAR_COMMAND='${command}'"
+		"DROPBEAR_KEY_FILE='${key_file}'"
+		"DROPBEAR_KEY_TYPE='${key_type}'"
+		"DROPBEAR_KEY_INFO_FILE='${key_info_file}'"
 	)
+
+	if isTrue "${SANDBOX}"
+	then
+		envvars+=( SANDBOX_WRITE="${LOGFILE}:${TEMP}" )
+	fi
 
 	# set up worker signal handler
 	local error_msg_detail="Failed to extract dropbear key information from '${key_file}'!"
 	local error_msg="gen_worker.sh aborted: ${error_msg_detail}"
 	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
 
-	env -i \
-		"${envvars[@]}" \
-		sandbox "${GK_SHARE}"/gen_worker.sh dropbear 2>&1
+	local dropbear_command=( "env -i" )
+	dropbear_command+=( "${envvars[*]}" )
+	dropbear_command+=( "${SANDBOX_COMMAND}" )
+	dropbear_command+=( "${GK_SHARE}/gen_worker.sh" )
+	dropbear_command+=( "dropbear" )
+	dropbear_command+=( "2>&1" )
+	eval "${dropbear_command[@]}"
 
 	local RET=$?
 
@@ -1100,11 +1106,6 @@ gkbuild() {
 	[[ ${#} -gt 7 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at most six arguments (${#} given)!"
 
-	if ! hash sandbox &>/dev/null
-	then
-		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
-	fi
-
 	local PKG=${1}
 	local VERSION=${2}
 	local SRCDIR=${3}
@@ -1136,41 +1137,40 @@ gkbuild() {
 	fi
 
 	local -a envvars=(
-		GK_SHARE="${GK_SHARE}"
-		LOGLEVEL="${LOGLEVEL}"
-		LOGFILE="${LOGFILE}"
-		NOCOLOR="${NOCOLOR}"
-		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
-		TEMP="${TEMP}"
-		TMPDIR="${TEMP}"
+		"GK_SHARE='${GK_SHARE}'"
+		"LOGLEVEL='${LOGLEVEL}'"
+		"LOGFILE='${LOGFILE}'"
+		"NOCOLOR='${NOCOLOR}'"
+		"TEMP='${TEMP}'"
+		"TMPDIR='${TEMP}'"
 	)
 
 	envvars+=(
-		GKPKG_PN="${PKG}"
-		GKPKG_PV="${VERSION}"
-		GKPKG_SRCDIR="${SRCDIR}"
-		GKPKG_SRCTAR="${SRCTAR}"
-		GKPKG_BINPKG="${BINPKG}"
-		GKPKG_DEPS="${DEPS}"
+		"GKPKG_PN='${PKG}'"
+		"GKPKG_PV='${VERSION}'"
+		"GKPKG_SRCDIR='${SRCDIR}'"
+		"GKPKG_SRCTAR='${SRCTAR}'"
+		"GKPKG_BINPKG='${BINPKG}'"
+		"GKPKG_DEPS='${DEPS}'"
 	)
 
 	envvars+=(
-		CFLAGS="${CMD_UTILS_CFLAGS}"
-		CXXFLAGS="${CMD_UTILS_CFLAGS}"
-		CBUILD="${CBUILD}"
-		CHOST="${CHOST}"
-		AR="$(tc-getAR)"
-		AS="$(tc-getAS)"
-		CC="$(tc-getCC)"
-		CPP="$(tc-getCPP)"
-		CXX="$(tc-getCXX)"
-		LD="$(tc-getLD)"
-		NM="$(tc-getNM)"
-		MAKE="${CMD_UTILS_MAKE}"
-		OBJCOPY="$(tc-getOBJCOPY)"
-		OBJDUMP="$(tc-getOBJDUMP)"
-		RANLIB="$(tc-getRANLIB)"
-		STRIP="$(tc-getSTRIP)"
+		"CFLAGS='${CMD_UTILS_CFLAGS}'"
+		"CXXFLAGS='${CMD_UTILS_CFLAGS}'"
+		"CBUILD='${CBUILD}'"
+		"CHOST='${CHOST}'"
+		"AR='$(tc-getAR)'"
+		"AS='$(tc-getAS)'"
+		"CC='$(tc-getCC)'"
+		"CPP='$(tc-getCPP)'"
+		"CXX='$(tc-getCXX)'"
+		"LD='$(tc-getLD)'"
+		"NM='$(tc-getNM)'"
+		"MAKE='${CMD_UTILS_MAKE}'"
+		"OBJCOPY='$(tc-getOBJCOPY)'"
+		"OBJDUMP='$(tc-getOBJDUMP)'"
+		"RANLIB='$(tc-getRANLIB)'"
+		"STRIP='$(tc-getSTRIP)'"
 	)
 
 	if [ ${NICE} -ne 0 ]
@@ -1179,17 +1179,26 @@ gkbuild() {
 	else
 		NICEOPTS=""
 	fi
-	envvars+=( NICEOPTS="${NICEOPTS}" )
+	envvars+=( "NICEOPTS='${NICEOPTS}'" )
 
-	envvars+=( MAKEOPTS="${MAKEOPTS}" )
+	envvars+=( "MAKEOPTS='${MAKEOPTS}'" )
+
+	if isTrue "${SANDBOX}"
+	then
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}'" )
+	fi
 
 	# set up gkbuild signal handler
 	local error_msg="gen_worker.sh aborted: Failed to compile ${PKG}-${VERSION}!"
 	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
 
-	env -i \
-		"${envvars[@]}" \
-		sandbox "${GK_SHARE}"/gen_worker.sh build 2>&1
+	local build_command=( "env -i" )
+	build_command+=( "${envvars[*]}" )
+	build_command+=( "${SANDBOX_COMMAND}" )
+	build_command+=( "${GK_SHARE}/gen_worker.sh" )
+	build_command+=( "build" )
+	build_command+=( "2>&1" )
+	eval "${build_command[@]}"
 
 	local RET=$?
 
@@ -1211,36 +1220,39 @@ unpack() {
 	[[ ${#} -ne 2 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
 
-	if ! hash sandbox &>/dev/null
-	then
-		gen_die "Sandbox not found. Please install sys-apps/sandbox!"
-	fi
-
 	local unpack_file=${1}
 	local unpack_dir=${2}
 
 	local -a envvars=(
-		GK_SHARE="${GK_SHARE}"
-		LOGLEVEL="${LOGLEVEL}"
-		LOGFILE="${LOGFILE}"
-		NOCOLOR="${NOCOLOR}"
-		TEMP="${TEMP}"
-		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+		"GK_SHARE='${GK_SHARE}'"
+		"LOGLEVEL='${LOGLEVEL}'"
+		"LOGFILE='${LOGFILE}'"
+		"NOCOLOR='${NOCOLOR}'"
+		"TEMP='${TEMP}'"
 	)
 
 	envvars+=(
-		UNPACK_FILE="${unpack_file}"
-		UNPACK_DIR="${unpack_dir}"
+		"UNPACK_FILE='${unpack_file}'"
+		"UNPACK_DIR='${unpack_dir}'"
 	)
+
+	if isTrue "${SANDBOX}"
+	then
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}'" )
+	fi
 
 	# set up unpack signal handler
 	local error_msg_detail="Failed to unpack '${unpack_file}' to '${unpack_dir}'!"
 	local error_msg="gen_worker.sh aborted: ${error_msg_detail}"
 	trap "gen_die \"${error_msg}\"" SIGABRT SIGHUP SIGQUIT SIGINT SIGTERM
 
-	env -i \
-		"${envvars[@]}" \
-		sandbox "${GK_SHARE}"/gen_worker.sh unpack 2>&1
+	local unpack_command=( "env -i" )
+	unpack_command+=( "${envvars[*]}" )
+	unpack_command+=( "${SANDBOX_COMMAND}" )
+	unpack_command+=( "${GK_SHARE}/gen_worker.sh" )
+	unpack_command+=( "unpack" )
+	unpack_command+=( "2>&1" )
+	eval "${unpack_command[@]}"
 
 	local RET=$?
 

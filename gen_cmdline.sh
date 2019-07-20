@@ -133,6 +133,8 @@ longusage() {
   echo "	--no-multipath		Exclude Multipath support"
   echo "	--iscsi			Include iSCSI support"
   echo "	--no-iscsi		Exclude iSCSI support"
+  echo "	--sandbox		Enable sandbox-ing when building initramfs"
+  echo "	--no-sandbox		Disable sandbox-ing when building initramfs"
   echo "	--ssh			Include SSH (dropbear) support"
   echo "	--no-ssh		Exclude SSH (dropbear) support"
   echo "	--ssh-authorized-keys-file=<file>"
@@ -439,6 +441,10 @@ parse_cmdline() {
 		--hyperv|--no-hyperv)
 			CMD_HYPERV=$(parse_optbool "$*")
 			print_info 3 "CMD_HYPERV: ${CMD_HYPERV}"
+			;;
+		--sandbox|--no-sandbox)
+			CMD_SANDBOX=$(parse_optbool "$*")
+			print_info 3 "CMD_SANDBOX: ${CMD_SANDBOX}"
 			;;
 		--ssh|--no-ssh)
 			CMD_SSH=$(parse_optbool "$*")
