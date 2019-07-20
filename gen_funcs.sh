@@ -1140,8 +1140,9 @@ gkbuild() {
 		LOGLEVEL="${LOGLEVEL}"
 		LOGFILE="${LOGFILE}"
 		NOCOLOR="${NOCOLOR}"
-		TEMP="${TEMP}"
 		SANDBOX_WRITE="${LOGFILE}:${TEMP}"
+		TEMP="${TEMP}"
+		TMPDIR="${TEMP}"
 	)
 
 	envvars+=(
