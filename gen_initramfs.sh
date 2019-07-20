@@ -178,34 +178,52 @@ log_future_cpio_content() {
 }
 
 append_devices() {
-	local TFILE="${TEMP}/initramfs-base-temp.devices"
-	if [ -f "${TFILE}" ]
+	if isTrue "${BUSYBOX}"
 	then
-		rm "${TFILE}" || gen_die "Failed to clean out existing '${TFILE}'!"
+		local TDIR="${TEMP}/initramfs-devices-temp"
+		if [ -d "${TDIR}" ]
+		then
+			rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+		fi
+
+		mkdir -p "${TDIR}/dev" || gen_die "Failed to create '${TDIR}/dev'!"
+		cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+		chmod 0755 dev || gen_die "Failed to chmod of '${TDIR}/dev' to 0755!"
+
+		log_future_cpio_content
+		find . -print0 | cpio ${CPIO_ARGS} -F "${CPIO}" \
+			|| gen_die "Failed to append devices to cpio!"
+	else
+		local TFILE="${TEMP}/initramfs-base-temp.devices"
+		if [ -f "${TFILE}" ]
+		then
+			rm "${TFILE}" || gen_die "Failed to clean out existing '${TFILE}'!"
+		fi
+
+		if [[ ! -x "${KERNEL_OUTPUTDIR}/usr/gen_init_cpio" ]]; then
+			compile_gen_init_cpio
+		fi
+
+		# WARNING, does NOT support appending to cpio!
+		cat >"${TFILE}" <<-EOF
+		dir /dev 0755 0 0
+		nod /dev/console 660 0 0 c 5 1
+		nod /dev/null 666 0 0 c 1 3
+		nod /dev/zero 666 0 0 c 1 5
+		nod /dev/tty0 600 0 0 c 4 0
+		nod /dev/tty1 600 0 0 c 4 1
+		nod /dev/ttyS0 600 0 0 c 4 64
+		EOF
+
+		print_info 3 "=================================================================" 1 0 1
+		print_info 3 "Adding the following devices to cpio:" 1 0 1
+		print_info 3 "$(cat "${TFILE}")" 1 0 1
+		print_info 3 "=================================================================" 1 0 1
+
+		"${KERNEL_OUTPUTDIR}"/usr/gen_init_cpio "${TFILE}" >"${CPIO}" \
+			|| gen_die "Failed to append devices to cpio!"
 	fi
-
-	if [[ ! -x "${KERNEL_OUTPUTDIR}/usr/gen_init_cpio" ]]; then
-		compile_gen_init_cpio
-	fi
-
-	# WARNING, does NOT support appending to cpio!
-	cat >"${TFILE}" <<-EOF
-	dir /dev 0755 0 0
-	nod /dev/console 660 0 0 c 5 1
-	nod /dev/null 666 0 0 c 1 3
-	nod /dev/zero 666 0 0 c 1 5
-	nod /dev/tty0 600 0 0 c 4 0
-	nod /dev/tty1 600 0 0 c 4 1
-	nod /dev/ttyS0 600 0 0 c 4 64
-	EOF
-
-	print_info 3 "=================================================================" 1 0 1
-	print_info 3 "Adding the following devices to cpio:" 1 0 1
-	print_info 3 "$(cat "${TFILE}")" 1 0 1
-	print_info 3 "=================================================================" 1 0 1
-
-	"${KERNEL_OUTPUTDIR}"/usr/gen_init_cpio "${TFILE}" >"${CPIO}" \
-		|| gen_die "Failed to append devices to cpio!"
 }
 
 append_base_layout() {
@@ -383,7 +401,7 @@ append_busybox() {
 	done
 
 	# Set up a few default symlinks
-	local required_applets='[ ash sh mount uname echo cut cat'
+	local required_applets='[ ash sh mknod mount uname echo cut cat'
 	local required_applet=
 	for required_applet in ${required_applets}
 	do
@@ -1576,7 +1594,7 @@ create_initramfs() {
 	# TODO: maybe replace this with:
 	# http://search.cpan.org/~pixel/Archive-Cpio-0.07/lib/Archive/Cpio.pm
 	# as then we can dedupe ourselves...
-	if [[ $UID -eq 0 ]]
+	if isTrue "${BUSYBOX}" || [[ ${UID} -eq 0 ]]
 	then
 		print_info 1 "$(get_indent 1)>> Deduping cpio ..."
 		local TDIR="${TEMP}/initramfs-final"
