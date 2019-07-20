@@ -282,9 +282,14 @@ gen_die() {
 		print_error 1 "ERROR: ${1}"
 	fi
 
-	print_error 1 "Please consult '${LOGFILE}' for more information and any"
-	print_error 1 "errors that were reported above."
-	print_error 1 ''
+	# Don't trust $LOGFILE before determine_real_args() was called
+	if [ -n "${CMD_LOGFILE}" -a -s "${LOGFILE}" ]
+	then
+		print_error 1 "Please consult '${LOGFILE}' for more information and any"
+		print_error 1 "errors that were reported above."
+		print_error 1 ''
+	fi
+
 	print_error 1 "Report any genkernel bugs to bugs.gentoo.org and"
 	print_error 1 "assign your bug to genkernel@gentoo.org. Please include"
 	print_error 1 "as much information as you can in your bug report; attaching"
