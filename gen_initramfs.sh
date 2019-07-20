@@ -192,7 +192,7 @@ append_devices() {
 		chmod 0755 dev || gen_die "Failed to chmod of '${TDIR}/dev' to 0755!"
 
 		log_future_cpio_content
-		find . -print0 | cpio ${CPIO_ARGS} -F "${CPIO}" \
+		find . -print0 | cpio ${CPIO_ARGS} -F "${CPIO_ARCHIVE}" \
 			|| gen_die "Failed to append devices to cpio!"
 	else
 		local TFILE="${TEMP}/initramfs-base-temp.devices"
@@ -221,7 +221,7 @@ append_devices() {
 		print_info 3 "$(cat "${TFILE}")" 1 0 1
 		print_info 3 "=================================================================" 1 0 1
 
-		"${KERNEL_OUTPUTDIR}"/usr/gen_init_cpio "${TFILE}" >"${CPIO}" \
+		"${KERNEL_OUTPUTDIR}"/usr/gen_init_cpio "${TFILE}" >"${CPIO_ARCHIVE}" \
 			|| gen_die "Failed to append devices to cpio!"
 	fi
 }
@@ -364,7 +364,7 @@ append_base_layout() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append baselayout to cpio!"
 }
 
@@ -415,7 +415,7 @@ append_busybox() {
 	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so.2
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -436,7 +436,7 @@ append_e2fsprogs() {
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -460,7 +460,7 @@ append_blkid() {
 	rm -rf usr/
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append blkid to cpio!"
 }
 
@@ -480,7 +480,7 @@ append_unionfs_fuse() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -516,7 +516,7 @@ append_multipath() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -545,7 +545,7 @@ append_dmraid() {
 	mkdir -p "${TDIR}"/var/lock/dmraid || gen_die "Failed to create '${TDIR}/var/lock/dmraid'!"
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append dmraid to cpio!"
 }
 
@@ -565,7 +565,7 @@ append_iscsi() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append iscsi to cpio!"
 }
 
@@ -635,7 +635,7 @@ append_lvm() {
 	fi
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append lvm to cpio!"
 }
 
@@ -679,7 +679,7 @@ append_mdadm() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -700,7 +700,7 @@ append_xfsprogs() {
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -745,7 +745,7 @@ append_zfs() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -766,7 +766,7 @@ append_btrfs() {
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -795,7 +795,7 @@ append_libgcc_s() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append libgcc_s to cpio!"
 }
 
@@ -841,7 +841,7 @@ append_linker() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append linker to cpio!"
 }
 
@@ -886,7 +886,7 @@ append_splash() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append splash to cpio!"
 }
 
@@ -906,7 +906,7 @@ append_strace() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -914,7 +914,7 @@ append_overlay() {
 	cd "${INITRAMFS_OVERLAY}"  || gen_die "Failed to chdir to '${INITRAMFS_OVERLAY}'!"
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append overlay to cpio!"
 }
 
@@ -938,7 +938,7 @@ append_luks() {
 	rm -rf usr/
 
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append luks to cpio!"
 }
 
@@ -1216,7 +1216,7 @@ append_dropbear() {
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -1250,7 +1250,7 @@ append_firmware() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append firmware to cpio!"
 }
 
@@ -1270,7 +1270,7 @@ append_gpg() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 }
 
@@ -1355,7 +1355,7 @@ append_modules() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append modules-${KV} to cpio!"
 }
 
@@ -1376,7 +1376,7 @@ append_modprobed() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append modprobe.d to cpio!"
 }
 
@@ -1511,7 +1511,7 @@ append_auxilary() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO}" \
+	find . -print0 | cpio ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append auxilary to cpio!"
 }
 
@@ -1532,7 +1532,7 @@ create_initramfs() {
 	print_info 1 "initramfs: >> Initializing ..."
 
 	# Create empty cpio
-	CPIO="${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}"
+	CPIO_ARCHIVE="${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}"
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
@@ -1596,8 +1596,8 @@ create_initramfs() {
 		mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 		cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
-		cpio --quiet -i -F "${CPIO}" 2>/dev/null \
-			|| gen_die "Failed to extract cpio '${CPIO}' for dedupe"
+		cpio --quiet -i -F "${CPIO_ARCHIVE}" 2>/dev/null \
+			|| gen_die "Failed to extract cpio '${CPIO_ARCHIVE}' for dedupe"
 
 		if [ -e etc/ld.so.cache ] && ! isTrue "$(tc-is-cross-compiler)"
 		then
@@ -1608,7 +1608,7 @@ create_initramfs() {
 				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
 		fi
 
-		find . -print0 | sort -z | cpio ${CPIO_ARGS} --reproducible -F "${CPIO}" 2>/dev/null \
+		find . -print0 | sort -z | cpio ${CPIO_ARGS} --reproducible -F "${CPIO_ARCHIVE}" 2>/dev/null \
 			|| gen_die "rebuilding cpio for dedupe"
 	else
 		print_info 1 "$(get_indent 1)>> Cannot deduping cpio contents without root; Skipping ..."
@@ -1637,7 +1637,7 @@ create_initramfs() {
 	then
 		# Explicitly do not compress if we are integrating into the kernel.
 		# The kernel will do a better job of it than us.
-		mv "${CPIO}" "${CPIO}.cpio"
+		mv "${CPIO_ARCHIVE}" "${CPIO_ARCHIVE}.cpio"
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" \
 			|| gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
 
@@ -1655,7 +1655,7 @@ create_initramfs() {
 		# All N default except XZ, so there it gets used if the kernel does
 		# compression on it's own.
 		cat >>${KERNEL_OUTPUTDIR}/.config	<<-EOF
-		CONFIG_INITRAMFS_SOURCE="${CPIO}.cpio${compress_ext}"
+		CONFIG_INITRAMFS_SOURCE="${CPIO_ARCHIVE}.cpio${compress_ext}"
 		CONFIG_INITRAMFS_ROOT_UID=0
 		CONFIG_INITRAMFS_ROOT_GID=0
 		CONFIG_INITRAMFS_COMPRESSION_NONE=n
@@ -1727,9 +1727,9 @@ create_initramfs() {
 			esac
 
 			print_info 1 "$(get_indent 1)>> Compressing cpio data (${compress_ext}) ..."
-			print_info 3 "COMMAND: ${compress_cmd} $CPIO" 1 0 1
-			${compress_cmd} "${CPIO}" || gen_die "Compression (${compress_cmd}) failed"
-			mv -f "${CPIO}${compress_ext}" "${CPIO}" || gen_die "Rename failed"
+			print_info 3 "COMMAND: ${compress_cmd} ${CPIO_ARCHIVE}" 1 0 1
+			${compress_cmd} "${CPIO_ARCHIVE}" || gen_die "Compression (${compress_cmd}) failed"
+			mv -f "${CPIO_ARCHIVE}${compress_ext}" "${CPIO_ARCHIVE}" || gen_die "Rename failed"
 		else
 			print_info 3 "$(get_indent 1)>> --no-compress-initramfs is set; Skipping compression of initramfs ..."
 		fi
@@ -1795,8 +1795,8 @@ create_initramfs() {
 				find . -print0 | cpio --quiet --null -o -H newc > ../ucode.cpio || gen_die "Failed to create cpu microcode cpio"
 				popd &>/dev/null || gen_die "Failed to chdir!"
 				print_info 1 "$(get_indent 2)early-microcode: Prepending early-microcode to initramfs ..."
-				cat "${TEMP}/ucode.cpio" "${CPIO}" > "${CPIO}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
-				mv -f "${CPIO}.early-microcode" "${CPIO}" || gen_die "Rename failed"
+				cat "${TEMP}/ucode.cpio" "${CPIO_ARCHIVE}" > "${CPIO_ARCHIVE}.early-microcode" || gen_die "Failed to prepend early-microcode to initramfs"
+				mv -f "${CPIO_ARCHIVE}.early-microcode" "${CPIO_ARCHIVE}" || gen_die "Rename failed"
 			else
 				print_warning 1 "$(get_indent 2)early-microcode: No microcode found; Will not prepend any microcode to initramfs ..."
 				print_info 1    "$(get_indent 2)                 ${BOLD}Note:${NORMAL} You can set --no-microcode-initramfs if you load microcode on your own"
@@ -1822,9 +1822,9 @@ create_initramfs() {
 			[[ -z ${mkimage_cmd} ]] && gen_die "mkimage is not available. Please install package 'dev-embedded/u-boot-tools'."
 			local mkimage_args="-A ${ARCH} -O linux -T ramdisk -C ${compression:-none} -a 0x00000000 -e 0x00000000"
 			print_info 1 "$(get_indent 1)>> Wrapping initramfs using mkimage ..."
-			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KNAME}-${ARCH}-${KV} -d ${CPIO} ${CPIO}.uboot"
-			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KNAME}-${ARCH}-${KV}" -d "${CPIO}" "${CPIO}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
-			mv -f "${CPIO}.uboot" "${CPIO}" || gen_die "Rename failed"
+			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KNAME}-${ARCH}-${KV} -d ${CPIO_ARCHIVE} ${CPIO_ARCHIVE}.uboot"
+			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KNAME}-${ARCH}-${KV}" -d "${CPIO_ARCHIVE}" "${CPIO_ARCHIVE}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
+			mv -f "${CPIO_ARCHIVE}.uboot" "${CPIO_ARCHIVE}" || gen_die "Rename failed"
 		fi
 	fi
 
@@ -1834,7 +1834,7 @@ create_initramfs() {
 		then
 			copy_image_with_preserve \
 				"initramfs" \
-				"${CPIO}" \
+				"${CPIO_ARCHIVE}" \
 				"initramfs-${KNAME}-${ARCH}-${KV}"
 		fi
 	fi
