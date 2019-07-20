@@ -221,7 +221,7 @@ is_valid_triplet() {
 	local triplet=${1}
 	local is_triplet=no
 
-	if [[ "${triplet}" =~ ^[a-zA-Z0-9]{2,}-[a-zA-Z0-9]{2,}-[a-zA-Z0-9]{2,} ]]
+	if [[ "${triplet}" =~ ^[^-]{2,}-[^-]{2,}-.{2,} ]]
 	then
 		is_triplet=yes
 	fi
