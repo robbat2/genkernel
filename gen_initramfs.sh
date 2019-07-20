@@ -664,6 +664,8 @@ append_mdadm() {
 
 	if [ -n "${MDADM_CONFIG}" ]
 	then
+		print_info 2 "$(get_indent 2)${PN}: >> Adding '${MDADM_CONFIG}' ..."
+
 		if [ -f "${MDADM_CONFIG}" ]
 		then
 			cp -aL "${MDADM_CONFIG}" "${TDIR}"/etc/mdadm.conf 2>/dev/null \
