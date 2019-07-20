@@ -257,6 +257,7 @@ then
 	if [ "${CALLBACK_ESCAPE}" -eq 0 ]
 	then
 		print_info 1 '' 1 0
+		print_info 1 '' 1 0
 		eval ${CMD_CALLBACK} | tee -a "${LOGFILE}"
 		CMD_STATUS="${PIPESTATUS[0]}"
 		print_info 1 '' 1 0
