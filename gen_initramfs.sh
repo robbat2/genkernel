@@ -1609,7 +1609,7 @@ create_initramfs() {
 			# We can update /etc/ld.so.cache which was copied from host
 			# to actually match initramfs' content.
 			print_info 1 "$(get_indent 1)>> Pre-generating initramfs' /etc/ld.so.cache ..."
-			ldconfig -r . 2>/dev/null \
+			ldconfig -f "${TDIR}/etc/ld.so.conf" -r . 2>/dev/null \
 				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
 		fi
 
