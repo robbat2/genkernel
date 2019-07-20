@@ -786,8 +786,7 @@ parse_cmdline() {
 			exit 0
 			;;
 		*)
-			echo "Error: Unknown option '$*'!"
-			exit 1
+			small_die "Unknown option '$*'!"
 			;;
 	esac
 }
