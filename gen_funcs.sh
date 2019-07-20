@@ -25,19 +25,19 @@ isTrue() {
 set_color_vars() {
 	if ! isTrue "${NOCOLOR}"
 	then
+		BOLD=$'\e[0;01m'
+		UNDER=$'\e[4m'
 		GOOD=$'\e[32;01m'
 		WARN=$'\e[33;01m'
 		BAD=$'\e[31;01m'
 		NORMAL=$'\e[0m'
-		BOLD=$'\e[0;01m'
-		UNDER=$'\e[4m'
 	else
+		BOLD=''
+		UNDER=''
 		GOOD=''
 		WARN=''
 		BAD=''
 		NORMAL=''
-		BOLD=''
-		UNDER=''
 	fi
 }
 set_color_vars
