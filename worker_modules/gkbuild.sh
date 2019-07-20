@@ -664,7 +664,12 @@ gkconf() {
 gklibtoolize() {
 	type -P eltpatch &>/dev/null || die "eltpatch not found; is app-portage/elt-patches installed?"
 
-	gkexec "ELT_LOGDIR=\"${T}\" LD=\"$(tc-getLD)\" eltpatch ${*}"
+	local command=( "ELT_LOGDIR='${T}'" )
+	command+=( "LD='$(tc-getLD)'" )
+	command+=( "eltpatch" )
+	command+=( "${@}" )
+
+	gkexec "${command[*]}"
 }
 
 # @FUNCTION: gkmake
