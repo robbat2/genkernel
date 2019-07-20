@@ -24,14 +24,39 @@ do
 	[[ "${arg}" == --config=* ]] && CMD_GK_CONFIG=${arg#--config=}
 done
 
-# Pull in our configuration
+# Pull in our configuration to get GK_SHARE only...
 _GENKERNEL_CONF=${CMD_GK_CONFIG:-/etc/genkernel.conf}
-source "${_GENKERNEL_CONF}" || small_die "Could not read ${_GENKERNEL_CONF}"
+GK_SHARE=$(source "${_GENKERNEL_CONF}" &>/dev/null && echo ${GK_SHARE})
 
 if [ -z "${GK_SHARE}" ]
 then
 	small_die "GK_SHARE is not set. Please check used genkernel config file at '${_GENKERNEL_CONF}'!"
 fi
+
+# Make sure that we do not clash with the environment
+GK_DETERMINEARGS_FILE="${GK_SHARE}/gen_determineargs.sh"
+GK_SETTINGS=( $(awk '/[^#]set_config_with_override/ { print $3 }' "${GK_DETERMINEARGS_FILE}" 2>/dev/null) )
+if [ ${#GK_SETTINGS[@]} -gt 0 ]
+then
+	for GK_SETTING in "${GK_SETTINGS[@]}"
+	do
+		for var_to_unset in ${GK_SETTING} CMD_${GK_SETTING}
+		do
+			if [ -n "${!var_to_unset}" ]
+			then
+				echo "WARNING: Will unset existing variable '${var_to_unset}' to avoid clashing with genkernel config ..." >&2
+				unset ${var_to_unset} || small_die "Failed to unset existing variable '${var_to_unset}'!"
+			fi
+		done
+	done
+
+	unset GK_DETERMINEARGS_FILE GK_SETTINGS GK_SETTING var_to_unset
+else
+	small_die "Failed to extract genkernel options from '${GK_DETERMINEARGS_FILE}'!"
+fi
+
+# Now we can source our configuration...
+source "${_GENKERNEL_CONF}" || small_die "Could not read ${_GENKERNEL_CONF}"
 
 # set default LOGLEVEL if uninitialized
 LOGLEVEL=${LOGLEVEL:-1}
