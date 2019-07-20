@@ -97,6 +97,7 @@ determine_real_args() {
 
 	#                               Dest / Config File   Command Line                     Arch Default
 	#                               ------------------   ------------                     ------------
+	set_config_with_override STRING TMPDIR                   CMD_TMPDIR                   "/var/tmp/genkernel"
 	set_config_with_override STRING LOGFILE                  CMD_LOGFILE                  "/var/log/genkernel.conf"
 	set_config_with_override STRING KERNEL_DIR               CMD_KERNEL_DIR               "${DEFAULT_KERNEL_SOURCE}"
 	set_config_with_override BOOL   KERNEL_SOURCES           CMD_KERNEL_SOURCES           "yes"
@@ -186,6 +187,14 @@ determine_real_args() {
 	set_config_with_override STRING STRIP_TYPE               CMD_STRIP_TYPE               "modules"
 	set_config_with_override BOOL   INSTALL                  CMD_INSTALL                  "yes"
 	set_config_with_override BOOL   CLEANUP                  CMD_CLEANUP                  "yes"
+
+	if [ ! -d "${TMPDIR}" ]
+	then
+		mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
+	fi
+
+	declare -gr TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
+	[ -z "${TEMP}" ] && gen_die "'mktemp -d -p \"${TMPDIR}\" gk.XXXXXXXX' failed!"
 
 	declare -gr GK_V_CACHEDIR="${CACHE_DIR}/${GK_V}"
 

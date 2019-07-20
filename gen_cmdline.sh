@@ -585,15 +585,8 @@ parse_cmdline() {
 			print_info 3 "CMD_STATIC: ${CMD_STATIC}"
 			;;
 		--tempdir=*)
-			TMPDIR="${*#*=}"
-			if [ ! -d "${TMPDIR}" ]
-			then
-				mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
-			fi
-			TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
-			[ -z "${TEMP}" ] && gen_die "mktemp failed!"
-			print_info 3 "TMPDIR: ${TMPDIR}"
-			print_info 3 "TEMP: ${TEMP}"
+			CMD_TMPDIR="${*#*=}"
+			print_info 3 "CMD_TMPDIR: ${CMD_TMPDIR}"
 			;;
 		--postclear|--no-postclear)
 			CMD_POSTCLEAR=$(parse_optbool "$*")

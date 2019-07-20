@@ -4,10 +4,6 @@
 PATH="${PATH}:/sbin:/usr/sbin"
 GK_V='4.0.0_beta7'
 
-# Set the default for TMPDIR. May be modified by genkernel.conf or the
-# --tempdir command line option.
-TMPDIR='/var/tmp/genkernel'
-
 TODEBUGCACHE=yes # Until an error occurs or LOGFILE is fully qualified.
 
 small_die() {
@@ -74,14 +70,6 @@ source "${GK_SHARE}"/gen_initramfs.sh || gen_die "Could not read '${GK_SHARE}/ge
 source "${GK_SHARE}"/gen_moddeps.sh || gen_die "Could not read '${GK_SHARE}/gen_moddeps.sh'"
 source "${GK_SHARE}"/gen_package.sh || gen_die "Could not read '${GK_SHARE}/gen_package.sh'"
 source "${GK_SHARE}"/gen_bootloader.sh || gen_die "Could not read '${GK_SHARE}/gen_bootloader.sh'"
-
-if [ ! -d "${TMPDIR}" ]
-then
-	mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
-fi
-
-TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
-[ -z "${TEMP}" ] && gen_die "mktemp failed!"
 
 export GK_MASTER_PID=${BASHPID}
 
