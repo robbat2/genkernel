@@ -1167,9 +1167,9 @@ start_volumes() {
 			/sbin/mdadm --assemble --scan
 			#Intel Matrix RAID (and possibly others) have a container layer above the actual volumes,
 			#So we have to look for volumes that haven't been activated.
-			mdadm -IRs
+			/sbin/mdadm -IRs
 		else
-			bad_msg "mdadm not found: skipping mdadm raid assembly!"
+			bad_msg "domdadm invoked but /sbin/mdadm not found; Skipping mdadm raid assembly ..."
 		fi
 	fi
 
@@ -1227,6 +1227,8 @@ start_volumes() {
 				/sbin/dmraid -ay ${DMRAID_OPTS}
 			fi
 			[ -x '/sbin/kpartx' ] && /sbin/dmsetup ls --exec '/sbin/kpartx -a -s'
+		else
+			bad_msg "dodmraid invoked but /sbin/dmraid not found; Skipping dmraid activation ..."
 		fi
 	fi
 
@@ -1239,7 +1241,7 @@ start_volumes() {
 
 		if [ "${lvm_path}" = "MISSING" ]
 		then
-			bad_msg "dolvm invoked, but LVM binary not available! skipping LVM volume group activation!"
+			bad_msg "dolvm invoked but LVM binary not available; Skipping LVM volume group activation ..."
 		else
 			for dev in ${RAID_DEVICES}
 			do
@@ -1270,7 +1272,7 @@ start_volumes() {
 	then
 		if [ ! -e /sys/fs/bcache/register_quiet ]
 		then
-			warn_msg "'/sys/fs/bcache/register_quiet' does not exist. Missing kernel driver? Skipping dobcache ..."
+			bad_msg "dobcache invoked but '/sys/fs/bcache/register_quiet' does not exist; Skipping bcache initialization ..."
 		else
 			local i=
 			for i in $(awk '$4 !~ /^(name$|$)/ { print $4 }' /proc/partitions)
@@ -1293,7 +1295,7 @@ start_volumes() {
 		then
 			/sbin/btrfs device scan
 		else
-			bad_msg "btrfs not found: skipping btrfs device scanning!"
+			bad_msg "dobtrfs invoked but /sbin/btrfs not found; Skipping btrfs device scanning ..."
 		fi
 	fi
 
