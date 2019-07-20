@@ -44,7 +44,15 @@ set_color_vars
 
 dump_debugcache() {
 	TODEBUGCACHE=no
-	echo "${DEBUGCACHE}" >> "${LOGFILE}"
+
+	if [ -w "${LOGFILE}" ]
+	then
+		echo "${DEBUGCACHE}" >> "${LOGFILE}"
+	else
+		echo "WARNING: Cannot write to '${LOGFILE}'!"
+		echo "${DEBUGCACHE}"
+	fi
+
 	DEBUGCACHE=
 }
 
