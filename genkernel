@@ -95,7 +95,6 @@ then
 	exit 1
 fi
 
-start_log
 NORMAL=${GOOD} print_info 1 "Gentoo Linux Genkernel; Version ${GK_V}${NORMAL}"
 print_info 1 "Using genkernel configuration from '${_GENKERNEL_CONF}' ..."
 unset _GENKERNEL_CONF
@@ -160,8 +159,6 @@ determine_kernel_config_file
 setup_cache_dir
 
 check_distfiles
-
-dump_debugcache
 
 KERNCACHE_IS_VALID="no"
 if [ -n "${KERNCACHE}" ]

@@ -188,6 +188,30 @@ determine_real_args() {
 	set_config_with_override BOOL   INSTALL                  CMD_INSTALL                  "yes"
 	set_config_with_override BOOL   CLEANUP                  CMD_CLEANUP                  "yes"
 
+	local can_write_log=no
+	if [ -w "${LOGFILE}" ]
+	then
+		can_write_log=yes
+	elif [ -w "$(dirname "${LOGFILE}")" ]
+	then
+		can_write_log=yes
+	fi
+
+	if ! isTrue "${can_write_log}"
+	then
+		small_die "Cannot write to '${LOGFILE}'!"
+	fi
+
+	if [ -f "${LOGFILE}" ]
+	then
+		# Truncate existing logfile
+		echo > "${LOGFILE}" 2>/dev/null || small_die "Could not write to '${LOGFILE}'!"
+	else
+		touch "${LOGFILE}" || small_die "Failed to create '${LOGFILE}'!"
+	fi
+
+	dump_debugcache
+
 	if [ ! -d "${TMPDIR}" ]
 	then
 		mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
