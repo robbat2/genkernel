@@ -517,6 +517,16 @@ determine_real_args() {
 			done
 			unset FEATURE_REQUIRING_BUSYBOX FEATURES_REQUIRING_BUSYBOX
 		fi
+
+		local lddtree_testfile=$(which cpio 2>/dev/null)
+		if [[ -z "${lddtree_testfile}" || ! -e "${lddtree_testfile}" ]]
+		then
+			# This will be fatal because we cpio either way
+			gen_die "cpio binary not found. Is app-arch/cpio installed?"
+		elif ! lddtree -l "${lddtree_testfile}" 1>/dev/null 2>&1
+		then
+			gen_die "'lddtree -l ${lddtree_testfile}' failed -- cannot generate initramfs without working lddtree!"
+		fi
 	fi
 
 	MICROCODE=${MICROCODE,,}

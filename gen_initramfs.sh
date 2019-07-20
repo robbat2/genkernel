@@ -1526,13 +1526,6 @@ append_data() {
 }
 
 create_initramfs() {
-	local lddtree_testfile=$(which cpio 2>/dev/null)
-	if [[ -z "${lddtree_testfile}" || ! -e "${lddtree_testfile}" ]]; then
-		print_warning 1 "cpio binary not found -- cannot check if lddtree is working!"
-	elif ! lddtree "${lddtree_testfile}" 1>/dev/null 2>&1; then
-		gen_die "'lddtree ${lddtree_testfile}' failed -- cannot generate initramfs without working lddtree!"
-	fi
-
 	local compress_ext=""
 	print_info 1 "initramfs: >> Initializing ..."
 
