@@ -73,7 +73,8 @@ verify-doc: doc/genkernel.8.txt
 		sed -r \
 			-e 's,[[:space:]]*--(no-)?,,g' \
 			-e '/bootloader/s,=\(grub\|grub2\),,g' \
-			-e '/microcode/s,\[\],,g' | \
+			-e '/microcode/s,=\(all\|amd\|intel\),,g' \
+			-e '/ssh-host-keys/s,=\(create\|create-from-host\|runtime\),,g' | \
 		while read opt ; do \
 			regex="^*--(...no-...)?$$opt" ; \
 			if ! egrep -e "$$regex" $< -sq ; then \
