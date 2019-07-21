@@ -34,6 +34,10 @@ GK_DETERMINEARGS_FILE="${GK_SHARE}/gen_determineargs.sh"
 GK_SETTINGS=( $(awk '/[^#]set_config_with_override/ { print $3 }' "${GK_DETERMINEARGS_FILE}" 2>/dev/null) )
 if [ ${#GK_SETTINGS[@]} -gt 0 ]
 then
+	GK_SETTINGS+=( CALLBACK )
+	GK_SETTINGS+=( EXTRAVERSION )
+	GK_SETTINGS+=( MOD_INSTALL )
+
 	for GK_SETTING in "${GK_SETTINGS[@]}"
 	do
 		for var_to_unset in ${GK_SETTING} CMD_${GK_SETTING}
