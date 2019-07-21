@@ -398,7 +398,7 @@ INTERNALS
 *--*[*no-*]*clear-cachedir*::
     Clears or skips clearing all files in cache location on genkernel start.
 
-*--tempdir*=<dir>::
+*--tmpdir*=<dir>::
     Sets genkernel's temporary working directory to <dir>.
 
 *--*[*no-*]*postclear*::

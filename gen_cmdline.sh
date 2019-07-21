@@ -172,7 +172,7 @@ longusage() {
   echo "				if you want to force rebuild of included tools"
   echo "				like BusyBox, DMRAID, GnuPG, LVM, MDADM ..."
   echo "	--no-clear-cachedir	Do not clean up on genkernel start"
-  echo "	--tempdir=<dir>		Location of genkernel's temporary directory"
+  echo "	--tmpdir=<dir>		Location of genkernel's temporary directory"
   echo "	--postclear		Clear all tmp files and caches after genkernel has run"
   echo "	--no-postclear		Do not clean up after genkernel has run"
   echo "  Output Settings"
@@ -593,7 +593,7 @@ parse_cmdline() {
 			CMD_STATIC=$(parse_optbool "$*")
 			print_info 3 "CMD_STATIC: ${CMD_STATIC}"
 			;;
-		--tempdir=*)
+		--tmpdir=*)
 			CMD_TMPDIR="${*#*=}"
 			print_info 3 "CMD_TMPDIR: ${CMD_TMPDIR}"
 			;;
