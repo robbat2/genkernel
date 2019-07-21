@@ -39,7 +39,7 @@ longusage() {
   echo "	--no-bcache		Don't enable block layer cache (bcache) support in kernel"
   echo "	--hyperv		Enable Microsoft Hyper-V kernel options in kernel"
   echo "	--no-hyperv		Don't enable Microsoft Hyper-V kernel options in kernel"
-  echo "	--microcode=(all,amd,intel)"
+  echo "	--microcode=(all|amd|intel)"
   echo "				Enable early microcode support in kernel configuration,"
   echo "				'all' for all (default), 'amd' for AMD and 'intel' for"
   echo "				Intel CPU types"
