@@ -193,6 +193,25 @@ config_kernel() {
 		fi
 	fi
 
+	# --kernel-localversion handling
+	if [ -n "${KERNEL_LOCALVERSION}" ]
+	then
+		local cfg_CONFIG_LOCALVERSION=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_LOCALVERSION")
+		case "${KERNEL_LOCALVERSION}" in
+			UNSET)
+				print_info 2 "$(get_indent 1)>> Ensure that CONFIG_LOCALVERSION is unset ..."
+				if [ -n "${cfg_CONFIG_LOCALVERSION}" ]
+				then
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_LOCALVERSION" ""
+				fi
+				;;
+			*)
+				print_info 2 "$(get_indent 1)>> Ensure that CONFIG_LOCALVERSION is set ..."
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_LOCALVERSION" "\"${KERNEL_LOCALVERSION}\""
+				;;
+		esac
+	fi
+
 	# Do we support modules at all?
 	local cfg_CONFIG_MODULES=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MODULES")
 	if isTrue "${cfg_CONFIG_MODULES}"

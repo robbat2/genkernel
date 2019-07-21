@@ -124,6 +124,10 @@ KERNEL CONFIGURATION
 *--*[*no-*]*virtio*::
     Adds, or skip adding VirtIO support to kernel configuration.
 
+*--kernel-localversion*=<...>::
+    Set kernel option CONFIG_LOCALVERSION. Use special value "UNSET" to
+    unset any already set LOCALVERSION.
+
 
 KERNEL COMPILATION
 ~~~~~~~~~~~~~~~~~~

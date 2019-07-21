@@ -120,6 +120,7 @@ determine_real_args() {
 	set_config_with_override STRING CROSS_COMPILE            CMD_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR                  CMD_BOOTDIR                  "/boot"
 	set_config_with_override STRING KERNEL_OUTPUTDIR         CMD_KERNEL_OUTPUTDIR         "${KERNEL_DIR}"
+	set_config_with_override STRING KERNEL_LOCALVERSION      CMD_KERNEL_LOCALVERSION
 	set_config_with_override STRING MODPROBEDIR              CMD_MODPROBEDIR              "/etc/modprobe.d"
 
 	set_config_with_override BOOL   SPLASH                   CMD_SPLASH                   "no"
@@ -453,6 +454,24 @@ determine_real_args() {
 		then
 			mkdir -p "${kerncache_dir}" \
 				|| gen_die "Failed to create '${kerncache_dir}'!"
+		fi
+	fi
+
+	if isTrue "${BUILD_KERNEL}"
+	then
+		if [ -n "${KERNEL_LOCALVERSION}" ]
+		then
+			case "${KERNEL_LOCALVERSION}" in
+				UNSET)
+					;;
+				*)
+					local valid_localversion_pattern='^-[A-Za-z0-9\-_]{1,}$'
+					if [[ ! "${KERNEL_LOCALVERSION}" =~ ${valid_localversion_pattern} ]]
+					then
+						gen_die "--kernel-localversion value '${KERNEL_LOCALVERSION}' does not match '${valid_localversion_pattern}' regex!"
+					fi
+					;;
+			esac
 		fi
 	fi
 

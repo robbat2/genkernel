@@ -75,6 +75,9 @@ longusage() {
   echo "				Kernel configuration file to use for compilation; Use"
   echo "				'default' to explicitly start from scratch using"
   echo "				genkernel defaults"
+  echo "	--kernel-localversion=<...>"
+  echo "				Set kernel CONFIG_LOCALVERSION, use special value"
+  echo "				'UNSET' to unset any set LOCALVERSION"
   echo "	--module-prefix=<dir>	Prefix to kernel module destination, modules"
   echo "				will be installed in <prefix>/lib/modules"
   echo "  Low-Level Compile settings"
@@ -624,6 +627,10 @@ parse_cmdline() {
 		--kernel-config=*)
 			CMD_KERNEL_CONFIG="${*#*=}"
 			print_info 3 "CMD_KERNEL_CONFIG: ${CMD_KERNEL_CONFIG}"
+			;;
+		--kernel-localversion=*)
+			CMD_KERNEL_LOCALVERSION="${*#*=}"
+			print_info 3 "CMD_KERNEL_LOCALVERSION: ${CMD_KERNEL_LOCALVERSION}"
 			;;
 		--module-prefix=*)
 			CMD_INSTALL_MOD_PATH="${*#*=}"
