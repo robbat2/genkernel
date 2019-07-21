@@ -244,6 +244,9 @@ LOW-LEVEL COMPILATION OPTIONS
 *--utils-as*=<assembler>::
     Assembler to use for utilities.
 
+*--utils-cflags*=<cflags>::
+    C compiler flags used to compile utilities.
+
 *--utils-cc*=<compiler>::
     Compiler to use for utilities.
 
