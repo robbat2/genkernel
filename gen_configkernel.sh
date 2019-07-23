@@ -72,9 +72,17 @@ determine_kernel_config_file() {
 }
 
 config_kernel() {
+	local diff_cmd="$(which zdiff 2>/dev/null)"
+	if [ -z "${diff_cmd}" ]
+	then
+		print_warning 5 "zdiff is not available."
+		diff_cmd="diff"
+	fi
+
 	cd "${KERNEL_DIR}" || gen_die "Failed to chdir to '${KERNEL_DIR}'!"
 
 	print_info 1 "kernel: >> Initializing ..."
+
 	if isTrue "${CLEAN}" && isTrue "${MRPROPER}"
 	then
 		print_info 2 "$(get_indent 1)>> --mrproper is set; Skipping 'make clean' ..."
@@ -92,16 +100,20 @@ config_kernel() {
 		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
 		then
 			# Current .config is different then one we are going to use
-			if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ] || \
-				! diff -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" >/dev/null
+			if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ] \
+				|| ! "${diff_cmd}" -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" >/dev/null
 			then
 				NOW=$(date +--%Y-%m-%d--%H-%M-%S)
 				cp "${KERNEL_OUTPUTDIR}/.config" "${KERNEL_OUTPUTDIR}/.config${NOW}.bak" \
 					|| gen_die "Could not backup kernel config (${KERNEL_OUTPUTDIR}/.config)"
 				print_info 1 "$(get_indent 1)>> Previous config backed up to .config${NOW}.bak"
 
-				[ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ] &&
-					rm "${KERNEL_OUTPUTDIR}/.config" >/dev/null
+				if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ]
+				then
+					print_info 3 "$(get_indent 1)>> Default kernel config was forced; Deleting existing kernel config '${KERNEL_OUTPUTDIR}/.config' ..."
+					rm "${KERNEL_OUTPUTDIR}/.config" >/dev/null \
+						|| gen_die "Failed to delete '${KERNEL_OUTPUTDIR}/.config'!"
+				fi
 			fi
 		fi
 	fi
@@ -111,28 +123,30 @@ config_kernel() {
 		print_info 1 "$(get_indent 1)>> Running 'make mrproper' ..."
 		compile_generic mrproper kernel
 	else
-		if [ -f "${KERNEL_OUTPUTDIR}/.config" ]
-		then
-			print_info 1 "$(get_indent 1)>> Using config from '${KERNEL_OUTPUTDIR}/.config' ..."
-		else
-			print_info 1 "$(get_indent 1)>> Using config from '${KERNEL_CONFIG}' ..."
-		fi
 		print_info 1 "$(get_indent 1)>> --no-mrproper is set; Skipping 'make mrproper' ..."
 	fi
 
-	# If we're not cleaning a la mrproper, then we don't want to try to overwrite the configs
-	# or we might remove configurations someone is trying to test.
-	if isTrue "${MRPROPER}" || [ ! -f "${KERNEL_OUTPUTDIR}/.config" ]
+	if [ ! -f "${KERNEL_OUTPUTDIR}/.config" ]
 	then
-		print_info 1 "$(get_indent 1)>> Using config from '${KERNEL_CONFIG}' ..."
+		# We always need a kernel config file...
+		print_info 3 "$(get_indent 1)>> Copying '${KERNEL_CONFIG}' to '${KERNEL_OUTPUTDIR}/.config' ..."
 
-		local message="Could not copy configuration file '${KERNEL_CONFIG}'!"
+		local message="Failed to copy kernel config file '${KERNEL_CONFIG}' to '${KERNEL_OUTPUTDIR}/.config'!"
 		if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}" 2>/dev/null)" == application/x-gzip ]]
 		then
 			# Support --kernel-config=/proc/config.gz, mainly
 			zcat "${KERNEL_CONFIG}" > "${KERNEL_OUTPUTDIR}/.config" || gen_die "${message}"
 		else
 			cp -aL "${KERNEL_CONFIG}" "${KERNEL_OUTPUTDIR}/.config" || gen_die "${message}"
+		fi
+	else
+		if ! "${diff_cmd}" -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" >/dev/null
+		then
+			print_warning 2 "$(get_indent 1)>> Will ignore kernel config from '${KERNEL_CONFIG}'"
+			print_warning 2 "$(get_indent 1)   in favor of already existing but different kernel config"
+			print_warning 2 "$(get_indent 1)   found in '${KERNEL_OUTPUTDIR}/.config' ..."
+		else
+			print_info 3 "$(get_indent 1)>> Can keep using already existing '${KERNEL_OUTPUTDIR}/.config' which is identical to --kernel-config file  ..."
 		fi
 	fi
 
