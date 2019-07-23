@@ -95,100 +95,103 @@ determine_real_args() {
 
 	print_info 4 "Resolving config file, command line, and arch default settings."
 
-	#                               Dest / Config File   Command Line                     Arch Default
-	#                               ------------------   ------------                     ------------
-	set_config_with_override STRING TMPDIR                   CMD_TMPDIR                   "/var/tmp/genkernel"
-	set_config_with_override STRING LOGFILE                  CMD_LOGFILE                  "/var/log/genkernel.conf"
-	set_config_with_override STRING KERNEL_DIR               CMD_KERNEL_DIR               "${DEFAULT_KERNEL_SOURCE}"
-	set_config_with_override BOOL   KERNEL_SOURCES           CMD_KERNEL_SOURCES           "yes"
-	set_config_with_override STRING KNAME                    CMD_KERNNAME                 "genkernel"
+	#                               Dest / Config File                    Command Line                              Arch Default
+	#                               ------------------                    ------------                              ------------
+	set_config_with_override STRING TMPDIR                                CMD_TMPDIR                                "/var/tmp/genkernel"
+	set_config_with_override STRING LOGFILE                               CMD_LOGFILE                               "/var/log/genkernel.conf"
+	set_config_with_override STRING KERNEL_DIR                            CMD_KERNEL_DIR                            "${DEFAULT_KERNEL_SOURCE}"
+	set_config_with_override BOOL   KERNEL_SOURCES                        CMD_KERNEL_SOURCES                        "yes"
+	set_config_with_override STRING KNAME                                 CMD_KERNNAME                              "genkernel"
 
-	set_config_with_override STRING COMPRESS_INITRD          CMD_COMPRESS_INITRD          "$DEFAULT_COMPRESS_INITRD"
-	set_config_with_override STRING COMPRESS_INITRD_TYPE     CMD_COMPRESS_INITRD_TYPE     "$DEFAULT_COMPRESS_INITRD_TYPE"
-	set_config_with_override STRING MAKEOPTS                 CMD_MAKEOPTS                 "$DEFAULT_MAKEOPTS"
-	set_config_with_override STRING NICE                     CMD_NICE                     "10"
-	set_config_with_override STRING KERNEL_MAKE              CMD_KERNEL_MAKE              "$DEFAULT_KERNEL_MAKE"
-	set_config_with_override STRING UTILS_CFLAGS             CMD_UTILS_CFLAGS             "$DEFAULT_UTILS_CFLAGS"
-	set_config_with_override STRING UTILS_MAKE               CMD_UTILS_MAKE               "$DEFAULT_UTILS_MAKE"
-	set_config_with_override STRING KERNEL_CC                CMD_KERNEL_CC                "$DEFAULT_KERNEL_CC"
-	set_config_with_override STRING KERNEL_LD                CMD_KERNEL_LD                "$DEFAULT_KERNEL_LD"
-	set_config_with_override STRING KERNEL_AS                CMD_KERNEL_AS                "$DEFAULT_KERNEL_AS"
-	set_config_with_override STRING UTILS_CC                 CMD_UTILS_CC                 "$DEFAULT_UTILS_CC"
-	set_config_with_override STRING UTILS_LD                 CMD_UTILS_LD                 "$DEFAULT_UTILS_LD"
-	set_config_with_override STRING UTILS_AS                 CMD_UTILS_AS                 "$DEFAULT_UTILS_AS"
+	set_config_with_override STRING CHECK_FREE_DISK_SPACE_BOOTDIR         CMD_CHECK_FREE_DISK_SPACE_BOOTDIR
+	set_config_with_override STRING CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR CMD_CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR
 
-	set_config_with_override STRING CROSS_COMPILE            CMD_CROSS_COMPILE
-	set_config_with_override STRING BOOTDIR                  CMD_BOOTDIR                  "/boot"
-	set_config_with_override STRING KERNEL_OUTPUTDIR         CMD_KERNEL_OUTPUTDIR         "${KERNEL_DIR}"
-	set_config_with_override STRING KERNEL_LOCALVERSION      CMD_KERNEL_LOCALVERSION
-	set_config_with_override STRING MODPROBEDIR              CMD_MODPROBEDIR              "/etc/modprobe.d"
+	set_config_with_override STRING COMPRESS_INITRD                       CMD_COMPRESS_INITRD                       "$DEFAULT_COMPRESS_INITRD"
+	set_config_with_override STRING COMPRESS_INITRD_TYPE                  CMD_COMPRESS_INITRD_TYPE                  "$DEFAULT_COMPRESS_INITRD_TYPE"
+	set_config_with_override STRING MAKEOPTS                              CMD_MAKEOPTS                              "$DEFAULT_MAKEOPTS"
+	set_config_with_override STRING NICE                                  CMD_NICE                                  "10"
+	set_config_with_override STRING KERNEL_MAKE                           CMD_KERNEL_MAKE                           "$DEFAULT_KERNEL_MAKE"
+	set_config_with_override STRING UTILS_CFLAGS                          CMD_UTILS_CFLAGS                          "$DEFAULT_UTILS_CFLAGS"
+	set_config_with_override STRING UTILS_MAKE                            CMD_UTILS_MAKE                            "$DEFAULT_UTILS_MAKE"
+	set_config_with_override STRING KERNEL_CC                             CMD_KERNEL_CC                             "$DEFAULT_KERNEL_CC"
+	set_config_with_override STRING KERNEL_LD                             CMD_KERNEL_LD                             "$DEFAULT_KERNEL_LD"
+	set_config_with_override STRING KERNEL_AS                             CMD_KERNEL_AS                             "$DEFAULT_KERNEL_AS"
+	set_config_with_override STRING UTILS_CC                              CMD_UTILS_CC                              "$DEFAULT_UTILS_CC"
+	set_config_with_override STRING UTILS_LD                              CMD_UTILS_LD                              "$DEFAULT_UTILS_LD"
+	set_config_with_override STRING UTILS_AS                              CMD_UTILS_AS                              "$DEFAULT_UTILS_AS"
 
-	set_config_with_override BOOL   SPLASH                   CMD_SPLASH                   "no"
-	set_config_with_override BOOL   CLEAR_CACHEDIR           CMD_CLEAR_CACHEDIR           "no"
-	set_config_with_override BOOL   POSTCLEAR                CMD_POSTCLEAR                "no"
-	set_config_with_override BOOL   MRPROPER                 CMD_MRPROPER                 "yes"
-	set_config_with_override BOOL   MENUCONFIG               CMD_MENUCONFIG               "no"
-	set_config_with_override BOOL   GCONFIG                  CMD_GCONFIG                  "no"
-	set_config_with_override BOOL   NCONFIG                  CMD_NCONFIG                  "no"
-	set_config_with_override BOOL   XCONFIG                  CMD_XCONFIG                  "no"
-	set_config_with_override BOOL   CLEAN                    CMD_CLEAN                    "yes"
+	set_config_with_override STRING CROSS_COMPILE                         CMD_CROSS_COMPILE
+	set_config_with_override STRING BOOTDIR                               CMD_BOOTDIR                               "/boot"
+	set_config_with_override STRING KERNEL_OUTPUTDIR                      CMD_KERNEL_OUTPUTDIR                      "${KERNEL_DIR}"
+	set_config_with_override STRING KERNEL_LOCALVERSION                   CMD_KERNEL_LOCALVERSION
+	set_config_with_override STRING MODPROBEDIR                           CMD_MODPROBEDIR                           "/etc/modprobe.d"
 
-	set_config_with_override STRING MINKERNPACKAGE           CMD_MINKERNPACKAGE
-	set_config_with_override STRING MODULESPACKAGE           CMD_MODULESPACKAGE
-	set_config_with_override BOOL   MODULEREBUILD            CMD_MODULEREBUILD            "yes"
-	set_config_with_override STRING KERNCACHE                CMD_KERNCACHE
-	set_config_with_override BOOL   RAMDISKMODULES           CMD_RAMDISKMODULES           "yes"
-	set_config_with_override BOOL   ALLRAMDISKMODULES        CMD_ALLRAMDISKMODULES        "no"
-	set_config_with_override STRING INITRAMFS_OVERLAY        CMD_INITRAMFS_OVERLAY
-	set_config_with_override BOOL   MOUNTBOOT                CMD_MOUNTBOOT                "yes"
-	set_config_with_override BOOL   BUILD_STATIC             CMD_STATIC                   "no"
-	set_config_with_override BOOL   SAVE_CONFIG              CMD_SAVE_CONFIG              "yes"
-	set_config_with_override BOOL   SYMLINK                  CMD_SYMLINK                  "no"
-	set_config_with_override STRING INSTALL_MOD_PATH         CMD_INSTALL_MOD_PATH
-	set_config_with_override BOOL   OLDCONFIG                CMD_OLDCONFIG                "yes"
-	set_config_with_override BOOL   SANDBOX                  CMD_SANDBOX                  "yes"
-	set_config_with_override BOOL   SSH                      CMD_SSH                      "no"
-	set_config_with_override STRING SSH_AUTHORIZED_KEYS_FILE CMD_SSH_AUTHORIZED_KEYS_FILE "/etc/dropbear/authorized_keys"
-	set_config_with_override STRING SSH_HOST_KEYS            CMD_SSH_HOST_KEYS            "create"
-	set_config_with_override BOOL   STRACE                   CMD_STRACE                   "no"
-	set_config_with_override BOOL   BCACHE                   CMD_BCACHE                   "no"
-	set_config_with_override BOOL   LVM                      CMD_LVM                      "no"
-	set_config_with_override BOOL   DMRAID                   CMD_DMRAID                   "no"
-	set_config_with_override BOOL   ISCSI                    CMD_ISCSI                    "no"
-	set_config_with_override BOOL   HYPERV                   CMD_HYPERV                   "no"
-	set_config_with_override STRING BOOTLOADER               CMD_BOOTLOADER               "no"
-	set_config_with_override BOOL   BUSYBOX                  CMD_BUSYBOX                  "yes"
-	set_config_with_override STRING BUSYBOX_CONFIG           CMD_BUSYBOX_CONFIG
-	set_config_with_override BOOL   NFS                      CMD_NFS                      "yes"
-	set_config_with_override STRING MICROCODE                CMD_MICROCODE                "all"
-	set_config_with_override BOOL   MICROCODE_INITRAMFS      CMD_MICROCODE_INITRAMFS      "yes"
-	set_config_with_override BOOL   UNIONFS                  CMD_UNIONFS                  "no"
-	set_config_with_override BOOL   NETBOOT                  CMD_NETBOOT                  "no"
-	set_config_with_override STRING REAL_ROOT                CMD_REAL_ROOT
-	set_config_with_override BOOL   DISKLABEL                CMD_DISKLABEL                "yes"
-	set_config_with_override BOOL   LUKS                     CMD_LUKS                     "no"
-	set_config_with_override BOOL   GPG                      CMD_GPG                      "no"
-	set_config_with_override BOOL   MDADM                    CMD_MDADM                    "no"
-	set_config_with_override STRING MDADM_CONFIG             CMD_MDADM_CONFIG
-	set_config_with_override BOOL   E2FSPROGS                CMD_E2FSPROGS                "no"
-	set_config_with_override BOOL   XFSPROGS                 CMD_XFSPROGS                 "no"
-	set_config_with_override BOOL   ZFS                      CMD_ZFS                      "$(rootfs_type_is zfs)"
-	set_config_with_override BOOL   BTRFS                    CMD_BTRFS                    "$(rootfs_type_is btrfs)"
-	set_config_with_override BOOL   VIRTIO                   CMD_VIRTIO                   "no"
-	set_config_with_override BOOL   MULTIPATH                CMD_MULTIPATH                "no"
-	set_config_with_override BOOL   FIRMWARE                 CMD_FIRMWARE                 "no"
-	set_config_with_override STRING FIRMWARE_DIR             CMD_FIRMWARE_DIR             "/lib/firmware"
-	set_config_with_override STRING FIRMWARE_FILES           CMD_FIRMWARE_FILES
-	set_config_with_override BOOL   FIRMWARE_INSTALL         CMD_FIRMWARE_INSTALL         "no"
-	set_config_with_override BOOL   INTEGRATED_INITRAMFS     CMD_INTEGRATED_INITRAMFS     "no"
-	set_config_with_override BOOL   WRAP_INITRD              CMD_WRAP_INITRD              "no"
-	set_config_with_override BOOL   GENZIMAGE                CMD_GENZIMAGE                "no"
-	set_config_with_override BOOL   KEYMAP                   CMD_KEYMAP                   "yes"
-	set_config_with_override BOOL   DOKEYMAPAUTO             CMD_DOKEYMAPAUTO             "no"
-	set_config_with_override STRING BUSYBOX_CONFIG           CMD_BUSYBOX_CONFIG
-	set_config_with_override STRING STRIP_TYPE               CMD_STRIP_TYPE               "modules"
-	set_config_with_override BOOL   INSTALL                  CMD_INSTALL                  "yes"
-	set_config_with_override BOOL   CLEANUP                  CMD_CLEANUP                  "yes"
+	set_config_with_override BOOL   SPLASH                                CMD_SPLASH                                "no"
+	set_config_with_override BOOL   CLEAR_CACHEDIR                        CMD_CLEAR_CACHEDIR                        "no"
+	set_config_with_override BOOL   POSTCLEAR                             CMD_POSTCLEAR                             "no"
+	set_config_with_override BOOL   MRPROPER                              CMD_MRPROPER                              "yes"
+	set_config_with_override BOOL   MENUCONFIG                            CMD_MENUCONFIG                            "no"
+	set_config_with_override BOOL   GCONFIG                               CMD_GCONFIG                               "no"
+	set_config_with_override BOOL   NCONFIG                               CMD_NCONFIG                               "no"
+	set_config_with_override BOOL   XCONFIG                               CMD_XCONFIG                               "no"
+	set_config_with_override BOOL   CLEAN                                 CMD_CLEAN                                 "yes"
+
+	set_config_with_override STRING MINKERNPACKAGE                        CMD_MINKERNPACKAGE
+	set_config_with_override STRING MODULESPACKAGE                        CMD_MODULESPACKAGE
+	set_config_with_override BOOL   MODULEREBUILD                         CMD_MODULEREBUILD                         "yes"
+	set_config_with_override STRING KERNCACHE                             CMD_KERNCACHE
+	set_config_with_override BOOL   RAMDISKMODULES                        CMD_RAMDISKMODULES                        "yes"
+	set_config_with_override BOOL   ALLRAMDISKMODULES                     CMD_ALLRAMDISKMODULES                     "no"
+	set_config_with_override STRING INITRAMFS_OVERLAY                     CMD_INITRAMFS_OVERLAY
+	set_config_with_override BOOL   MOUNTBOOT                             CMD_MOUNTBOOT                             "yes"
+	set_config_with_override BOOL   BUILD_STATIC                          CMD_STATIC                                "no"
+	set_config_with_override BOOL   SAVE_CONFIG                           CMD_SAVE_CONFIG                           "yes"
+	set_config_with_override BOOL   SYMLINK                               CMD_SYMLINK                               "no"
+	set_config_with_override STRING INSTALL_MOD_PATH                      CMD_INSTALL_MOD_PATH
+	set_config_with_override BOOL   OLDCONFIG                             CMD_OLDCONFIG                             "yes"
+	set_config_with_override BOOL   SANDBOX                               CMD_SANDBOX                               "yes"
+	set_config_with_override BOOL   SSH                                   CMD_SSH                                   "no"
+	set_config_with_override STRING SSH_AUTHORIZED_KEYS_FILE              CMD_SSH_AUTHORIZED_KEYS_FILE              "/etc/dropbear/authorized_keys"
+	set_config_with_override STRING SSH_HOST_KEYS                         CMD_SSH_HOST_KEYS                         "create"
+	set_config_with_override BOOL   STRACE                                CMD_STRACE                                "no"
+	set_config_with_override BOOL   BCACHE                                CMD_BCACHE                                "no"
+	set_config_with_override BOOL   LVM                                   CMD_LVM                                   "no"
+	set_config_with_override BOOL   DMRAID                                CMD_DMRAID                                "no"
+	set_config_with_override BOOL   ISCSI                                 CMD_ISCSI                                 "no"
+	set_config_with_override BOOL   HYPERV                                CMD_HYPERV                                "no"
+	set_config_with_override STRING BOOTLOADER                            CMD_BOOTLOADER                            "no"
+	set_config_with_override BOOL   BUSYBOX                               CMD_BUSYBOX                               "yes"
+	set_config_with_override STRING BUSYBOX_CONFIG                        CMD_BUSYBOX_CONFIG
+	set_config_with_override BOOL   NFS                                   CMD_NFS                                   "yes"
+	set_config_with_override STRING MICROCODE                             CMD_MICROCODE                             "all"
+	set_config_with_override BOOL   MICROCODE_INITRAMFS                   CMD_MICROCODE_INITRAMFS                   "yes"
+	set_config_with_override BOOL   UNIONFS                               CMD_UNIONFS                               "no"
+	set_config_with_override BOOL   NETBOOT                               CMD_NETBOOT                               "no"
+	set_config_with_override STRING REAL_ROOT                             CMD_REAL_ROOT
+	set_config_with_override BOOL   DISKLABEL                             CMD_DISKLABEL                             "yes"
+	set_config_with_override BOOL   LUKS                                  CMD_LUKS                                  "no"
+	set_config_with_override BOOL   GPG                                   CMD_GPG                                   "no"
+	set_config_with_override BOOL   MDADM                                 CMD_MDADM                                 "no"
+	set_config_with_override STRING MDADM_CONFIG                          CMD_MDADM_CONFIG
+	set_config_with_override BOOL   E2FSPROGS                             CMD_E2FSPROGS                             "no"
+	set_config_with_override BOOL   XFSPROGS                              CMD_XFSPROGS                              "no"
+	set_config_with_override BOOL   ZFS                                   CMD_ZFS                                   "$(rootfs_type_is zfs)"
+	set_config_with_override BOOL   BTRFS                                 CMD_BTRFS                                 "$(rootfs_type_is btrfs)"
+	set_config_with_override BOOL   VIRTIO                                CMD_VIRTIO                                "no"
+	set_config_with_override BOOL   MULTIPATH                             CMD_MULTIPATH                             "no"
+	set_config_with_override BOOL   FIRMWARE                              CMD_FIRMWARE                              "no"
+	set_config_with_override STRING FIRMWARE_DIR                          CMD_FIRMWARE_DIR                          "/lib/firmware"
+	set_config_with_override STRING FIRMWARE_FILES                        CMD_FIRMWARE_FILES
+	set_config_with_override BOOL   FIRMWARE_INSTALL                      CMD_FIRMWARE_INSTALL                      "no"
+	set_config_with_override BOOL   INTEGRATED_INITRAMFS                  CMD_INTEGRATED_INITRAMFS                  "no"
+	set_config_with_override BOOL   WRAP_INITRD                           CMD_WRAP_INITRD                           "no"
+	set_config_with_override BOOL   GENZIMAGE                             CMD_GENZIMAGE                             "no"
+	set_config_with_override BOOL   KEYMAP                                CMD_KEYMAP                                "yes"
+	set_config_with_override BOOL   DOKEYMAPAUTO                          CMD_DOKEYMAPAUTO                          "no"
+	set_config_with_override STRING BUSYBOX_CONFIG                        CMD_BUSYBOX_CONFIG
+	set_config_with_override STRING STRIP_TYPE                            CMD_STRIP_TYPE                            "modules"
+	set_config_with_override BOOL   INSTALL                               CMD_INSTALL                               "yes"
+	set_config_with_override BOOL   CLEANUP                               CMD_CLEANUP                               "yes"
 
 	local can_write_log=no
 	if [ -w "${LOGFILE}" ]

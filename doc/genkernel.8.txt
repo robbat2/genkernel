@@ -395,6 +395,14 @@ INTERNALS
 *--cachedir*=<dir>::
     Override the default cache location.
 
+*--check-free-disk-space-bootdir*=<MB>::
+    When set to a non-zero value, genkernel will check early on start for
+    specified amount of free disk space in megabyte in *BOOTDIR*.
+
+*--check-free-disk-space-kerneloutputdir*=<MB>::
+    When set to a non-zero value, genkernel will check early on start for
+    specified amount of free disk space in megabyte in *KERNEL_OUTPUTDIR*.
+
 *--*[*no-*]*clear-cachedir*::
     Clears or skips clearing all files in cache location on genkernel start.
 

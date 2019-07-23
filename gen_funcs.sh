@@ -1462,6 +1462,85 @@ rootfs_type_is() {
 	fi
 }
 
+check_disk_space_requirements() {
+	local number_pattern='^[1-9]{1}[0-9]+$'
+	local available_free_disk_space=
+
+	# Start check for BOOTDIR
+	local need_to_check=yes
+
+	if [ -z "${CHECK_FREE_DISK_SPACE_BOOTDIR}" -o "${CHECK_FREE_DISK_SPACE_BOOTDIR}" = '0' ]
+	then
+		need_to_check=no
+	fi
+
+	if isTrue "${need_to_check}" && ! isTrue "${CMD_INSTALL}"
+	then
+		need_to_check=no
+	fi
+
+	if isTrue "${need_to_check}"
+	then
+		if [[ ! "${CHECK_FREE_DISK_SPACE_BOOTDIR}" =~ ${number_pattern} ]]
+		then
+			gen_die "--check-free-disk-space-bootdir value '${CHECK_FREE_DISK_SPACE_BOOTDIR}' is not a valid number!"
+		fi
+
+		available_free_disk_space=$(unset POSIXLY_CORRECT && df -BM "${BOOTDIR}" | awk '$3 ~ /[0-9]+/ { print $4 }')
+		if [ -n "${available_free_disk_space}" ]
+		then
+			print_info 2 '' 1 0
+			print_info 2 "Checking for at least ${CHECK_FREE_DISK_SPACE_BOOTDIR} MB free disk space in '${BOOTDIR}' ..."
+			print_info 5 "df reading: ${available_free_disk_space}"
+
+			available_free_disk_space=${available_free_disk_space%M}
+			if [ ${available_free_disk_space} -lt ${CHECK_FREE_DISK_SPACE_BOOTDIR} ]
+			then
+				gen_die "${CHECK_FREE_DISK_SPACE_BOOTDIR} MB free disk space is required in '${BOOTDIR}' but only ${available_free_disk_space} MB is available!"
+			fi
+		else
+			print_warning 1 "Invalid df value; Skipping free disk space check for '${BOOTDIR}' ..."
+		fi
+	fi
+
+	# Start check for kernel outputdir
+	need_to_check=yes
+
+	if [ -z "${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR}" -o "${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR}" = '0' ]
+	then
+		need_to_check=no
+	fi
+
+	if isTrue "${need_to_check}" && ! isTrue "${BUILD_KERNEL}"
+	then
+		need_to_check=no
+	fi
+
+	if isTrue "${need_to_check}"
+	then
+		if [[ ! "${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR}" =~ ${number_pattern} ]]
+		then
+			gen_die "--check-free-disk-space-kerneloutputdir value '${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR}' is not a valid number!"
+		fi
+
+		available_free_disk_space=$(unset POSIXLY_CORRECT && df -BM "${KERNEL_OUTPUTDIR}" | awk '$3 ~ /[0-9]+/ { print $4 }')
+		if [ -n "${available_free_disk_space}" ]
+		then
+			print_info 2 '' 1 0
+			print_info 2 "Checking for at least ${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR} MB free disk space in '${KERNEL_OUTPUTDIR}' ..."
+			print_info 5 "df reading: ${available_free_disk_space}"
+
+			available_free_disk_space=${available_free_disk_space%M}
+			if [ ${available_free_disk_space} -lt ${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR} ]
+			then
+				gen_die "${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR} MB free disk space is required in '${BOOTDIR}' but only ${available_free_disk_space} MB is available!"
+			fi
+		else
+			print_warning 1 "Invalid df value; Skipping free disk space check for '${KERNEL_OUTPUTDIR}' ..."
+		fi
+	fi
+}
+
 check_distfiles() {
 	local source_files=( $(compgen -A variable |grep '^GKPKG_.*SRCTAR$') )
 

@@ -168,6 +168,12 @@ longusage() {
   echo "	--real-root=<foo>	Specify a default for real_root="
   echo "  Internals"
   echo "	--cachedir=<dir>	Override the default cache location"
+  echo "	--check-free-disk-space-bootdir=<MB>"
+  echo "				Check for specified amount of free disk space in MB in BOOTDIR"
+  echo "				at genkernel start"
+  echo "	--check-free-disk-space-kerneloutputdir=<MB>"
+  echo "				Check for specified amount of free disk space in MB in"
+  echo "				kernel outputdir at genkernel start"
   echo "	--clear-cachedir	Clear genkernel's cache location on start. Useful"
   echo "				if you want to force rebuild of included tools"
   echo "				like BusyBox, DMRAID, GnuPG, LVM, MDADM ..."
@@ -600,6 +606,14 @@ parse_cmdline() {
 		--postclear|--no-postclear)
 			CMD_POSTCLEAR=$(parse_optbool "$*")
 			print_info 3 "CMD_POSTCLEAR: ${CMD_POSTCLEAR}"
+			;;
+		--check-free-disk-space-bootdir=*)
+			CMD_CHECK_FREE_DISK_SPACE_BOOTDIR="${*#*=}"
+			print_info 3 "CMD_CHECK_FREE_DISK_SPACE_BOOTDIR: ${CMD_CHECK_FREE_DISK_SPACE_BOOTDIR}"
+			;;
+		--check-free-disk-space-kerneloutputdir=*)
+			CMD_CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR="${*#*=}"
+			print_info 3 "CMD_CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR: ${CMD_CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR}"
 			;;
 		--color|--no-color)
 			CMD_COLOR=$(parse_optbool "$*")

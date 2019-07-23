@@ -197,6 +197,8 @@ fi
 
 isTrue "${CMD_INSTALL}" && make_bootdir_writable
 
+check_disk_space_requirements
+
 if isTrue "${BUILD_KERNEL}" && ! isTrue "${KERNCACHE_IS_VALID}"
 then
 	print_info 1 '' 1 0
