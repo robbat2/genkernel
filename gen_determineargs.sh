@@ -204,13 +204,8 @@ determine_real_args() {
 		small_die "Cannot write to '${LOGFILE}'!"
 	fi
 
-	if [ -f "${LOGFILE}" ]
-	then
-		# Truncate existing logfile
-		echo > "${LOGFILE}" 2>/dev/null || small_die "Could not write to '${LOGFILE}'!"
-	else
-		touch "${LOGFILE}" || small_die "Failed to create '${LOGFILE}'!"
-	fi
+	GK_TIME_START=$(date +%s)
+	echo ">>> Started genkernel v${GK_V} on: $(date +"%Y-%m-%d %H:%M:%S")" > "${LOGFILE}" 2>/dev/null || small_die "Could not write to '${LOGFILE}'!"
 
 	dump_debugcache
 

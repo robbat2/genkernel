@@ -370,6 +370,11 @@ cleanup() {
 		print_info 3 "CACHE_DIR: ${CACHE_DIR}"
 		print_info 3 "TMPDIR: ${TMPDIR}"
 	fi
+
+	GK_TIME_END=$(date +%s)
+	let GK_TIME_RUNTIME_SECONDS=${GK_TIME_END}-${GK_TIME_START}
+	let GK_TIME_RUNTIME_DAYS=${GK_TIME_RUNTIME_SECONDS}/86400
+	TZ= printf ">>> Ended on: $(date +"%Y-%m-%d %H:%M:%S") (after %d days%(%k hours %M minutes %S seconds)T)\n" ${GK_TIME_RUNTIME_DAYS} ${GK_TIME_RUNTIME_SECONDS} >> "${LOGFILE}" 2>/dev/null
 }
 
 clear_tmpdir() {
