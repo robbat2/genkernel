@@ -1301,29 +1301,32 @@ append_modules() {
 		mkdir -p "${TDIR}"/${mydir} || gen_die "Failed to create '${TDIR}/${mydir}'!"
 	done
 
+	local modules_dstdir="${TDIR}/lib/modules/${KV}"
+	local modules_srcdir="/lib/modules/${KV}"
+
 	print_info 2 "$(get_indent 2)modules: >> Copying modules to initramfs ..."
-	if [ "${INSTALL_MOD_PATH}" != '' ]
+
+	if [ -n "${INSTALL_MOD_PATH}" ]
 	then
-		cd "${INSTALL_MOD_PATH}" || gen_die "Failed to chdir to '${INSTALL_MOD_PATH}'!"
-	else
-		cd / || gen_die "Failed to chdir to '/'!"
+		modules_srcdir="${INSTALL_MOD_PATH%/}${modules_srcdir}"
 	fi
 
-	local _MODULES_DIR="${PWD%/}/lib/modules/${KV}"
-	if [ ! -d "${_MODULES_DIR}" ]
+	if [ ! -d "${modules_srcdir}" ]
 	then
-		error_message="'${_MODULES_DIR}' does not exist! Did you forget"
+		error_message="'${modules_srcdir}' does not exist! Did you forget"
 		error_message+=" to compile kernel before building initramfs?"
 		error_message+=" If you know what you are doing please set '--no-ramdisk-modules'."
 		gen_die "${error_message}"
 	fi
+
+	cd "${modules_srcdir}" || gen_die "Failed to chdir to '${modules_srcdir}'!"
 
 	local i= mymod=
 	local MOD_EXT="$(modules_kext)"
 	local n_copied_modules=0
 	for i in $(gen_dep_list)
 	do
-		mymod=$(find "${_MODULES_DIR}" -name "${i}${MOD_EXT}" 2>/dev/null | head -n 1)
+		mymod=$(find . -name "${i}${MOD_EXT}" 2>/dev/null | head -n 1)
 		if [ -z "${mymod}" ]
 		then
 			print_warning 3 "$(get_indent 3) - ${i}${MOD_EXT} not found; Skipping ..."
@@ -1331,8 +1334,8 @@ append_modules() {
 		fi
 
 		print_info 3 "$(get_indent 3) - Copying ${i}${MOD_EXT} ..."
-		cp -ax --parents "${mymod}" "${TDIR}"/ 2>/dev/null \
-			|| gen_die "Failed to copy '${mymod}' to '${TDIR}/'!"
+		cp -ax --parents --target-directory "${modules_dstdir}" "${mymod}" 2>/dev/null \
+			|| gen_die "Failed to copy '${modules_srcdir}/${mymod}' to '${modules_dstdir}'!"
 		n_copied_modules=$[$n_copied_modules+1]
 	done
 
@@ -1343,11 +1346,12 @@ append_modules() {
 		print_info 2 "$(get_indent 2)modules: ${n_copied_modules} modules copied!"
 	fi
 
-	cp -ax --parents "${_MODULES_DIR}"/modules* "${TDIR}"/ 2>/dev/null \
-		|| gen_die "Failed to copy '${_MODULES_DIR}/modules*' to '${TDIR}/'!"
+	cp -ax --parents --target-directory "${modules_dstdir}" modules* 2>/dev/null \
+		|| gen_die "Failed to copy '${modules_srcdir}/modules*' to '${modules_dstdir}'!"
 
 	local group_modules= group=
-	for group_modules in ${!MODULES_*}; do
+	for group_modules in ${!MODULES_*}
+	do
 		group="$(echo ${group_modules} | cut -d_ -f2- | tr "[:upper:]" "[:lower:]")"
 		print_list ${!group_modules} > "${TDIR}"/etc/modules/${group} \
 			|| gen_die "Failed to create '${TDIR}/etc/modules/${group}'!"
