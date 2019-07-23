@@ -380,9 +380,12 @@ then
 
 	if isTrue "${show_warning_initramfs_is_required}" && isTrue "${BUILD_RAMDISK}"
 	then
+		INITRAMFS_INSTALLED_IN="${TMPDIR}"
+		isTrue "${CMD_INSTALL}" && INITRAMFS_INSTALLED_IN="${BOOTDIR}"
+
 		print_warning 1 '' 1 0
 		print_warning 1 "If you require Genkernel's hardware detection features, you ${BOLD}MUST${NORMAL}"
-		print_warning 1 "tell your bootloader to use the provided initramfs file (${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV})."
+		print_warning 1 "tell your bootloader to use the provided initramfs file (${INITRAMFS_INSTALLED_IN}/initramfs-${KNAME}-${ARCH}-${KV})."
 	fi
 	unset show_warning_initramfs_is_required
 fi
