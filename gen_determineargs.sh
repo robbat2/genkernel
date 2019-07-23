@@ -459,6 +459,12 @@ determine_real_args() {
 
 	if isTrue "${BUILD_KERNEL}"
 	then
+		if [ "${KERNEL_DIR}" != "${KERNEL_OUTPUTDIR}" -a ! -d "${KERNEL_OUTPUTDIR}" ]
+		then
+			print_warning 3 "Set --kernel-outputdir '${KERNEL_OUTPUTDIR}' does not exist; Will try to create ..."
+			mkdir -p "${KERNEL_OUTPUTDIR}" || gen_die "Failed to create '${KERNEL_OUTPUTDIR}'!"
+		fi
+
 		if [ -n "${KERNEL_LOCALVERSION}" ]
 		then
 			case "${KERNEL_LOCALVERSION}" in
