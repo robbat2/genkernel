@@ -282,26 +282,31 @@ gen_die() {
 		print_error 1 "ERROR: ${1}"
 	fi
 
-	# Don't trust $LOGFILE before determine_real_args() was called
-	if [ -n "${CMD_LOGFILE}" -a -s "${LOGFILE}" ]
+	if [[ -n "${GK_MASTER_PID}" && ${BASHPID} != ${GK_MASTER_PID} ]]
 	then
-		print_error 1 "Please consult '${LOGFILE}' for more information and any"
-		print_error 1 "errors that were reported above."
+		# We died in a subshell! Let's trigger trap function...
+		kill -s SIGTERM ${GK_MASTER_PID}
+	else
+		# Don't trust $LOGFILE before determine_real_args() was called
+		if [ -n "${CMD_LOGFILE}" -a -s "${LOGFILE}" ]
+		then
+			print_error 1 "Please consult '${LOGFILE}' for more information and any"
+			print_error 1 "errors that were reported above."
+			print_error 1 ''
+		fi
+
+		print_error 1 "Report any genkernel bugs to bugs.gentoo.org and"
+		print_error 1 "assign your bug to genkernel@gentoo.org. Please include"
+		print_error 1 "as much information as you can in your bug report; attaching"
+		print_error 1 "'${LOGFILE}' so that your issue can be dealt with effectively."
 		print_error 1 ''
+		print_error 1 "Please do ${BOLD}*not*${NORMAL} report ${BOLD}kernel${NORMAL} compilation failures as genkernel bugs!"
+		print_error 1 ''
+
+		# Cleanup temp dirs and caches if requested
+		cleanup
 	fi
 
-	print_error 1 "Report any genkernel bugs to bugs.gentoo.org and"
-	print_error 1 "assign your bug to genkernel@gentoo.org. Please include"
-	print_error 1 "as much information as you can in your bug report; attaching"
-	print_error 1 "'${LOGFILE}' so that your issue can be dealt with effectively."
-	print_error 1 ''
-	print_error 1 "Please do ${BOLD}*not*${NORMAL} report ${BOLD}kernel${NORMAL} compilation failures as genkernel bugs!"
-	print_error 1 ''
-
-	# Cleanup temp dirs and caches if requested
-	cleanup
-
-	[[ -n "${GK_MASTER_PID}" && ${BASHPID} != ${GK_MASTER_PID} ]] && kill -s SIGTERM ${GK_MASTER_PID}
 	exit 1
 }
 
