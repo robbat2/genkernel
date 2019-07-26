@@ -209,6 +209,32 @@ can_run_programs_compiled_by_genkernel() {
 	echo "${can_run_programs}"
 }
 
+is_gzipped() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local file_to_check=${1}
+
+	if [ ! -f "${file_to_check}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): File '${file_to_check}' does not exist!"
+	fi
+
+	local file_is_gzipped=no
+	local file_mimetype=$(file --brief --mime-type "${file_to_check}" 2>/dev/null)
+
+	case "${file_mimetype}" in
+		application/x-gzip)
+			file_is_gzipped=yes
+			;;
+		application/gzip)
+			file_is_gzipped=yes
+			;;
+	esac
+
+	echo "${file_is_gzipped}"
+}
+
 is_valid_ssh_host_keys_parameter_value() {
 	local parameter_value=${1}
 
