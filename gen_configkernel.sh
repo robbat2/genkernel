@@ -132,7 +132,7 @@ config_kernel() {
 		print_info 3 "$(get_indent 1)>> Copying '${KERNEL_CONFIG}' to '${KERNEL_OUTPUTDIR}/.config' ..."
 
 		local message="Failed to copy kernel config file '${KERNEL_CONFIG}' to '${KERNEL_OUTPUTDIR}/.config'!"
-		if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}" 2>/dev/null)" == application/x-gzip ]]
+		if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
 		then
 			# Support --kernel-config=/proc/config.gz, mainly
 			zcat "${KERNEL_CONFIG}" > "${KERNEL_OUTPUTDIR}/.config" || gen_die "${message}"

@@ -123,7 +123,8 @@ gen_kerncache() {
 	cp -aL "${KERNEL_OUTPUTDIR}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}" \
 		|| gen_die "Could not copy the kernel config '${KERNEL_OUTPUTDIR}/.config' for the kernel package!"
 
-	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+	if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
+	then
 		# Support --kernel-config=/proc/config.gz, mainly
 		zcat "${KERNEL_CONFIG}" > "${TEMP}/kerncache/config-${ARCH}-${KV}.orig" \
 			|| gen_die "Could not copy the kernel config '${KERNEL_CONFIG}' for the kernel package!"
@@ -250,7 +251,8 @@ gen_kerncache_is_valid() {
 					local test1=$(grep -v "^#" "${TEMP}/config-${ARCH}-${KV}" | md5sum | cut -d " " -f 1)
 				fi
 
-				if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]; then
+				if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
+				then
 					# Support --kernel-config=/proc/config.gz, mainly
 					local CONFGREP=zgrep
 				else

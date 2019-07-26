@@ -442,7 +442,7 @@ then
 		print_warning 1 '"man genkernel" explains "dozfs" in detail.'
 	fi
 
-	if [[ "$(file --brief --mime-type "${KERNEL_CONFIG}")" == application/x-gzip ]]
+	if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
 	then
 		# Support --kernel-config=/proc/config.gz, mainly
 		CONFGREP=zgrep

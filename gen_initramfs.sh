@@ -1629,7 +1629,7 @@ create_initramfs() {
 		local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
 	fi
 
-	if [[ "$(file --brief --mime-type "${ACTUAL_KERNEL_CONFIG}")" == application/x-gzip ]]
+	if isTrue "$(is_gzipped "${ACTUAL_KERNEL_CONFIG}")"
 	then
 		# Support --kernel-config=/proc/config.gz, mainly
 		local CONFGREP=zgrep
