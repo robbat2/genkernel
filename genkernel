@@ -262,8 +262,11 @@ then
 		gen_kerncache_extract_modules
 	fi
 
-	print_info 1 '' 1 0
-	gen_kerncache_extract_config
+	if isTrue "${SAVE_CONFIG}"
+	then
+		print_info 1 '' 1 0
+		gen_kerncache_extract_config
+	fi
 fi
 
 # Run callback
