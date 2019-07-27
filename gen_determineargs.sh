@@ -553,12 +553,12 @@ determine_real_args() {
 		then
 			# This will be fatal because we cpio either way
 			gen_die "cpio binary not found. Is app-arch/cpio installed?"
-		elif ! lddtree -l "${CPIO_COMMAND}" &>/dev/null
+		elif ! "${LDDTREE_COMMAND}" -l "${CPIO_COMMAND}" &>/dev/null
 		then
 			# This is typically the case when app-misc/pax-utils[python] is used
 			# and selected Python version isn't supported by pax-utils or
 			# dev-python/pyelftools yet, #618056.
-			gen_die "'lddtree -l \"${CPIO_COMMAND}\"' failed -- cannot generate initramfs without working lddtree!"
+			gen_die "'\"${LDDTREE_COMMAND}\" -l \"${CPIO_COMMAND}\"' failed -- cannot generate initramfs without working lddtree!"
 		fi
 
 		SANDBOX_COMMAND=

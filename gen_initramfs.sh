@@ -37,7 +37,7 @@ copy_binaries() {
 		[[ -e "${binary}" ]] \
 			|| gen_die "Binary ${binary} could not be found"
 
-		if LC_ALL=C lddtree "${binary}" 2>&1 | fgrep -q 'not found'
+		if LC_ALL=C "${LDDTREE_COMMAND}" "${binary}" 2>&1 | fgrep -q 'not found'
 		then
 			gen_die "Binary ${binary} is linked to missing libraries and may need to be re-built"
 		fi
@@ -45,12 +45,12 @@ copy_binaries() {
 	# This must be OUTSIDE the for loop, we only want to run lddtree etc ONCE.
 	# lddtree does not have the -V (version) nor the -l (list) options prior to version 1.18
 	(
-		if lddtree -V > /dev/null 2>&1
+		if "${LDDTREE_COMMAND}" -V > /dev/null 2>&1
 		then
-			lddtree -l "$@" \
+			"${LDDTREE_COMMAND}" -l "$@" \
 				|| gen_die "Binary '${binary}' or some of its library dependencies could not be copied!"
 		else
-			lddtree "$@" \
+			"${LDDTREE_COMMAND}" "$@" \
 				| tr ')(' '\n' \
 				| awk '/=>/{ if($3 ~ /^\//){print $3}}' \
 				|| gen_die "Binary '${binary}' or some of its library dependencies could not be copied!"
@@ -135,7 +135,7 @@ copy_system_binaries() {
 			print_info 5 "System binary dirname set to '${base_dir}'."
 		fi
 
-		if LC_ALL=C lddtree "${binary}" 2>&1 | fgrep -q 'not found'
+		if LC_ALL=C "${LDDTREE_COMMAND}" "${binary}" 2>&1 | fgrep -q 'not found'
 		then
 			gen_die "$(get_useful_function_stack)System binary '${binary}' is linked to missing libraries and may need to be re-built!"
 		fi
@@ -165,7 +165,7 @@ copy_system_binaries() {
 				print_info 5 "Need to copy dependency '${base_dir}/${binary_dependency_basename}' ..."
 				"${FUNCNAME}" "${destdir}" "${base_dir}/${binary_dependency_basename}"
 			fi
-		done 3< <(lddtree -l "${binary}" 2>/dev/null)
+		done 3< <("${LDDTREE_COMMAND}" -l "${binary}" 2>/dev/null)
 		IFS="${GK_DEFAULT_IFS}"
 	done
 }
