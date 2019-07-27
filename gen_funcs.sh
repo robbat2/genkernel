@@ -835,7 +835,8 @@ get_tar_cmd() {
 	local archive_file=${1}
 
 	local -a tar_cmd
-	tar_cmd+=( 'tar -c' )
+	tar_cmd+=( "${TAR_COMMAND}" )
+	tar_cmd+=( '-c' )
 
 	local pcmd
 	if [[ "${archive_file}" == *.tar.bz2 ]]
@@ -1188,6 +1189,7 @@ gkbuild() {
 		"GKPKG_SRCTAR='${SRCTAR}'"
 		"GKPKG_BINPKG='${BINPKG}'"
 		"GKPKG_DEPS='${DEPS}'"
+		"TAR_COMMAND='${TAR_COMMAND}'"
 	)
 
 	envvars+=(
@@ -1268,6 +1270,7 @@ unpack() {
 	)
 
 	envvars+=(
+		"TAR_COMMAND='${TAR_COMMAND}'"
 		"UNPACK_FILE='${unpack_file}'"
 		"UNPACK_DIR='${unpack_dir}'"
 	)

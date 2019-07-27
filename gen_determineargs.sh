@@ -7,7 +7,7 @@ determine_KV() {
 
 	if ! isTrue "${KERNEL_SOURCES}" && [ -e "${KERNCACHE}" ]
 	then
-		tar -x -C "${TEMP}" -f "${KERNCACHE}" kerncache.config \
+		"${TAR_COMMAND}" -x -C "${TEMP}" -f "${KERNCACHE}" kerncache.config \
 			|| gen_die "Failed to extract 'kerncache.config' from '${KERNCACHE}' to '${TEMP}'!"
 
 		if [ -e "${TEMP}/kerncache.config" ]

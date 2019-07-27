@@ -21,6 +21,6 @@ _unpack_main() {
 		mkdir -p "${UNPACK_DIR}" || die "Failed to create '${UNPACK_DIR}'!"
 	fi
 
-	tar -xaf "${UNPACK_FILE}" --directory "${UNPACK_DIR}" \
+	"${TAR_COMMAND}" -xaf "${UNPACK_FILE}" --directory "${UNPACK_DIR}" \
 		|| die "Failed to unpack '${UNPACK_FILE}' to '${UNPACK_DIR}'!"
 }

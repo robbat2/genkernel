@@ -487,7 +487,7 @@ populate_binpkg() {
 		# current .config.
 		if [[ -f "${BINPKG}" ]]
 		then
-			local oldconfig_md5="$(tar -xaf "${BINPKG}" -O ./configs/.config.gk_orig 2>/dev/null | md5sum)"
+			local oldconfig_md5="$("${TAR_COMMAND}" -xaf "${BINPKG}" -O ./configs/.config.gk_orig 2>/dev/null | md5sum)"
 			local newconfig_md5="$(md5sum < "${TEMP}"/busybox-config)"
 			if [[ "${oldconfig_md5}" != "${newconfig_md5}" ]]
 			then

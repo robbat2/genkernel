@@ -7,19 +7,19 @@ gen_minkernpackage() {
 	mkdir "${TEMP}/minkernpackage" || gen_die "Failed to create '${TEMP}/minkernpackage'!"
 	if [ -n "${KERNCACHE}" ]
 	then
-		tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernel-${ARCH}-${KV} \
+		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernel-${ARCH}-${KV} \
 			|| gen_die "Failed to extract 'kernel-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
 		mv "${TEMP}"/minkernpackage/{kernel-${ARCH}-${KV},kernel-${KNAME}-${ARCH}-${KV}} \
 			|| gen_die "Failed to rename '${TEMP}/minkernpackage/kernel-${ARCH}-${KV}' to 'kernel-${KNAME}-${ARCH}-${KV}'!"
 
-		tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" System.map-${ARCH}-${KV} \
+		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" System.map-${ARCH}-${KV} \
 			|| gen_die "Failed to extract 'System.map-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
 		mv "${TEMP}"/minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}} \
 			|| gen_die "Failed to rename '${TEMP}/minkernpackage/System.map-${ARCH}-${KV}' to 'System.map-${KNAME}-${ARCH}-${KV}'!"
 
-		tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" config-${ARCH}-${KV} \
+		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" config-${ARCH}-${KV} \
 			|| gen_die "Failed to extract 'config-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
 		mv "${TEMP}"/minkernpackage/{config-${ARCH}-${KV},config-${KNAME}-${ARCH}-${KV}} \
@@ -27,7 +27,7 @@ gen_minkernpackage() {
 
 		if isTrue "${GENZIMAGE}"
 		then
-			tar -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernelz-${ARCH}-${KV} \
+			"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernelz-${ARCH}-${KV} \
 				|| gen_die "Failed to extract 'kernelz-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
 			mv "${TEMP}"/minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}} \
@@ -174,7 +174,7 @@ gen_kerncache() {
 }
 
 gen_kerncache_extract_kernel() {
-	tar -xf "${KERNCACHE}" -C "${TEMP}" \
+	"${TAR_COMMAND}" -xf "${KERNCACHE}" -C "${TEMP}" \
 		|| gen_die "Failed to extract '${KERNCACHE}' to '${TEMP}'!"
 
 	copy_image_with_preserve \
@@ -200,10 +200,10 @@ gen_kerncache_extract_modules() {
 	print_info 1 "Extracting kerncache kernel modules from '${KERNCACHE}' ..."
 	if [ -n "${INSTALL_MOD_PATH}" ]
 	then
-		tar -xf "${KERNCACHE}" --strip-components 1 -C "${INSTALL_MOD_PATH}"/lib \
+		"${TAR_COMMAND}" -xf "${KERNCACHE}" --strip-components 1 -C "${INSTALL_MOD_PATH}"/lib \
 			|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${INSTALL_MOD_PATH}/lib'!"
 	else
-		tar -xf "${KERNCACHE}" --strip-components 1 -C /lib \
+		"${TAR_COMMAND}" -xf "${KERNCACHE}" --strip-components 1 -C /lib \
 			|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${INSTALL_MOD_PATH}/lib'!"
 	fi
 }
@@ -216,7 +216,7 @@ gen_kerncache_extract_config() {
 		mkdir -p /etc/kernels || gen_die "Failed to create '/etc/kernels'!"
 	fi
 
-	tar -xf "${KERNCACHE}" -C /etc/kernels config-${ARCH}-${KV} \
+	"${TAR_COMMAND}" -xf "${KERNCACHE}" -C /etc/kernels config-${ARCH}-${KV} \
 		|| gen_die "Failed to extract kerncache config 'config-${ARCH}-${KV}' from '${KERNCACHE}' to '/etc/kernels'!"
 
 	mv /etc/kernels/config-${ARCH}-${KV} /etc/kernels/kernel-config-${ARCH}-${KV} \
@@ -228,7 +228,7 @@ gen_kerncache_is_valid() {
 
 	if [ -e "${KERNCACHE}" ]
 	then
-		tar -xf "${KERNCACHE}" -C "${TEMP}" \
+		"${TAR_COMMAND}" -xf "${KERNCACHE}" -C "${TEMP}" \
 			|| gen_die "Failed to extract '${KERNCACHE}' to '${TEMP}'!"
 
 		if ! isTrue "${KERNEL_SOURCES}"

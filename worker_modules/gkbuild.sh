@@ -178,7 +178,7 @@ _gkbuild_main() {
 		unset found_dyn_files
 	fi
 
-	tar -caf "${GKPKG_BINPKG}" . \
+	"${TAR_COMMAND}" -caf "${GKPKG_BINPKG}" . \
 		|| die "Failed to create binpkg of ${P} in '${GKPKG_BINPKG}'!"
 }
 
@@ -295,7 +295,7 @@ _initialize() {
 			fi
 
 			print_info 2 "$(get_indent 2)${P}: >> Unpacking required binpkg '${GKPKG_DEP}' ..."
-			tar -xaf "${GKPKG_DEP}" -C "${BROOT}" \
+			"${TAR_COMMAND}" -xaf "${GKPKG_DEP}" -C "${BROOT}" \
 				|| die "Unable to build ${P}: Failed to extract required binpkg '${GKPKG_DEP}' to '${BROOT}'!"
 		done
 		unset GKPKG_DEP
@@ -448,7 +448,7 @@ _src_prepare() {
 
 _src_unpack() {
 	cd "${WORKDIR}" || die "Failed to chdir to '${WORKDIR}'!"
-	tar -xaf "${GKPKG_SRCTAR}" \
+	"${TAR_COMMAND}" -xaf "${GKPKG_SRCTAR}" \
 		|| die "Failed to unpack '${GKPKG_SRCTAR}' to '${WORKDIR}'!"
 }
 
