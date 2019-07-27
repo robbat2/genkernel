@@ -542,14 +542,17 @@ determine_real_args() {
 			unset FEATURE_REQUIRING_BUSYBOX FEATURES_REQUIRING_BUSYBOX
 		fi
 
-		local lddtree_testfile=$(which cpio 2>/dev/null)
-		if [[ -z "${lddtree_testfile}" || ! -e "${lddtree_testfile}" ]]
+		CPIO_COMMAND="$(which cpio 2>/dev/null)"
+		if [[ -z "${CPIO_COMMAND}" ]]
 		then
 			# This will be fatal because we cpio either way
 			gen_die "cpio binary not found. Is app-arch/cpio installed?"
-		elif ! lddtree -l "${lddtree_testfile}" 1>/dev/null 2>&1
+		elif ! lddtree -l "${CPIO_COMMAND}" &>/dev/null
 		then
-			gen_die "'lddtree -l ${lddtree_testfile}' failed -- cannot generate initramfs without working lddtree!"
+			# This is typically the case when app-misc/pax-utils[python] is used
+			# and selected Python version isn't supported by pax-utils or
+			# dev-python/pyelftools yet, #618056.
+			gen_die "'lddtree -l \"${CPIO_COMMAND}\"' failed -- cannot generate initramfs without working lddtree!"
 		fi
 
 		SANDBOX_COMMAND=
