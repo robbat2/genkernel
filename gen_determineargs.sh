@@ -542,6 +542,12 @@ determine_real_args() {
 			unset FEATURE_REQUIRING_BUSYBOX FEATURES_REQUIRING_BUSYBOX
 		fi
 
+		LDDTREE_COMMAND="$(which lddtree 2>/dev/null)"
+		if [ -z "${LDDTREE_COMMAND}" ]
+		then
+			gen_die "lddtree not found. Is app-misc/pax-utils installed?"
+		fi
+
 		CPIO_COMMAND="$(which cpio 2>/dev/null)"
 		if [[ -z "${CPIO_COMMAND}" ]]
 		then
