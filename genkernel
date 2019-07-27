@@ -103,7 +103,6 @@ NORMAL=${GOOD} print_info 1 "Gentoo Linux Genkernel; Version ${GK_V}${NORMAL}"
 print_info 1 "Using genkernel configuration from '${_GENKERNEL_CONF}' ..."
 unset _GENKERNEL_CONF
 print_info 1 "Running with options: ${GK_OPTIONS}"
-print_info 1 '' 1 0
 
 # Save any customizations of MODULES_* first.
 override_module_vars="$(compgen -A variable |grep '^MODULES_')"
@@ -118,6 +117,7 @@ determine_real_args
 
 if isTrue "${BUILD_RAMDISK}" && ! isTrue "${SANDBOX}"
 then
+	print_warning 1 '' 1 0
 	print_warning 1 "${BOLD}WARNING:${NORMAL} Will build initramfs ${BOLD}without${NORMAL} sandbox support " 0
 
 	SANDBOX_WARNING_TIMER=0
@@ -129,9 +129,9 @@ then
 	done
 
 	print_warning 1 '' 1 0
-	print_warning 1 '' 1 0
 fi
 
+print_info 2 '' 1 0
 print_info 2 "Sourcing default modules_load from '${GK_SHARE}/defaults/modules_load' ..."
 source "${GK_SHARE}/defaults/modules_load" || gen_die "Could not read '${GK_SHARE}/defaults/modules_load'!"
 
@@ -186,6 +186,7 @@ then
 	gen_kerncache_is_valid
 fi
 
+print_info 1 '' 1 0
 print_info 1 "Working with Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}"
 print_info 1 "Using kernel config file '${KERNEL_CONFIG}' ..."
 
@@ -255,8 +256,13 @@ fi
 
 if isTrue "${KERNCACHE_IS_VALID}"
 then
+	if ! isTrue "${BUILD_STATIC}"
+	then
+		print_info 1 '' 1 0
+		gen_kerncache_extract_modules
+	fi
+
 	print_info 1 '' 1 0
-	! isTrue "${BUILD_STATIC}" && gen_kerncache_extract_modules
 	gen_kerncache_extract_config
 fi
 
@@ -328,11 +334,16 @@ then
 	fi
 fi
 
-if [ -n "${MINKERNPACKAGE}" -o -n "${MODULESPACKAGE}" ]
+if [ -n "${MINKERNPACKAGE}" ]
 then
 	print_info 1 '' 1 0
-	[ -n "${MINKERNPACKAGE}" ] && gen_minkernpackage
-	[ -n "${MODULESPACKAGE}" ] && gen_modulespackage
+	gen_minkernpackage
+fi
+
+if [ -n "${MODULESPACKAGE}" ]
+then
+	print_info 1 '' 1 0
+	gen_modulespackage
 fi
 
 if isTrue "${BUILD_KERNEL}"

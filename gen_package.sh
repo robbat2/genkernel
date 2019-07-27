@@ -174,6 +174,7 @@ gen_kerncache() {
 }
 
 gen_kerncache_extract_kernel() {
+	print_info 1 "Extracting kerncache kernel from '${KERNCACHE}' ..."
 	"${TAR_COMMAND}" -xf "${KERNCACHE}" -C "${TEMP}" \
 		|| gen_die "Failed to extract '${KERNCACHE}' to '${TEMP}'!"
 
@@ -238,6 +239,7 @@ gen_kerncache_is_valid() {
 
 			if [ -e "${TEMP}/config-${ARCH}-${KV}" -a -e "${TEMP}/kernel-${ARCH}-${KV}" ]
 			then
+				print_info 1 '' 1 0
 				print_info 1 'Valid kerncache found; No sources will be used ...'
 				KERNCACHE_IS_VALID="yes"
 			fi
@@ -262,9 +264,11 @@ gen_kerncache_is_valid() {
 
 				if [[ "${test1}" == "${test2}" ]]
 				then
+					print_info 1 '' 1 0
 					print_info 1 "Valid kerncache '${KERNCACHE}' found; Will skip kernel build step ..."
 					KERNCACHE_IS_VALID="yes"
 				else
+					print_info 1 '' 1 0
 					print_info 1 "Kerncache kernel config differs from '${KERNEL_CONFIG}'; Ignoring outdated kerncache '${KERNCACHE}' ..."
 				fi
 			else
@@ -274,14 +278,14 @@ gen_kerncache_is_valid() {
 					invalid_reason="Kernel config '${KERNEL_CONFIG}' does not exist -- cannot validate kerncache"
 				fi
 
+				print_info 1 '' 1 0
 				print_info 1 "${invalid_reason}; Ignorning kerncache '${KERNCACHE}' ..."
 			fi
 		fi
 	else
+		print_warning 1 '' 1 0
 		print_warning 1 "Kerncache '${KERNCACHE}' does not exist (yet?); Ignoring ..."
 	fi
-
-	echo
 
 	export KERNCACHE_IS_VALID
 }
