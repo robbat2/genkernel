@@ -555,7 +555,7 @@ determine_real_args() {
 		SANDBOX_COMMAND=
 		if isTrue "${SANDBOX}"
 		then
-			SANDBOX_COMMAND="$(which sandbox)"
+			SANDBOX_COMMAND="$(which sandbox 2>/dev/null)"
 			if [ -z "${SANDBOX_COMMAND}" ]
 			then
 				gen_die "Sandbox not found. Is sys-apps/sandbox installed?"
