@@ -407,6 +407,8 @@ determine_real_args() {
 		fi
 	fi
 
+	local need_tar=no
+
 	if [ -n "${MINKERNPACKAGE}" ]
 	then
 		MINKERNPACKAGE=$(expand_file "${CMD_MINKERNPACKAGE}")
@@ -421,6 +423,8 @@ determine_real_args() {
 			mkdir -p "${minkernpackage_dir}" \
 				|| gen_die "Failed to create '${minkernpackage_dir}'!"
 		fi
+
+		need_tar=yes
 	fi
 
 	if [ -n "${MODULESPACKAGE}" ]
@@ -437,6 +441,8 @@ determine_real_args() {
 			mkdir -p "${modulespackage_dir}" \
 				|| gen_die "Failed to create '${modulespackage_dir}'!"
 		fi
+
+		need_tar=yes
 	fi
 
 	if [ -n "${KERNCACHE}" ]
@@ -453,6 +459,8 @@ determine_real_args() {
 			mkdir -p "${kerncache_dir}" \
 				|| gen_die "Failed to create '${kerncache_dir}'!"
 		fi
+
+		need_tar=yes
 	fi
 
 	if isTrue "${BUILD_KERNEL}"
@@ -569,6 +577,17 @@ determine_real_args() {
 			then
 				gen_die "Sandbox not found. Is sys-apps/sandbox installed?"
 			fi
+		fi
+
+		need_tar=yes
+	fi
+
+	if isTrue "${need_tar}"
+	then
+		TAR_COMMAND="$(which tar 2>/dev/null)"
+		if [ -z "${TAR_COMMAND}" ]
+		then
+			gen_die "tar not found. Is app-arch/tar installed?"
 		fi
 	fi
 
