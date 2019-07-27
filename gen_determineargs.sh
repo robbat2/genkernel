@@ -477,7 +477,7 @@ determine_real_args() {
 				UNSET)
 					;;
 				*)
-					local valid_localversion_pattern='^-[A-Za-z0-9\-_]{1,}$'
+					local valid_localversion_pattern='^[A-Za-z0-9_.-]{1,}$'
 					if [[ ! "${KERNEL_LOCALVERSION}" =~ ${valid_localversion_pattern} ]]
 					then
 						gen_die "--kernel-localversion value '${KERNEL_LOCALVERSION}' does not match '${valid_localversion_pattern}' regex!"
