@@ -270,7 +270,7 @@ LOW-LEVEL COMPILATION OPTIONS
 
 *--*[*no-*]*nice*[=<niceness>]::
     Runs the kernel make at the default niceness (reduction in priority) of
-    10, or in the case of --no-nice, runs the kernel make at normal priority.
+    10, or in the case of *--no-nice*, runs the kernel make at normal priority.
 
 
 INITIALIZATION
@@ -297,12 +297,12 @@ INITIALIZATION
     When enabled, this will compile LVM for you.
 
 *--*[*no-*]*mdadm*::
-    Includes or excludes mdadm/mdmon support.
-    Without sys-fs/mdadm[static] installed, this will compile mdadm for you.
+    Includes or excludes mdadm support.
+    When enabled, this will compile mdadm for you.
 
 *--mdadm-config*=<file>::
     Use <file> as configfile for MDADM.
-    By default the ramdisk will be built *without* an mdadm.conf and
+    By default the ramdisk will be built *without* an 'mdadm.conf' and
     will auto-detect arrays during boot-up.
 
 *--*[*no-*]*microcode-initramfs*::
@@ -312,43 +312,50 @@ INITIALIZATION
 
 *--*[*no-*]*dmraid*::
     Includes or excludes DMRAID support.
+    When enabled, this will compile dmraid for you.
 
 *--*[*no-*]*nfs*::
     Includes or excludes NFS support.
 
 *--*[*no-*]*e2fsprogs*::
     Includes or excludes e2fsprogs.
+    When enabled, this will compile e2fsprogs for you.
 
 *--*[*no-*]*xfsprogs*::
     Includes or excludes xfsprogs.
+    When enabled, this will compile xfsprogs for you.
 
 *--*[*no-*]*zfs*::
     Includes or excludes ZFS support.
 
 *--*[*no-*]*btrfs*::
     Includes or excludes Btrfs support.
+    When enabled, this will compile btrfs-progs for you.
 
 *--*[*no-*]*multipath*::
     Includes or excludes Multipath support.
+    When enabled, this will compile multipath-tools for you.
 
 *--*[*no-*]*iscsi*::
     Includes or excludes iSCSI support.
+    When enabled, this will compile open-iscsi for you.
 
 *--*[*no-*]*sandbox*::
     Enables or disables sandbox-ing when building initramfs.
 
 *--*[*no-*]*ssh*::
     Includes or excludes SSH (dropbear) support for remote LUKS keys.
+    When enabled, this will compile dropbear for you.
 
 *--ssh-authorized-keys-file*=<file>::
     Specifies a user created authorized_keys file. By default genkernel
-    will use "/etc/dropbear/authorized_keys".
+    will use '/etc/dropbear/authorized_keys'.
 
 *--ssh-host-keys*=<create|create-from-host|runtime>::
     When set to *create*, which is the default value, genkernel will embed
-    SSH host keys from "/etc/dropbear" and will create those keys when missing.
+    SSH host keys from '/etc/dropbear' and will create those keys when missing.
     When set to *create-from-host*, genkernel will embed SSH host keys from
-    "/etc/dropbear" but will create those keys from "/etc/ssh" when missing
+    '/etc/dropbear' but will create those keys from '/etc/ssh' when missing
     (not recommended for security reasons).
     When set to *runtime*, genkernel will not embed any SSH host key in
     initramfs and dropbear will generate needed host key at runtime (`dropbear -R`).
@@ -366,10 +373,12 @@ INITIALIZATION
     Make and install kernelz image from 'arch/powerpc/boot/zImage.initrd'.
 
 *--*[*no-*]*disklabel*::
-    Includes or excludes disk label and uuid support in your initrd.
+    Includes or excludes disk label and uuid support in your initramfs.
+    When enabled, this will compile util-linux for you.
 
 *--*[*no-*]*luks*::
     Includes or excludes LUKS support.
+    When enabled, this will compile cryptsetup for you.
 
 *--*[*no-*]*gpg*::
     Includes or excludes support for GnuPG 1.x, the portable standalone branch
@@ -378,16 +387,19 @@ INITIALIZATION
     After that, re-point the *root_key* argument to the new .gpg file.
 
 *--*[*no-*]*busybox*::
-    Includes or excludes busybox in the initrd or initramfs.
+    Includes or excludes busybox in the initramfs.
+    When enabled, this will compile busybox for you.
 
 *--*[*no-*]*unionfs*::
     Includes or excludes support for unionfs.
+    When enabled, this will compile unionfs-fuse for you.
 
 *--*[*no-*]*netboot*::
     Creates or does not create a self-contained env in the initramfs.
 
 *--real-root*=<foo>::
-    Specify a default for *real_root*= kernel option.
+    Specify a default for *real_root*= kernel option which will be
+    embedded into initramfs.
 
 
 INTERNALS
@@ -407,7 +419,8 @@ INTERNALS
     Clears or skips clearing all files in cache location on genkernel start.
 
 *--tmpdir*=<dir>::
-    Sets genkernel's temporary working directory to <dir>.
+    Sets genkernel's temporary working directory to <dir>. By default, a
+    directory below '/var/tmp/genkernel' will be used.
 
 *--*[*no-*]*postclear*::
     Clears or skips clearing all tmp files and caches after genkernel has run.
@@ -420,17 +433,17 @@ OUTPUT SETTINGS
     option defaults to genkernel.
 
 *--minkernpackage*=<file>::
-    Archive file created using tar containing kernel and initramfs.
-    NOTE: No modules outside of the initramfs will be included!
+Archive file created using tar containing kernel and initramfs.
+
+NOTE: No modules outside of the initramfs will be included!
 
 *--modulespackage*=<archive>::
     Archive file created using tar containing modules after the callbacks
     have run.
 
 *--kerncache*=<archive>::
-   Archive file created using tar containing kernel binary, content of
-   '/lib/modules' and the kernel config.  NOTE: Archive is created before
-   the callbacks are run.
+    Archive file created using tar containing kernel binary, content of
+    '/lib/modules' and the kernel config after the callbacks have run.
 
 *--*[*no-*]*kernel-sources*::
     This option is only valid if kerncache is defined If there is a
@@ -810,6 +823,6 @@ AUTHORS
 
 SEE ALSO
 --------
-/etc/genkernel.conf - genkernel configuration file
+'/etc/genkernel.conf' - genkernel configuration file
 
 // vim: ft=asciidoc et tw=72 sts=4 ts=4 :
