@@ -1060,61 +1060,57 @@ chooseKeymap() {
 		case ${keymap} in
 			1|azerty) keymap=azerty ;;
 			2|be) keymap=be ;;
-			3|bg) keymap=bg ;;
-			4|br-a) keymap=br-a ;;
-			5|br-l) keymap=br-l ;;
-			6|by) keymap=by ;;
-			7|cf) keymap=cf ;;
-			8|croat) keymap=croat ;;
-			9|cz) keymap=cz ;;
-			10|de) keymap=de ;;
-			11|dk) keymap=dk ;;
-			12|dvorak) keymap=dvorak ;;
-			13|es) keymap=es ;;
-			14|et) keymap=et ;;
-			15|fi) keymap=fi ;;
-			16|fr) keymap=fr ;;
-			17|gr) keymap=gr ;;
-			18|hu) keymap=hu ;;
-			19|il) keymap=il ;;
-			20|is) keymap=is ;;
-			21|it) keymap=it ;;
-			22|jp) keymap=jp ;;
-			23|la) keymap=la ;;
-			24|lt) keymap=lt ;;
-			25|mk) keymap=mk ;;
-			26|nl) keymap=nl ;;
-			27|no) keymap=no ;;
-			28|pl) keymap=pl ;;
-			29|pt) keymap=pt ;;
-			30|ro) keymap=ro ;;
-			31|ru) keymap=ru ;;
-			32|se) keymap=se ;;
-			33|sg) keymap=sg ;;
-			34|sk-y) keymap=sk-y ;;
-			35|sk-z) keymap=sk-z ;;
-			36|slovene) keymap=slovene ;;
-			37|trf) keymap=trf ;;
-			38|trq) keymap=trq ;;
-			39|ua) keymap=ua ;;
-			40|uk) keymap=uk ;;
-			41|us) keymap=us ;;
-			42|wangbe) keymap=wangbe ;;
-			43|sf|ch*) keymap=sf ;;
+			3|bepo) keymap=bepo ;;
+			4|bg) keymap=bg ;;
+			5|br-a) keymap=br-a ;;
+			6|br-l) keymap=br-l ;;
+			7|by) keymap=by ;;
+			8|cf) keymap=cf ;;
+			9|colemak) keymap=colemak ;;
+			10|croat) keymap=croat ;;
+			11|cz) keymap=cz ;;
+			12|de) keymap=de ;;
+			13|dk) keymap=dk ;;
+			14|dvorak) keymap=dvorak ;;
+			15|es) keymap=es ;;
+			16|et) keymap=et ;;
+			17|fi) keymap=fi ;;
+			18|fr) keymap=fr ;;
+			19|gr) keymap=gr ;;
+			20|hu) keymap=hu ;;
+			21|il) keymap=il ;;
+			22|is) keymap=is ;;
+			23|it) keymap=it ;;
+			24|jp) keymap=jp ;;
+			25|la) keymap=la ;;
+			26|lt) keymap=lt ;;
+			27|mk) keymap=mk ;;
+			28|nl) keymap=nl ;;
+			29|no) keymap=no ;;
+			30|pl) keymap=pl ;;
+			31|pt) keymap=pt ;;
+			32|ro) keymap=ro ;;
+			33|ru) keymap=ru ;;
+			34|se) keymap=se ;;
+			35|sf|ch*) keymap=sf ;;
+			36|sg) keymap=sg ;;
+			37|sk-y) keymap=sk-y ;;
+			38|sk-z) keymap=sk-z ;;
+			39|slovene) keymap=slovene ;;
+			40|trf) keymap=trf ;;
+			41|ua) keymap=ua ;;
+			42|uk) keymap=uk ;;
+			43|us) keymap=us ;;
+			44|wangbe) keymap=wangbe ;;
 		esac
 	fi
+
 	if [ -e /lib/keymaps/${keymap}.map ]
 	then
 		good_msg "Loading the '${keymap}' keymap ..."
 		loadkmap < /lib/keymaps/${keymap}.map
-#		xkeymap=${keymap}
-#		echo ${keymap} | egrep -e "[0-9]+" >/dev/null 2>&1
-#		if [ $? -eq 0 ]
-#		then
-#			xkeymap=$(tail -n 8 /lib/keymaps/keymapList | grep ${keymap} | sed -r "s/.*\s+${keymap}\s+([a-z-]+).*/\1/g" | egrep -v 1)
-#		fi
+
 		mkdir -p /etc/sysconfig
-#		echo "XKEYBOARD=${xkeymap}" > /etc/sysconfig/keyboard
 		echo "XKEYBOARD=${keymap}" > /etc/sysconfig/keyboard
 		splash set_msg "Set keymap to '${keymap}'"
 	elif [ -z "${keymap}" ]
