@@ -233,9 +233,9 @@ then
 
 		old_KV=$(cat "${TEMP}/.old_kv")
 		print_info 1 "$(get_indent 1)>> Kernel version has changed (probably due to config change) since genkernel start:"
-		print_info 1 "$(get_indent 1)>> We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL} ..."
+		print_info 1 "$(get_indent 1)   We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL} ..."
 	else
-		print_info 2 "$(get_indent 1)>> Kernel version has not changed since genkernel start."
+		print_info 2 "$(get_indent 1)>> Kernel version has not changed since genkernel start"
 	fi
 
 	compile_kernel
