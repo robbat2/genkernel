@@ -7,31 +7,37 @@ gen_minkernpackage() {
 	mkdir "${TEMP}/minkernpackage" || gen_die "Failed to create '${TEMP}/minkernpackage'!"
 	if [ -n "${KERNCACHE}" ]
 	then
-		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernel-${ARCH}-${KV} \
-			|| gen_die "Failed to extract 'kernel-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" "${GK_FILENAME_TEMP_KERNEL}" \
+			|| gen_die "Failed to extract '${GK_FILENAME_TEMP_KERNEL}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
-		mv "${TEMP}"/minkernpackage/{kernel-${ARCH}-${KV},kernel-${KNAME}-${ARCH}-${KV}} \
-			|| gen_die "Failed to rename '${TEMP}/minkernpackage/kernel-${ARCH}-${KV}' to 'kernel-${KNAME}-${ARCH}-${KV}'!"
+		if [[ "${GK_FILENAME_TEMP_KERNEL}" != "${GK_FILENAME_KERNEL}" ]]
+		then
+			mv "${TEMP}"/minkernpackage/{${GK_FILENAME_TEMP_KERNEL},${GK_FILENAME_KERNEL}} \
+				|| gen_die "Failed to rename '${TEMP}/minkernpackage/${GK_FILENAME_TEMP_KERNEL}' to '${GK_FILENAME_KERNEL}'!"
+		fi
 
-		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" System.map-${ARCH}-${KV} \
-			|| gen_die "Failed to extract 'System.map-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" "${GK_FILENAME_TEMP_SYSTEMMAP}" \
+			|| gen_die "Failed to extract '${GK_FILENAME_TEMP_SYSTEMMAP}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
-		mv "${TEMP}"/minkernpackage/{System.map-${ARCH}-${KV},System.map-${KNAME}-${ARCH}-${KV}} \
-			|| gen_die "Failed to rename '${TEMP}/minkernpackage/System.map-${ARCH}-${KV}' to 'System.map-${KNAME}-${ARCH}-${KV}'!"
+		if [[ "${GK_FILENAME_TEMP_SYSTEMMAP}" != "${GK_FILENAME_SYSTEMMAP}" ]]
+		then
+			mv "${TEMP}"/minkernpackage/{${GK_FILENAME_TEMP_SYSTEMMAP},${GK_FILENAME_SYSTEMMAP}} \
+				|| gen_die "Failed to rename '${TEMP}/minkernpackage/${GK_FILENAME_TEMP_SYSTEMMAP}' to '${GK_FILENAME_SYSTEMMAP}'!"
+		fi
 
-		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" config-${ARCH}-${KV} \
-			|| gen_die "Failed to extract 'config-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
-
-		mv "${TEMP}"/minkernpackage/{config-${ARCH}-${KV},config-${KNAME}-${ARCH}-${KV}} \
-			|| gen_die "Failed to rename '${TEMP}/minkernpackage/config-${ARCH}-${KV}' to 'config-${KNAME}-${ARCH}-${KV}'!"
+		"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" "${GK_FILENAME_TEMP_CONFIG}" \
+			|| gen_die "Failed to extract '${GK_FILENAME_TEMP_CONFIG}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
 		if isTrue "${GENZIMAGE}"
 		then
-			"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" kernelz-${ARCH}-${KV} \
-				|| gen_die "Failed to extract 'kernelz-${ARCH}-${KV}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
+			"${TAR_COMMAND}" -x -C "${TEMP}"/minkernpackage -f "${KERNCACHE}" "${GK_FILENAME_TEMP_KERNELZ}" \
+				|| gen_die "Failed to extract '${GK_FILENAME_TEMP_KERNELZ}' from '${KERNCACHE}' to '${TEMP}/minkernpackage'!"
 
-			mv "${TEMP}"/minkernpackage/{kernelz-${ARCH}-${KV},kernelz-${KNAME}-${ARCH}-${KV}} \
-				|| gen_die "Failed to rename '${TEMP}/minkernpackage/kernelz-${ARCH}-${KV}' to 'kernelz-${KNAME}-${ARCH}-${KV}'!"
+			if [[ "${GK_FILENAME_TEMP_KERNELZ}" != "${GK_FILENAME_KERNELZ}" ]]
+			then
+				mv "${TEMP}"/minkernpackage/{${GK_FILENAME_TEMP_KERNELZ},${GK_FILENAME_KERNELZ}} \
+					|| gen_die "Failed to rename '${TEMP}/minkernpackage/${GK_FILENAME_TEMP_KERNELZ}' to '${GK_FILENAME_KERNELZ}'!"
+			fi
 		fi
 	else
 		local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY})
@@ -42,13 +48,13 @@ gen_minkernpackage() {
 
 		cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${KERNEL_OUTPUTDIR}'!"
 
-		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/kernel-${KNAME}-${ARCH}-${KV}" \
+		cp "${tmp_kernel_binary}" "${TEMP}/minkernpackage/${GK_FILENAME_TEMP_KERNEL}" \
 			|| gen_die "Could not copy the kernel binary '${tmp_kernel_binary}' for the min kernel package!"
 
-		cp "System.map" "${TEMP}/minkernpackage/System.map-${KNAME}-${ARCH}-${KV}" \
+		cp "System.map" "${TEMP}/minkernpackage/${GK_FILENAME_TEMP_SYSTEMMAP}" \
 			|| gen_die "Could not copy '${KERNEL_OUTPUTDIR}/System.map' for the min kernel package!"
 
-		cp ".config" "${TEMP}/minkernpackage/config-${KNAME}-${ARCH}-${KV}" \
+		cp ".config" "${TEMP}/minkernpackage/${GK_FILENAME_TEMP_CONFIG}" \
 			|| gen_die "Could not copy the kernel config '${KERNEL_OUTPUTDIR}/.config' for the min kernel package!"
 
 		if isTrue "${GENZIMAGE}"
@@ -59,7 +65,7 @@ gen_minkernpackage() {
 				gen_die "Failed to locate kernel binary '${KERNEL_BINARY_2}'!"
 			fi
 
-			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/kernelz-${KNAME}-${ARCH}-${KV}" \
+			cp "${tmp_kernel_binary2}" "${TEMP}/minkernpackage/${GK_FILENAME_TEMP_KERNEL}" \
 				|| gen_die "Could not copy the kernelz binary '${tmp_kernel_binary2}' for the min kernel package!"
 		fi
 	fi
@@ -68,8 +74,8 @@ gen_minkernpackage() {
 	then
 		if isTrue "${BUILD_RAMDISK}"
 		then
-			cp "${TMPDIR}/initramfs-${KV}" "${TEMP}/minkernpackage/initramfs-${KNAME}-${ARCH}-${KV}" \
-				|| gen_die "Could not copy the initramfs '${TMPDIR}/initramfs-${KV}' for the min kernel package!"
+			cp "${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}" "${TEMP}/minkernpackage/${GK_FILENAME_TEMP_INITRAMFS}" \
+				|| gen_die "Could not copy the initramfs '${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}' for the min kernel package!"
 		fi
 	fi
 
@@ -117,23 +123,23 @@ gen_kerncache() {
 
 	cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${KERNEL_OUTPUTDIR}'!"
 
-	cp -aL "${tmp_kernel_binary}" "${TEMP}/kerncache/kernel-${ARCH}-${KV}" \
+	cp -aL "${tmp_kernel_binary}" "${TEMP}/kerncache/${GK_FILENAME_TEMP_KERNEL}" \
 		|| gen_die  "Could not copy the kernel binary '${tmp_kernel_binary}' for the kernel package!"
 
-	cp -aL "${KERNEL_OUTPUTDIR}/.config" "${TEMP}/kerncache/config-${ARCH}-${KV}" \
+	cp -aL "${KERNEL_OUTPUTDIR}/.config" "${TEMP}/kerncache/${GK_FILENAME_TEMP_CONFIG}" \
 		|| gen_die "Could not copy the kernel config '${KERNEL_OUTPUTDIR}/.config' for the kernel package!"
 
 	if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
 	then
 		# Support --kernel-config=/proc/config.gz, mainly
-		zcat "${KERNEL_CONFIG}" > "${TEMP}/kerncache/config-${ARCH}-${KV}.orig" \
+		zcat "${KERNEL_CONFIG}" > "${TEMP}/kerncache/${GK_FILENAME_TEMP_CONFIG}.orig" \
 			|| gen_die "Could not copy the kernel config '${KERNEL_CONFIG}' for the kernel package!"
 	else
-		cp -aL "${KERNEL_CONFIG}" "${TEMP}/kerncache/config-${ARCH}-${KV}.orig" \
+		cp -aL "${KERNEL_CONFIG}" "${TEMP}/kerncache/${GK_FILENAME_TEMP_CONFIG}.orig" \
 			|| gen_die "Could not copy the kernel config '${KERNEL_CONFIG}' for the kernel package!"
 	fi
 
-	cp -aL "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/kerncache/System.map-${ARCH}-${KV}" \
+	cp -aL "${KERNEL_OUTPUTDIR}/System.map" "${TEMP}/kerncache/${GK_FILENAME_TEMP_SYSTEMMAP}" \
 		|| gen_die "Could not copy the System.map '${KERNEL_OUTPUTDIR}/System.map' for the kernel package!"
 
 	if isTrue "${GENZIMAGE}"
@@ -144,7 +150,7 @@ gen_kerncache() {
 			gen_die "Failed locate kernelz binary '${KERNEL_BINARY_2}'!"
 		fi
 
-		cp -aL "${tmp_kernel_binary2}" "${TEMP}/kerncache/kernelz-${ARCH}-${KV}" \
+		cp -aL "${tmp_kernel_binary2}" "${TEMP}/kerncache/${GK_FILENAME_TEMP_KERNELZ}" \
 			|| gen_die "Could not copy the kernelz '${tmp_kernel_binary2}' for the kernel package!"
 	fi
 
@@ -179,22 +185,22 @@ gen_kerncache_extract_kernel() {
 		|| gen_die "Failed to extract '${KERNCACHE}' to '${TEMP}'!"
 
 	copy_image_with_preserve \
-		"kernel" \
-		"${TEMP}/kernel-${ARCH}-${KV}" \
-		"kernel-${KNAME}-${ARCH}-${KV}"
+		"${GK_FILENAME_KERNEL_SYMLINK}" \
+		"${TEMP}/${GK_FILENAME_TEMP_KERNEL}" \
+		"${GK_FILENAME_KERNEL}"
 
 	if isTrue "${GENZIMAGE}"
 	then
 		copy_image_with_preserve \
 			"kernelz" \
-			"${TEMP}/kernelz-${ARCH}-${KV}" \
-			"kernelz-${KNAME}-${ARCH}-${KV}"
+			"${TEMP}/${GK_FILENAME_TEMP_KERNELZ}" \
+			"${GK_FILENAME_KERNELZ}"
 	fi
 
 	copy_image_with_preserve \
-		"System.map" \
-		"${TEMP}/System.map-${ARCH}-${KV}" \
-		"System.map-${KNAME}-${ARCH}-${KV}"
+		"${GK_FILENAME_SYSTEMMAP_SYMLINK}" \
+		"${TEMP}/${GK_FILENAME_TEMP_SYSTEMMAP}" \
+		"${GK_FILENAME_SYSTEMMAP}"
 }
 
 gen_kerncache_extract_modules() {
@@ -217,11 +223,11 @@ gen_kerncache_extract_config() {
 		mkdir -p /etc/kernels || gen_die "Failed to create '/etc/kernels'!"
 	fi
 
-	"${TAR_COMMAND}" -xf "${KERNCACHE}" -C /etc/kernels config-${ARCH}-${KV} \
-		|| gen_die "Failed to extract kerncache config 'config-${ARCH}-${KV}' from '${KERNCACHE}' to '/etc/kernels'!"
+	"${TAR_COMMAND}" -xf "${KERNCACHE}" -C /etc/kernels "${GK_FILENAME_TEMP_CONFIG}" \
+		|| gen_die "Failed to extract kerncache config '${GK_FILENAME_TEMP_CONFIG}' from '${KERNCACHE}' to '/etc/kernels'!"
 
-	mv /etc/kernels/config-${ARCH}-${KV} /etc/kernels/kernel-config-${ARCH}-${KV} \
-		|| gen_die "Failed to rename kernelcache config '/etc/kernels/config-${ARCH}-${KV}' to '/etc/kernels/kernel-config-${ARCH}-${KV}'!"
+	mv /etc/kernels/${GK_FILENAME_TEMP_CONFIG} /etc/kernels/${GK_FILENAME_CONFIG} \
+		|| gen_die "Failed to rename kernelcache config '/etc/kernels/${GK_FILENAME_TEMP_CONFIG}' to '/etc/kernels/${GK_FILENAME_CONFIG}'!"
 }
 
 gen_kerncache_is_valid() {
@@ -237,20 +243,20 @@ gen_kerncache_is_valid() {
 			BUILD_KERNEL="no"
 			# Can make this more secure ....
 
-			if [ -e "${TEMP}/config-${ARCH}-${KV}" -a -e "${TEMP}/kernel-${ARCH}-${KV}" ]
+			if [ -e "${TEMP}/${GK_FILENAME_TEMP_CONFIG}" -a -e "${TEMP}/${GK_FILENAME_TEMP_KERNEL}" ]
 			then
 				print_info 1 '' 1 0
 				print_info 1 'Valid kerncache found; No sources will be used ...'
 				KERNCACHE_IS_VALID="yes"
 			fi
 		else
-			if [ -e "${TEMP}/config-${ARCH}-${KV}" -a -e "${KERNEL_CONFIG}" ]
+			if [ -e "${TEMP}/${GK_FILENAME_TEMP_CONFIG}" -a -e "${KERNEL_CONFIG}" ]
 			then
-				if [ -e "${TEMP}/config-${ARCH}-${KV}.orig" ]
+				if [ -e "${TEMP}/${GK_FILENAME_TEMP_CONFIG}.orig" ]
 				then
-					local test1=$(grep -v "^#" "${TEMP}/config-${ARCH}-${KV}.orig" | md5sum | cut -d " " -f 1)
+					local test1=$(grep -v "^#" "${TEMP}/${GK_FILENAME_TEMP_CONFIG}.orig" | md5sum | cut -d " " -f 1)
 				else
-					local test1=$(grep -v "^#" "${TEMP}/config-${ARCH}-${KV}" | md5sum | cut -d " " -f 1)
+					local test1=$(grep -v "^#" "${TEMP}/${GK_FILENAME_TEMP_CONFIG}" | md5sum | cut -d " " -f 1)
 				fi
 
 				if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"

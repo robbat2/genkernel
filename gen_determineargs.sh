@@ -83,6 +83,168 @@ determine_KV() {
 	fi
 }
 
+determine_output_filenames() {
+	print_info 5 '' 1 0
+
+	GK_FILENAME_CONFIG="kernel-config-${ARCH}-${KV}"
+	GK_FILENAME_KERNELZ="kernelz-${KV}"
+	GK_FILENAME_TEMP_CONFIG="config-${ARCH}-${KV}"
+	GK_FILENAME_TEMP_INITRAMFS="initramfs-${ARCH}-${KV}"
+	GK_FILENAME_TEMP_KERNEL="kernel-${ARCH}-${KV}"
+	GK_FILENAME_TEMP_KERNELZ="kernelz-${ARCH}-${KV}"
+	GK_FILENAME_TEMP_SYSTEMMAP="System.map-${ARCH}-${KV}"
+
+	isTrue "${CMD_INSTALL}" || return
+
+	# Do we have values?
+	if [ -z "${KERNEL_FILENAME}" ]
+	then
+		gen_die "--kernel-filename must be set to a non-empty value!"
+	elif [ -z "${KERNEL_SYMLINK_NAME}" ]
+	then
+		gen_die "--kernel-symlink-name must be set to a non-empty value!"
+	elif [ -z "${SYSTEMMAP_FILENAME}" ]
+	then
+		gen_die "--systemmap-filename must be set to a non-empty value!"
+	elif [ -z "${SYSTEMMAP_SYMLINK_NAME}" ]
+	then
+		gen_die "--systemmap-symlink-name must be set to a non-empty value!"
+	elif [ -z "${INITRAMFS_FILENAME}" ]
+	then
+		gen_die "--initramfs-filename must be set to a non-empty value!"
+	elif [ -z "${INITRAMFS_FILENAME}" ]
+	then
+		gen_die "--initramfs-filename must be set to a non-empty value!"
+	fi
+
+	# Kernel
+	GK_FILENAME_KERNEL=$(arch_replace "${KERNEL_FILENAME}")
+	GK_FILENAME_KERNEL=$(kv_replace "${GK_FILENAME_KERNEL}")
+
+	if [ -z "${GK_FILENAME_KERNEL}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_KERNEL' is empty!"
+	else
+		print_info 5 "GK_FILENAME_KERNEL set to '${GK_FILENAME_KERNEL}' (was: '${KERNEL_FILENAME}')"
+	fi
+
+	# Kernel symlink
+	GK_FILENAME_KERNEL_SYMLINK=$(arch_replace "${KERNEL_SYMLINK_NAME}")
+	GK_FILENAME_KERNEL_SYMLINK=$(kv_replace "${GK_FILENAME_KERNEL_SYMLINK}")
+
+	if [ -z "${GK_FILENAME_KERNEL_SYMLINK}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_KERNEL_SYMLINK' is empty!"
+	else
+		print_info 5 "GK_FILENAME_KERNEL_SYMLINK set to '${GK_FILENAME_KERNEL_SYMLINK}' (was: '${KERNEL_SYMLINK_NAME}')"
+	fi
+
+	if [[ "${GK_FILENAME_KERNEL}" == "${GK_FILENAME_KERNEL_SYMLINK}" ]]
+	then
+		gen_die "--kernel-filename cannot be identical with --kernel-symlink-name!"
+	fi
+
+	# System.map
+	GK_FILENAME_SYSTEMMAP=$(arch_replace "${SYSTEMMAP_FILENAME}")
+	GK_FILENAME_SYSTEMMAP=$(kv_replace "${GK_FILENAME_SYSTEMMAP}")
+
+	if [ -z "${GK_FILENAME_SYSTEMMAP}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_SYSTEMMAP' is empty!"
+	else
+		print_info 5 "GK_FILENAME_SYSTEMMAP set to '${GK_FILENAME_SYSTEMMAP}' (was: '${SYSTEMMAP_FILENAME}')"
+	fi
+
+	# System.map symlink
+	GK_FILENAME_SYSTEMMAP_SYMLINK=$(arch_replace "${SYSTEMMAP_SYMLINK_NAME}")
+	GK_FILENAME_SYSTEMMAP_SYMLINK=$(kv_replace "${GK_FILENAME_SYSTEMMAP_SYMLINK}")
+
+	if [ -z "${GK_FILENAME_SYSTEMMAP_SYMLINK}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_SYSTEMMAP_SYMLINK' is empty!"
+	else
+		print_info 5 "GK_FILENAME_SYSTEMMAP_SYMLINK set to '${GK_FILENAME_SYSTEMMAP_SYMLINK}' (was: '${SYSTEMMAP_SYMLINK_NAME}')"
+	fi
+
+	if [[ "${GK_FILENAME_SYSTEMMAP}" == "${GK_FILENAME_SYSTEMMAP_SYMLINK}" ]]
+	then
+		gen_die "--systemmap-filename cannot be identical with --systemmap-symlink-name!"
+	fi
+
+	# Initramfs
+	GK_FILENAME_INITRAMFS=$(arch_replace "${INITRAMFS_FILENAME}")
+	GK_FILENAME_INITRAMFS=$(kv_replace "${GK_FILENAME_INITRAMFS}")
+
+	if [ -z "${GK_FILENAME_INITRAMFS}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_INITRAMFS' is empty!"
+	else
+		print_info 5 "GK_FILENAME_INITRAMFS set to '${GK_FILENAME_INITRAMFS}' (was: '${INITRAMFS_FILENAME}')"
+	fi
+
+	# Initramfs symlink
+	GK_FILENAME_INITRAMFS_SYMLINK=$(arch_replace "${INITRAMFS_SYMLINK_NAME}")
+	GK_FILENAME_INITRAMFS_SYMLINK=$(kv_replace "${GK_FILENAME_INITRAMFS_SYMLINK}")
+
+	if [ -z "${GK_FILENAME_INITRAMFS_SYMLINK}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_INITRAMFS_SYMLINK' is empty!"
+	else
+		print_info 5 "GK_FILENAME_INITRAMFS_SYMLINK set to '${GK_FILENAME_INITRAMFS_SYMLINK}' (was: '${INITRAMFS_SYMLINK_NAME}')"
+	fi
+
+	if [[ "${GK_FILENAME_INITRAMFS}" == "${GK_FILENAME_INITRAMFS_SYMLINK}" ]]
+	then
+		gen_die "--initramfs-filename cannot be identical with --initramfs-symlink-name!"
+	fi
+
+	# Make sure we have unique filenames
+	if [[ "${GK_FILENAME_KERNEL}" == "${GK_FILENAME_INITRAMFS}" ]]
+	then
+		gen_die "--kernel-filename cannot be identical with --initramfs-filename!"
+	elif [[ "${GK_FILENAME_KERNEL}" == "${GK_FILENAME_SYSTEMMAP}" ]]
+	then
+		gen_die "--kernel-filename cannot be identical with --systemmap-filename!"
+	elif [[ "${GK_FILENAME_INITRAMFS}" == "${GK_FILENAME_SYSTEMMAP}" ]]
+	then
+		gen_die "--initramfs-filename cannot be identical with --systemmap-filename!"
+	fi
+
+	if [[ "${GK_FILENAME_KERNEL_SYMLINK}" == "${GK_FILENAME_INITRAMFS_SYMLINK}" ]]
+	then
+		gen_die "--kernel-symlink-name cannot be identical with --initramfs-symlink-name!"
+	elif [[ "${GK_FILENAME_KERNEL_SYMLINK}" == "${GK_FILENAME_SYSTEMMAP_SYMLINK}" ]]
+	then
+		gen_die "--kernel-symlink-name cannot be identical with --systemmap-symlink-name!"
+	elif [[ "${GK_FILENAME_INITRAMFS_SYMLINK}" == "${GK_FILENAME_SYSTEMMAP_SYMLINK}" ]]
+	then
+		gen_die "--initramfs-symlink-name cannot be identical with --systemmap-symlink-name!"
+	fi
+
+	local -a filename_vars
+	filename_vars+=( 'GK_FILENAME_INITRAMFS;--initramfs-filename' )
+	filename_vars+=( 'GK_FILENAME_INITRAMFS_SYMLINK;--initramfs-symlink-name' )
+	filename_vars+=( 'GK_FILENAME_KERNEL;--kernel-filename' )
+	filename_vars+=( 'GK_FILENAME_KERNEL_SYMLINK;--kernel-symlink-name' )
+	filename_vars+=( 'GK_FILENAME_SYSTEMMAP;--systemmap-filename' )
+	filename_vars+=( 'GK_FILENAME_SYSTEMMAP_SYMLINK;--systemmap-symlink-name' )
+
+	local valid_filename_pattern='^[a-zA-Z0-9_.-]{1,}$'
+	local filename_combo filename_varname filename_option
+
+	for filename_combo in "${filename_vars[@]}"
+	do
+		filename_combo=( ${filename_combo//;/ } )
+		filename_varname=${filename_combo[0]}
+		filename_option=${filename_combo[1]}
+
+		if [[ ! "${!filename_varname}" =~ ${valid_filename_pattern} ]]
+		then
+			gen_die "${filename_varname} value '${!filename_varname}' does not match regex '${valid_filename_pattern}'. Check ${filename_option} option!"
+		fi
+	done
+}
+
 determine_real_args() {
 	# Unset known variables which will interfere with _tc-getPROG().
 	local tc_var tc_varname_build tc_vars=$(get_tc_vars)
@@ -101,7 +263,12 @@ determine_real_args() {
 	set_config_with_override STRING LOGFILE                               CMD_LOGFILE                               "/var/log/genkernel.conf"
 	set_config_with_override STRING KERNEL_DIR                            CMD_KERNEL_DIR                            "${DEFAULT_KERNEL_SOURCE}"
 	set_config_with_override BOOL   KERNEL_SOURCES                        CMD_KERNEL_SOURCES                        "yes"
-	set_config_with_override STRING KNAME                                 CMD_KERNNAME                              "genkernel"
+	set_config_with_override STRING INITRAMFS_FILENAME                    CMD_INITRAMFS_FILENAME                    "${DEFAULT_INITRAMFS_FILENAME}"
+	set_config_with_override STRING INITRAMFS_SYMLINK_NAME                CMD_INITRAMFS_SYMLINK_NAME                "${DEFAULT_INITRAMFS_SYMLINK_NAME}"
+	set_config_with_override STRING KERNEL_FILENAME                       CMD_KERNEL_FILENAME                       "${DEFAULT_KERNEL_FILENAME}"
+	set_config_with_override STRING KERNEL_SYMLINK_NAME                   CMD_KERNEL_SYMLINK_NAME                   "${DEFAULT_KERNEL_SYMLINK_NAME}"
+	set_config_with_override STRING SYSTEMMAP_FILENAME                    CMD_SYSTEMMAP_FILENAME                    "${DEFAULT_SYSTEMMAP_FILENAME}"
+	set_config_with_override STRING SYSTEMMAP_SYMLINK_NAME                CMD_SYSTEMMAP_SYMLINK_NAME                "${DEFAULT_SYSTEMMAP_SYMLINK_NAME}"
 
 	set_config_with_override STRING CHECK_FREE_DISK_SPACE_BOOTDIR         CMD_CHECK_FREE_DISK_SPACE_BOOTDIR
 	set_config_with_override STRING CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR CMD_CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR

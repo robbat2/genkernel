@@ -174,6 +174,8 @@ determine_KV
 
 determine_kernel_arch
 
+determine_output_filenames
+
 determine_kernel_config_file
 
 setup_cache_dir
@@ -219,6 +221,8 @@ then
 	determine_KV
 	if [ -f "${TEMP}/.old_kv" ]
 	then
+		determine_output_filenames
+
 		old_KV=$(cat "${TEMP}/.old_kv")
 		print_info 1 "$(get_indent 1)>> Kernel version has changed (probably due to config change) since genkernel start:"
 		print_info 1 "$(get_indent 1)>> We are now building Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL} ..."
@@ -237,9 +241,9 @@ then
 
 	if isTrue "${SAVE_CONFIG}"
 	then
-		print_info 1 "$(get_indent 1)>> Saving config of successful build to '/etc/kernels/kernel-config-${ARCH}-${KV}' ..."
+		print_info 1 "$(get_indent 1)>> Saving config of successful build to '/etc/kernels/${GK_FILENAME_CONFIG}' ..."
 		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
-		cp "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/kernel-config-${ARCH}-${KV}" || \
+		cp "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/${GK_FILENAME_CONFIG}" || \
 			print_warning 1 "Unable to copy the kernel configuration file; Ignoring non-fatal error ..."
 			# Just a warning because ordinary users are not allowed to write in /etc
 	fi
@@ -373,16 +377,16 @@ then
 		esac
 	else
 		print_info 1 ''
-		print_info 1 "You will find the kernel image in '${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}'."
+		print_info 1 "You will find the kernel image in '${TMPDIR}/${GK_FILENAME_TEMP_KERNEL}'."
 
 		if isTrue "${GENZIMAGE}"
 		then
-			print_info 1 "You will find the kernelz binary in '${TMPDIR}/kernelz-${KV}'."
+			print_info 1 "You will find the kernelz binary in '${TMPDIR}/${GK_FILENAME_TEMP_KERNELZ}'."
 		fi
 
 		if isTrue "${BUILD_RAMDISK}"
 		then
-			print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
+			print_info 1 "You will find the initramfs in '${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}'."
 		fi
 	fi
 
@@ -396,26 +400,27 @@ then
 
 	if isTrue "${show_warning_initramfs_is_required}" && isTrue "${BUILD_RAMDISK}"
 	then
-		INITRAMFS_INSTALLED_IN="${TMPDIR}"
-		isTrue "${CMD_INSTALL}" && INITRAMFS_INSTALLED_IN="${BOOTDIR}"
+		INITRAMFS_FILE="${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}"
+		isTrue "${CMD_INSTALL}" && INITRAMFS_FILE="${BOOTDIR}/${GK_FILENAME_INITRAMFS}"
 
 		print_warning 1 '' 1 0
 		print_warning 1 "If you require Genkernel's hardware detection features, you ${BOLD}MUST${NORMAL}"
-		print_warning 1 "tell your bootloader to use the provided initramfs file (${INITRAMFS_INSTALLED_IN}/initramfs-${KNAME}-${ARCH}-${KV})."
+		print_warning 1 "tell your bootloader to use the provided initramfs file '${INITRAMFS_FILE}'."
+		unset INITRAMFS_FILE
 	fi
 	unset show_warning_initramfs_is_required
 fi
 
 if isTrue "${BUILD_RAMDISK}"
 then
-	if ! isTrue "${BUILD_KERNEL}" && ! isTrue "${CMD_INSTALL}"
+	if ! isTrue "${BUILD_KERNEL}"
 	then
+		INITRAMFS_FILE="${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}"
+		isTrue "${CMD_INSTALL}" && INITRAMFS_FILE="${BOOTDIR}/${GK_FILENAME_INITRAMFS}"
+
 		print_info 1 ''
-		print_info 1 "You will find the initramfs in '${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
-	elif ! isTrue "${BUILD_KERNEL}" && isTrue "${CMD_INSTALL}"
-	then
-		print_info 1 ''
-		print_info 1 "You will find the initramfs in '${BOOTDIR}/initramfs-${KNAME}-${ARCH}-${KV}'."
+		print_info 1 "You will find the initramfs in '${INITRAMFS_FILE}'."
+		unset INITRAMFS_FILE
 	fi
 
 	print_warning 1 '' 1 0

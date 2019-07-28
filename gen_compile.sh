@@ -303,38 +303,38 @@ compile_kernel() {
 	# if source != outputdir, we need this:
 	tmp_kernel_binary="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary}"
 	tmp_kernel_binary2="${KERNEL_OUTPUTDIR}"/"${tmp_kernel_binary2}"
-	systemmap="${KERNEL_OUTPUTDIR}"/System.map
+	local tmp_systemmap="${KERNEL_OUTPUTDIR}"/System.map
 
 	if isTrue "${CMD_INSTALL}"
 	then
 		copy_image_with_preserve \
-			"kernel" \
+			"${GK_FILENAME_KERNEL_SYMLINK}" \
 			"${tmp_kernel_binary}" \
-			"kernel-${KNAME}-${ARCH}-${KV}"
+			"${GK_FILENAME_KERNEL}"
 
 		copy_image_with_preserve \
-			"System.map" \
-			"${systemmap}" \
-			"System.map-${KNAME}-${ARCH}-${KV}"
+			"${GK_FILENAME_SYSTEMMAP_SYMLINK}" \
+			"${tmp_systemmap}" \
+			"${GK_FILENAME_SYSTEMMAP}"
 
 		if isTrue "${GENZIMAGE}"
 		then
 			copy_image_with_preserve \
 				"kernelz" \
 				"${tmp_kernel_binary2}" \
-				"kernelz-${KV}"
+				"${GK_FILENAME_KERNELZ}"
 		fi
 	else
-		cp "${tmp_kernel_binary}" "${TMPDIR}/kernel-${KNAME}-${ARCH}-${KV}" \
-			|| gen_die "Could not copy the kernel binary to '${TMPDIR}'!"
+		cp "${tmp_kernel_binary}" "${TMPDIR}/${GK_FILENAME_TEMP_KERNEL}" \
+			|| gen_die "Could not copy kernel binary '${tmp_kernel_binary}' to '${TMPDIR}'!"
 
-		cp "${systemmap}" "${TMPDIR}/System.map-${KNAME}-${ARCH}-${KV}" \
-			|| gen_die "Could not copy System.map to '${TMPDIR}'!"
+		cp "${tmp_systemmap}" "${TMPDIR}/${GK_FILENAME_TEMP_SYSTEMMAP}" \
+			|| gen_die "Could not copy System.map '${tmp_systemmap}' to '${TMPDIR}'!"
 
 		if isTrue "${GENZIMAGE}"
 		then
-			cp "${tmp_kernel_binary2}" "${TMPDIR}/kernelz-${KV}" \
-				|| gen_die "Could not copy the kernelz binary to '${TMPDIR}'!"
+			cp "${tmp_kernel_binary2}" "${TMPDIR}/${GK_FILENAME_TEMP_KERNELZ}" \
+				|| gen_die "Could not copy kernelz binary '${tmp_kernel_binary2}' to '${TMPDIR}'!"
 		fi
 	fi
 }

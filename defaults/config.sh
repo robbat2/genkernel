@@ -21,6 +21,13 @@ KERNEL_SUPPORT_MICROCODE=no
 # Arch-specific defaults that can be overridden in the config file or on the
 # command line.
 #
+DEFAULT_INITRAMFS_FILENAME="initramfs-genkernel-%%ARCH%%-%%KV%%"
+DEFAULT_INITRAMFS_SYMLINK_NAME="initramfs"
+DEFAULT_KERNEL_FILENAME="kernel-genkernel-%%ARCH%%-%%KV%%"
+DEFAULT_KERNEL_SYMLINK_NAME="kernel"
+DEFAULT_SYSTEMMAP_FILENAME="System.map-%%ARCH%%-%%KV%%"
+DEFAULT_SYSTEMMAP_SYMLINK_NAME="System.map"
+
 DEFAULT_COMPRESS_INITRD=yes
 DEFAULT_COMPRESS_INITRD_TYPE=best
 

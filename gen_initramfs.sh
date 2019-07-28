@@ -1536,7 +1536,7 @@ create_initramfs() {
 	print_info 1 "initramfs: >> Initializing ..."
 
 	# Create empty cpio
-	CPIO_ARCHIVE="${TMPDIR}/initramfs-${KNAME}-${ARCH}-${KV}"
+	CPIO_ARCHIVE="${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}"
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
@@ -1826,8 +1826,8 @@ create_initramfs() {
 			[[ -z ${mkimage_cmd} ]] && gen_die "mkimage is not available. Please install package 'dev-embedded/u-boot-tools'."
 			local mkimage_args="-A ${ARCH} -O linux -T ramdisk -C ${compression:-none} -a 0x00000000 -e 0x00000000"
 			print_info 1 "$(get_indent 1)>> Wrapping initramfs using mkimage ..."
-			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n initramfs-${KNAME}-${ARCH}-${KV} -d ${CPIO_ARCHIVE} ${CPIO_ARCHIVE}.uboot"
-			${mkimage_cmd} ${mkimage_args} -n "initramfs-${KNAME}-${ARCH}-${KV}" -d "${CPIO_ARCHIVE}" "${CPIO_ARCHIVE}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
+			print_info 2 "$(get_indent 1)${mkimage_cmd} ${mkimage_args} -n ${GK_FILENAME_TEMP_INITRAMFS} -d ${CPIO_ARCHIVE} ${CPIO_ARCHIVE}.uboot"
+			${mkimage_cmd} ${mkimage_args} -n "${GK_FILENAME_TEMP_INITRAMFS}" -d "${CPIO_ARCHIVE}" "${CPIO_ARCHIVE}.uboot" >> ${LOGFILE} 2>&1 || gen_die "Wrapping initramfs using mkimage failed"
 			mv -f "${CPIO_ARCHIVE}.uboot" "${CPIO_ARCHIVE}" || gen_die "Rename failed"
 		fi
 	fi
@@ -1837,9 +1837,9 @@ create_initramfs() {
 		if ! isTrue "${INTEGRATED_INITRAMFS}"
 		then
 			copy_image_with_preserve \
-				"initramfs" \
+				"${GK_FILENAME_INITRAMFS_SYMLINK}" \
 				"${CPIO_ARCHIVE}" \
-				"initramfs-${KNAME}-${ARCH}-${KV}"
+				"${GK_FILENAME_INITRAMFS}"
 		fi
 	fi
 }

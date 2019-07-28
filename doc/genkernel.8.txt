@@ -150,16 +150,20 @@ KERNEL COMPILATION
     are copied over.
 
 *--*[*no-*]*symlink*::
-    Manages,  or does not manage, symlinks in '/boot' like the manual
-    kernel "make install" process does. A kernel (or,  depending on
-    options,  kernelz)  symlink will link to the most recently built
-    kernel image and a kernel.old (or kernelz.old) symlink will link
-    to the second most recently built image, if one exists.  Similar
-    symlinks (both * and *.old) are managed for initramfs and System.map.
-    The corresponding work products (i.e., the actual kernel
-    and initramfs images, and System.map) are also managed accordingly.
-    NOTE: Specifying   *--symlink*  does nothing unless
-    *--install* is also specified.
+Manages,  or does not manage, symlinks in '/boot' like the manual
+kernel "make install" process does. A 'kernel' (or, depending on
+options, 'kernelz') symlink will link to the most recently built
+kernel image and a 'kernel.old' (or 'kernelz.old') symlink will link
+to the second most recently built image, if one exists. Similar
+symlinks (with and without '.old' suffix) are managed for initramfs and
+System.map. The corresponding work products (i.e., the actual kernel
+and initramfs images, and System.map) are also managed accordingly.
++
+The symlink name can be controlled via *--kernel-symlink-name* and/or
+*--initramfs-symlink-name* option.
+
+NOTE: Specifying *--symlink* does nothing unless *--install* is also
+specified.
 
 *--*[*no-*]*oldconfig*::
     Runs, or does not run, "make oldconfig" before compilation.  Specifying
@@ -428,9 +432,22 @@ INTERNALS
 
 OUTPUT SETTINGS
 ~~~~~~~~~~~~~~~
-*--kernname*=<...>::
-    Tag the kernel and initrd with a name, if not defined this
-    option defaults to genkernel.
+*--initramfs-filename*=<...>::
+Set initramfs filename which will be used when initramfs will be installed
+into *BOOTDIR* (implies *--install* option). Please see
+*--kernel-filename* option for available placeholders and restrictions.
++
+By default, initramfs filename will be set to 'initramfs-genkernel-%%ARCH%%-%%KV%%'.
+
+*--initramfs-symlink-name*=<...>::
+Set initramfs symlink name which will be used when initramfs will be
+installed into *BOOTDIR* (implies *--install* option) and *--symlink*
+option is given. Please see *--kernel-filename* option for available
+placeholders and restrictions.
++
+By default, initramfs symlink name will be set to 'initramfs'.
+
+NOTE: Initramfs filename and initramfs symlink name must be different.
 
 *--minkernpackage*=<file>::
 Archive file created using tar containing kernel and initramfs.
@@ -445,10 +462,57 @@ NOTE: No modules outside of the initramfs will be included!
     Archive file created using tar containing kernel binary, content of
     '/lib/modules' and the kernel config after the callbacks have run.
 
+*--kernel-filename*=<...>::
+Set kernel filename which will be used when kernel will be installed
+into *BOOTDIR* (implies *--install* option). The following placeholders
+are available:
++
+[horizontal]
+*%%ARCH%%*:::
+Will be replaced with genkernel arch value, for example 'x86_64'.
+*%%KV%%*:::
+Will be replaced with kernel version, for example '5.2.3-gentoo'.
+
++
+Kernel filename is only allowed to contain characters like 'a-z' or 'A-Z',
+'0-9', '_', '.' and '-'.
++
+By default, kernel name will be set to 'kernel-genkernel-%%ARCH%%-%%KV%%'.
+
+NOTE: When setting a custom kernel name make sure that your bootloader and
+tools like *kexec* when used are recognizing your custom kernel name.
+
 *--*[*no-*]*kernel-sources*::
     This option is only valid if kerncache is defined If there is a
     valid kerncache no checks will be made against a kernel source
     tree.
+
+*--kernel-symlink-name*=<...>::
+Set kernel symlink name which will be used when kernel will be installed
+into *BOOTDIR* (implies *--install* option) and *--symlink* option is
+given. Please see *--kernel-filename* option for available placeholders
+and restrictions.
++
+By default, kernel symlink name will be set to 'kernel'.
+
+NOTE: Kernel filename and kernel symlink name must be different.
+
+*--systemmap-filename*=<...>::
+Set System.map filename which will be used when kernel will be installed
+into *BOOTDIR* (implies *--install* option). Please see
+*--kernel-filename* option for available placeholders and restrictions.
++
+By default, System.map filename will be set to 'System.map-genkernel-%%ARCH%%-%%KV%%'.
+
+*--systemmap-symlink-name*=<...>::
+Set System.map symlink name which will be used when kernel will be
+installed into *BOOTDIR* (implies *--install* option) and *--symlink*
+option is given. Please see *--kernel-filename* option for available
+placeholders and restrictions.
++
+By default, System.map symlink name will be set to 'System.map'.
+
+NOTE: System.map filename and System.map symlink name must be different.
 
 *--initramfs-overlay*=<dir>::
     Directory structure to include in the initramfs, only available

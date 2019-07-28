@@ -182,8 +182,10 @@ longusage() {
   echo "	--postclear		Clear all tmp files and caches after genkernel has run"
   echo "	--no-postclear		Do not clean up after genkernel has run"
   echo "  Output Settings"
-  echo "	--kernname=<...>	Tag the kernel and initramfs with a name; If not defined"
-  echo "				the option defaults to 'genkernel'"
+  echo "	--kernel-filename=<...>"
+  echo "				Set kernel filename"
+  echo "	--kernel-symlink-name=<...>"
+  echo "				Set kernel symlink name"
   echo "	--minkernpackage=<archive>"
   echo "				Archive file created using tar containing kernel and"
   echo "				initramfs"
@@ -196,9 +198,13 @@ longusage() {
   echo "	--no-kernel-sources	This option is only valid if kerncache is"
   echo "				defined. If there is a valid kerncache no checks"
   echo "				will be made against a kernel source tree"
+  echo "	--initramfs-filename=<...>"
+  echo "				Set initramfs filename"
   echo "	--initramfs-overlay=<dir>"
   echo "				Directory structure to include in the initramfs,"
   echo "				only available on 2.6 kernels"
+  echo "	--initramfs-symlink-name=<...>"
+  echo "				Set initramfs symlink name"
   echo "	--firmware		Enable copying of firmware into initramfs"
   echo "	--firmware-dir=<dir>"
   echo "				Specify directory to copy firmware from (defaults"
@@ -229,6 +235,10 @@ longusage() {
   echo "				Strip debug symbols from none, all, installed kernel (obsolete) or"
   echo "				modules (default)"
   echo "	--no-strip		Don't strip installed kernel or modules, alias for --strip=none"
+  echo "	--systemmap-filename=<...>"
+  echo "				Set System.map filename"
+  echo "	--systemmap-symlink-name=<...>"
+  echo "				Set System.map symlink name"
   echo
   echo "For a detailed list of supported initramfs options and flags; issue:"
   echo "	man 8 genkernel"
@@ -670,9 +680,13 @@ parse_cmdline() {
 			CMD_KERNCACHE="${*#*=}"
 			print_info 3 "KERNCACHE: ${CMD_KERNCACHE}"
 			;;
-		--kernname=*)
-			CMD_KERNNAME="${*#*=}"
-			print_info 3 "KERNNAME: ${CMD_KERNNAME}"
+		--kernel-filename=*)
+			CMD_KERNEL_FILENAME="${*#*=}"
+			print_info 3 "CMD_KERNEL_FILENAME: ${CMD_KERNEL_FILENAME}"
+			;;
+		--kernel-symlink-name=*)
+			CMD_KERNEL_SYMLINK_NAME="${*#*=}"
+			print_info 3 "CMD_KERNEL_SYMLINK_NAME: ${CMD_KERNEL_SYMLINK_NAME}"
 			;;
 		--symlink|--no-symlink)
 			CMD_SYMLINK=$(parse_optbool "$*")
@@ -682,9 +696,25 @@ parse_cmdline() {
 			CMD_KERNEL_SOURCES=$(parse_optbool "$*")
 			print_info 3 "CMD_KERNEL_SOURCES: ${CMD_KERNEL_SOURCES}"
 			;;
+		--initramfs-filename=*)
+			CMD_INITRAMFS_FILENAME="${*#*=}"
+			print_info 3 "CMD_INITRAMFS_FILENAME: ${CMD_INITRAMFS_FILENAME}"
+			;;
 		--initramfs-overlay=*)
 			CMD_INITRAMFS_OVERLAY="${*#*=}"
 			print_info 3 "CMD_INITRAMFS_OVERLAY: ${CMD_INITRAMFS_OVERLAY}"
+			;;
+		--initramfs-symlink-name=*)
+			CMD_INITRAMFS_SYMLINK_NAME="${*#*=}"
+			print_info 3 "CMD_INITRAMFS_SYMLINK_NAME: ${CMD_INITRAMFS_SYMLINK_NAME}"
+			;;
+		--systemmap-filename=*)
+			CMD_SYSTEMMAP_FILENAME="${*#*=}"
+			print_info 3 "CMD_SYSTEMMAP_FILENAME: ${CMD_SYSTEMMAP_FILENAME}"
+			;;
+		--systemmap-symlink-name=*)
+			CMD_SYSTEMMAP_SYMLINK_NAME="${*#*=}"
+			print_info 3 "CMD_SYSTEMMAP_SYMLINK_NAME: ${CMD_SYSTEMMAP_SYMLINK_NAME}"
 			;;
 		--linuxrc=*)
 			CMD_LINUXRC="${*#*=}"
