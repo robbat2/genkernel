@@ -188,6 +188,14 @@ then
 	gen_kerncache_is_valid
 fi
 
+if isTrue "${KERNCACHE_IS_VALID}" && ! isTrue "${CMD_INSTALL}" && ! isTrue "${BUILD_RAMDISK}"
+then
+	error_msg="Nothing to do: Selected action does not include building initramfs."
+	error_msg+=" Because kerncache is valid, no kernel will be build."
+	error_msg+=" However, due to set --no-install option, we will not even install kernel binary from kerncache."
+	gen_die "${error_msg}"
+fi
+
 print_info 1 '' 1 0
 print_info 1 "Working with Linux kernel ${BOLD}${KV}${NORMAL} for ${BOLD}${ARCH}${NORMAL}"
 print_info 1 "Using kernel config file '${KERNEL_CONFIG}' ..."
