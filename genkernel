@@ -280,6 +280,21 @@ if isTrue "${KERNCACHE_IS_VALID}"
 then
 	if ! isTrue "${BUILD_STATIC}"
 	then
+		if ! isTrue "${CMD_INSTALL}" && [ -z "${INSTALL_MOD_PATH}" ]
+		then
+			# We have to set $INSTALL_MOD_PATH to avoid installing files
+			# to /lib/modules because --no-install was set
+			INSTALL_MOD_PATH="$(mktemp -d -p "${TEMP}" kerncache-modules.XXXXXXX 2>/dev/null)"
+			if [ -z "${INSTALL_MOD_PATH}" ]
+			then
+				gen_die "Internal error: Variable 'INSTALL_MOD_PATH' is empty; mktemp() for kerncache modules failed!"
+			else
+				print_info 5 '' 1 0
+				print_info 5 "INSTALL_MOD_PATH set to '${INSTALL_MOD_PATH}' because --kerncache is used but --no-install was set ..."
+				mkdir "${INSTALL_MOD_PATH}/lib" || gen_die "Failed to create '${INSTALL_MOD_PATH}/lib'!"
+			fi
+		fi
+
 		print_info 1 '' 1 0
 		gen_kerncache_extract_modules
 	fi
