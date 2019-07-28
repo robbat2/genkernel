@@ -71,6 +71,8 @@ longusage() {
   echo "	--no-static		Do not build a static (monolithic kernel)"
   echo "  Kernel settings"
   echo "	--kerneldir=<dir>	Location of the kernel sources"
+  echo "	--kernel-append-localversion=<...>"
+  echo "				Appends value to genkernel's KERNEL_LOCALVERSION option"
   echo "	--kernel-config=<file|default>"
   echo "				Kernel configuration file to use for compilation; Use"
   echo "				'default' to explicitly start from scratch using"
@@ -647,6 +649,10 @@ parse_cmdline() {
 		--kerneldir=*)
 			CMD_KERNEL_DIR="${*#*=}"
 			print_info 3 "CMD_KERNEL_DIR: ${CMD_KERNEL_DIR}"
+			;;
+		--kernel-append-localversion=*)
+			CMD_KERNEL_APPEND_LOCALVERSION="${*#*=}"
+			print_info 3 "CMD_KERNEL_APPEND_LOCALVERSION: ${CMD_KERNEL_APPEND_LOCALVERSION}"
 			;;
 		--kernel-config=*)
 			CMD_KERNEL_CONFIG="${*#*=}"

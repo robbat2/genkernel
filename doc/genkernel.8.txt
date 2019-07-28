@@ -124,6 +124,12 @@ KERNEL CONFIGURATION
 *--*[*no-*]*virtio*::
     Adds, or skip adding VirtIO support to kernel configuration.
 
+*--kernel-append-localversion*=<...>::
+    Appends value to genkernel's *KERNEL_LOCALVERSION* option (see below).
+    The idea is to use this option to allow to easily build a new revision
+    with own kernel binary, initramfs and modules directory without losing
+    default *KERNEL_LOCALVERSION* value.
+
 *--kernel-localversion*=<...>::
 Set kernel option *LOCALVERSION*. Use special value *UNSET* to
 unset any already set *LOCALVERSION*. The following placeholders are

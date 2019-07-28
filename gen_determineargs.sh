@@ -290,6 +290,7 @@ determine_real_args() {
 	set_config_with_override STRING CROSS_COMPILE                         CMD_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR                               CMD_BOOTDIR                               "/boot"
 	set_config_with_override STRING KERNEL_OUTPUTDIR                      CMD_KERNEL_OUTPUTDIR                      "${KERNEL_DIR}"
+	set_config_with_override STRING KERNEL_APPEND_LOCALVERSION            CMD_KERNEL_APPEND_LOCALVERSION
 	set_config_with_override STRING KERNEL_LOCALVERSION                   CMD_KERNEL_LOCALVERSION                   "-%%ARCH%%"
 	set_config_with_override STRING MODPROBEDIR                           CMD_MODPROBEDIR                           "/etc/modprobe.d"
 
@@ -630,34 +631,52 @@ determine_real_args() {
 		need_tar=yes
 	fi
 
+	# We always need to populate KERNEL_LOCALVERSION to be able to warn
+	# if user changed value but didn't rebuild kernel
+	local valid_localversion_pattern='^[A-Za-z0-9_.-]{1,}$'
+
+	if [ -n "${KERNEL_LOCALVERSION}" ]
+	then
+		case "${KERNEL_LOCALVERSION}" in
+			UNSET)
+				;;
+			*)
+				KERNEL_LOCALVERSION=$(arch_replace "${KERNEL_LOCALVERSION}")
+				if [ -z "${KERNEL_LOCALVERSION}" ]
+				then
+					# We somehow lost value...
+					gen_die "Internal error: Variable 'KERNEL_LOCALVERSION' is empty!"
+				fi
+
+				if [[ ! "${KERNEL_LOCALVERSION}" =~ ${valid_localversion_pattern} ]]
+				then
+					gen_die "--kernel-localversion value '${KERNEL_LOCALVERSION}' does not match '${valid_localversion_pattern}' regex!"
+				fi
+				;;
+		esac
+	fi
+
+	if [ -n "${KERNEL_APPEND_LOCALVERSION}" ]
+	then
+		if [[ ! "${KERNEL_APPEND_LOCALVERSION}" =~ ${valid_localversion_pattern} ]]
+		then
+			gen_die "--kernel-append-localversion value '${KERNEL_APPEND_LOCALVERSION}' does not match '${valid_localversion_pattern}' regex!"
+		fi
+
+		if [[ "${KERNEL_LOCALVERSION}" == "UNSET" ]]
+		then
+			gen_die "Cannot append '${KERNEL_APPEND_LOCALVERSION}' to KERNEL_LOCALVERSION you want to unset!"
+		else
+			KERNEL_LOCALVERSION+="${KERNEL_APPEND_LOCALVERSION}"
+		fi
+	fi
+
 	if isTrue "${BUILD_KERNEL}"
 	then
 		if [ "${KERNEL_DIR}" != "${KERNEL_OUTPUTDIR}" -a ! -d "${KERNEL_OUTPUTDIR}" ]
 		then
 			print_warning 3 "Set --kernel-outputdir '${KERNEL_OUTPUTDIR}' does not exist; Will try to create ..."
 			mkdir -p "${KERNEL_OUTPUTDIR}" || gen_die "Failed to create '${KERNEL_OUTPUTDIR}'!"
-		fi
-
-		if [ -n "${KERNEL_LOCALVERSION}" ]
-		then
-			case "${KERNEL_LOCALVERSION}" in
-				UNSET)
-					;;
-				*)
-					KERNEL_LOCALVERSION=$(arch_replace "${KERNEL_LOCALVERSION}")
-					if [ -z "${KERNEL_LOCALVERSION}" ]
-					then
-						# We somehow lost value...
-						gen_die "Internal error: Variable 'KERNEL_LOCALVERSION' is empty!"
-					fi
-
-					local valid_localversion_pattern='^[A-Za-z0-9_.-]{1,}$'
-					if [[ ! "${KERNEL_LOCALVERSION}" =~ ${valid_localversion_pattern} ]]
-					then
-						gen_die "--kernel-localversion value '${KERNEL_LOCALVERSION}' does not match '${valid_localversion_pattern}' regex!"
-					fi
-					;;
-			esac
 		fi
 	fi
 
