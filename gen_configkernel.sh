@@ -27,7 +27,7 @@ determine_kernel_config_file() {
 		then
 			print_info 1 "Default configuration was forced. Will ignore any user kernel configuration!"
 		else
-			kconfig_candidates=( "/etc/kernels/${GK_FILENAME_CONFIG}" ${kconfig_candidates[@]} )
+			kconfig_candidates=( "/etc/kernels/${GK_FILENAME_CONFIG}" "/etc/kernels/kernel-config-${ARCH}-${KV}" ${kconfig_candidates[@]} )
 		fi
 
 		local f

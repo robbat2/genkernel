@@ -86,7 +86,7 @@ determine_KV() {
 determine_output_filenames() {
 	print_info 5 '' 1 0
 
-	GK_FILENAME_CONFIG="kernel-config-${ARCH}-${KV}"
+	GK_FILENAME_CONFIG="kernel-config-${KV}"
 	GK_FILENAME_KERNELZ="kernelz-${KV}"
 	GK_FILENAME_TEMP_CONFIG="config-${ARCH}-${KV}"
 	GK_FILENAME_TEMP_INITRAMFS="initramfs-${ARCH}-${KV}"
@@ -290,7 +290,7 @@ determine_real_args() {
 	set_config_with_override STRING CROSS_COMPILE                         CMD_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR                               CMD_BOOTDIR                               "/boot"
 	set_config_with_override STRING KERNEL_OUTPUTDIR                      CMD_KERNEL_OUTPUTDIR                      "${KERNEL_DIR}"
-	set_config_with_override STRING KERNEL_LOCALVERSION                   CMD_KERNEL_LOCALVERSION
+	set_config_with_override STRING KERNEL_LOCALVERSION                   CMD_KERNEL_LOCALVERSION                   "-%%ARCH%%"
 	set_config_with_override STRING MODPROBEDIR                           CMD_MODPROBEDIR                           "/etc/modprobe.d"
 
 	set_config_with_override BOOL   SPLASH                                CMD_SPLASH                                "no"
@@ -644,6 +644,13 @@ determine_real_args() {
 				UNSET)
 					;;
 				*)
+					KERNEL_LOCALVERSION=$(arch_replace "${KERNEL_LOCALVERSION}")
+					if [ -z "${KERNEL_LOCALVERSION}" ]
+					then
+						# We somehow lost value...
+						gen_die "Internal error: Variable 'KERNEL_LOCALVERSION' is empty!"
+					fi
+
 					local valid_localversion_pattern='^[A-Za-z0-9_.-]{1,}$'
 					if [[ ! "${KERNEL_LOCALVERSION}" =~ ${valid_localversion_pattern} ]]
 					then

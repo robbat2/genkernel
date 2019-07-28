@@ -247,6 +247,16 @@ then
 			print_warning 1 "Unable to copy the kernel configuration file; Ignoring non-fatal error ..."
 			# Just a warning because ordinary users are not allowed to write in /etc
 	fi
+elif [[ -n "${KERNEL_LOCALVERSION}" && "${KERNEL_LOCALVERSION}" != "${LOV}" ]]
+then
+	if [[ "${KERNEL_LOCALVERSION}" == "UNSET" && -z "${LOV}" ]]
+	then
+		# LOV is already unset...
+		:
+	else
+		print_warning 1 '' 1 0
+		print_warning 1 "Current kernel's LOCALVERSION is set to '${LOV}'; Will ignore set --kernel-localversion value '${KERNEL_LOCALVERSION}' because kernel was not build ..."
+	fi
 fi
 
 if isTrue "${CMD_INSTALL}"

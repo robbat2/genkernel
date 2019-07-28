@@ -125,8 +125,19 @@ KERNEL CONFIGURATION
     Adds, or skip adding VirtIO support to kernel configuration.
 
 *--kernel-localversion*=<...>::
-    Set kernel option CONFIG_LOCALVERSION. Use special value "UNSET" to
-    unset any already set LOCALVERSION.
+Set kernel option *LOCALVERSION*. Use special value *UNSET* to
+unset any already set *LOCALVERSION*. The following placeholders are
+available:
++
+[horizontal]
+*%%ARCH%%*:::
+Will be replaced with genkernel arch value, for example 'x86_64'.
+
++
+*LOCALVERSION* is only allowed to contain characters like 'a-z' or 'A-Z',
+'0-9', '_', '.' and '-'.
++
+By default, *LOCALVERSION* will be set to '-%%ARCH%%'.
 
 
 KERNEL COMPILATION
@@ -437,7 +448,7 @@ Set initramfs filename which will be used when initramfs will be installed
 into *BOOTDIR* (implies *--install* option). Please see
 *--kernel-filename* option for available placeholders and restrictions.
 +
-By default, initramfs filename will be set to 'initramfs-genkernel-%%ARCH%%-%%KV%%'.
+By default, initramfs filename will be set to 'initramfs-%%KV%%.img'.
 
 *--initramfs-symlink-name*=<...>::
 Set initramfs symlink name which will be used when initramfs will be
@@ -477,7 +488,7 @@ Will be replaced with kernel version, for example '5.2.3-gentoo'.
 Kernel filename is only allowed to contain characters like 'a-z' or 'A-Z',
 '0-9', '_', '.' and '-'.
 +
-By default, kernel name will be set to 'kernel-genkernel-%%ARCH%%-%%KV%%'.
+By default, kernel name will be set to 'vmlinuz-%%KV%%'.
 
 NOTE: When setting a custom kernel name make sure that your bootloader and
 tools like *kexec* when used are recognizing your custom kernel name.
@@ -502,7 +513,7 @@ Set System.map filename which will be used when kernel will be installed
 into *BOOTDIR* (implies *--install* option). Please see
 *--kernel-filename* option for available placeholders and restrictions.
 +
-By default, System.map filename will be set to 'System.map-genkernel-%%ARCH%%-%%KV%%'.
+By default, System.map filename will be set to 'System.map-%%KV%%'.
 
 *--systemmap-symlink-name*=<...>::
 Set System.map symlink name which will be used when kernel will be
