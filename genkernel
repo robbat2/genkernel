@@ -407,11 +407,15 @@ then
 		esac
 	else
 		print_info 1 ''
-		print_info 1 "You will find the kernel image in '${TMPDIR}/${GK_FILENAME_TEMP_KERNEL}'."
 
-		if isTrue "${GENZIMAGE}"
+		if ! isTrue "${KERNCACHE_IS_VALID}"
 		then
-			print_info 1 "You will find the kernelz binary in '${TMPDIR}/${GK_FILENAME_TEMP_KERNELZ}'."
+			print_info 1 "You will find the kernel image in '${TMPDIR}/${GK_FILENAME_TEMP_KERNEL}'."
+
+			if isTrue "${GENZIMAGE}"
+			then
+				print_info 1 "You will find the kernelz binary in '${TMPDIR}/${GK_FILENAME_TEMP_KERNELZ}'."
+			fi
 		fi
 
 		if isTrue "${BUILD_RAMDISK}"
@@ -420,13 +424,16 @@ then
 		fi
 	fi
 
-	print_info 1 ''
-	print_info 1 'Required kernel parameter:'
-	print_info 1 ''
-	print_info 1 '	root=/dev/$ROOT'
-	print_info 1 ''
-	print_info 1 'Where $ROOT is the device node for your root partition as the'
-	print_info 1 'one specified in /etc/fstab'
+	if isTrue "${CMD_INSTALL}" || ! isTrue "${KERNCACHE_IS_VALID}"
+	then
+		print_info 1 ''
+		print_info 1 'Required kernel parameter:'
+		print_info 1 ''
+		print_info 1 '	root=/dev/$ROOT'
+		print_info 1 ''
+		print_info 1 'Where $ROOT is the device node for your root partition as the'
+		print_info 1 'one specified in /etc/fstab'
+	fi
 
 	if isTrue "${show_warning_initramfs_is_required}" && isTrue "${BUILD_RAMDISK}"
 	then
