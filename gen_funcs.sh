@@ -595,6 +595,7 @@ dropbear_create_key() {
 		"LOGLEVEL='${LOGLEVEL}'"
 		"LOGFILE='${LOGFILE}'"
 		"NOCOLOR='${NOCOLOR}'"
+		"PATH='${PATH}'"
 		"TEMP='${TEMP}'"
 	)
 
@@ -670,6 +671,7 @@ dropbear_generate_key_info_file() {
 		"LOGLEVEL='${LOGLEVEL}'"
 		"LOGFILE='${LOGFILE}'"
 		"NOCOLOR='${NOCOLOR}'"
+		"PATH='${PATH}'"
 		"TEMP='${TEMP}'"
 	)
 
@@ -1197,6 +1199,7 @@ gkbuild() {
 		"LOGLEVEL='${LOGLEVEL}'"
 		"LOGFILE='${LOGFILE}'"
 		"NOCOLOR='${NOCOLOR}'"
+		"PATH='${PATH}'"
 		"TEMP='${TEMP}'"
 		"TMPDIR='${TEMP}'"
 	)
@@ -1285,6 +1288,7 @@ unpack() {
 		"LOGLEVEL='${LOGLEVEL}'"
 		"LOGFILE='${LOGFILE}'"
 		"NOCOLOR='${NOCOLOR}'"
+		"PATH='${PATH}'"
 		"TEMP='${TEMP}'"
 	)
 
