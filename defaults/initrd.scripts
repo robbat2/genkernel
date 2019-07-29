@@ -1727,10 +1727,23 @@ start_network() {
 
 		warn_msg "Will not try to start network ..."
 		return 1
+	elif [ "${interface_identifier}" = 'mac' ]
+	then
+		good_msg "Interface detected as ${GK_NET_IFACE}"
 	fi
 
 	if [ -z "${IP}" -o "${IP}" = 'dhcp' ]
 	then
+		if is_interface_up
+		then
+			# CONFIG_IP_PNP_DHCP and ip=dhcp probably caused kernel to bring up
+			# network for us. Really no need re-run dhcp...
+			warn_msg "Interface ${GK_NET_IFACE} is already up."
+			warn_msg "Skipping network setup; Will use existing network configuration ..."
+			touch "${GK_NET_LOCKFILE}"
+			return 0
+		fi
+
 		good_msg "Bringing up interface ${GK_NET_IFACE} using dhcp ..." ${QUIET}
 		busybox udhcpc -i "${GK_NET_IFACE}" -n -t ${GK_NET_DHCP_RETRIES} -T ${GK_NET_TIMEOUT_DHCP} -R -p "${GK_NET_DHCP_PIDFILE}"
 		if [ $? -ne 0 ]
@@ -1739,6 +1752,15 @@ start_network() {
 			return 1
 		fi
 	else
+		if is_interface_up
+		then
+			# At this point we don't know if kernel has brought up network the
+			# way we wanted. It's safer to restart interface and do it on our own...
+			warn_msg "Interface ${GK_NET_IFACE} is already up and therefore in an unknown state!"
+			warn_msg "Will now restart interface ${GK_NET_IFACE} to get into a known state ..."
+			kill_network
+		fi
+
 		good_msg "Bringing up interface ${GK_NET_IFACE} ..." ${QUIET}
 		ip link set "${GK_NET_IFACE}" up
 
@@ -1835,7 +1857,16 @@ kill_network() {
 		return
 	fi
 
-	rm "${GK_NET_LOCKFILE}"
+	[ -f "${GK_NET_LOCKFILE}" ] && rm "${GK_NET_LOCKFILE}"
+}
+
+is_interface_up() {
+	if ip link show dev "${GK_NET_IFACE}" 2>/dev/null | grep -q ',UP,'
+	then
+		return 0
+	else
+		return 1
+	fi
 }
 
 ipv6_tentative() {
