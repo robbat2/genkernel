@@ -680,6 +680,12 @@ determine_real_args() {
 
 	if isTrue "${BUILD_KERNEL}"
 	then
+		if isTrue "$(has_space_characters "${KERNEL_OUTPUTDIR}")"
+		then
+			# Kernel Makefile doesn't support spaces in outputdir path...
+			gen_die "--kernel-outputdir '${KERNEL_OUTPUTDIR}' contains space character(s) which are not supported!"
+		fi
+
 		if [ "${KERNEL_DIR}" != "${KERNEL_OUTPUTDIR}" -a ! -d "${KERNEL_OUTPUTDIR}" ]
 		then
 			print_warning 3 "Set --kernel-outputdir '${KERNEL_OUTPUTDIR}' does not exist; Will try to create ..."
