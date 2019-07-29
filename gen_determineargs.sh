@@ -380,6 +380,13 @@ determine_real_args() {
 
 	dump_debugcache
 
+	if isTrue "$(has_space_characters "${TMPDIR}")"
+	then
+		# Packages like util-linux will fail to compile when path to
+		# build dir contains spaces
+		gen_die "--tmpdir '${TMPDIR}' contains space character(s) which are not supported!"
+	fi
+
 	if [ ! -d "${TMPDIR}" ]
 	then
 		mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"

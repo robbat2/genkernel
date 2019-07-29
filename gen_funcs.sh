@@ -209,6 +209,22 @@ can_run_programs_compiled_by_genkernel() {
 	echo "${can_run_programs}"
 }
 
+has_space_characters() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local testvalue=${1}
+	local has_space_characters=no
+
+	local space_pattern='[[:space:]]'
+	if [[ "${testvalue}" =~ ${space_pattern} ]]
+	then
+		has_space_characters=yes
+	fi
+
+	echo "${has_space_characters}"
+}
+
 is_gzipped() {
 	[[ ${#} -ne 1 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
