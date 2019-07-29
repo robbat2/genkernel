@@ -622,7 +622,7 @@ gkconf() {
 		fi
 
 		if [[ ${conf_help} == *--with-sysroot* ]]; then
-			conf_args+=( --with-sysroot="${BROOT}/usr:${SYSROOT}" )
+			conf_args+=( "--with-sysroot='${BROOT}/usr:${SYSROOT}'" )
 		fi
 
 		# Handle arguments containing quoted whitespace (see bug #457136).
