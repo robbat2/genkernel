@@ -2011,7 +2011,12 @@ cleanup() {
 
 	if [ -f "${GK_NET_LOCKFILE}" ]
 	then
-		kill_network
+		if [ "${REAL_ROOT}" = "/dev/nfs" ]
+		then
+			warn_msg "real_root=/dev/nfs; Will not bring down interface ${GK_NET_IFACE} ..."
+		else
+			kill_network
+		fi
 	fi
 }
 
