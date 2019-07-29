@@ -437,8 +437,7 @@ populate_binpkg() {
 
 	local REQUIRED_BINPKGS_PARENT_VARNAME="CHECK_L${CHECK_LEVEL_PARENT}_REQUIRED_BINPKGS"
 	local REQUIRED_BINPKGS_CURRENT_VARNAME="CHECK_L${CHECK_LEVEL_CURRENT}_REQUIRED_BINPKGS"
-	local REQUIRED_BINPKGS_CURRENT_VARNAME_SEPARATE_WORD="${REQUIRED_BINPKGS_CURRENT_VARNAME}[@]"
-	local REQUIRED_BINPKGS_CURRENT_VARNAME_SINGLE_WORD="${REQUIRED_BINPKGS_CURRENT_VARNAME}[*]"
+	local -n REQUIRED_BINPKGS_CURRENT_VARNAME_ref="${REQUIRED_BINPKGS_CURRENT_VARNAME}"
 
 	# Make sure we start with an empty array just in case ...
 	eval declare -ga ${REQUIRED_BINPKGS_CURRENT_VARNAME}=\(\)
@@ -523,7 +522,7 @@ populate_binpkg() {
 	if [[ -f "${BINPKG}" ]]
 	then
 		local required_binpkg=
-		for required_binpkg in "${!REQUIRED_BINPKGS_CURRENT_VARNAME_SEPARATE_WORD}"
+		for required_binpkg in "${REQUIRED_BINPKGS_CURRENT_VARNAME_ref[@]}"
 		do
 			# Create shorter variable value so we do not clutter output
 			local required_binpkg_filename=$(basename "${required_binpkg}")
@@ -537,7 +536,7 @@ populate_binpkg() {
 
 			print_info 3 "${CHECK_LEVEL_PREFIX}Existing ${P} binpkg is newer than '${required_binpkg_filename}'; Skipping ..."
 		done
-		unset required_binpkg REQUIRED_BINPKGS_CURRENT_VARNAME_SEPARATE_WORD required_binpkg_filename
+		unset required_binpkg required_binpkg_filename
 	fi
 
 	if [[ -f "${BINPKG}" ]]
@@ -562,13 +561,22 @@ populate_binpkg() {
 	if [[ ! -f "${BINPKG}" ]]
 	then
 		print_info 3 "${CHECK_LEVEL_PREFIX}Binpkg '${BINPKG}' does NOT exist; Need to build ${P} ..."
+
+		local required_binpkgs=
+		local required_binpkg=
+		for required_binpkg in "${REQUIRED_BINPKGS_CURRENT_VARNAME_ref[@]}"
+		do
+			required_binpkgs+="${required_binpkg};"
+		done
+		unset required_binpkg required_binpkg_filename
+
 		gkbuild \
 			${PN} \
 			${PV} \
 			$(get_gkpkg_srcdir "${PN}") \
 			$(get_gkpkg_srctar "${PN}") \
 			"${BINPKG}" \
-			"${!REQUIRED_BINPKGS_CURRENT_VARNAME_SINGLE_WORD}"
+			"${required_binpkgs}"
 	else
 		print_info 3 "${CHECK_LEVEL_PREFIX}Can keep using existing ${P} binpkg from '${BINPKG}'!"
 		[[ ${CHECK_LEVEL_CURRENT} -eq 0 ]] && print_info 2 "$(get_indent 2)${PN}: >> Using ${P} binpkg ..."
@@ -581,7 +589,7 @@ populate_binpkg() {
 		unset CHECK_L${CHECK_LEVEL_PARENT}_REQUIRED_BINPKGS
 	else
 		print_info 3 "${CHECK_LEVEL_PREFIX}Binpkg of ${P} is ready; Adding to list '${REQUIRED_BINPKGS_PARENT_VARNAME}' ..."
-		eval ${REQUIRED_BINPKGS_PARENT_VARNAME}+=\( "${BINPKG}" \)
+		eval ${REQUIRED_BINPKGS_PARENT_VARNAME}+=\( \"${BINPKG}\" \)
 	fi
 
 	# REQUIRED_BINPKGS_CURRENT_VARNAME

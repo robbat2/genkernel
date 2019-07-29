@@ -284,8 +284,7 @@ _initialize() {
 
 	if [[ -n "${GKPKG_DEPS}" ]]
 	then
-		# GKPKG_DEPS is ${ARRAY[*]} value (single word), not ${ARRAY[@]} (separate word)!
-		GKPKG_DEPS=( ${GKPKG_DEPS} )
+		IFS=';' read -r -a GKPKG_DEPS <<< "${GKPKG_DEPS}"
 		local GKPKG_DEP=
 		for GKPKG_DEP in "${GKPKG_DEPS[@]}"
 		do
