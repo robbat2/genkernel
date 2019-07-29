@@ -1233,6 +1233,19 @@ gkbuild() {
 		"STRIP='$(tc-getSTRIP)'"
 	)
 
+	local envvar_prefix envvars_to_export envvar_to_export
+	for envvar_prefix in CCACHE_ DISTCC_
+	do
+		envvars_to_export=$(compgen -A variable | grep "^${envvar_prefix}")
+		for envvar_to_export in ${envvars_to_export}
+		do
+			[ -z "${envvar_to_export}" ] && break
+
+			envvars+=( "${envvar_to_export}='${!envvar_to_export}'" )
+		done
+	done
+	unset envvar_prefix envvars_to_export envvar_to_export
+
 	if [ ${NICE} -ne 0 ]
 	then
 		NICEOPTS="nice -n${NICE} "
