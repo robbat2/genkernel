@@ -44,10 +44,10 @@ determine_KV() {
 		[ -f "${KERNEL_OUTPUTDIR}/include/linux/utsrelease.h" ] && \
 			VERSION_SOURCE="${KERNEL_OUTPUTDIR}/include/linux/utsrelease.h"
 		# Handle new-style releases where version.h doesn't have UTS_RELEASE
-		if [ -f ${KERNEL_OUTPUTDIR}/include/config/kernel.release ]
+		if [ -f "${KERNEL_OUTPUTDIR}/include/config/kernel.release" ]
 		then
 			print_info 3 "Using '${KERNEL_OUTPUTDIR}/include/config/kernel.release' to extract LOCALVERSION ..."
-			UTS_RELEASE=$(cat ${KERNEL_OUTPUTDIR}/include/config/kernel.release)
+			UTS_RELEASE=$(cat "${KERNEL_OUTPUTDIR}/include/config/kernel.release")
 			LOV=$(echo ${UTS_RELEASE}|sed -e "s/${VER}.${PAT}.${SUB}${EXV}//")
 			KV=${VER}.${PAT}.${SUB}${EXV}${LOV}
 		elif [ -n "${VERSION_SOURCE}" ]
