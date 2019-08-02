@@ -236,7 +236,7 @@ compile_modules() {
 		local -x INSTALL_MOD_STRIP=1
 	else
 		print_info 1 "$(get_indent 1)>> Installing ${KV} modules ..."
-		local -x INSTALL_MOD_STRIP=0
+		unset INSTALL_MOD_STRIP
 	fi
 
 	compile_generic "modules_install" kernel
