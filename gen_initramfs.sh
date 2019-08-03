@@ -1806,15 +1806,14 @@ create_initramfs() {
 				print_info 1    "$(get_indent 2)                 ${BOLD}Note:${NORMAL} You can set --no-microcode-initramfs if you load microcode on your own"
 			fi
 
-			if ! isTrue "${WRAP_INITRD}" && [[ "${MICROCODE}" == intel ]]
+			if ! isTrue "${WRAP_INITRD}"
 			then
-				# Only show this information for Intel users because we have no mechanism yet
-				# to generate amd-*.img in /boot after sys-kernel/linux-firmware update
 				print_info 1 ''
 				print_info 1 "${BOLD}Note:${NORMAL}"
 				print_info 1 '--microcode-initramfs option is enabled by default for backward compatability.'
 				print_info 1 'If your bootloader can load multiple initramfs it is recommended to load'
-				print_info 1 '/boot/intel-uc.img instead of embedding microcode into initramfs.'
+				print_info 1 '/boot/{amd,intel}-uc.img instead of embedding microcode into initramfs so you'
+				print_info 1 'can update microcode via package update independently of initramfs updates.'
 			fi
 		else
 			print_info 3 "$(get_indent 1)>> --no-microcode-initramfs is set; Skipping early-microcode support ..."
