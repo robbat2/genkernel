@@ -640,7 +640,7 @@ determine_real_args() {
 
 	# We always need to populate KERNEL_LOCALVERSION to be able to warn
 	# if user changed value but didn't rebuild kernel
-	local valid_localversion_pattern='^[A-Za-z0-9_.-]{1,}$'
+	local valid_localversion_pattern='^[A-Za-z0-9_.+-]{1,}$'
 
 	if [ -n "${KERNEL_LOCALVERSION}" ]
 	then
