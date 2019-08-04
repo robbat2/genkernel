@@ -36,6 +36,8 @@ compile_external_modules() {
 		return
 	fi
 
+	local -x KV_OUT_DIR="${KERNEL_OUTPUTDIR}"
+
 	print_info 1 "$(get_indent 1)>> Compiling out-of-tree module(s) ..."
 	print_info 3 "COMMAND: ${command}" 1 0 1
 
