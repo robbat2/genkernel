@@ -229,7 +229,7 @@ determine_output_filenames() {
 	filename_vars+=( 'GK_FILENAME_SYSTEMMAP;--systemmap-filename' )
 	filename_vars+=( 'GK_FILENAME_SYSTEMMAP_SYMLINK;--systemmap-symlink-name' )
 
-	local valid_filename_pattern='^[a-zA-Z0-9_.-]{1,}$'
+	local valid_filename_pattern='^[a-zA-Z0-9_.+-]{1,}$'
 	local filename_combo filename_varname filename_option
 
 	for filename_combo in "${filename_vars[@]}"
