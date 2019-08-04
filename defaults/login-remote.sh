@@ -66,22 +66,32 @@ then
 			exit 1
 	esac
 else
+	gk_ver="$(cat /etc/build_id)"
+	gk_build_date="$(cat /etc/build_date)"
+	kernel_ver="$(uname -r)"
+
 	export PS1='remote rescueshell \w \# '
 	touch "${GK_SSHD_LOCKFILE}"
-	good_msg "The lockfile '${GK_SSHD_LOCKFILE}' was created."
-	good_msg "In order to resume boot process, run 'resume-boot'."
-	good_msg "Be aware that it will kill your connection which means"
-	good_msg "you will no longer be able work in this shell."
+
+	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${gk_ver}${NORMAL} (${gk_build_date}) ${BOLD}remote rescue shell${NORMAL}!"
+	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${kernel_ver}${NORMAL}"
+	echo
+	good_msg "${NORMAL}The lockfile '${BOLD}${GK_SSHD_LOCKFILE}${NORMAL}' was created."
+	good_msg "${NORMAL}In order to resume boot process, run '${BOLD}resume-boot${NORMAL}'."
+	good_msg "${NORMAL}Be aware that it will kill your connection which means"
+	good_msg "${NORMAL}you will no longer be able to work in this shell."
 
 	if [ -n "${CRYPT_ROOT}" -a ! -f "${CRYPT_ROOT_OPENED_LOCKFILE}" ]
 	then
-		good_msg "To remote unlock LUKS-encrypted root device, run 'unlock-luks root'."
+		good_msg "${NORMAL}To remote unlock LUKS-encrypted root device, run '${BOLD}unlock-luks root${NORMAL}'."
 	fi
 
 	if [ -n "${CRYPT_SWAP}" -a ! -f "${CRYPT_ROOT_OPENED_LOCKFILE}" ]
 	then
-		good_msg "To remote unlock LUKS-encrypted swap device, run 'unlock-luks swap'."
+		good_msg "${NORMAL}To remote unlock LUKS-encrypted swap device, run '${BOLD}unlock-luks swap${NORMAL}'."
 	fi
+
+	echo
 
 	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
 	exec ${SH} --login

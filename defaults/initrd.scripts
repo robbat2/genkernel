@@ -809,6 +809,11 @@ run_shell() {
 
 	export PS1='rescueshell \w \# '
 
+	echo
+	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${gk_ver}${NORMAL} (${gk_build_date}) ${BOLD}rescue shell${NORMAL}!"
+	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${kernel_ver}${NORMAL}"
+	echo
+
 	if [ -n "${CONSOLE}" ] && [ -c "/dev/${CONSOLE}" ]
 	then
 		setsid ${SH} -c "exec sh --login </dev/${CONSOLE} >/dev/${CONSOLE} 2>&1"
