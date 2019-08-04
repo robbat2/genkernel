@@ -222,10 +222,10 @@ determine_output_filenames() {
 	fi
 
 	local -a filename_vars
-	filename_vars+=( 'GK_FILENAME_INITRAMFS;--initramfs-filename' )
-	filename_vars+=( 'GK_FILENAME_INITRAMFS_SYMLINK;--initramfs-symlink-name' )
 	filename_vars+=( 'GK_FILENAME_KERNEL;--kernel-filename' )
 	filename_vars+=( 'GK_FILENAME_KERNEL_SYMLINK;--kernel-symlink-name' )
+	filename_vars+=( 'GK_FILENAME_INITRAMFS;--initramfs-filename' )
+	filename_vars+=( 'GK_FILENAME_INITRAMFS_SYMLINK;--initramfs-symlink-name' )
 	filename_vars+=( 'GK_FILENAME_SYSTEMMAP;--systemmap-filename' )
 	filename_vars+=( 'GK_FILENAME_SYSTEMMAP_SYMLINK;--systemmap-symlink-name' )
 
