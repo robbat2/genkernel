@@ -1152,6 +1152,10 @@ waitForZFS() {
 	exit 1
 }
 
+splash() {
+	return 0
+}
+
 start_volumes() {
 	# Here, we check for /dev/device-mapper, and if it exists, we setup a
 	# a symlink, which should hopefully fix bug #142775 and bug #147015

@@ -5,10 +5,6 @@
 . /etc/initrd.scripts
 . "${CRYPT_ENV_FILE}"
 
-splash() {
-	return 0
-}
-
 [ -e /etc/initrd.splash ] && . /etc/initrd.splash
 
 receivefile() {

@@ -4,10 +4,6 @@ print_usage() {
 	echo "Usage: $0 root|swap" >&2
 }
 
-splash() {
-	return 0
-}
-
 if [ -z "${1}" ]
 then
 	print_usage

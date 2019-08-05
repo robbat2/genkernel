@@ -3,10 +3,6 @@
 . /etc/initrd.defaults
 . /etc/initrd.scripts
 
-splash() {
-	return 0
-}
-
 [ -e /etc/initrd.splash ] && . /etc/initrd.splash
 
 # Basic /dev content, we need it as fast as possible.
