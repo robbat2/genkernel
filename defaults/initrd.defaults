@@ -70,6 +70,7 @@ CDROOT_MARKER='/livecd'
 VERIFY=0
 
 IP='dhcp'
+GK_DEBUGMODE_STATEFILE="/tmp/debug.enabled"
 GK_NET_DHCP_PIDFILE='/var/run/udhcpc.pid'
 GK_NET_DHCP_RETRIES=3
 GK_NET_GW=

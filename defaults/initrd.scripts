@@ -49,7 +49,7 @@ modules_scan() {
 				break
 			fi
 
-			if [ -n "${DEBUG}" ]
+			if is_debug
 			then
 				printf "%b" "${BOLD}   ::${NORMAL} "
 				printf "%b" "Scanning for ${x} ..."
@@ -58,12 +58,12 @@ modules_scan() {
 			modprobe ${x} >/dev/null 2>&1
 			loaded=${?}
 
-			[ -n "${DEBUG}" -a "${loaded}" = "0" ] && \
+			is_debug && [ "${loaded}" = "0" ] && \
 				echo "loaded"
-			[ -n "${DEBUG}" -a "${loaded}" != "0" ] && \
+			is_debug && [ "${loaded}" != "0" ] && \
 				echo "not loaded"
 
-			[ -z "${DEBUG}" -a "${loaded}" = "0" ] && \
+			! is_debug && [ "${loaded}" = "0" ] && \
 				[ -z "${QUIET}" ] && \
 				printf "%b" "${x} "
 		else
@@ -460,6 +460,17 @@ conf_rc_no_umounts() {
 		printf 'no_umounts="%s"\n' "${no_umounts}" >> ${conf}
 		test_success "Unable to write to /etc/conf.d/localmount"
 	fi
+}
+
+is_debug() {
+	is_debug=1
+
+	if [ -f "${GK_DEBUGMODE_STATEFILE}" ]
+	then
+		is_debug=0
+	fi
+
+	return ${is_debug}
 }
 
 # is_int "${A}" ["${B}"..]
@@ -880,7 +891,7 @@ test_success() {
 # $2 hide flag
 
 good_msg() {
-	[ -n "${QUIET}" ] && [ -z "${DEBUG}" ] && return 0
+	[ -n "${QUIET}" ] && ! is_debug && return 0
 
 	msg_string=${1}
 	msg_string="${msg_string:-...}"
@@ -888,7 +899,7 @@ good_msg() {
 }
 
 good_msg_n() {
-	[ -n "${QUIET}" ] && [ -z "${DEBUG}" ] && return 0
+	[ -n "${QUIET}" ] && ! is_debug && return 0
 
 	msg_string=${1}
 	msg_string="${msg_string:-...}"
@@ -1943,7 +1954,7 @@ start_sshd() {
 	# setup environment variables for the ssh login shell
 	local varname= varvalue=
 	touch "${CRYPT_ENV_FILE}"
-	for varname in CRYPT_ROOT CRYPT_ROOT_TRIM CRYPT_SILENT CRYPT_SWAP DEBUG
+	for varname in CRYPT_ROOT CRYPT_ROOT_TRIM CRYPT_SILENT CRYPT_SWAP
 	do
 		eval varvalue=\$${varname}
 		echo "${varname}=${varvalue}" >> "${CRYPT_ENV_FILE}"
@@ -2106,12 +2117,15 @@ setup_md_device() {
 }
 
 rundebugshell() {
-	if [ -n "${DEBUG}" ]
+	if is_debug
 	then
 		good_msg 'Starting debug shell as requested by "debug" option.'
-		good_msg "Stopping by: ${1}"
-		run_shell
+	else
+		return 0
 	fi
+
+	good_msg "Stopping by: ${1}"
+	run_shell
 }
 
 do_resume() {

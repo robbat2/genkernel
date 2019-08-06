@@ -106,7 +106,7 @@ main() {
 
 	if [ -s "${LUKS_KEY}" ]
 	then
-		if  [ "${DEBUG}" != 'yes' ]
+		if  ! is_debug
 		then
 			rm -f "${LUKS_KEY}"
 		else
