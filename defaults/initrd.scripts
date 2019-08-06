@@ -1108,12 +1108,30 @@ prompt_user() {
 	bad_msg '- type "shell" for a shell'
 	bad_msg '- type "q" to skip ...'
 	printf "%s" "${2}(${oldvalue}) :: "
-	read ${1}
-	#if [ $? -gt 0 ]
-	#then
-	#	# prompt timed out
-	#	printf "\n"
-	#fi
+
+	if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
+	then
+		read ${1}
+	else
+		local read_timeout_timestamp
+		let read_timeout_timestamp=$(date +%s)+${GK_PROMPT_TIMEOUT}
+
+		echo "# Could not find the ${2} in ${oldvalue}${explnt}" > "${GK_PROMPT_FILE}"
+		echo "# Please specify another value (file will be processed at $(date -d @${read_timeout_timestamp}):" >> "${GK_PROMPT_FILE}"
+		echo "${1}=${oldvalue}" >> "${GK_PROMPT_FILE}"
+		read -t ${GK_PROMPT_TIMEOUT} ${1}
+		if [ $? -gt 0 ]
+		then
+			# prompt timed out
+			printf "\n"
+
+			if [ -f "${GK_PROMPT_FILE}" ]
+			then
+				warn_msg "Timeout! Trying to read answer from '${GK_PROMPT_FILE}' ..."
+				. "${GK_PROMPT_FILE}" && run rm "${GK_PROMPT_FILE}"
+			fi
+		fi
+	fi
 
 	case $(eval echo '$'${1}) in
 		'q')
@@ -2143,6 +2161,12 @@ start_sshd() {
 	then
 		warn_msg "Network not started; Not starting sshd ..."
 		return
+	fi
+
+	if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
+	then
+		warn_msg "Changing gk.prompt.timeout=0 to 30 ..."
+		GK_PROMPT_TIMEOUT=30
 	fi
 
 	if [ ! -x "/usr/sbin/dropbear" ]

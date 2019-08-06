@@ -687,6 +687,15 @@ recognized by the kernel itself.
 *gk.net.timeout.interface*=<...>::
     By default we will wait up to 10 seconds for interface to show up.
 
+*gk.prompt.timeout*=<...>::
+By default a prompt within genkernel initramfs like shown when set
+*root* could not be found will never timeout. Use this option to set
+a timeout.
+
+NOTE: When *dosshd* is used, *gk.prompt.timeout* will be set to 30 seconds
+when not set. This will allow remote user to provide answer through
+*GK_PROMPT_FILE* which is set to '/tmp/current_prompt' by default.
+
 *dosshd*::
     Will bring up an interface and start a SSH daemon within initramfs
     allowing to remotely unlock encrypted devices or just for debugging

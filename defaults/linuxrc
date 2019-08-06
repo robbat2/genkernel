@@ -336,6 +336,16 @@ do
 			fi
 			unset tmp_wait
 		;;
+		gk.prompt.timeout=*)
+			tmp_timeout=${x#*=}
+			if is_int "${tmp_timeout}"
+			then
+				GK_PROMPT_TIMEOUT=${tmp_timeout}
+			else
+				warn_msg "'${x}' does not look like a valid time (second) value -- ignored!"
+			fi
+			unset tmp_timeout
+		;;
 		real_rootflags=*)
 			REAL_ROOTFLAGS=${x#*=}
 		;;
