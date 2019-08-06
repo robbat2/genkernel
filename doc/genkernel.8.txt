@@ -760,6 +760,22 @@ recognized by the kernel itself.
 *debug*::
     Drop into a debug shell early in the process.
 
+*gk.log.disabled*=<...>::
+    By default, any shown message and external command calls will be logged
+    to '/tmp/init.log' in initramfs. This boolean option allows you to
+    disable logging for some reason.
+
+*gk.log.keep*=<...>::
+When set to a boolean value, genkernel will preserve '/tmp/init.log',
+see above, and copy file to '/genkernel-boot.log' on *root* device.
+You can also set your own file like '/root/my-genkernel-boot.log' to
+copy log to a custom path.
+
+NOTE: The default file '/genkernel-boot.log' on *root* was chosen because
+genkernel's initramfs will only mount root filesystem by default. If you
+want to store the log file in '/var/log/genkernel-boot.log' for example
+make sure that this mountpoint is accessible, see *initramfs.mounts*.
+
 *noload*=<...>::
     List of modules to skip loading.
     Separate using commas or spaces.

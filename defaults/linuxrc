@@ -28,7 +28,7 @@ then
 	exit 1
 fi
 
-mount -t proc -o noexec,nosuid,nodev proc /proc >/dev/null 2>&1
+run mount -t proc -o noexec,nosuid,nodev proc /proc >/dev/null 2>&1
 mount -o remount,rw / >/dev/null 2>&1
 
 # Prevent superfluous printks from being printed to the console
@@ -37,11 +37,11 @@ echo 1 > /proc/sys/kernel/printk
 if [ ! -s /etc/ld.so.cache ]
 then
 	# Looks like we were unable to run ldconfig during initramfs generation
-	[ -x /sbin/ldconfig ] && /sbin/ldconfig
+	[ -x /sbin/ldconfig ] && run /sbin/ldconfig
 fi
 
 # Set up symlinks
-/bin/busybox --install -s
+run /bin/busybox --install -s
 
 gk_ver="$(cat /etc/build_id)"
 gk_build_date="$(cat /etc/build_date)"
@@ -51,7 +51,7 @@ good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
 
 if [ "$0" = '/init' ]
 then
-	[ -e /linuxrc ] && rm /linuxrc
+	[ -e /linuxrc ] && run rm /linuxrc
 fi
 
 CMDLINE=$(cat /proc/cmdline)
@@ -63,7 +63,7 @@ ROOTFSTYPE='auto'
 CRYPT_SILENT=0
 QUIET=''
 
-mkdir -p /etc/cmdline /etc/modprobe.d
+run mkdir -p /etc/cmdline /etc/modprobe.d
 for x in ${CMDLINE}
 do
 	case "${x}" in
@@ -155,7 +155,7 @@ do
 		;;
 		# Debug Options
 		debug)
-			touch "${GK_DEBUGMODE_STATEFILE}"
+			run touch "${GK_DEBUGMODE_STATEFILE}"
 		;;
 		# Scan delay options
 		scandelay=*)
@@ -274,6 +274,47 @@ do
 		;;
 		dosshd)
 			USE_SSH=1
+		;;
+		gk.log.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				[ -f "${GK_INIT_LOG}" ] && rm "${GK_INIT_LOG}"
+				GK_INIT_LOG=
+				touch "${GK_INIT_LOG_DISABLED}"
+			fi
+			unset tmp_disabled
+		;;
+		gk.log.keep=*)
+			case "${x#*=}" in
+				[Tt][Rr][Uu][Ee])
+					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+				;;
+				[Yy][Ee][Ss])
+					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+				;;
+				[Yy])
+					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+				;;
+				1)
+					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+				;;
+				[Ff][Aa][Ll][Ss][Ee])
+					GK_INIT_LOG_COPYTO=
+				;;
+				[Nn][Oo])
+					GK_INIT_LOG_COPYTO=
+				;;
+				[Nn])
+					GK_INIT_LOG_COPYTO=
+				;;
+				0)
+					GK_INIT_LOG_COPYTO=
+				;;
+				*)
+					GK_INIT_LOG_COPYTO=${x#*=}
+				;;
+			esac
 		;;
 		gk.sshd.port=*)
 			tmp_port=${x#*=}
@@ -442,14 +483,15 @@ mount_devfs
 mount_sysfs
 
 # Initialize mdev
-good_msg 'Activating mdev'
+good_msg 'Activating mdev ...'
 
 # Serialize hotplug events
-touch /dev/mdev.seq
+run touch /dev/mdev.seq
 
 # Setup hotplugging for firmware loading
 if [ -f "/proc/sys/kernel/hotplug" ]
 then
+	log_msg "COMMAND: 'echo /sbin/mdev > /proc/sys/kernel/hotplug'"
 	echo /sbin/mdev > /proc/sys/kernel/hotplug
 fi
 
@@ -459,7 +501,7 @@ then
 	good_msg 'Skipping module load; disabled via commandline'
 elif [ -d "/lib/modules/${KV}" ]
 then
-	good_msg 'Loading modules'
+	good_msg 'Loading modules ...'
 	if [ -n "${FIRSTMODS}" ]
 	then
 		# try these modules first -- detected modules for root device:
@@ -481,7 +523,7 @@ else
 fi
 
 # Ensure that device nodes are properly configured
-mdev -s || bad_msg "mdev -s failed"
+run mdev -s || bad_msg "mdev -s failed"
 
 cd /
 
@@ -561,7 +603,7 @@ then
 	fi
 fi
 
-mkdir -p "${NEW_ROOT}"
+run mkdir -p "${NEW_ROOT}"
 CHROOT="${NEW_ROOT}"
 
 # Run debug shell if requested
@@ -603,12 +645,12 @@ then
 	if [ "${REAL_ROOT}" = '' ] && [ "${got_good_root}" != '1' ]
 	then
 		# Undo stuff
-		umount  "${NEW_ROOT}/dev" 2>/dev/null
-		umount  "${NEW_ROOT}/sys" 2>/dev/null
-		umount /sys 2>/dev/null
+		run umount  "${NEW_ROOT}/dev" 2>/dev/null
+		run umount  "${NEW_ROOT}/sys" 2>/dev/null
+		run umount /sys 2>/dev/null
 
-		umount  "${NEW_ROOT}"
-		rm -rf  "${NEW_ROOT}/*"
+		run umount  "${NEW_ROOT}"
+		run rm -rf  "${NEW_ROOT}/*"
 
 		bad_msg 'Could not find CD to boot, something else needed!'
 		CDROOT=0
@@ -621,7 +663,7 @@ ROOTDELAY_TIME_WAITED=0
 [ -n "${ROOTDELAY}" -a ${ROOTDELAY} -gt 0 ] && let ROOTDELAY_TIMEOUT=${ROOTDELAY_TIMEOUT}+${ROOTDELAY}-1
 while true
 do
-	good_msg_n 'Determining root device ...'
+	good_msg_n "Determining root device (trying ${REAL_ROOT}) ..."
 
 	while [ "${got_good_root}" != '1' ]
 	do
@@ -650,7 +692,7 @@ do
 						got_good_root=1
 						REAL_ROOT="${ROOT_DEV}"
 						echo
-						good_msg "Detected real_root=${ROOT_DEV}"
+						good_msg "Root device detected as ${REAL_ROOT}!"
 						break
 					fi
 				;;
@@ -664,20 +706,20 @@ do
 					ROOT_DEV="${REAL_ROOT#*=}"
 					if [ "${ROOT_DEV}" != 'ZFS' ]
 					then
-						if [ "$(zfs get type -o value -H ${ROOT_DEV})" = 'filesystem' ]
+						if [ "$(zfs get type -o value -H ${ROOT_DEV} 2>/dev/null)" = 'filesystem' ]
 						then
 							got_good_root=1
 							REAL_ROOT=${ROOT_DEV}
 							ROOTFSTYPE=zfs
 							echo
-							good_msg "Detected real_root=${ROOT_DEV}"
+							good_msg "Root device detected as ${REAL_ROOT}!"
 							break
 						else
 							bad_msg "${ROOT_DEV} is not a filesystem"
 							continue
 						fi
 					else
-						BOOTFS=$(/sbin/zpool list -H -o bootfs)
+						BOOTFS=$(/sbin/zpool list -H -o bootfs 2>/dev/null)
 						if [ "${BOOTFS}" != '-' ]
 						then
 							for i in ${BOOTFS}
@@ -689,7 +731,7 @@ do
 									REAL_ROOT=${i}
 									ROOTFSTYPE=zfs
 									echo
-									good_msg "Detected real_root=${ROOT_DEV}"
+									good_msg "Root device detected as ${REAL_ROOT}!"
 									break
 								fi
 							done
@@ -701,7 +743,7 @@ do
 					then
 						got_good_root=1
 						echo
-						good_msg "Detected real_root=${REAL_ROOT}"
+						good_msg "Root device detected as ${REAL_ROOT}!"
 						break
 					fi
 				;;
@@ -732,10 +774,10 @@ do
 			then
 				# at this point we determined dataset and are ready to mount
 				# let's check if this dataset is encrypted and ask for passphrase
-				if [ "$(zpool list -H -o feature@encryption "${REAL_ROOT%%/*}")" = 'active' ]
+				if [ "$(zpool list -H -o feature@encryption "${REAL_ROOT%%/*}" 2>/dev/null)" = 'active' ]
 				then
-					ZFS_KEYSTATUS="$(zfs get -H -o value keystatus "${REAL_ROOT}")"
-					ZFS_ENCRYPTIONROOT="$(zfs get -H -o value encryptionroot "${REAL_ROOT}")"
+					ZFS_KEYSTATUS="$(zfs get -H -o value keystatus "${REAL_ROOT}" 2>/dev/null)"
+					ZFS_ENCRYPTIONROOT="$(zfs get -H -o value encryptionroot "${REAL_ROOT}" 2>/dev/null)"
 					if ! [ "${ZFS_ENCRYPTIONROOT}" = '-' ] || [ "${ZFS_KEYSTATUS}" = 'available' ]
 					then
 						good_msg "Detected ZFS encryption, asking for key"
@@ -796,11 +838,11 @@ do
 			if [ "${REAL_ROOTFLAGS}" = '' ]
 			then
 				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}"
-				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}
+				run mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}
 				mountret=$?
 			else
 				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}"
-				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
+				run mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
 				mountret=$?
 			fi
 		fi
@@ -852,7 +894,7 @@ do
 	then
 		if mountpoint "${NEW_ROOT}" 1>/dev/null 2>&1
 		then
-			umount "${NEW_ROOT}" 1>/dev/null 2>&1
+			run umount "${NEW_ROOT}" 1>/dev/null 2>&1
 			if [ $? -ne 0 ]
 			then
 				echo
@@ -904,7 +946,7 @@ then
 				MOUNTTYPE="${LOOPTYPE}"
 				;;
 		esac
-		mount -t "${MOUNTTYPE}" -o ro /dev/mapper/root "${NEW_ROOT}/mnt/livecd"
+		run mount -t "${MOUNTTYPE}" -o ro /dev/mapper/root "${NEW_ROOT}/mnt/livecd"
 		test_success 'Mount filesystem'
 		FS_LOCATION='mnt/livecd'
 	# Setup the loopback mounts, if unencrypted
@@ -912,7 +954,7 @@ then
 		if [ "${LOOPTYPE}" = 'normal' ]
 		then
 			good_msg 'Mounting loop filesystem'
-			mount -t ext2 -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
+			run mount -t ext2 -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
 			test_success 'Mount filesystem'
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'squashfs' ]
@@ -951,7 +993,7 @@ then
 			echo ' ' | losetup -E 19 -e ucl-0 -p0 "${NEW_ROOT}/dev/loop0" "${CDROOT_PATH}/${LOOPEXT}${LOOP}"
 			test_success 'losetup the loop device'
 
-			mount -t ext2 -o ro "${NEW_ROOT}/dev/loop0" "${NEW_ROOT}/mnt/livecd"
+			run mount -t ext2 -o ro "${NEW_ROOT}/dev/loop0" "${NEW_ROOT}/mnt/livecd"
 			test_success 'Mount the losetup loop device'
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'zisofs' ]
@@ -979,7 +1021,7 @@ then
 			test_success 'losetup /dev/sr0 /dev/loop0'
 
 			good_msg 'Mounting the Root Partition'
-			mount -t squashfs -o ro "${NEW_ROOT}${CDROOT_DEV}" "${NEW_ROOT}/mnt/livecd"
+			run mount -t squashfs -o ro "${NEW_ROOT}${CDROOT_DEV}" "${NEW_ROOT}/mnt/livecd"
 			test_success 'mount /dev/loop0 /'
 			FS_LOCATION='mnt/livecd'
 		fi
@@ -997,7 +1039,7 @@ then
 		then
 			for dir in /var/tmp /tmp
 			do
-				[ ! -d ${CHROOT}${dir} ] && mkdir -p "${CHROOT}${dir}"
+				[ ! -d ${CHROOT}${dir} ] && run mkdir -p "${CHROOT}${dir}"
 			done
 
 			cat > "${CHROOT}/etc/fstab" << FSTAB
@@ -1020,8 +1062,8 @@ FSTAB
 		# Check to see if we successfully mounted $aufs_dev
 		if [ -n "${aufs_dev}" ] && grep ${aufs_dev} /etc/mtab 1>/dev/null
 		then
-			[ ! -d ${CHROOT}${aufs_dev_mnt} ] && mkdir -p "${CHROOT}${aufs_dev_mnt}"
-			mount --move "${aufs_dev_mnt}" "${CHROOT}${aufs_dev_mnt}"
+			[ ! -d ${CHROOT}${aufs_dev_mnt} ] && run mkdir -p "${CHROOT}${aufs_dev_mnt}"
+			run mount --move "${aufs_dev_mnt}" "${CHROOT}${aufs_dev_mnt}"
 		fi
 	fi
 
@@ -1111,10 +1153,10 @@ FSTAB
 	if [ "${aufs}" = '1' ]
 	then
 		[ ! -d "${CHROOT}${CDROOT_PATH}" ] && mkdir "${CHROOT}${CDROOT_PATH}"
-		mount --move "${CDROOT_PATH}" "${CHROOT}${CDROOT_PATH}"
+		run mount --move "${CDROOT_PATH}" "${CHROOT}${CDROOT_PATH}"
 	else
 		[ ! -d "${NEW_ROOT}${CDROOT_PATH}" ] && mkdir -p "${NEW_ROOT}${CDROOT_PATH}"
-		mount --move "${CDROOT_PATH}" "${NEW_ROOT}${CDROOT_PATH}"
+		run mount --move "${CDROOT_PATH}" "${NEW_ROOT}${CDROOT_PATH}"
 	fi
 
 	# Let Init scripts know that we booted from CD
@@ -1123,14 +1165,14 @@ FSTAB
 else
 	if [ "${USE_UNIONFS_NORMAL}" = '1' ]
 	then
-		mkdir /union_changes
-		mount -t tmpfs tmpfs /union_changes
+		run mkdir /union_changes
+		run mount -t tmpfs tmpfs /union_changes
 		setup_unionfs /union_changes ${NEW_ROOT}
-		mkdir -p ${UNION}/tmp/.initrd
+		run mkdir -p ${UNION}/tmp/.initrd
 	elif [ "${aufs}" = '1' ]
 	then
 		aufs_insert_dir "${aufs_union}" "${NEW_ROOT}"
-		mkdir -p "${aufs_union}/tmp/.initrd"
+		run mkdir -p "${aufs_union}/tmp/.initrd"
 	fi
 fi # if [ "${CDROOT}" = '1' ]
 
@@ -1184,19 +1226,19 @@ if [ "${aufs}" = '1' ]
 then
 	aufs_union_memory=${CHROOT}/.unions/memory
 
-	mkdir -p "${aufs_union_memory}"
-	mount --move "${aufs_memory}" "${aufs_union_memory}"
+	run mkdir -p "${aufs_union_memory}"
+	run mount --move "${aufs_memory}" "${aufs_union_memory}"
 	test_success "Failed to move aufs ${aufs_memory} into the system root"
 
 	for dir in /mnt/gentoo ${aufs_rw_branch} ${aufs_ro_branch}
 	do
-		mkdir -p "${CHROOT}${dir}"
-		chmod 755 "${CHROOT}${dir}"
+		run mkdir -p "${CHROOT}${dir}"
+		run chmod 755 "${CHROOT}${dir}"
 	done
 
 	for mount in ${aufs_rw_branch} ${aufs_ro_branch}
 	do
-		mount --move "${mount}" "${CHROOT}${mount}"
+		run mount --move "${mount}" "${CHROOT}${mount}"
 	done
 fi
 
@@ -1225,9 +1267,9 @@ for fs in /dev /sys /proc
 do
 	if grep -qs "${fs}" /proc/mounts
 	then
-		if ! mount -o move ${fs} "${CHROOT}"${fs}
+		if ! run mount -o move ${fs} "${CHROOT}"${fs}
 		then
-			umount ${fs} || \
+			run umount ${fs} || \
 			bad_msg "Failed to move and unmount the ramdisk ${fs}!"
 		fi
 	fi
@@ -1243,6 +1285,8 @@ fi
 
 # Run debug shell if requested
 rundebugshell "before entering switch_root"
+
+preserve_log
 
 # init_opts is set in the environment by the kernel when it parses the command line
 init=${REAL_INIT:-/sbin/init}

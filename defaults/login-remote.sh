@@ -7,6 +7,20 @@
 
 [ -e /etc/initrd.splash ] && . /etc/initrd.splash
 
+GK_INIT_LOG_PREFIX=${0}
+if [ -n "${SSH_CLIENT}" ]
+then
+	SSH_CLIENT_IP=$(echo "${SSH_CLIENT}" | awk '{ print $1 }')
+	SSH_CLIENT_PORT=$(echo "${SSH_CLIENT}" | awk '{ print $2 }')
+
+	if [ -n "${SSH_CLIENT_IP}" ] && [ -n "${SSH_CLIENT_PORT}" ]
+	then
+		GK_INIT_LOG_PREFIX="${0}[${SSH_CLIENT_IP}:${SSH_CLIENT_PORT}]"
+		export SSH_CLIENT_IP
+		export SSH_CLIENT_PORT
+	fi
+fi
+
 receivefile() {
 	case ${1} in
 		root)
@@ -62,12 +76,16 @@ then
 			exit 1
 	esac
 else
+	run touch "${GK_SSHD_LOCKFILE}"
+
+	# Don't log further remote shell output
+	GK_INIT_LOG=
+
 	gk_ver="$(cat /etc/build_id)"
 	gk_build_date="$(cat /etc/build_date)"
 	kernel_ver="$(uname -r)"
 
 	export PS1='remote rescueshell \w \# '
-	touch "${GK_SSHD_LOCKFILE}"
 
 	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${gk_ver}${NORMAL} (${gk_build_date}) ${BOLD}remote rescue shell${NORMAL}!"
 	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${kernel_ver}${NORMAL}"
@@ -90,7 +108,12 @@ else
 	echo
 
 	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
-	exec ${SH} --login
+
+	exec \
+		env \
+		SSH_CLIENT_IP="${SSH_CLIENT_IP}" \
+		SSH_CLIENT_PORT="${SSH_CLIENT_PORT}" \
+		${SH} --login
 fi
 
 exit 0

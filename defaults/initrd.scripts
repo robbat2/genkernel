@@ -34,6 +34,17 @@ modules_scan() {
 	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && \
 		printf "%b" "${BOLD}   ::${NORMAL} Loading from ${1}: "
 
+	if [ -z "${MODULES_SCAN_WARNING_SHOWN}" ]
+	then
+		local note_msg="NOTE: Due to how genkernel auto-detects your"
+		note_msg="${note_msg} hardware you will now see a lot of failed modprobe" \
+		note_msg="${note_msg} attempts which you can ignore:"
+
+		log_msg "${note_msg}"
+
+		MODULES_SCAN_WARNING_SHOWN=yes
+	fi
+
 	for x in ${MODS}
 	do
 		MLOAD=$(echo ${MLIST} | sed -e "s/.*${x}.*/${x}/")
@@ -55,7 +66,7 @@ modules_scan() {
 				printf "%b" "Scanning for ${x} ..."
 			fi
 
-			modprobe ${x} >/dev/null 2>&1
+			run modprobe ${x} >/dev/null 2>&1
 			loaded=${?}
 
 			is_debug && [ "${loaded}" = "0" ] && \
@@ -78,7 +89,6 @@ uppercase() {
 	# needs tr on busybox
 	echo $1 | tr 'a-z' 'A-Z'
 }
-
 
 findmediamount() {
 	# $1 = mount dir name / media name
@@ -130,14 +140,14 @@ findmediamount() {
 				fi
 				good_msg "Attempting to mount media: ${x}" ${CRYPT_SILENT}
 
-				mount -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
+				run mount -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
 				if [ $? -eq 0 ]
 				then
 					if [ -n "${ISOBOOT}" ]
 					then
 						if [ -f "${mntcddir}/${ISOBOOT}" ]
 						then
-							mount -o loop "${mntcddir}/${ISOBOOT}" "${mntdir}"
+							run mount -o loop "${mntcddir}/${ISOBOOT}" "${mntdir}"
 							if [ $? -eq 0 ]
 							then
 								good_msg "iso mounted on ${mntdir}"
@@ -153,7 +163,7 @@ findmediamount() {
 						good_msg "Media found on ${x}" ${CRYPT_SILENT}
 						break
 					else
-						umount ${mntcddir}
+						run umount ${mntcddir}
 					fi
 				fi
 			fi
@@ -203,37 +213,37 @@ bootstrapFS() {
 			aufs_branch=${aufs_memory}/aufs-rw-branch/${aufs_dev_uid}
 		fi
 
-		mkdir -p ${aufs_memory} ${aufs_union} ${aufs_dev_mnt}
+		run mkdir -p ${aufs_memory} ${aufs_union} ${aufs_dev_mnt}
 	else
 		# Legacy SquashFS implementation
 		good_msg "Making tmpfs for ${NEW_ROOT}"
-		mount -n -t tmpfs tmpfs ${NEW_ROOT}
+		run mount -n -t tmpfs tmpfs ${NEW_ROOT}
 	fi
 
 	# Setup the filesystem nodes and directories
 	for i in ${CDROOT_PATH} /mnt/livecd /mnt/key /mnt/gentoo /tmp /tmp/.initrd /dev /proc /run /sys; do
-		mkdir -p "${NEW_ROOT}${i}"
-		chmod 755 "${NEW_ROOT}${i}"
+		run mkdir -p "${NEW_ROOT}${i}"
+		run chmod 755 "${NEW_ROOT}${i}"
 	done
 
-	[ ! -d "${CDROOT_PATH}" ] && mkdir -p "${CDROOT_PATH}"
-	[ ! -e "${NEW_ROOT}/dev/null" ] && mknod -m 666 "${NEW_ROOT}"/dev/null c 1 3
-	[ ! -e "${NEW_ROOT}/dev/zero" ] && mknod -m 666 "${NEW_ROOT}"/dev/zero c 1 5
-	[ ! -e "${NEW_ROOT}/dev/console" ] && mknod -m 600 "${NEW_ROOT}"/dev/console c 5 1
-	[ ! -e "${NEW_ROOT}/dev/ttyS0" ] && mknod -m 660 "${NEW_ROOT}"/dev/ttyS0 c 4 64
+	[ ! -d "${CDROOT_PATH}" ]          && run mkdir -p "${CDROOT_PATH}"
+	[ ! -e "${NEW_ROOT}/dev/null" ]    && run mknod -m 666 "${NEW_ROOT}"/dev/null c 1 3
+	[ ! -e "${NEW_ROOT}/dev/zero" ]    && run mknod -m 666 "${NEW_ROOT}"/dev/zero c 1 5
+	[ ! -e "${NEW_ROOT}/dev/console" ] && run mknod -m 600 "${NEW_ROOT}"/dev/console c 5 1
+	[ ! -e "${NEW_ROOT}/dev/ttyS0" ]   && run mknod -m 660 "${NEW_ROOT}"/dev/ttyS0 c 4 64
 
 	# For SGI LiveCDs
 	if [ "${LOOPTYPE}" = "sgimips" ]
 	then
-		[ ! -e "${NEW_ROOT}/dev/sr0" ] && mknod "${NEW_ROOT}/dev/sr0" b 11 0
-		[ ! -e "${NEW_ROOT}/dev/loop0" ] && mknod "${NEW_ROOT}/dev/loop0" b 7 0
+		[ ! -e "${NEW_ROOT}/dev/sr0" ]   && run mknod "${NEW_ROOT}/dev/sr0" b 11 0
+		[ ! -e "${NEW_ROOT}/dev/loop0" ] && run mknod "${NEW_ROOT}/dev/loop0" b 7 0
 	fi
 
 	# Required for splash to work. Not an issue with the initrd as this
 	# device isn't created there and is not needed.
 	for minor in 0 1
 	do
-		[ ! -e "${NEW_ROOT}/dev/${minor}" ] && mknod -m 600 "${NEW_ROOT}/dev/tty${minor}" c 4 ${minor}
+		[ ! -e "${NEW_ROOT}/dev/${minor}" ] && run mknod -m 600 "${NEW_ROOT}/dev/tty${minor}" c 4 ${minor}
 	done
 }
 
@@ -254,11 +264,11 @@ bootstrapCD() {
 		if [ -f isoroot_checksums ]
 		then
 			good_msg "Verifying checksums, this may take some time ..."
-			if ! busybox sha512sum -c isoroot_checksums
+			if ! run sha512sum -c isoroot_checksums
 			then
 				bad_msg "Some checksums failed, press any key to poweroff ..."
 				read -n1 -s
-				busybox poweroff -f
+				poweroff -f
 			else
 				good_msg "Checksums all valid, continuing boot ..."
 			fi
@@ -294,23 +304,25 @@ cache_cd_contents() {
 			# echo ${z}
 			good_msg "Copying loop file for caching ..."
 			# Verify that the needed directory exists
-			mkdir -p "$(dirname ${NEW_ROOT}/mnt/${LOOP})"
-			cp -a ${CDROOT_PATH}/${LOOP} ${NEW_ROOT}/mnt/${LOOP}
+			run mkdir -p "$(dirname ${NEW_ROOT}/mnt/${LOOP})"
+			run cp -a ${CDROOT_PATH}/${LOOP} ${NEW_ROOT}/mnt/${LOOP}
 			if [ $? -ne 0 ]
 			then
 				warn_msg "Failed to cache the loop file! Lack of RAM?"
-				rm -rf ${NEW_ROOT}/mnt/${LOOP} 2>/dev/null
-				rm -rf ${NEW_ROOT}/mnt/livecd.* 2>/dev/null
-				rm -rf ${NEW_ROOT}/mnt/image.* 2>/dev/null
-				rm -rf ${NEW_ROOT}/mnt/zisofs 2>/dev/null
+				run rm -rf ${NEW_ROOT}/mnt/${LOOP} 2>/dev/null
+				run rm -rf ${NEW_ROOT}/mnt/livecd.* 2>/dev/null
+				run rm -rf ${NEW_ROOT}/mnt/image.* 2>/dev/null
+				run rm -rf ${NEW_ROOT}/mnt/zisofs 2>/dev/null
 			fi
 		fi
 	fi
 }
 
 mount_sysfs() {
-	mount -t sysfs sysfs /sys -o noexec,nosuid,nodev >/dev/null 2>&1
-	[ $? -eq 0 ] || bad_msg "Failed to mount /sys!"
+	if ! run mount -t sysfs sysfs /sys -o noexec,nosuid,nodev >/dev/null 2>&1
+	then
+		bad_msg "Failed to mount /sys!"
+	fi
 }
 
 # Check support for both aufs and overlayfs
@@ -345,8 +357,8 @@ is_union_modules() {
 		else
 			warn_msg "Adding all modules in ${mod_dir}"
 
-			mkdir /mnt/modules
-			mount "${mod_dir}" /mnt/modules
+			run mkdir /mnt/modules
+			run mount "${mod_dir}" /mnt/modules
 			union_insert_modules /mnt/modules
 		fi
 	fi
@@ -361,7 +373,7 @@ is_union_modules() {
 #
 aufs_insert_dir() {
 	# Always mount it over the precedent (add:1:)
-	if mount -n -o "remount,add:1:$2=rr" aufs "$1"
+	if run mount -n -o "remount,add:1:$2=rr" aufs "$1"
 	then
 		good_msg "Addition of $2 to $1 successful"
 	fi
@@ -409,18 +421,18 @@ union_mod() {
 	then
 		if [ ! -d "${aufs_union}"/mnt/"${mod}" ]
 		then
-			mkdir -p "${aufs_union}"/mnt/modules/"${mod}" || return
+			run mkdir -p "${aufs_union}"/mnt/modules/"${mod}" || return
 		fi
 
-		mount -o loop,ro "$2" "${aufs_union}"/mnt/modules/"${mod}"
+		run mount -o loop,ro "$2" "${aufs_union}"/mnt/modules/"${mod}"
 		aufs_insert_dir "${aufs_union}" "${aufs_union}"/mnt/modules/"${mod}"
 	else
 		if [ ! -d "${mod_dir}/.${mod}" ]
 		then
-			mkdir -p "${mod_dir}/.${mod}" || return
+			run mkdir -p "${mod_dir}/.${mod}" || return
 		fi
 
-		mount -o loop,ro "$2" "${mod_dir}/.${mod}"
+		run mount -o loop,ro "$2" "${mod_dir}/.${mod}"
 	fi
 }
 
@@ -450,7 +462,7 @@ conf_rc_no_umounts() {
 
 		if [ -n "${cmd}" ]
 		then
-			sed -i "${cmd%;}" ${conf}
+			run sed -i "${cmd%;}" ${conf}
 			test_success "Unable to edit /etc/conf.d/localmount"
 		fi
 	fi
@@ -486,6 +498,39 @@ is_int() {
 	done
 }
 
+is_log_enabled() {
+	if [ -z "${GK_INIT_LOG}" ]
+	then
+		return 1
+	elif [ -f "${GK_INIT_LOG_DISABLED}" ]
+	then
+		return 1
+	fi
+
+	return 0
+}
+
+is_true() {
+	case "$1" in
+		[Tt][Rr][Uu][Ee])
+			return 0
+		;;
+		[Tt])
+			return 0
+		;;
+		[Yy][Ee][Ss])
+			return 0
+		;;
+		[Yy])
+			return 0
+		;;
+		1)
+			return 0
+		;;
+	esac
+	return 1
+}
+
 # Function to create an ext2 fs on $aufs_dev, $aufs_dev_mnt mountpoint
 create_changefs() {
 	local size
@@ -504,13 +549,13 @@ create_changefs() {
 		then
 			bad_msg "Please give a size of at least 16 Megabytes"
 		else
-			if dd if=/dev/zero "of=${aufs_dev_mnt}${aufs_union_file}" bs=1 seek="${size}"M count=0 >/dev/null 2>&1
+			if run dd if=/dev/zero "of=${aufs_dev_mnt}${aufs_union_file}" bs=1 seek="${size}"M count=0 >/dev/null 2>&1
 			then
 				good_msg "Creation of ${aufs_union_file}, ${size}MB on ${aufs_dev successful}, formatting it ext2"
-				mke2fs -F "${aufs_dev_mnt}${aufs_union_file}" >/dev/null 2>&1
+				run mke2fs -F "${aufs_dev_mnt}${aufs_union_file}" >/dev/null 2>&1
 				break
 			else
-				rm "${aufs_dev_mnt}${aufs_union_file}"
+				run rm "${aufs_dev_mnt}${aufs_union_file}"
 				bad_msg "Unable to create ${aufs_union_file#*/} on ${aufs_dev} of ${size}MB"
 				bad_msg "Ensure your disk is not full or read-only"
 
@@ -518,7 +563,7 @@ create_changefs() {
 				if [ "${doabort}" = 'a' ]
 				then
 					bad_msg "Aborting creation of ${aufs_union_file}!"
-					umount "${aufs_dev}" && rmdir "${aufs_dev_mnt}"
+					run umount "${aufs_dev}" && rmdir "${aufs_dev_mnt}"
 					return 1
 				fi
 			fi
@@ -562,7 +607,7 @@ setup_aufs() {
 		then
 			good_msg "Mounting ${aufs_dev} to ${aufs_memory} for aufs support"
 
-			if ! mount -t auto "${aufs_dev}" "${aufs_dev_mnt}" >/dev/null 2>&1
+			if ! run mount -t auto "${aufs_dev}" "${aufs_dev_mnt}" >/dev/null 2>&1
 			then
 				bad_msg "Mount of ${aufs_dev} failed, falling back to ramdisk based aufs"
 				unset aufs_dev
@@ -572,12 +617,12 @@ setup_aufs() {
 		# Check and attempt to create the AUFS union file
 		if [ ! -e ${aufs_dev_mnt}${aufs_union_file} ] && [ -n "${aufs_dev}" ]
 		then
-			create_changefs && mount -t auto "${aufs_dev_mnt}${aufs_union_file}" "${aufs_memory}"
+			create_changefs && run mount -t auto "${aufs_dev_mnt}${aufs_union_file}" "${aufs_memory}"
 		elif [ -n "${aufs_dev}" ]
 		then
 			while :;
 			do
-				if mount -t auto "${aufs_dev_mnt}${aufs_union_file}" "${aufs_memory}" >/dev/null 2>&1
+				if run mount -t auto "${aufs_dev_mnt}${aufs_union_file}" "${aufs_memory}" >/dev/null 2>&1
 				then
 					if [ "${aufs_union_file}" = "/casper-rw" ]
 					then
@@ -592,18 +637,18 @@ setup_aufs() {
 						bad_msg "/sbin/e2fsck not found! aborting filesystem check"
 						bad_msg "Moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
 
-						mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
+						run mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
 						break
 					fi
 
-					if e2fsck "${aufs_dev_mnt}${aufs_union_file}" >/dev/null 2>&1
+					if run e2fsck "${aufs_dev_mnt}${aufs_union_file}" >/dev/null 2>&1
 					then
 						good_msg "e2fsck ran successfully. Please verify data after bootup"
 					else
 						bad_msg "Your ${aufs_union_file#*/} image might be corrupted"
 						bad_msg "moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
 
-						mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
+						run mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
 						break
 					fi
 				fi
@@ -628,22 +673,22 @@ setup_aufs() {
 			bad_msg "Falling back to ramdisk based aufs"
 			good_msg "Mounting ramdisk to ${aufs_memory} for aufs support"
 
-			mount -t tmpfs tmpfs "${aufs_memory}"
+			run mount -t tmpfs tmpfs "${aufs_memory}"
 		else
 			aufs_xino=${aufs_memory}/xino
 
-			mkdir -p "${aufs_xino}"
-			mount -t tmpfs aufs-xino "${aufs_xino}"
+			run mkdir -p "${aufs_xino}"
+			run mount -t tmpfs aufs-xino "${aufs_xino}"
 		fi
 	else
 		aufs_xino=${aufs_memory}
 
 		good_msg "Mounting ramdisk to ${aufs_memory} for aufs support"
-		mount -t tmpfs tmpfs "${aufs_memory}"
+		run mount -t tmpfs tmpfs "${aufs_memory}"
 	fi
 
-	mkdir -p "${aufs_branch}"
-	if ! mount -t aufs -n -o "nowarn_perm,udba=none,xino=${aufs_xino}/.aufs.xino,br:${aufs_branch}=rw" aufs "${aufs_union}"
+	run mkdir -p "${aufs_branch}"
+	if ! run mount -t aufs -n -o "nowarn_perm,udba=none,xino=${aufs_xino}/.aufs.xino,br:${aufs_branch}=rw" aufs "${aufs_union}"
 	then
 		bad_msg "Can't setup union ${aufs_union} in directory!"
 		aufs=0
@@ -660,11 +705,11 @@ setup_overlayfs() {
 	rundebugshell overlayfs
 	for i in "${overlay}" "${static}"
 	do
-		[ ! -d "${i}" ] && mkdir -p "${i}"
+		[ ! -d "${i}" ] && run mkdir -p "${i}"
 	done
 
 	good_msg "Loading overlayfs"
-	modprobe overlay >/dev/null 2>&1
+	run modprobe overlay >/dev/null 2>&1
 	checkfs overlay
 
 	mount -t squashfs -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${static}"
@@ -672,7 +717,7 @@ setup_overlayfs() {
 	mkdir "${upperdir}" "${workdir}"
 
 	is_union_modules overlayfs
-	mount -t overlay overlay -o lowerdir="${static}${mod_path}",upperdir="${upperdir}",workdir="${workdir}" "${NEW_ROOT}"
+	run mount -t overlay overlay -o lowerdir="${static}${mod_path}",upperdir="${upperdir}",workdir="${workdir}" "${NEW_ROOT}"
 
 	[ ! -d "${NEW_ROOT}${overlay}" ] && mkdir -p "${NEW_ROOT}${overlay}"
 	[ ! -d "${NEW_ROOT}${static}" ] && mkdir -p "${NEW_ROOT}${static}"
@@ -681,7 +726,7 @@ setup_overlayfs() {
 
 	for i in "${overlay}" "${static}"
 	do
-		mount --bind "${i}" "${NEW_ROOT}${i}"
+		run mount --bind "${i}" "${NEW_ROOT}${i}"
 	done
 
 	# Did we populate the overlayfs modules path locations variable?
@@ -689,7 +734,7 @@ setup_overlayfs() {
 	then
 		for i in ${mods}
 		do
-			mount --bind "${overlay}/.${i}" "${NEW_ROOT}/${overlay}/.${i}"
+			run mount --bind "${overlay}/.${i}" "${NEW_ROOT}/${overlay}/.${i}"
 		done
 	fi
 }
@@ -747,7 +792,7 @@ findnfsmount() {
 			if [ "${CDROOT}" != '0' ]
 			then
 				good_msg "Attempting to mount NFS CD image on ${NFSROOT} with options ${NFSOPTIONS}"
-				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${CDROOT_PATH}
+				run mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${CDROOT_PATH}
 				if [ $? -eq 0 ]
 				then
 					REAL_ROOT="/dev/nfs"
@@ -757,7 +802,7 @@ findnfsmount() {
 				fi
 			else
 				good_msg "Attempting to mount NFS root on ${NFSROOT} with options ${NFSOPTIONS}"
-				mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}
+				run mount -t nfs -o ${NFSOPTIONS} ${NFSROOT} ${NEW_ROOT}
 				if [ $? -eq 0 ]
 				then
 					REAL_ROOT="/dev/nfs"
@@ -815,10 +860,24 @@ check_loop() {
 	fi
 }
 
+run() {
+	local retval
+
+	if "$@"; then
+		retval=$?
+		log_msg "Executed: '$*'"
+	else
+		retval=$?
+		log_msg "Failed (${retval}): '$*'"
+	fi
+
+	return ${retval}
+}
+
 run_shell() {
 	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
 
-	touch "${GK_SHELL_LOCKFILE}"
+	run touch "${GK_SHELL_LOCKFILE}"
 
 	export PS1='rescueshell \w \# '
 
@@ -834,14 +893,18 @@ run_shell() {
 		&& [ "${CONSOLE}" != "/dev/tty0" ] \
 		&& [ -c "${CONSOLE}" ]
 	then
+		log_msg "Opening rescue shell on ${CONSOLE} ..."
 		setsid ${SH} -c "exec sh --login <${CONSOLE} >${CONSOLE} 2>&1"
 	elif command -v cttyhack 1>/dev/null 2>&1
 	then
+		log_msg "Opening rescue shell using cttyhack ..."
 		setsid cttyhack ${SH} --login
 	elif [ -c '/dev/tty1' ]
 	then
+		log_msg "Opening rescue shell on /dev/tty1 fallback ..."
 		setsid ${SH} -c 'exec sh --login </dev/tty1 >/dev/tty1 2>&1'
 	else
+		log_msg "Opening rescue shell (last resort) ..."
 		${SH} --login
 	fi
 
@@ -872,15 +935,15 @@ mount_devfs() {
 	# Options copied from /etc/init.d/udev-mount, should probably be kept in sync
 	if ! fs_type_in_use devtmpfs
 	then
-		mount -t ${devfs} -o "exec,nosuid,mode=0755,size=10M" udev /dev \
+		run mount -t ${devfs} -o "exec,nosuid,mode=0755,size=10M" udev /dev \
 			|| bad_msg "Failed to mount /dev as ${devfs}"
 	fi
 
 	# http://git.busybox.net/busybox/plain/docs/mdev.txt
 	if ! fs_type_in_use devpts
 	then
-		mkdir -m 0755 /dev/pts
-		mount -t devpts -o gid=5,mode=0620 devpts /dev/pts || bad_msg "Failed to mount /dev/pts"
+		run mkdir -m 0755 /dev/pts
+		run mount -t devpts -o gid=5,mode=0620 devpts /dev/pts || bad_msg "Failed to mount /dev/pts"
 	fi
 }
 
@@ -896,6 +959,28 @@ test_success() {
 	fi
 }
 
+log_msg() {
+	is_log_enabled || return
+
+	if [ ! -f "${GK_INIT_LOG}" ]
+	then
+		touch "${GK_INIT_LOG}"
+	fi
+
+	local log_prefix=
+	[ -n "${GK_INIT_LOG_PREFIX}" ] && log_prefix="${GK_INIT_LOG_PREFIX}: "
+
+	local msg=${1}
+
+	# Cannot use substitution because $msg could contain infinite color
+	# codes and substitution can't be greedy.
+	# Because Busybox's sed cannot deal with control characters, we
+	# have to get rid of all non-printable characters like "^[" first...
+	LANG=C echo "${log_prefix}${msg}" | sed \
+		-e "s,[^[:print:]],,g" \
+		-e 's,\(\\033\)\?\[[0-9;]\+m,,g' \
+		| ts '[%Y-%m-%d %H:%M:%S]' >> "${GK_INIT_LOG}"
+}
 
 # msg functions arguments
 # $1 string
@@ -904,22 +989,31 @@ test_success() {
 good_msg() {
 	[ -n "${QUIET}" ] && ! is_debug && return 0
 
-	msg_string=${1}
+	local msg_string=${1}
 	msg_string="${msg_string:-...}"
+
+	log_msg "[OK] ${msg_string}"
+
 	[ "$2" != '1' ] && printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 good_msg_n() {
 	[ -n "${QUIET}" ] && ! is_debug && return 0
 
-	msg_string=${1}
+	local msg_string=${1}
 	msg_string="${msg_string:-...}"
+
+	log_msg "[OK] ${msg_string}"
+
 	[ "$2" != '1' ] && printf "%b" "${GOOD}>>${NORMAL}${BOLD} ${msg_string}"
 }
 
 bad_msg() {
-	msg_string=${1}
+	local msg_string=${1}
 	msg_string="${msg_string:-...}"
+
+	log_msg "[!!] ${msg_string}"
+
 	if [ "$2" != '1' ]
 	then
 		splash 'verbose' >/dev/null &
@@ -928,24 +1022,67 @@ bad_msg() {
 }
 
 warn_msg() {
-	msg_string=${1}
+	local msg_string=${1}
 	msg_string="${msg_string:-...}"
+
+	log_msg "[**] ${msg_string}"
+
 	[ "$2" != '1' ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 crypt_filter() {
 	if [ "${CRYPT_SILENT}" = '1' ]
 	then
-		eval $1 >/dev/null 2>&1
+		eval run ${1} >/dev/null 2>&1
 	else
 		splash 'verbose' >/dev/null &
-		eval $1
+		eval run ${1}
 		res=$?
 		if [ ${res} -eq 0 ]
 		then
 			splash set_msg 'Disk unlocked.'
 		fi
 		return ${res}
+	fi
+}
+
+preserve_log() {
+	is_log_enabled || return
+	[ ! -s "${GK_INIT_LOG}" ] && return
+	[ -z "${GK_INIT_LOG_COPYTO}" ] && return
+
+	local have_errors=0
+	local logfile_target="${CHROOT}/${GK_INIT_LOG_COPYTO#/}"
+	local logfile_target_dir="$(dirname "${logfile_target}")"
+	local fail_msg="Failed to copy '${GK_INIT_LOG}' to '${logfile_target}'"
+
+	if run mount -o remount,rw ${CHROOT}
+	then
+		if [ -z "${logfile_target_dir}" ]
+		then
+			have_errors=1
+			bad_msg "${fail_msg}: Failed to determine dirname of '${logfile_target}'!"
+		elif [ ! -d "${logfile_target_dir}" ]
+		then
+			if ! run mkdir -p "${logfile_target_dir}" 2>/dev/null
+			then
+				have_errors=1
+				bad_msg "${fail_msg}: Failed to create '${logfile_target_dir}'!"
+			fi
+		fi
+
+		if [ ${have_errors} = 0 ]
+		then
+			good_msg "gk.log.keep set; Copying '${GK_INIT_LOG}' to '${logfile_target}' ..."
+			if ! cp "${GK_INIT_LOG}" "${logfile_target}" 2>/dev/null
+			then
+				bad_msg "${fail_msg}!"
+			fi
+		fi
+
+		mount -o remount,ro ${CHROOT}
+	else
+		bad_msg "${fail_msg}: 'mount -o remount,rw ${CHROOT}' failed!"
 	fi
 }
 
@@ -1043,7 +1180,7 @@ load_modules() {
 	# kernel version
 	if [ -d "/lib/modules/${KV}" ]
 	then
-		good_msg 'Loading modules'
+		good_msg 'Loading modules ...'
 		# Load appropriate kernel modules
 		for modules in ${MY_HWOPTS}
 		do
@@ -1060,13 +1197,12 @@ setup_keymap() {
 		if [ ! -e /dev/vc/0 -a ! -e /dev/tty0 ]
 		then
 			DEVBIND=1
-			mount -o bind ${NEW_ROOT}/dev /dev
+			run mount -o bind ${NEW_ROOT}/dev /dev
 		fi
-		[ ! -e /dev/tty0 ] && ln -s /dev/tty1 /dev/tty0
 
 		[ -f /lib/keymaps/keymapList ] && chooseKeymap
 
-		[ "${DEVBIND}" = '1' ] && umount /dev
+		[ "${DEVBIND}" = '1' ] && run umount /dev
 	fi
 }
 
@@ -1082,7 +1218,7 @@ chooseKeymap() {
 	if [ -z "${keymap}" ]
 	then
 		splash 'verbose' >/dev/null &
-		cat /lib/keymaps/keymapList
+		run cat /lib/keymaps/keymapList
 		read -t 10 -p '<< Load keymap (Enter for default): ' keymap
 		case ${keymap} in
 			1|azerty) keymap=azerty ;;
@@ -1135,9 +1271,9 @@ chooseKeymap() {
 	if [ -e /lib/keymaps/${keymap}.map ]
 	then
 		good_msg "Loading the '${keymap}' keymap ..."
-		loadkmap < /lib/keymaps/${keymap}.map
+		run loadkmap < /lib/keymaps/${keymap}.map
 
-		mkdir -p /etc/sysconfig
+		run mkdir -p /etc/sysconfig
 		echo "XKEYBOARD=${keymap}" > /etc/sysconfig/keyboard
 		splash set_msg "Set keymap to '${keymap}'"
 	elif [ -z "${keymap}" ]
@@ -1158,8 +1294,8 @@ chooseKeymap() {
 copyKeymap() {
 	if [ -e /etc/sysconfig/keyboard -a ${CDROOT} -eq 1 ]
 	then
-		[ ! -d ${NEW_ROOT}/etc/sysconfig ] && mkdir -p ${NEW_ROOT}/etc/sysconfig
-		cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
+		[ ! -d ${NEW_ROOT}/etc/sysconfig ] && run mkdir -p ${NEW_ROOT}/etc/sysconfig
+		run cp /etc/sysconfig/keyboard ${NEW_ROOT}/etc/sysconfig/keyboard
 	fi
 }
 
@@ -1183,18 +1319,23 @@ start_volumes() {
 	# a symlink, which should hopefully fix bug #142775 and bug #147015
 	if [ -e /dev/device-mapper ] && [ ! -e /dev/mapper/control ]
 	then
-		mkdir -p /dev/mapper
-		ln -sf /dev/device-mapper /dev/mapper/control
+		run mkdir -p /dev/mapper
+		run ln -sf /dev/device-mapper /dev/mapper/control
 	fi
 
 	if [ "${USE_MDADM}" = '1' ]
 	then
 		if [ -x '/sbin/mdadm' ]
 		then
-			/sbin/mdadm --assemble --scan
+			local mdadm_cmd="run /sbin/mdadm --assemble --scan 2>&1"
+			is_log_enabled && mdadm_cmd="${mdadm_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${mdadm_cmd}"
+
 			#Intel Matrix RAID (and possibly others) have a container layer above the actual volumes,
 			#So we have to look for volumes that haven't been activated.
-			/sbin/mdadm -IRs
+			mdadm_cmd="run /sbin/mdadm -IRs 2>&1"
+			is_log_enabled && mdadm_cmd="${mdadm_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${mdadm_cmd}"
 		else
 			bad_msg "domdadm invoked but /sbin/mdadm not found; Skipping mdadm raid assembly ..."
 		fi
@@ -1226,19 +1367,24 @@ start_volumes() {
 		then
 			good_msg "Scanning for multipath devices"
 			good_msg ":: Populating scsi_id info for libudev queries"
-			mkdir -p /run/udev/data
+			run mkdir -p /run/udev/data
 
 			local ech
 			for ech in /sys/block/*
 			do
 				local tgtfile=b$(cat ${ech}/dev)
-				/lib/udev/scsi_id -g -x /dev/${ech##*/} |sed -e 's/^/E:/' >/run/udev/data/${tgtfile}
+				run /lib/udev/scsi_id -g -x /dev/${ech##*/} | sed -e 's/^/E:/' >/run/udev/data/${tgtfile}
 			done
 
-			${multipath_path} -v 0
+			local multipath_cmd="run ${multipath_path} -v 0 2>&1"
+			is_log_enabled && multipath_cmd="${multipath_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${multipath_cmd}"
 			sleep 2
-			good_msg "Activating multipath devices"
-			${dmsetup_path} ls --target multipath --exec "${kpartx_path} -a -v"
+
+			good_msg "Activating multipath devices ..."
+			multipath_cmd="run ${dmsetup_path} ls --target multipath --exec '${kpartx_path} -a -v' 2>&1"
+			is_log_enabled && multipath_cmd="${multipath_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${multipath_cmd}"
 		fi
 	fi
 
@@ -1246,14 +1392,23 @@ start_volumes() {
 	then
 		if [ -x '/sbin/dmraid' ]
 		then
-			good_msg "Activating Device-Mapper RAID(s)"
+			good_msg "Activating Device-Mapper RAID(s) ..."
+			local dmraid_cmd="run /sbin/dmraid -ay"
 			if [ -z "${DMRAID_OPTS}" ]
 			then
-				/sbin/dmraid -ay
+				dmraid_cmd="${dmraid_cmd} 2>&1"
 			else
-				/sbin/dmraid -ay ${DMRAID_OPTS}
+				dmraid_cmd="${dmraid_cmd} ${DMRAID_OPTS} 2>&1"
 			fi
-			[ -x '/sbin/kpartx' ] && /sbin/dmsetup ls --exec '/sbin/kpartx -a -s'
+			is_log_enabled && dmraid_cmd="${dmraid_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${dmraid_cmd}"
+
+			if [ -x '/sbin/kpartx' ]
+			then
+				dmraid_cmd="run /sbin/dmsetup ls --exec '/sbin/kpartx -a -s' 2>&1"
+				is_log_enabled && dmraid_cmd="${dmraid_cmd} | tee -a '${GK_INIT_LOG}'"
+				eval "${dmraid_cmd}"
+			fi
 		else
 			bad_msg "dodmraid invoked but /sbin/dmraid not found; Skipping dmraid activation ..."
 		fi
@@ -1275,23 +1430,30 @@ start_volumes() {
 				setup_md_device "${dev}"
 			done
 
-			# This is needed for LVM to accept the following logic
-			lvm_commands="#! ${lvm_path}"
+			local lvm_cmd
 
 			# If there is a cache, update it. Unbreak at least dmcrypt
-			[ -d /etc/lvm/cache ] && lvm_commands="${lvm_commands} \nvgscan"
+			if [ -d /etc/lvm/cache ]
+			then
+				good_msg "Scanning for volume groups ..."
+				lvm_cmd="run ${lvm_path} vgscan 2>&1"
+				is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
+				eval "${lvm_cmd}"
+			fi
+
+			good_msg "Activating volume groups ..."
 
 			# To activate volumegroups on all devices in the cache
-			lvm_commands="${lvm_commands} \nvgchange -ay --sysinit"
+			local lvm_cmd="run ${lvm_path} vgchange -ay --sysinit 2>&1"
+			is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${lvm_cmd}"
 
-			# To create symlinks so users can use real_root=/dev/vg/root
+			# To create symlinks so users can use root=/dev/vg/root
 			# This needs to run after vgchange, using vgchange --mknodes is too
 			# early.
-			lvm_commands="${lvm_commands} \nvgmknodes --ignorelockingfailure"
-
-			# And finally execute it all (/proc/... needed if lvm is compiled without readline)
-			good_msg "Scanning for and activating Volume Groups"
-			printf "%b\n" "${lvm_commands}" | ${lvm_path} /proc/self/fd/0
+			local lvm_cmd="run ${lvm_path} vgmknodes --ignorelockingfailure 2>&1"
+			is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${lvm_cmd}"
 		fi
 	fi
 
@@ -1308,6 +1470,7 @@ start_volumes() {
 				then
 					# Push all the block devices to register_quiet
 					# If its bcache, it will bring it up, if not, it will simply ignore it.
+					log_msg "COMMAND: 'echo \"/dev/${i}\" >/sys/fs/bcache/register_quiet'"
 					echo "/dev/${i}" >/sys/fs/bcache/register_quiet 2>/dev/null
 				else
 					warn_msg "'/dev/${i}' should exist but is missing; Ignoring ..."
@@ -1320,7 +1483,10 @@ start_volumes() {
 	then
 		if [ -x '/sbin/btrfs' ]
 		then
-			/sbin/btrfs device scan
+			local btrfs_cmd="run /sbin/btrfs device scan 2>&1"
+			is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
+
+			eval "${btrfs_cmd}"
 		else
 			bad_msg "dobtrfs invoked but /sbin/btrfs not found; Skipping btrfs device scanning ..."
 		fi
@@ -1334,14 +1500,16 @@ start_volumes() {
 			bad_msg "Cannot import ZFS pool because /dev/zfs is missing"
 		elif [ -z "${ZFS_POOL}" ]
 		then
-			good_msg "Importing ZFS pools"
+			good_msg "Importing ZFS pools ..."
 
-			/sbin/zpool import -N -a ${ZPOOL_CACHE} ${ZPOOL_FORCE}
+			local zfs_cmd="run /sbin/zpool import -N -a ${ZPOOL_CACHE} ${ZPOOL_FORCE} 2>&1"
+			is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+			eval "${zfs_cmd}"
 			if [ $? -eq 0 ]
 			then
-				good_msg "Importing ZFS pools succeeded"
+				good_msg "Importing ZFS pools succeeded!"
 			else
-				bad_msg "Imported ZFS pools failed"
+				bad_msg "Imported ZFS pools failed!"
 			fi
 		else
 
@@ -1351,19 +1519,27 @@ start_volumes() {
 
 				if [ -n "${CRYPT_ROOT}" -o -n "${CRYPT_SWAP}" ]
 				then
-					good_msg "LUKS detected. Reimporting ${ZFS_POOL}"
-					/sbin/zpool export -f "${ZFS_POOL}"
-					/sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} "${ZFS_POOL}"
+					good_msg "LUKS detected. Reimporting ${ZFS_POOL} ..."
+
+					local zfs_cmd="run /sbin/zpool export -f '${ZFS_POOL}' 2>&1"
+					is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+					eval "${zfs_cmd}"
+
+					zfs_cmd="run /sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} '${ZFS_POOL}' 2>&1"
+					is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+					eval "${zfs_cmd}"
 				fi
 			else
-				good_msg "Importing ZFS pool ${ZFS_POOL}"
+				good_msg "Importing ZFS pool ${ZFS_POOL} ..."
 
-				/sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} "${ZFS_POOL}"
+				local zfs_cmd="run /sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} '${ZFS_POOL}' 2>&1"
+				is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+				eval "${zfs_cmd}"
 				if [ $? -eq 0 ]
 				then
-					good_msg "Import of ${ZFS_POOL} succeeded"
+					good_msg "Import of ${ZFS_POOL} succeeded!"
 				else
-					bad_msg "Import of ${ZFS_POOL} failed"
+					bad_msg "Import of ${ZFS_POOL} failed!"
 				fi
 			fi
 		fi
@@ -1371,10 +1547,15 @@ start_volumes() {
 }
 
 start_iscsi() {
+	local iscsi_cmd
+
 	if [ ! -n "${ISCSI_NOIBFT}" ]
 	then
-		good_msg "Activating iSCSI via iBFT"
-		iscsistart -b
+		good_msg "Activating iSCSI via iBFT ..."
+
+		iscsi_cmd="run iscsistart -b 2>&1"
+		is_log_enabled && iscsi_cmd="${iscsi_cmd} | tee -a '${GK_INIT_LOG}'"
+		eval "${iscsi_cmd}"
 	fi
 
 	if [ -n "${ISCSI_INITIATORNAME}" ] && [ -n "${ISCSI_TARGET}" ] && [ -n "${ISCSI_ADDRESS}" ]
@@ -1418,7 +1599,9 @@ start_iscsi() {
 			ADDITIONAL="${ADDITIONAL} -d ${ISCSI_DEBUG}"
 		fi
 
-		iscsistart -i "${ISCSI_INITIATORNAME}" -t "${ISCSI_TARGET}" -a "${ISCSI_ADDRESS}" ${ADDITIONAL}
+		iscsi_cmd="run iscsistart -i '${ISCSI_INITIATORNAME}' -t '${ISCSI_TARGET}' -a '${ISCSI_ADDRESS}' ${ADDITIONAL} 2>&1"
+		is_log_enabled && iscsi_cmd="${iscsi_cmd} | tee -a '${GK_INIT_LOG}'"
+		eval "${iscsi_cmd}"
 	fi
 }
 
@@ -1481,8 +1664,7 @@ openLUKS() {
 			fi
 
 			setup_md_device ${LUKS_DEVICE}
-			cryptsetup isLuks ${LUKS_DEVICE}
-			if [ $? -ne 0 ]
+			if ! run cryptsetup isLuks ${LUKS_DEVICE}
 			then
 				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" ${CRYPT_SILENT}
 				DEV_ERROR=1
@@ -1538,8 +1720,7 @@ openLUKS() {
 						# At this point a device was recognized, now let's see if the key is there
 						[ ! -d "${mntkey}" ] && mkdir -p "${mntkey}" >/dev/null 2>&1
 
-						mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>&1
-						if [ "$?" != '0' ]
+						if ! run mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>&1
 						then
 							KEYDEV_ERROR=1
 							bad_msg "Mounting of device ${REAL_LUKS_KEYDEV} failed." ${CRYPT_SILENT}
@@ -1550,7 +1731,7 @@ openLUKS() {
 							# keyfile exists?
 							if [ ! -e "${mntkey}${LUKS_KEY}" ]
 							then
-								umount -n "${mntkey}" >/dev/null 2>&1
+								run umount -n "${mntkey}" >/dev/null 2>&1
 								KEY_ERROR=1
 								KEYDEV_ERROR=1
 								bad_msg "Key {LUKS_KEY} on device ${REAL_LUKS_KEYDEV} not found." ${CRYPT_SILENT}
@@ -1568,8 +1749,8 @@ openLUKS() {
 							bad_msg "GPG-encrypted key file provided but gpg program is missing. Was initramfs built without --gpg parameter?"
 							bad_msg "Falling back to passphrase usage!"
 						else
-							[ -e /dev/tty ] && mv /dev/tty /dev/tty.org
-							mknod /dev/tty c 5 1
+							[ -e /dev/tty ] && run mv /dev/tty /dev/tty.org
+							run mknod /dev/tty c 5 1
 							cryptsetup_options="${cryptsetup_options} -d -"
 							gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
 						fi
@@ -1582,12 +1763,12 @@ openLUKS() {
 				crypt_filter_ret=$?
 
 				[ -e /dev/tty.org ] \
-					&& rm -f /dev/tty \
-					&& mv /dev/tty.org /dev/tty
+					&& run rm -f /dev/tty \
+					&& run mv /dev/tty.org /dev/tty
 
 				if [ ${crypt_filter_ret} -eq 0 ]
 				then
-					touch "${OPENED_LOCKFILE}"
+					run touch "${OPENED_LOCKFILE}"
 					good_msg "LUKS device ${LUKS_DEVICE} opened" ${CRYPT_SILENT}
 					break
 				elif [ ! -e "${OPENED_LOCKFILE}" ]
@@ -1600,8 +1781,13 @@ openLUKS() {
 			fi
 		fi
 	done
-	umount "${mntkey}" >/dev/null 2>&1
-	rmdir -p "${mntkey}" >/dev/null 2>&1
+
+	if run mountpoint "${mntkey}" >/dev/null 2>&1
+	then
+		run umount "${mntkey}" >/dev/null 2>&1
+	fi
+
+	[ -d "${mntkey}" ] run rmdir -p "${mntkey}" >/dev/null 2>&1
 }
 
 iface_name() {
@@ -1771,12 +1957,15 @@ start_network() {
 			# network for us. Really no need re-run dhcp...
 			warn_msg "Interface ${GK_NET_IFACE} is already up."
 			warn_msg "Skipping network setup; Will use existing network configuration ..."
-			touch "${GK_NET_LOCKFILE}"
+			run touch "${GK_NET_LOCKFILE}"
 			return 0
 		fi
 
+		local udhcpc_cmd="run udhcpc -i '${GK_NET_IFACE}' -n -t ${GK_NET_DHCP_RETRIES} -T ${GK_NET_TIMEOUT_DHCP} -R -p '${GK_NET_DHCP_PIDFILE}' 2>&1"
+		is_log_enabled && udhcpc_cmd="${udhcpc_cmd} | tee -a '${GK_INIT_LOG}'"
+
 		good_msg "Bringing up interface ${GK_NET_IFACE} using dhcp ..." ${QUIET}
-		busybox udhcpc -i "${GK_NET_IFACE}" -n -t ${GK_NET_DHCP_RETRIES} -T ${GK_NET_TIMEOUT_DHCP} -R -p "${GK_NET_DHCP_PIDFILE}"
+		eval "${udhcpc_cmd}"
 		if [ $? -ne 0 ]
 		then
 			bad_msg "Failed to start udhcpc for interface ${GK_NET_IFACE}!"
@@ -1793,10 +1982,10 @@ start_network() {
 		fi
 
 		good_msg "Bringing up interface ${GK_NET_IFACE} ..." ${QUIET}
-		ip link set "${GK_NET_IFACE}" up
+		run ip link set "${GK_NET_IFACE}" up
 
 		good_msg "Setting address '${IP}' on ${GK_NET_IFACE} ..." ${QUIET}
-		ip addr add "${IP}" dev "${GK_NET_IFACE}"
+		run ip addr add "${IP}" dev "${GK_NET_IFACE}"
 
 		if [ -n "${GK_NET_ROUTES}" ]
 		then
@@ -1804,25 +1993,25 @@ start_network() {
 			for route in ${GK_NET_ROUTES}
 			do
 				good_msg "Adding additional route '${route}' on ${GK_NET_IFACE} ..." ${QUIET}
-				ip route add "${route}" dev "${GK_NET_IFACE}"
+				run ip route add "${route}" dev "${GK_NET_IFACE}"
 			done
 		fi
 
 		if [ -n "${GK_NET_GW}" ]
 		then
 			good_msg "Adding default route via '${GK_NET_GW}' on ${GK_NET_IFACE} ..." ${QUIET}
-			ip route add default via "${GK_NET_GW}" dev "${GK_NET_IFACE}"
+			run ip route add default via "${GK_NET_GW}" dev "${GK_NET_IFACE}"
 		fi
 	fi
 
-	touch "${GK_NET_LOCKFILE}"
+	run touch "${GK_NET_LOCKFILE}"
 }
 
 kill_network() {
 	if [ -s "${GK_NET_DHCP_PIDFILE}" ]
 	then
 		good_msg "Stopping udhcpc ..."
-		kill $(cat "${GK_NET_DHCP_PIDFILE}")
+		run kill $(cat "${GK_NET_DHCP_PIDFILE}")
 	fi
 
 	if [ ! -d "/sys/class/net/${GK_NET_IFACE}" ]
@@ -1867,9 +2056,9 @@ kill_network() {
 	local deconfiguration_timeout=${GK_NET_TIMEOUT_DECONFIGURATION}
 	while [ ${deconfiguration_timeout} -gt 0 ]
 	do
-		ip addr flush dev "${GK_NET_IFACE}"
-		ip route flush dev "${GK_NET_IFACE}"
-		ip link set "${GK_NET_IFACE}" down
+		run ip addr flush dev "${GK_NET_IFACE}"
+		run ip route flush dev "${GK_NET_IFACE}"
+		run ip link set "${GK_NET_IFACE}" down
 		if grep -q "down" "/sys/class/net/${GK_NET_IFACE}/operstate" 2>/dev/null
 		then
 			break
@@ -1888,7 +2077,7 @@ kill_network() {
 		return
 	fi
 
-	[ -f "${GK_NET_LOCKFILE}" ] && rm "${GK_NET_LOCKFILE}"
+	[ -f "${GK_NET_LOCKFILE}" ] && run rm "${GK_NET_LOCKFILE}"
 }
 
 is_interface_up() {
@@ -1964,17 +2153,17 @@ start_sshd() {
 
 	# setup environment variables for the ssh login shell
 	local varname= varvalue=
-	touch "${CRYPT_ENV_FILE}"
+	run touch "${CRYPT_ENV_FILE}"
 	for varname in CRYPT_ROOT CRYPT_ROOT_TRIM CRYPT_SILENT CRYPT_SWAP
 	do
 		eval varvalue=\$${varname}
 		echo "${varname}=${varvalue}" >> "${CRYPT_ENV_FILE}"
 	done
 
-	touch /var/log/lastlog
+	run touch /var/log/lastlog
 
 	good_msg "Starting dropbear sshd ..." ${QUIET}
-	/usr/sbin/dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
+	run /usr/sbin/dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
 	test_success "Failed to start dropbear"
 }
 
@@ -1991,13 +2180,16 @@ wait_sshd() {
 
 	printf "%b" "${GOOD}>>${NORMAL}${BOLD} gk.sshd.wait set; Waiting ${GK_SSHD_WAIT} seconds for SSH connection ${NORMAL}..."
 
+	local last_cmd="run last -W 2>/dev/null | head -n 3"
+	is_log_enabled && last_cmd="${last_cmd} | tee -a '${GK_INIT_LOG}'"
+
 	local ssh_timeout=${GK_SSHD_WAIT}
 	while [ ${ssh_timeout} -gt 0 ]
 	do
 		if [ -f "${GK_SSHD_LOCKFILE}" ]
 		then
 			echo ""
-			last -W | head -n 3 2>/dev/null
+			eval "${last_cmd}"
 			break
 		fi
 		sleep 1
@@ -2012,7 +2204,7 @@ kill_sshd() {
 	if [ -s "${GK_SSHD_PIDFILE}" ]
 	then
 		good_msg "Stopping dropbear sshd ..." ${QUIET}
-		kill $(cat "${GK_SSHD_PIDFILE}")
+		run kill $(cat "${GK_SSHD_PIDFILE}")
 	fi
 }
 
@@ -2038,7 +2230,10 @@ cleanup() {
 	kill_sshd
 
 	# Ensure that we terminated any existing connection
-	pkill -9 dropbear >/dev/null 2>&1
+	if pgrep dropbear >/dev/null 2>&1
+	then
+		run pkill -9 dropbear >/dev/null 2>&1
+	fi
 
 	if [ -f "${GK_NET_LOCKFILE}" ]
 	then
@@ -2055,7 +2250,7 @@ sdelay() {
 	# Sleep a specific number of seconds if SDELAY is set
 	if [ -n "${SDELAY}" ]
 	then
-		good_msg_n "Waiting ${SDELAY} seconds ..."
+		good_msg_n "scandelay set; Waiting ${SDELAY} seconds ..."
 		while [ ${SDELAY} -gt 0 ]
 		do
 			let SDELAY=${SDELAY}-1
@@ -2071,12 +2266,20 @@ sdelay() {
 
 quiet_kmsg() {
 	# if QUIET is set make the kernel less chatty
-	[ -n "${QUIET}" ] && echo '0' > /proc/sys/kernel/printk
+	if [ -n "${QUIET}" ]
+	then
+		echo '0' > /proc/sys/kernel/printk \
+			&& log_msg "COMMAND: 'echo \"0\" > /proc/sys/kernel/printk'"
+	fi
 }
 
 verbose_kmsg() {
 	# if QUIET is set make the kernel less chatty
-	[ -n "${QUIET}" ] && echo '6' > /proc/sys/kernel/printk
+	if [ -n "${QUIET}" ]
+	then
+		echo '6' > /proc/sys/kernel/printk \
+			&& log_msg "COMMAND: 'echo \"6\" > /proc/sys/kernel/printk'"
+	fi
 }
 
 cdupdate() {
@@ -2091,7 +2294,7 @@ cdupdate() {
 		if [ -n "${cdupdate_path}" ]
 		then
 			good_msg "Running cdupdate.sh (${cdupdate_path})"
-			${cdupdate_path}
+			run ${cdupdate_path}
 			if [ "$?" != '0' ]
 			then
 				bad_msg "Executing cdupdate.sh failed!"
@@ -2105,7 +2308,13 @@ cdupdate() {
 
 setup_btrfsctl() {
 	# start BTRFS volume detection, if available
-	[ -x /sbin/btrfsctl ] && /sbin/btrfsctl -a
+	if [ -x /sbin/btrfsctl ]
+	then
+		local btrfs_cmd="run /sbin/btrfsctl -a 2>&1"
+		is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
+
+		eval "${btrfs_cmd}"
+	fi
 }
 
 setup_md_device() {
@@ -2120,10 +2329,10 @@ setup_md_device() {
 		MD_NUMBER=$(echo ${device}|sed -e 's#\(luks:\)\?/dev/md\([[:digit:]]\+\)#\2#')
 		if [ ! -e /dev/md${MD_NUMBER} ]
 		then
-			mknod /dev/md${MD_NUMBER} b 9 ${MD_NUMBER} >/dev/null 2>&1
+			run mknod /dev/md${MD_NUMBER} b 9 ${MD_NUMBER} >/dev/null 2>&1
 			[ $? -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed ..."
 		fi
-		mdstart ${MDPART} /dev/md${MD_NUMBER}
+		run mdstart ${MDPART} /dev/md${MD_NUMBER}
 	fi
 }
 
@@ -2242,16 +2451,16 @@ setup_squashfs_aufs() {
 
 	for dir in ${aufs_rw_branch} ${aufs_ro_branch}
 	do
-		[ ! -d "${dir}" ] && mkdir -p "${dir}"
+		[ ! -d "${dir}" ] && run mkdir -p "${dir}"
 	done
 
 	good_msg "Loading aufs module ..."
-	modprobe aufs >/dev/null 2>&1
+	run modprobe aufs >/dev/null 2>&1
 	checkfs aufs
 
-	mount -t squashfs -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${aufs_ro_branch}"
-	mount -t tmpfs none "${aufs_rw_branch}"
-	mount -t aufs -o "br:${aufs_rw_branch}:${aufs_ro_branch}" aufs "${NEW_ROOT}"
+	run mount -t squashfs -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${aufs_ro_branch}"
+	run mount -t tmpfs none "${aufs_rw_branch}"
+	run mount -t aufs -o "br:${aufs_rw_branch}:${aufs_ro_branch}" aufs "${NEW_ROOT}"
 }
 
 setup_unionfs() {
@@ -2270,9 +2479,9 @@ setup_unionfs() {
 #		fi
 
 #		mkdir -p ${MEMORY}
-		mkdir -p ${UNION}
+		run mkdir -p ${UNION}
 		good_msg "Loading fuse module"
-		modprobe fuse >/dev/null 2>&1
+		run modprobe fuse >/dev/null 2>&1
 #		 if [ -n "${UNIONFS}" ]
 #		 then
 #			 CHANGESDEV=${UNIONFS}
@@ -2299,12 +2508,12 @@ setup_unionfs() {
 #			 mount -t tmpfs tmpfs ${MEMORY}
 #		 fi
 
-		mkdir /tmp
-		mkdir -p ${UNION}
+		run mkdir /tmp
+		run mkdir -p ${UNION}
 #		mkdir -p ${CHANGES}
 #		mount -t unionfs -o dirs=${CHANGES}=rw unionfs ${UNION}
 		good_msg "Creating union mount"
-		unionfs -o allow_other,cow,noinitgroups,suid,dev,default_permissions,use_ino ${rw_dir}=RW:${ro_dir}=RO ${UNION} 2>/dev/null
+		run unionfs -o allow_other,cow,noinitgroups,suid,dev,default_permissions,use_ino ${rw_dir}=RW:${ro_dir}=RO ${UNION} 2>/dev/null
 		ret=$?
 		if [ ${ret} -ne 0 ]
 		then
@@ -2312,7 +2521,7 @@ setup_unionfs() {
 			USE_UNIONFS_NORMAL=0
 		fi
 		[ ! -d "${NEW_ROOT}${CDROOT_PATH}" ] && mkdir -p "${NEW_ROOT}${CDROOT_PATH}"
-		mount --bind "${CDROOT_PATH}" "${NEW_ROOT}${CDROOT_PATH}"
+		run mount --bind "${CDROOT_PATH}" "${NEW_ROOT}${CDROOT_PATH}"
 	else
 		USE_UNIONFS_NORMAL=0
 	fi

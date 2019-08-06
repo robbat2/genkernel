@@ -30,6 +30,12 @@ esac
 . /etc/initrd.scripts
 . "${CRYPT_ENV_FILE}"
 
+GK_INIT_LOG_PREFIX=${0}
+if [ -n "${SSH_CLIENT_IP}" ] && [ -n "${SSH_CLIENT_PORT}" ]
+then
+	GK_INIT_LOG_PREFIX="${0}[${SSH_CLIENT_IP}:${SSH_CLIENT_PORT}]"
+fi
+
 main() {
 	if [ ! -x /sbin/cryptsetup ]
 	then
@@ -58,7 +64,7 @@ main() {
 			fi
 
 			setup_md_device "${LUKS_DEVICE}"
-			if ! cryptsetup isLuks "${LUKS_DEVICE}"
+			if ! run cryptsetup isLuks "${LUKS_DEVICE}"
 			then
 				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" "${CRYPT_SILENT}"
 
@@ -84,12 +90,12 @@ main() {
 				crypt_filter_ret=$?
 
 				[ -e /dev/tty.org ] \
-					&& rm -f /dev/tty \
-					&& mv /dev/tty.org /dev/tty
+					&& run rm -f /dev/tty \
+					&& run mv /dev/tty.org /dev/tty
 
 				if [ ${crypt_filter_ret} -eq 0 ]
 				then
-					touch "${OPENED_LOCKFILE}"
+					run touch "${OPENED_LOCKFILE}"
 					good_msg "LUKS device ${LUKS_DEVICE} opened" "${CRYPT_SILENT}"
 					break
 				else
@@ -107,7 +113,7 @@ main() {
 	then
 		if  ! is_debug
 		then
-			rm -f "${LUKS_KEY}"
+			run rm -f "${LUKS_KEY}"
 		else
 			warn_msg "LUKS key file '${LUKS_KEY}' not deleted because DEBUG mode is enabled!"
 		fi
@@ -117,7 +123,7 @@ main() {
 	then
 		# Kill any running cryptsetup prompt for this device.
 		# But SIGINT only to keep shell functional.
-		pkill -2 -f "luksOpen.*${LUKS_NAME}\$" >/dev/null 2>&1
+		run pkill -2 -f "luksOpen.*${LUKS_NAME}\$" >/dev/null 2>&1
 	fi
 }
 
