@@ -818,6 +818,8 @@ check_loop() {
 run_shell() {
 	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
 
+	touch "${GK_SHELL_LOCKFILE}"
+
 	export PS1='rescueshell \w \# '
 
 	echo
@@ -838,9 +840,9 @@ run_shell() {
 		${SH} --login
 	fi
 
-	echo
+	rm "${GK_SHELL_LOCKFILE}"
 
-	:> "${GK_SHELL_LOCKFILE}"
+	echo
 }
 
 fs_type_in_use() {
