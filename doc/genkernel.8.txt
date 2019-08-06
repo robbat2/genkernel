@@ -877,6 +877,18 @@ make sure that this mountpoint is accessible, see *initramfs.mounts*.
     Loop-mount an ISO file from the boot device to get the filesystem image.
     Useful with chain-loading environments and USB keys.
 
+initramfs.mounts
+----------------
+By default, genkernel's initramfs will only mount *root* device. But
+sometimes additional mounts are required before initramfs can switch to
+real root (for example on systems with a seperate '/usr' mount).
+
+Therefore genkernel package contains '/etc/initramfs.mounts' file which
+will allow you to specify additional mounts which should be mounted before
+initramfs will switch to real root.
+
+NOTE: This file will not be included in initramfs. Instead, booted initramfs
+will check for this file on specified *root* device.
 
 NETBOOTING
 ----------
@@ -930,6 +942,8 @@ AUTHORS
 
 SEE ALSO
 --------
+'/etc/initramfs.mounts' - additional required mounts before switching to real root
+
 '/etc/genkernel.conf' - genkernel configuration file
 
 // vim: ft=asciidoc et tw=72 sts=4 ts=4 :
