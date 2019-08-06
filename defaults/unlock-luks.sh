@@ -116,8 +116,9 @@ main() {
 
 	if [ "${crypt_filter_ret}" = '0' ]
 	then
-		# Kill any running cryptsetup prompt for this device
-		pkill -9 -f "luksOpen.*${LUKS_NAME}\$" >/dev/null 2>&1
+		# Kill any running cryptsetup prompt for this device.
+		# But SIGINT only to keep shell functional.
+		pkill -2 -f "luksOpen.*${LUKS_NAME}\$" >/dev/null 2>&1
 	fi
 }
 
