@@ -1255,11 +1255,6 @@ fi
 
 cleanup
 
-good_msg "Booting (initramfs)"
-
-cd "${CHROOT}"
-mkdir "${CHROOT}/proc" "${CHROOT}/sys" "${CHROOT}/run" 2>/dev/null
-
 # If devtmpfs is mounted, try move it to the new root
 # If that fails, try to unmount all possible mounts of
 # devtmpfs as stuff breaks otherwise
