@@ -922,8 +922,6 @@ do
 done
 # End determine root device
 
-#verbose_kmsg
-
 # If CD root is set determine the looptype to boot
 if [ "${CDROOT}" = '1' ]
 then
