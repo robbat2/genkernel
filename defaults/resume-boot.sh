@@ -1,15 +1,28 @@
 #!/bin/sh
 
 . /etc/initrd.defaults
+. /etc/initrd.scripts
 
-if [ -s "${GK_SHELL_LOCKFILE}" ]
+GK_INIT_LOG_PREFIX=${0}
+if [ -n "${SSH_CLIENT_IP}" ] && [ -n "${SSH_CLIENT_PORT}" ]
 then
-	kill -9 "$(cat "${GK_SHELL_LOCKFILE}")"
+	GK_INIT_LOG_PREFIX="${0}[${SSH_CLIENT_IP}:${SSH_CLIENT_PORT}]"
 fi
 
-if [ -f "${GK_SSHD_LOCKFILE}" ]
-then
-	rm "${GK_SSHD_LOCKFILE}"
-fi
+# We don't want to kill init script (PID 1),
+# ourselves and parent process yet...
+pids_to_keep="1 ${$} ${PPID}"
+
+for pid in $(pgrep sh)
+do
+	if ! echo " ${pids_to_keep} " | grep -q " ${pid} "
+	then
+		kill -9 ${pid}
+	fi
+done
+
+good_msg "Resuming boot process ..."
+[ -f "${GK_SSHD_LOCKFILE}" ] && run rm "${GK_SSHD_LOCKFILE}"
+[ "${PPID}" != '1' ] && kill -9 ${PPID}
 
 exit 0
