@@ -39,11 +39,11 @@ main() {
 
 	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="${NAME}" LUKS_KEY='"${CRYPT_KEYFILE_'${TYPE}'}"'
 	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"' OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
-	local cryptsetup_options=
+	local cryptsetup_options
 
 	while true
 	do
-		local gpg_cmd= crypt_filter_ret=
+		local gpg_cmd crypt_filter_ret
 
 		if [ -e "${OPENED_LOCKFILE}" ]
 		then
@@ -53,15 +53,14 @@ main() {
 			LUKS_DEVICE=$(find_real_device "${LUKS_DEVICE}")
 			if [ -z "${LUKS_DEVICE}" ]
 			then
-				bad_msg "Looks like CRYPT_${TYPE} kernel cmdline argument is not set." ${CRYPT_SILENT}
+				bad_msg "Looks like CRYPT_${TYPE} kernel cmdline argument is not set." "${CRYPT_SILENT}"
 				exit 1
 			fi
 
-			setup_md_device ${LUKS_DEVICE}
-			cryptsetup isLuks ${LUKS_DEVICE}
-			if [ $? -ne 0 ]
+			setup_md_device "${LUKS_DEVICE}"
+			if ! cryptsetup isLuks "${LUKS_DEVICE}"
 			then
-				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" ${CRYPT_SILENT}
+				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" "${CRYPT_SILENT}"
 
 				# User has SSH access and is able to call script again or
 				# able to investigate the problem on its own.
@@ -69,7 +68,7 @@ main() {
 			else
 				if [ "x${LUKS_TRIM}" = "xyes" ]
 				then
-					good_msg "Enabling TRIM support for ${LUKS_NAME} ..." ${CRYPT_SILENT}
+					good_msg "Enabling TRIM support for ${LUKS_NAME} ..." "${CRYPT_SILENT}"
 					cryptsetup_options="${cryptsetup_options} --allow-discards"
 				fi
 
@@ -91,10 +90,10 @@ main() {
 				if [ ${crypt_filter_ret} -eq 0 ]
 				then
 					touch "${OPENED_LOCKFILE}"
-					good_msg "LUKS device ${LUKS_DEVICE} opened" ${CRYPT_SILENT}
+					good_msg "LUKS device ${LUKS_DEVICE} opened" "${CRYPT_SILENT}"
 					break
 				else
-					bad_msg "Failed to open LUKS device ${LUKS_DEVICE}" ${CRYPT_SILENT}
+					bad_msg "Failed to open LUKS device ${LUKS_DEVICE}" "${CRYPT_SILENT}"
 
 					# We need to stop here with a non-zero exit code to prevent
 					# a loop when invalid keyfile was sent.
