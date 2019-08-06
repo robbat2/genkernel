@@ -11,11 +11,13 @@
 [ ! -e /dev/tty ]      && mknod /dev/tty c 5 0
 [ ! -e /dev/tty0 ]     && mknod /dev/tty0 c 4 0
 [ ! -e /dev/tty1 ]     && mknod /dev/tty1 c 4 1
+[ ! -e /dev/ttyS0 ]    && mknod /dev/ttyS0 c 4 64
+[ ! -e /dev/ttyS1 ]    && mknod /dev/ttyS1 c 4 65
 [ ! -e /dev/urandom ]  && mknod /dev/urandom c 1 9
 [ ! -e /dev/random ]   && mknod /dev/random c 1 8
 [ ! -e /dev/zero ]     && mknod /dev/zero c 1 5
 
-# Clean input/output
+# Take control
 exec >${CONSOLE} <${CONSOLE} 2>&1
 
 if [ "$$" != '1' ]
@@ -184,9 +186,9 @@ do
 		;;
 		# Redirect output to a specific tty
 		CONSOLE=*|console=*)
-			CONSOLE=${x#*=}
-			CONSOLE=$(basename ${CONSOLE})
-#			exec >${CONSOLE} <${CONSOLE} 2>&1
+			NEW_CONSOLE=${x#*=}
+			NEW_CONSOLE=$(basename ${NEW_CONSOLE})
+			NEW_CONSOLE=${NEW_CONSOLE%%,*}
 		;;
 		# /dev/md
 		lvmraid=*)
@@ -361,6 +363,21 @@ do
 		;;
 	esac
 done
+
+if [ -n "${NEW_CONSOLE}" ]
+then
+	# We cannot update console while processing CMDLINE because we
+	# are only interested in last console= value.
+	[ ! -c "${NEW_CONSOLE}" ] && NEW_CONSOLE="/dev/${NEW_CONSOLE}"
+	if [ -c "${NEW_CONSOLE}" ]
+	then
+		exec >${NEW_CONSOLE} <${NEW_CONSOLE} 2>&1
+		good_msg "Console switched from '${CONSOLE}' to '${NEW_CONSOLE}'!"
+		CONSOLE="${NEW_CONSOLE}"
+	else
+		bad_msg "Unable to switch console: '${NEW_CONSOLE}' not found or not a character device!"
+	fi
+fi
 
 quiet_kmsg
 

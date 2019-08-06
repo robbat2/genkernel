@@ -827,9 +827,14 @@ run_shell() {
 	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${kernel_ver}${NORMAL}"
 	echo
 
-	if [ -n "${CONSOLE}" ] && [ -c "/dev/${CONSOLE}" ]
+	# Avoid /dev/{console,tty0} due to "can't access tty; job control turned off" problem;
+	# cttyhack will handle this for us...
+	if [ -n "${CONSOLE}" ] \
+		&& [ "${CONSOLE}" != "/dev/console" ] \
+		&& [ "${CONSOLE}" != "/dev/tty0" ] \
+		&& [ -c "${CONSOLE}" ]
 	then
-		setsid ${SH} -c "exec sh --login </dev/${CONSOLE} >/dev/${CONSOLE} 2>&1"
+		setsid ${SH} -c "exec sh --login <${CONSOLE} >${CONSOLE} 2>&1"
 	elif command -v cttyhack 1>/dev/null 2>&1
 	then
 		setsid cttyhack ${SH} --login
@@ -843,6 +848,10 @@ run_shell() {
 	rm "${GK_SHELL_LOCKFILE}"
 
 	echo
+
+	# We maybe have called exec and dettached from main script; We
+	# must restore control...
+	exec >${CONSOLE} <${CONSOLE} 2>&1
 }
 
 fs_type_in_use() {
