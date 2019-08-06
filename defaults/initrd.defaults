@@ -6,7 +6,6 @@ PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 # ctrl-V then esc will print ^[
 # ctrl-V then ctrl-shift-m will print ^M
 BACK_UP="\033[1K\033[0G"
-NORMAL="\033[0m"
 WARN="\033[33;1m"
 BAD="\033[31;1m"
 BOLD="\033[1m"
