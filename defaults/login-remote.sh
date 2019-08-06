@@ -15,31 +15,31 @@ receivefile() {
 		swap)
 			file=${CRYPT_KEYFILE_SWAP}
 			;;
+		'')
+			bad_msg "No keyfile specified." "${CRYPT_SILENT}"
+			exit 1
+			;;
 		*)
-			bad_msg "Unknown '${1}' keyfile received." ${CRYPT_SILENT}
+			bad_msg "Unknown '${1}' keyfile received." "${CRYPT_SILENT}"
 			exit 1
 			;;
 	esac
 
 	# limit maximum stored bytes to 1M to avoid killing the server
-	dd of=${file} count=1k bs=1k 2>/dev/null
+	run dd of="${file}" count=1k bs=1k 2>/dev/null
 	return $?
 }
 
-
-
 if [ "x${1}" = "x-c" ]
 then
-	command=$(echo ${2} | awk -F" " '{print $1}')
-	type=$(echo ${2} | awk -F" " '{print $2}')
+	command=$(echo "${2}" | awk '{ print $1 }')
+	type=$(echo "${2}" | awk '{ print $2 }')
 
 	case ${command} in 
 		post)
-			receivefile ${type}
-			if [ $? -eq 0 ]
+			if receivefile "${type}"
 			then
-				unlock-luks ${type}
-				if [ $? -eq 0 ]
+				if unlock-luks "${type}"
 				then
 					if [ "${type}" = 'root' ]
 					then
@@ -53,12 +53,12 @@ then
 					exit 1
 				fi
 			else
-				bad_msg "Keyfile was not properly received!" ${CRYPT_SILENT}
+				bad_msg "Keyfile was not properly received!" "${CRYPT_SILENT}"
 				exit 1
 			fi
 			;;
 		*)
-			bad_msg "Command '${command}' is not supported!" ${CRYPT_SILENT}
+			bad_msg "Command '${command}' is not supported!" "${CRYPT_SILENT}"
 			exit 1
 	esac
 else
@@ -77,12 +77,12 @@ else
 	good_msg "${NORMAL}Be aware that it will kill your connection which means"
 	good_msg "${NORMAL}you will no longer be able to work in this shell."
 
-	if [ -n "${CRYPT_ROOT}" -a ! -f "${CRYPT_ROOT_OPENED_LOCKFILE}" ]
+	if [ -n "${CRYPT_ROOT}" ] && [ ! -f "${CRYPT_ROOT_OPENED_LOCKFILE}" ]
 	then
 		good_msg "${NORMAL}To remote unlock LUKS-encrypted root device, run '${BOLD}unlock-luks root${NORMAL}'."
 	fi
 
-	if [ -n "${CRYPT_SWAP}" -a ! -f "${CRYPT_ROOT_OPENED_LOCKFILE}" ]
+	if [ -n "${CRYPT_SWAP}" ] && [ ! -f "${CRYPT_ROOT_OPENED_LOCKFILE}" ]
 	then
 		good_msg "${NORMAL}To remote unlock LUKS-encrypted swap device, run '${BOLD}unlock-luks swap${NORMAL}'."
 	fi
