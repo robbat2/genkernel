@@ -2047,8 +2047,7 @@ kill_network() {
 	# interface.
 	if ipv6_tentative
 	then
-		[ -z "${QUIET}" ] && \
-		printf "%b" "${WARN}**${NORMAL}${BOLD} Waiting for tentative IPv6 addresses to complete DAD ${NORMAL}..."
+		[ -z "${QUIET}" ] && good_msg_n "Waiting for tentative IPv6 addresses to complete DAD ..."
 
 		local dad_timeout=10
 		while [ ${dad_timeout} -gt 0 ]
@@ -2056,11 +2055,10 @@ kill_network() {
 			ipv6_tentative || break
 			sleep 1
 			: $(( dad_timeout -= 1 ))
-			[ -z "${QUIET}" ] && \
-			printf "."
+			[ -z "${QUIET}" ] && printf "."
 		done
 
-		echo ""
+		[ -z "${QUIET}" ] && echo ''
 
 		if [ ${dad_timeout} -le 0 ]
 		then
@@ -2068,8 +2066,7 @@ kill_network() {
 		fi
 	fi
 
-	[ -z "${QUIET}" ] && \
-	printf "%b" "${GOOD}>>${NORMAL}${BOLD} Bringing down interface ${GK_NET_IFACE} ${NORMAL}..."
+	[ -z "${QUIET}" ] && good_msg_n "Bringing down interface ${GK_NET_IFACE} ..."
 
 	local deconfiguration_timeout=${GK_NET_TIMEOUT_DECONFIGURATION}
 	while [ ${deconfiguration_timeout} -gt 0 ]
@@ -2083,11 +2080,10 @@ kill_network() {
 		fi
 		sleep 1
 		: $(( deconfiguration_timeout -= 1 ))
-		[ -z "${QUIET}" ] && \
-		printf "."
+		[ -z "${QUIET}" ] && printf "."
 	done
 
-	echo ""
+	[ -z "${QUIET}" ] && echo ''
 
 	if [ ${deconfiguration_timeout} -le 0 ]
 	then
