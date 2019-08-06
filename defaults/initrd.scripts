@@ -2332,7 +2332,7 @@ setup_md_device() {
 			run mknod /dev/md${MD_NUMBER} b 9 ${MD_NUMBER} >/dev/null 2>&1
 			[ $? -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed ..."
 		fi
-		run mdstart ${MDPART} /dev/md${MD_NUMBER}
+		run raidautorun /dev/md${MD_NUMBER}
 	fi
 }
 

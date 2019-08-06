@@ -1,5 +1,3 @@
-# Gentoo patch:
-CONFIG_MDSTART=y
 # Options to match older versions of busybox:
 CONFIG_ASH_BUILTIN_ECHO=y
 CONFIG_ASH_BUILTIN_PRINTF=y
