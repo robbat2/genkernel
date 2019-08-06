@@ -2198,7 +2198,7 @@ wait_sshd() {
 		return
 	fi
 
-	printf "%b" "${GOOD}>>${NORMAL}${BOLD} gk.sshd.wait set; Waiting ${GK_SSHD_WAIT} seconds for SSH connection ${NORMAL}..."
+	good_msg_n "gk.sshd.wait set; Waiting ${GK_SSHD_WAIT} seconds for SSH connection ..."
 
 	local last_cmd="run last -W 2>/dev/null | head -n 3"
 	is_log_enabled && last_cmd="${last_cmd} | tee -a '${GK_INIT_LOG}'"
