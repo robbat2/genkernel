@@ -366,15 +366,11 @@ parse_cmdline() {
 			;;
 		--mdadm|--no-mdadm)
 			CMD_MDADM=$(parse_optbool "$*")
-			print_info 3 "CMD_MDADM: $CMD_MDADM"
-			if isTrue "${CMD_MDADM}" && [ ! -e /sbin/mdadm ]
-			then
-				print_warning 'Warning: --mdadm generally requires sys-fs/mdadm present on the host system'
-			fi
+			print_info 3 "CMD_MDADM: ${CMD_MDADM}"
 			;;
 		--mdadm-config=*)
 			CMD_MDADM_CONFIG="${*#*=}"
-			print_info 3 "CMD_MDADM_CONFIG: $CMD_MDADM_CONFIG"
+			print_info 3 "CMD_MDADM_CONFIG: ${CMD_MDADM_CONFIG}"
 			;;
 		--busybox|--no-busybox)
 			CMD_BUSYBOX=$(parse_optbool "$*")
