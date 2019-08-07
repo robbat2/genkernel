@@ -4,6 +4,8 @@
 PATH="${PATH}:/sbin:/usr/sbin"
 GK_V='4.0.0_beta11'
 
+GK_TIME_START=$(date +%s)
+
 TODEBUGCACHE=yes # Until an error occurs or LOGFILE is fully qualified.
 
 small_die() {
