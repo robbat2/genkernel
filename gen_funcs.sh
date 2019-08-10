@@ -352,6 +352,8 @@ gen_die() {
 		print_error 1 "Please do ${BOLD}*not*${NORMAL} report ${BOLD}kernel${NORMAL} compilation failures as genkernel bugs!"
 		print_error 1 ''
 
+		restore_boot_mount_state
+
 		# Cleanup temp dirs and caches if requested
 		cleanup
 	fi
