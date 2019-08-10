@@ -17,17 +17,41 @@ determine_kernel_config_file() {
 		fi
 	else
 		local -a kconfig_candidates
-		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" )
-		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" )
-		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/generated-config" )
-		kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config" )
-		kconfig_candidates+=( "${DEFAULT_KERNEL_CONFIG}" )
+
+		local -a gk_kconfig_candidates
+		gk_kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config-${KV}" )
+		gk_kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config-${VER}.${PAT}" )
+		gk_kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/generated-config" )
+		gk_kconfig_candidates+=( "${GK_SHARE}/arch/${ARCH}/kernel-config" )
+		gk_kconfig_candidates+=( "${DEFAULT_KERNEL_CONFIG}" )
 
 		if [ -n "${CMD_KERNEL_CONFIG}" -a "${CMD_KERNEL_CONFIG}" = "default" ]
 		then
 			print_info 1 "Default configuration was forced. Will ignore any user kernel configuration!"
+			kconfig_candidates=( ${gk_kconfig_candidates[@]} )
 		else
-			kconfig_candidates=( "/etc/kernels/${GK_FILENAME_CONFIG}" "/etc/kernels/kernel-config-${ARCH}-${KV}" ${kconfig_candidates[@]} )
+			local -a user_kconfig_candidates
+
+			# Always prefer kernel config based on actual $KV reading
+			user_kconfig_candidates+=( "/etc/kernels/${GK_FILENAME_CONFIG}" )
+
+			if [ -n "${KERNEL_LOCALVERSION}" -a "${KERNEL_LOCALVERSION}" != "UNSET" ]
+			then
+				# Look for kernel config based on KERNEL_LOCALVERSION
+				# which we are going to use, too.
+				# This will allow user to copy previous kernel config file
+				# which includes LOV by default to new version when doing
+				# kernel upgrade since we add $ARCH to $LOV by default.
+				user_kconfig_candidates+=( "/etc/kernels/kernel-config-${VER}.${PAT}.${SUB}${EXV}${KERNEL_LOCALVERSION}" )
+			fi
+
+			# Look for genkernel-3.x configs for backward compatibility, too
+			user_kconfig_candidates+=( "/etc/kernels/kernel-config-${ARCH}-${KV}" )
+
+			kconfig_candidates=(
+				 ${user_kconfig_candidates[@]}
+				 ${gk_kconfig_candidates[@]}
+			)
 		fi
 
 		local f
