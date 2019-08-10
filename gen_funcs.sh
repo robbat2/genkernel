@@ -1746,7 +1746,7 @@ make_bootdir_writable() {
 	# Based on mount-boot.eclass code
 	local fstabstate=$(awk "!/^#|^[[:blank:]]+#|^${BOOTDIR//\//\\/}/ {print \$2}" /etc/fstab 2>/dev/null | egrep "^${BOOTDIR}$" )
 	local procstate=$(awk "\$2 ~ /^${BOOTDIR//\//\\/}\$/ {print \$2}" /proc/mounts 2>/dev/null)
-	local proc_ro=$(awk '{ print $2 " ," $4 "," }' /proc/mounts 2>/dev/null | sed -n "/${BOOTDIR//\//\\/} .*,ro,/p")
+	local proc_ro=$(awk '{ print $2 " ," $4 "," }' /proc/mounts 2>/dev/null | sed -n "/^${BOOTDIR//\//\\/} .*,ro,/p")
 
 	if [ -n "${fstabstate}" ] && [ -n "${procstate}" ]
 	then
