@@ -1608,7 +1608,8 @@ create_initramfs() {
 			# We can generate or update /etc/ld.so.cache which was copied from host
 			# to actually match initramfs' content.
 			print_info 1 "$(get_indent 1)>> Pre-generating initramfs' /etc/ld.so.cache ..."
-			ldconfig -f /etc/ld.so.conf -r "${TDIR}" 2>/dev/null \
+			# Need to disable sandbox which doesn't understand chroot(), bug #431038
+			SANDBOX_ON=0 ldconfig -f /etc/ld.so.conf -r "${TDIR}" 2>/dev/null \
 				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
 		fi
 
