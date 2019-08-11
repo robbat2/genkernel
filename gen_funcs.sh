@@ -1704,8 +1704,6 @@ kconfig_get_opt() {
 		-e "/^#\? \?${optname}[ =].*/{ s/.*${optname}[ =]//g; s/is not set\| +//g; p; q }"
 }
 
-KCONFIG_MODIFIED_MARKER="${TEMP}/.kconfig_modified"
-
 kconfig_set_opt() {
 	[[ ${#} -lt 3 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at least three arguments (${#} given)!"
