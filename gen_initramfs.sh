@@ -1603,12 +1603,12 @@ create_initramfs() {
 		"${CPIO_COMMAND}" --quiet -i -F "${CPIO_ARCHIVE}" 2>/dev/null \
 			|| gen_die "Failed to extract cpio '${CPIO_ARCHIVE}' for dedupe"
 
-		if [ -e etc/ld.so.cache ] && ! isTrue "$(tc-is-cross-compiler)"
+		if ! isTrue "$(tc-is-cross-compiler)"
 		then
-			# We can update /etc/ld.so.cache which was copied from host
+			# We can generate or update /etc/ld.so.cache which was copied from host
 			# to actually match initramfs' content.
 			print_info 1 "$(get_indent 1)>> Pre-generating initramfs' /etc/ld.so.cache ..."
-			ldconfig -f "${TDIR}/etc/ld.so.conf" -r . 2>/dev/null \
+			ldconfig -f /etc/ld.so.conf -r "${TDIR}" 2>/dev/null \
 				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
 		fi
 
