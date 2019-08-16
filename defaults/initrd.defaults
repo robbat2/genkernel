@@ -73,6 +73,7 @@ IP='dhcp'
 GK_DEBUGMODE_STATEFILE="/tmp/debug.enabled"
 GK_INIT_LOG='/tmp/init.log'
 GK_INIT_LOG_COPYTO=
+GK_INIT_LOG_COPYTO_DEFAULT='/genkernel-boot.log'
 GK_INIT_LOG_DISABLED='/tmp/no-init.log'
 GK_INIT_LOG_PREFIX=
 GK_NET_DHCP_PIDFILE='/var/run/udhcpc.pid'

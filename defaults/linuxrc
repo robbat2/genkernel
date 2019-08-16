@@ -288,16 +288,16 @@ do
 		gk.log.keep=*)
 			case "${x#*=}" in
 				[Tt][Rr][Uu][Ee])
-					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
 				;;
 				[Yy][Ee][Ss])
-					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
 				;;
 				[Yy])
-					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
 				;;
 				1)
-					GK_INIT_LOG_COPYTO=/genkernel-boot.log
+					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
 				;;
 				[Ff][Aa][Ll][Ss][Ee])
 					GK_INIT_LOG_COPYTO=
