@@ -126,6 +126,7 @@ do
 		;;
 		dozfs*)
 			USE_ZFS=1
+			export ZPOOL_IMPORT_UDEV_TIMEOUT_MS=0
 
 			case "${x#*=}" in
 				*force*)
