@@ -1087,7 +1087,7 @@ preserve_log() {
 		fi
 
 		logfile_mountpoint="$(dirname "${logfile_mountpoint}")"
-		if [ "${logfile_mountpoint}" = "${CHROOT}" ]
+		if [ "${logfile_mountpoint}" = "/" ]
 		then
 			# Stop here
 			bad_msg "${fail_msg}: Failed to determine mountpoint for '${logfile_target}'!"
