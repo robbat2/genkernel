@@ -1396,7 +1396,7 @@ start_volumes() {
 			[ -x "${multipath_path}" ] && break
 		done
 
-		for dmsetup_path in /sbin/dmsetup /bin/dmsetup MISSING
+		for dmsetup_path in /usr/sbin/dmsetup /sbin/dmsetup /bin/dmsetup MISSING
 		do
 			[ -x "${dmsetup_path}" ] && break
 		done
