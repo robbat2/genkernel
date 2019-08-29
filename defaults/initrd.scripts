@@ -1792,7 +1792,7 @@ openLUKS() {
 
 					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ]
 					then
-						if [ ! -x '/sbin/gpg' ]
+						if [ ! -x '/usr/bin/gpg' ]
 						then
 							bad_msg "GPG-encrypted key file provided but gpg program is missing. Was initramfs built without --gpg parameter?"
 							bad_msg "Falling back to passphrase usage!"
@@ -1800,7 +1800,7 @@ openLUKS() {
 							[ -e /dev/tty ] && run mv /dev/tty /dev/tty.org
 							run mknod /dev/tty c 5 1
 							cryptsetup_options="${cryptsetup_options} -d -"
-							gpg_cmd="/sbin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
+							gpg_cmd="/usr/bin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
 						fi
 					else
 						cryptsetup_options="${cryptsetup_options} -d ${mntkey}${LUKS_KEY}"
