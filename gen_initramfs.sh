@@ -194,6 +194,12 @@ append_devices() {
 		log_future_cpio_content
 		find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} -F "${CPIO_ARCHIVE}" \
 			|| gen_die "Failed to append devices to cpio!"
+
+		cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+		if isTrue "${CLEANUP}"
+		then
+			rm -rf "${TDIR}"
+		fi
 	else
 		local TFILE="${TEMP}/initramfs-base-temp.devices"
 		if [ -f "${TFILE}" ]
@@ -366,6 +372,12 @@ append_base_layout() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append baselayout to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_busybox() {
@@ -417,6 +429,12 @@ append_busybox() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_e2fsprogs() {
@@ -438,6 +456,12 @@ append_e2fsprogs() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_blkid() {
@@ -462,6 +486,12 @@ append_blkid() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append blkid to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_unionfs_fuse() {
@@ -482,6 +512,12 @@ append_unionfs_fuse() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_multipath() {
@@ -518,6 +554,12 @@ append_multipath() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_dmraid() {
@@ -547,6 +589,12 @@ append_dmraid() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append dmraid to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_iscsi() {
@@ -567,6 +615,12 @@ append_iscsi() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append iscsi to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_lvm() {
@@ -642,6 +696,12 @@ append_lvm() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append lvm to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_mdadm() {
@@ -686,6 +746,12 @@ append_mdadm() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_xfsprogs() {
@@ -707,6 +773,12 @@ append_xfsprogs() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_zfs() {
@@ -752,6 +824,12 @@ append_zfs() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_btrfs() {
@@ -773,6 +851,12 @@ append_btrfs() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_libgcc_s() {
@@ -802,6 +886,12 @@ append_libgcc_s() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append libgcc_s to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_linker() {
@@ -848,6 +938,12 @@ append_linker() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append linker to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_splash() {
@@ -893,6 +989,12 @@ append_splash() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append splash to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_strace() {
@@ -913,6 +1015,12 @@ append_strace() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_overlay() {
@@ -945,6 +1053,12 @@ append_luks() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append luks to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_dropbear() {
@@ -1223,6 +1337,12 @@ append_dropbear() {
 
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_firmware() {
@@ -1257,6 +1377,12 @@ append_firmware() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append firmware to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_gpg() {
@@ -1277,6 +1403,12 @@ append_gpg() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 print_list()
@@ -1366,6 +1498,12 @@ append_modules() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append modules-${KV} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_modprobed() {
@@ -1387,6 +1525,12 @@ append_modprobed() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append modprobe.d to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 # check for static linked file with objdump
@@ -1522,6 +1666,12 @@ append_auxilary() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append auxilary to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
 }
 
 append_data() {
@@ -1620,6 +1770,12 @@ create_initramfs() {
 
 		find . -print0 | sort -z | "${CPIO_COMMAND}" ${CPIO_ARGS} --reproducible -F "${CPIO_ARCHIVE}" 2>/dev/null \
 			|| gen_die "rebuilding cpio for dedupe"
+
+		cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+		if isTrue "${CLEANUP}"
+		then
+			rm -rf "${TDIR}"
+		fi
 	else
 		print_info 1 "$(get_indent 1)>> Cannot deduping cpio contents without root; Skipping ..."
 	fi

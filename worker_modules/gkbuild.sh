@@ -183,6 +183,12 @@ _gkbuild_main() {
 
 	"${TAR_COMMAND}" -caf "${GKPKG_BINPKG}" . \
 		|| die "Failed to create binpkg of ${P} in '${GKPKG_BINPKG}'!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if [ ! -f "${TEMP}/.no_cleanup" ]
+	then
+		rm -rf "${WORKDIR}"
+	fi
 }
 
 _initialize() {

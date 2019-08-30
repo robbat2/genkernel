@@ -394,6 +394,13 @@ determine_real_args() {
 	declare -gr TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
 	[ -z "${TEMP}" ] && gen_die "'mktemp -d -p \"${TMPDIR}\" gk.XXXXXXXX' failed!"
 
+	if ! isTrue "${CLEANUP}"
+	then
+		local no_cleanup_marker="${TEMP}/.no_cleanup"
+		print_info 5 "Creating no cleanup marker '${no_cleanup_marker}' ..."
+		touch "${no_cleanup_marker}" || gen_die "Failed to create '${no_cleanup_marker}'!"
+	fi
+
 	declare -gr GK_V_CACHEDIR="${CACHE_DIR}/${GK_V}"
 
 	declare -gr KCONFIG_MODIFIED_MARKER="${TEMP}/.kconfig_modified"
