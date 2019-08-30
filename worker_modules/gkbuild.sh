@@ -247,9 +247,6 @@ _initialize() {
 		die "Unable to build ${P}: '${GK_SHARE}/gkbuilds/${PN}.gkbuild' does NOT exist!"
 	fi
 
-	source "${GKBUILD}" \
-		|| die "Failed to source '${GKBUILD}'!"
-
 	declare -gr WORKDIR=$(mktemp -d -p "${TEMP}" ${PN}.XXXXXXXX 2>/dev/null)
 	[ -z "${WORKDIR}" ] && die "mktemp failed!"
 
@@ -281,6 +278,9 @@ _initialize() {
 	mkdir "${T}" || die "Failed to create '${T}'!"
 
 	S="${WORKDIR}/${GKPKG_SRCDIR}"
+
+	source "${GKBUILD}" \
+		|| die "Failed to source '${GKBUILD}'!"
 
 	# Some tools like eltpatch (libtoolize) depend on these variables
 	export S D
