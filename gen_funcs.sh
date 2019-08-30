@@ -321,6 +321,41 @@ kv_replace() {
 	var_replace "KV" "${KV}" "${1}"
 }
 
+# Internal func.  The first argument is the version info to expand.
+# Query the preprocessor to improve compatibility across different
+# compilers rather than maintaining a --version flag matrix. #335943
+_gcc_fullversion() {
+	local ver="$1"; shift
+	set -- $($(tc-getCPP "$@") -E -P - <<<"__GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__")
+	eval echo "$ver"
+}
+
+# @FUNCTION: gcc-fullversion
+# @RETURN: compiler version (major.minor.micro: [3.4.6])
+gcc-fullversion() {
+	_gcc_fullversion '$1.$2.$3' "$@"
+}
+# @FUNCTION: gcc-version
+# @RETURN: compiler version (major.minor: [3.4].6)
+gcc-version() {
+	_gcc_fullversion '$1.$2' "$@"
+}
+# @FUNCTION: gcc-major-version
+# @RETURN: major compiler version (major: [3].4.6)
+gcc-major-version() {
+	_gcc_fullversion '$1' "$@"
+}
+# @FUNCTION: gcc-minor-version
+# @RETURN: minor compiler version (minor: 3.[4].6)
+gcc-minor-version() {
+	_gcc_fullversion '$2' "$@"
+}
+# @FUNCTION: gcc-micro-version
+# @RETURN: micro compiler version (micro: 3.4.[6])
+gcc-micro-version() {
+	_gcc_fullversion '$3' "$@"
+}
+
 gen_die() {
 	set +x
 
