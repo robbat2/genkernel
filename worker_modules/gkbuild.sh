@@ -81,19 +81,22 @@ _gkbuild_main() {
 		case "${current_phase}" in
 			src_compile)
 				print_info 2 "$(get_indent 2)${P}: >> Compiling source ..."
+				cd "${S}" || die "Failed to chdir to '${S}'!"
 				;;
 
 			src_configure)
 				print_info 2 "$(get_indent 2)${P}: >> Configuring source ..."
-				declare -ga CONFIGUREOPTS
+				cd "${S}" || die "Failed to chdir to '${S}'!"
 				;;
 
 			src_install)
 				print_info 2 "$(get_indent 2)${P}: >> Install to DESTDIR ..."
+				cd "${S}" || die "Failed to chdir to '${S}'!"
 				;;
 
 			src_prepare)
 				print_info 2 "$(get_indent 2)${P}: >> Preparing source ..."
+				cd "${S}" || die "Failed to chdir to '${S}'!"
 				;;
 
 			src_unpack)
@@ -331,8 +334,6 @@ _initialize() {
 }
 
 _src_compile() {
-	cd "${S}" || die "Failed to chdir to '${S}'!"
-
 	if [ -f Makefile ] || [ -f GNUmakefile ] || [ -f makefile ]
 	then
 		gkmake V=1
@@ -340,8 +341,6 @@ _src_compile() {
 }
 
 _src_configure() {
-	cd "${S}" || die "Failed to chdir to '${S}'!"
-
 	if [[ -x ${GKCONF_SOURCE:-.}/configure ]]
 	then
 		gkconf
@@ -349,8 +348,6 @@ _src_configure() {
 }
 
 _src_install() {
-	cd "${S}" || die "Failed to chdir to '${S}'!"
-
 	if [ -f Makefile ] || [ -f GNUmakefile ] || [ -f makefile ]
 	then
 		gkmake V=1 DESTDIR="${D}" install
@@ -358,8 +355,6 @@ _src_install() {
 }
 
 _src_prepare() {
-	cd "${S}" || die "Failed to chdir to '${S}'!"
-
 	# let's try to be smart and run autoreconf only when needed
 	local want_autoreconf=${WANT_AUTORECONF}
 
