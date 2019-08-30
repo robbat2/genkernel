@@ -171,8 +171,14 @@ copy_system_binaries() {
 }
 
 log_future_cpio_content() {
+	local dir_size=$(get_du "${PWD}")
+	if [ -n "${dir_size}" ]
+	then
+		dir_size=" (${dir_size})"
+	fi
+
 	print_info 3 "=================================================================" 1 0 1
-	print_info 3 "About to add these files from '${PWD}' to cpio archive:" 1 0 1
+	print_info 3 "About to add these files${dir_size} from '${PWD}' to cpio archive:" 1 0 1
 	print_info 3 "$(find . -print0 | xargs --null ls -ald)" 1 0 1
 	print_info 3 "=================================================================" 1 0 1
 }

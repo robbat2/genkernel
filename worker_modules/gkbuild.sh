@@ -184,6 +184,13 @@ _gkbuild_main() {
 	"${TAR_COMMAND}" -caf "${GKPKG_BINPKG}" . \
 		|| die "Failed to create binpkg of ${P} in '${GKPKG_BINPKG}'!"
 
+	if [ -n "${DU_COMMAND}" ]
+	then
+		print_info 5 "Final size of build root:      $(get_du "${BROOT}")"
+		print_info 5 "Final size of build directory: $(get_du "${S}")"
+		print_info 5 "Final size of installed tree:  $(get_du "${D}")"
+	fi
+
 	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
 	if [ ! -f "${TEMP}/.no_cleanup" ]
 	then

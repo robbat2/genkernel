@@ -764,6 +764,8 @@ determine_real_args() {
 			unset FEATURE_REQUIRING_BUSYBOX FEATURES_REQUIRING_BUSYBOX
 		fi
 
+		DU_COMMAND="$(which du 2>/dev/null)"
+
 		LDDTREE_COMMAND="$(which lddtree 2>/dev/null)"
 		if [ -z "${LDDTREE_COMMAND}" ]
 		then

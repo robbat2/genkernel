@@ -813,6 +813,16 @@ get_chost_libdir() {
 	echo "${libdir}"
 }
 
+get_du() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	[ -z "${DU_COMMAND}" ] && return
+
+	local sz=( $("${DU_COMMAND}" -hs "${1}" 2>/dev/null) )
+	echo "${sz[0]}"
+}
+
 _get_gkpkg_var_value() {
 	[[ ${#} -ne 2 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly two arguments (${#} given)!"
@@ -1264,6 +1274,7 @@ gkbuild() {
 		"GKPKG_SRCTAR='${SRCTAR}'"
 		"GKPKG_BINPKG='${BINPKG}'"
 		"GKPKG_DEPS='${DEPS}'"
+		"DU_COMMAND='${DU_COMMAND}'"
 		"TAR_COMMAND='${TAR_COMMAND}'"
 	)
 
