@@ -578,10 +578,12 @@ append_lvm() {
 	fi
 
 	populate_binpkg ${PN}
+	populate_binpkg thin-provisioning-tools
 
 	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+	unpack "$(get_gkpkg_binpkg "thin-provisioning-tools")" "${TDIR}"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
@@ -630,6 +632,9 @@ append_lvm() {
 			-e '/^[[:space:]]*monitoring/s,=.*,= 0,g' \
 			-e '/^[[:space:]]*external_device_info_source/s,=.*,= "none",g' \
 			-e '/^[[:space:]]*units/s,=.*"r",= "h",g' \
+			-e '/^[[:space:]]*thin_repair_executable/s,=.*,= /usr/sbin/thin_repair,g' \
+			-e '/^[[:space:]]*thin_dump_executable/s,=.*,= /usr/sbin/thin_dump,g' \
+			-e '/^[[:space:]]*thin_check_executable/s,=.*,= /usr/sbin/thin_check,g' \
 			"${TDIR}"/etc/lvm/lvm.conf \
 				|| gen_die 'Could not sed lvm.conf!'
 	fi

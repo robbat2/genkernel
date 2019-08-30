@@ -27,6 +27,13 @@ src_configure() {
 		--disable-udev_rules
 	)
 
+	local texec
+	for texec in check dump repair restore
+	do
+		myconf+=( --with-thin-${texec}=/usr/sbin/thin_${texec} )
+		myconf+=( --with-cache-${texec}=/usr/sbin/cache_${texec} )
+	done
+
 	gkconf "${myconf[@]}"
 }
 
