@@ -181,8 +181,11 @@ _gkbuild_main() {
 		unset found_dyn_files
 	fi
 
-	"${TAR_COMMAND}" -caf "${GKPKG_BINPKG}" . \
-		|| die "Failed to create binpkg of ${P} in '${GKPKG_BINPKG}'!"
+	local -a tar_cmd=( "$(get_tar_cmd "${GKPKG_BINPKG}")" )
+	tar_cmd+=( '.' )
+
+	print_info 3 "COMMAND: ${tar_cmd[*]}" 1 0 1
+	eval "${tar_cmd[@]}" || die "Failed to create binpkg of ${P} in '${GKPKG_BINPKG}'!"
 
 	if [ -n "${DU_COMMAND}" ]
 	then
