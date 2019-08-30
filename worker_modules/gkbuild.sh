@@ -304,6 +304,7 @@ _initialize() {
 
 		append-cflags -I"${BROOT}"/usr/include
 		append-cppflags -I"${BROOT}"/usr/include
+		append-cxxflags -I"${BROOT}"/usr/include
 		append-ldflags -L"${BROOT}"/usr/lib
 	fi
 
