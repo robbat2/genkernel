@@ -15,7 +15,6 @@ src_configure() {
 	unset PLATFORM # if set in user env, this breaks configure
 
 	local myconf=(
-		--disable-lto #655638
 		--enable-blkid
 		--disable-libicu
 		--disable-gettext
