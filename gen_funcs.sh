@@ -1096,6 +1096,10 @@ tc-getBUILD_CC() {
 	tc-getBUILD_PROG CC gcc "$@"
 }
 
+tc-getBUILD_CXX() {
+	tc-getBUILD_PROG CXX g++ "$@"
+}
+
 tc-getCC() {
 	tc-getPROG CC gcc "$@"
 }
