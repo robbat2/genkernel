@@ -274,7 +274,7 @@ compile_kernel() {
 		compile_generic "${KERNEL_MAKE_DIRECTIVE_2}" kernel
 	fi
 
-	if isTrue "${FIRMWARE_INSTALL}" && [ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -ge 4014 ]
+	if isTrue "${FIRMWARE_INSTALL}" && [ ${KV_NUMERIC} -ge 4014 ]
 	then
 		# Kernel v4.14 removed firmware from the kernel sources
 		print_warning 1 "$(get_indent 1)>> Linux v4.14 removed in-kernel firmware, you MUST install the sys-kernel/linux-firmware package!"
@@ -290,7 +290,7 @@ compile_kernel() {
 			[ "${INSTALL_FW_PATH}" != '' ] && export INSTALL_FW_PATH
 			MAKEOPTS="${MAKEOPTS} -j1" compile_generic "firmware_install" kernel
 		fi
-	elif [ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -lt 4014 ]
+	elif [ ${KV_NUMERIC} -lt 4014 ]
 	then
 		print_info 1 "$(get_indent 1)>> Skipping installation of bundled firmware due to --no-firmware-install ..."
 	fi
