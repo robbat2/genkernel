@@ -1068,7 +1068,7 @@ _tc-getPROG() {
 	fi
 
 	local search=
-	[[ -n ${tuple} ]] && search=$(type -p ${tuple}-${prog[0]})
+	[[ -n ${tuple} ]] && search=$(type -p "${tuple}-${prog[0]}")
 	[[ -n ${search} ]] && prog[0]=${search##*/}
 
 	export ${var}="${prog[*]}"
