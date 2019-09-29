@@ -753,20 +753,29 @@ config_kernel() {
 	then
 		if isTrue "${KERNEL_SUPPORT_MICROCODE}"
 		then
+			local -a kconfigs_microcode
+			local -a kconfigs_microcode_amd
+			local -a kconfigs_microcode_intel
+
 			print_info 2 "$(get_indent 1)>> Ensure that required kernel options for early microcode loading support are set ..."
-			kconfig_microcode_intel=(CONFIG_MICROCODE_INTEL CONFIG_MICROCODE_INTEL_EARLY)
+			kconfigs_microcode+=( 'CONFIG_MICROCODE' )
+			kconfigs_microcode+=( 'CONFIG_MICROCODE_OLD_INTERFACE' )
+			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs_microcode+=( 'CONFIG_MICROCODE_EARLY' )
 
-			kconfig_microcode_amd=(CONFIG_MICROCODE_AMD)
-			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfig_microcode_amd+=(CONFIG_MICROCODE_AMD_EARLY)
+			# Intel
+			kconfigs_microcode_intel+=( 'CONFIG_MICROCODE_INTEL' )
+			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs_microcode_intel+=( 'CONFIG_MICROCODE_INTEL_EARLY' )
 
-			kconfigs=(CONFIG_MICROCODE CONFIG_MICROCODE_OLD_INTERFACE)
-			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs+=(CONFIG_MICROCODE_EARLY)
+			# AMD
+			kconfigs_microcode_amd=( 'CONFIG_MICROCODE_AMD' )
+			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs_microcode_amd+=( 'CONFIG_MICROCODE_AMD_EARLY' )
 
-			[[ "$MICROCODE" == all ]] && kconfigs+=( ${kconfig_microcode_amd[@]} ${kconfig_microcode_intel[@]} )
-			[[ "$MICROCODE" == amd ]] && kconfigs+=( ${kconfig_microcode_amd[@]} )
-			[[ "$MICROCODE" == intel ]] && kconfigs+=( ${kconfig_microcode_intel[@]} )
+			[[ "${MICROCODE}" == all ]]   && kconfigs_microcode+=( ${kconfigs_microcode_amd[@]} ${kconfigs_microcode_intel[@]} )
+			[[ "${MICROCODE}" == amd ]]   && kconfigs_microcode+=( ${kconfigs_microcode_amd[@]} )
+			[[ "${MICROCODE}" == intel ]] && kconfigs_microcode+=( ${kconfigs_microcode_intel[@]} )
 
-			for k in "${kconfigs[@]}"
+			local k
+			for k in "${kconfigs_microcode[@]}"
 			do
 				local cfg=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
 				case "${cfg}" in
@@ -777,6 +786,18 @@ config_kernel() {
 			done
 
 			required_kernel_options+=( 'CONFIG_MICROCODE' )
+			case "${MICROCODE}" in
+				amd)
+					required_kernel_options+=( 'CONFIG_MICROCODE_AMD' )
+					;;
+				intel)
+					required_kernel_options+=( 'CONFIG_MICROCODE_INTEL' )
+					;;
+				all)
+					required_kernel_options+=( 'CONFIG_MICROCODE_AMD' )
+					required_kernel_options+=( 'CONFIG_MICROCODE_INTEL' )
+					;;
+			esac
 		else
 			print_info 1 "$(get_indent 1)>> Ignoring --microcode parameter; Architecture does not support microcode loading ..."
 		fi
