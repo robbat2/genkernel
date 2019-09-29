@@ -6,6 +6,32 @@ __module_main() {
 	_gkbuild_main
 }
 
+_disable_distcc() {
+	if [[ -z "${DISABLE_DISTCC}" ]] || ! isTrue "${DISABLE_DISTCC}"
+	then
+		return
+	fi
+
+	if [[ "$(tc-getCC)" != *distcc* ]] && [[ "$(tc-getCXX)" != *distcc* ]]
+	then
+		return
+	fi
+
+	print_warning 3 "distcc usage for ${P} is known to cause problems; Limiting to localhost ..."
+	export DISTCC_HOSTS=localhost
+
+	# We must ensure that parallel jobs aren't set higher than
+	# available processing units which would kill the system now
+	# that we limited distcc usage to localhost
+	local MAKEOPTS_USER=$(makeopts_jobs)
+	local MAKEOPTS_MAX=$(get_nproc)
+	if [[ ${MAKEOPTS_USER} -gt ${MAKEOPTS_MAX} ]]
+	then
+		print_warning 3 "MAKEOPTS for ${P} adjusted to -j${MAKEOPTS_MAX} due to disabled distcc support ..."
+		export MAKEOPTS="-j${MAKEOPTS_MAX}"
+	fi
+}
+
 # Remove occurrences of strings from variable given in $1
 # Strings removed are matched as globs, so for example
 # '-O*' would remove -O1, -O2 etc.
@@ -67,6 +93,8 @@ _gkbuild_main() {
 			eval "${x}() { default; }"
 		fi
 	done
+
+	_disable_distcc
 
 	local current_phase=
 	for current_phase in ${all_phases}
