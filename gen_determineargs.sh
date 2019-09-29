@@ -74,6 +74,7 @@ determine_KV() {
 
 	KV_MAJOR=$(echo $KV | cut -f1 -d.)
 	KV_MINOR=$(echo $KV | cut -f2 -d.)
+	KV_NUMERIC=$((${KV_MAJOR} * 1000 + ${KV_MINOR}))
 
 	if [ -n "${old_KV}" -a "${KV}" != "${old_KV}" ]
 	then
