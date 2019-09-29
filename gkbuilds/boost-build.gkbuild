@@ -1,6 +1,10 @@
 # Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
+# distcc is known to fail compiling boost and will fallback
+# to local processing; Even when using distcc pump mode.
+DISABLE_DISTCC=yes
+
 MY_PV="${PV//./_}"
 S="${WORKDIR}/boost_${MY_PV}/tools/build/src"
 QA_IGNORE_DYNAMICALLY_LINKED_PROGRAM='(bjam|b2)$'
