@@ -581,7 +581,7 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_NET" "${cfg_CONFIG_HYPERV}" \
 			&& required_kernel_options+=( 'CONFIG_HYPERV_NET' )
 
-		if [ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -ge 4014 ]
+		if [ ${KV_NUMERIC} -ge 4014 ]
 		then
 			local cfg_CONFIG_VSOCKETS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS")
 			case "${cfg_CONFIG_VSOCKETS}" in
@@ -595,16 +595,16 @@ config_kernel() {
 
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_KEYBOARD" "${cfg_CONFIG_HYPERV}"
 
-		[ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -ge 4006 ] &&
+		[ ${KV_NUMERIC} -ge 4006 ] &&
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_PCI_HYPERV" "${cfg_CONFIG_HYPERV}"
 
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FB_HYPERV" "${cfg_CONFIG_HYPERV}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HID_HYPERV_MOUSE" "${cfg_CONFIG_HYPERV}"
 
-		[ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -ge 4010 ] &&
+		[ ${KV_NUMERIC} -ge 4010 ] &&
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UIO_HV_GENERIC" "${cfg_CONFIG_HYPERV}"
 
-		[ $((${KV_MAJOR} * 1000 + ${KV_MINOR})) -ge 4012 ] &&
+		[ ${KV_NUMERIC} -ge 4012 ] &&
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_HYPERV_TSCPAGE" "y"
 	fi
 
@@ -677,7 +677,7 @@ config_kernel() {
 		esac
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VHOST_NET" "${cfg_CONFIG_VHOST_NET}"
 
-		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4006 ]
+		if [ ${KV_NUMERIC} -ge 4006 ]
 		then
 			local cfg_CONFIG_FW_CFG_SYSFS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FW_CFG_SYSFS")
 			case "${cfg_CONFIG_FW_CFG_SYSFS}" in
@@ -717,7 +717,7 @@ config_kernel() {
 			&& required_kernel_options+=( 'CONFIG_VIRTIO_NET' )
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_PCI" "${newvirtio_setting}"
 
-		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4011 ]
+		if [ ${KV_NUMERIC} -ge 4011 ]
 		then
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_BLK_SCSI" "y"
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_MQ_VIRTIO" "y"
@@ -731,7 +731,7 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MMIO" "${newvirtio_setting}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES" "y"
 
-		if [ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4008 ]
+		if [ ${KV_NUMERIC} -ge 4008 ]
 		then
 			local cfg_CONFIG_VSOCKETS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS")
 			case "${cfg_CONFIG_VSOCKETS}" in
@@ -744,7 +744,7 @@ config_kernel() {
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_VSOCKETS_COMMON" "${newvirtio_setting}"
 		fi
 
-		[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -ge 4010 ] &&
+		[ ${KV_NUMERIC} -ge 4010 ] &&
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_DEV_VIRTIO" "${newvirtio_setting}"
 	fi
 
@@ -760,15 +760,15 @@ config_kernel() {
 			print_info 2 "$(get_indent 1)>> Ensure that required kernel options for early microcode loading support are set ..."
 			kconfigs_microcode+=( 'CONFIG_MICROCODE' )
 			kconfigs_microcode+=( 'CONFIG_MICROCODE_OLD_INTERFACE' )
-			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs_microcode+=( 'CONFIG_MICROCODE_EARLY' )
+			[ ${KV_NUMERIC} -le 4003 ] && kconfigs_microcode+=( 'CONFIG_MICROCODE_EARLY' )
 
 			# Intel
 			kconfigs_microcode_intel+=( 'CONFIG_MICROCODE_INTEL' )
-			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs_microcode_intel+=( 'CONFIG_MICROCODE_INTEL_EARLY' )
+			[ ${KV_NUMERIC} -le 4003 ] && kconfigs_microcode_intel+=( 'CONFIG_MICROCODE_INTEL_EARLY' )
 
 			# AMD
 			kconfigs_microcode_amd=( 'CONFIG_MICROCODE_AMD' )
-			[ $(($KV_MAJOR * 1000 + ${KV_MINOR})) -le 4003 ] && kconfigs_microcode_amd+=( 'CONFIG_MICROCODE_AMD_EARLY' )
+			[ ${KV_NUMERIC} -le 4003 ] && kconfigs_microcode_amd+=( 'CONFIG_MICROCODE_AMD_EARLY' )
 
 			[[ "${MICROCODE}" == all ]]   && kconfigs_microcode+=( ${kconfigs_microcode_amd[@]} ${kconfigs_microcode_intel[@]} )
 			[[ "${MICROCODE}" == amd ]]   && kconfigs_microcode+=( ${kconfigs_microcode_amd[@]} )
