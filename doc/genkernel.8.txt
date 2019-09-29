@@ -269,7 +269,10 @@ LOW-LEVEL COMPILATION OPTIONS
     C compiler flags used to compile utilities.
 
 *--utils-cc*=<compiler>::
-    Compiler to use for utilities.
+    C Compiler to use for utilities.
+
+*--utils-cxx*=<compiler>::
+    C++ Compiler to use for utilities.
 
 *--utils-ld*=<linker>::
     Linker to use for utilities.

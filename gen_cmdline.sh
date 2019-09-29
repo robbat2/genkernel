@@ -94,7 +94,8 @@ longusage() {
   echo "	--kernel-outputdir=<path>"
   echo "				Save output files outside the source tree"
   echo "	--utils-as=<assembler>	Assembler to use for utils"
-  echo "	--utils-cc=<compiler>	Compiler to use for utilities"
+  echo "	--utils-cc=<compiler>	C Compiler to use for utilities"
+  echo "	--utils-cxx=<compiler>	C++ Compiler to use for utilities"
   echo "	--utils-cflags=<cflags> C compiler flags used to compile utilities"
   echo "	--utils-ld=<linker>	Linker to use for utils"
   echo "	--utils-make=<makeprog>	GNU Make to use for utils"
@@ -308,6 +309,10 @@ parse_cmdline() {
 		--utils-cc=*)
 			CMD_UTILS_CC="${*#*=}"
 			print_info 3 "CMD_UTILS_CC: ${CMD_UTILS_CC}"
+			;;
+		--utils-cxx=*)
+			CMD_UTILS_CXX="${*#*=}"
+			print_info 3 "CMD_UTILS_CXX: ${CMD_UTILS_CXX}"
 			;;
 		--utils-cflags=*)
 			CMD_UTILS_CFLAGS="${*#*=}"

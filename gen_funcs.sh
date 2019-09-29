@@ -1061,6 +1061,9 @@ _tc-getPROG() {
 			CC)
 				[[ -n "${multilib_cflags}" ]] && prog+=( "${multilib_cflags}" )
 				;;
+			CXX)
+				[[ -n "${multilib_cflags}" ]] && prog+=( "${multilib_cflags}" )
+				;;
 			LD)
 				[[ -n "${multilib_ldflags}" ]] &&  prog+=( "${multilib_ldflags}" )
 				;;
