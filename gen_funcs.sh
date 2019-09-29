@@ -792,7 +792,7 @@ debug_breakpoint() {
 get_chost_libdir() {
 	local cc=$(tc-getCC)
 
-	local test_file=$("${cc}" -print-file-name=libnss_files.so 2>/dev/null)
+	local test_file=$(${cc} -print-file-name=libnss_files.so 2>/dev/null)
 	if [ -z "${test_file}" ]
 	then
 		gen_die "$(get_useful_function_stack "${FUNCNAME}")Unable to determine CHOST's libdir: '${cc} -print-file-name=libnss_files.so' returned nothing!"
