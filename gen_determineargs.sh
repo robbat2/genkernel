@@ -490,7 +490,7 @@ determine_real_args() {
 
 	# set CBUILD and CHOST
 	local build_cc=$(tc-getBUILD_CC)
-	CBUILD=$("${build_cc}" -dumpmachine 2>/dev/null)
+	CBUILD=$(${build_cc} -dumpmachine 2>/dev/null)
 	if [ -z "${CBUILD}" ]
 	then
 		gen_die "Failed to determine CBUILD using '${build_cc} -dumpmachine' command!"
