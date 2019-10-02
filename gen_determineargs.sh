@@ -698,6 +698,14 @@ determine_real_args() {
 
 	if isTrue "${BUILD_KERNEL}"
 	then
+		case "${CMD_STRIP_TYPE}" in
+			all|kernel|modules|none)
+				;;
+			*)
+				gen_die "Invalid strip type '${CMD_STRIP_TYPE}'; --strip=<type> requires one of: all, kernel, modules, none"
+				;;
+		esac
+
 		if isTrue "$(has_space_characters "${KERNEL_OUTPUTDIR}")"
 		then
 			# Kernel Makefile doesn't support spaces in outputdir path...
