@@ -438,6 +438,52 @@ setup_cache_dir() {
 }
 
 cleanup() {
+	# Child processes we maybe want to kill can only appear in
+	# current session
+	local session=$(ps -o sess= ${$} 2>/dev/null | awk '{ print $1 }')
+	if [ -n "${session}" ]
+	then
+		# Time to kill any still running child process.
+		# All our childs will have GK_SHARE environment variable set.
+		local -a killed_pids
+
+		local pid_to_kill=
+		while IFS= read -r -u 3 pid_to_kill
+		do
+			# Don't kill ourselves or we will trigger trap
+			[ "${pid_to_kill}" = "${BASHPID}" ] && continue
+
+			# Killing process group allows us to catch grandchilds
+			# with clean environment, too.
+			if kill -${pid_to_kill} &>/dev/null
+			then
+				killed_pids+=( ${pid_to_kill} )
+			fi
+		done 3< <(ps e -s ${session} 2>/dev/null | grep GK_SHARE= 2>/dev/null | awk '{ print $1 }')
+
+		if [ ${#killed_pids[@]} -gt 0 ]
+		then
+			# Be patient -- still running process could prevent cleanup!
+			sleep 3
+
+			# Add one valid pid so that ps command won't fail
+			killed_pids+=( ${BASHPID} )
+
+			killed_pids=$(IFS=,; echo "${killed_pids[*]}")
+
+			# Processes had enough time to gracefully terminate!
+			while IFS= read -r -u 3 pid_to_kill
+			do
+				# Don't kill ourselves or we will trigger trap
+				[ "${pid_to_kill}" = "${BASHPID}" ] && continue
+
+				kill -9 -${pid_to_kill} &>/dev/null
+			done 3< <(ps --no-headers -q ${killed_pids} 2>/dev/null | awk '{ print $1 }')
+		fi
+	else
+		print_warning 1 "Failed to determine session leader; Will not try to stop child processes"
+	fi
+
 	if isTrue "${CLEANUP}"
 	then
 		if [ -n "${TEMP}" -a -d "${TEMP}" ]
