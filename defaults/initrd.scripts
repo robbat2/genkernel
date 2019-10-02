@@ -2019,6 +2019,23 @@ start_network() {
 			bad_msg "Failed to start udhcpc for interface ${GK_NET_IFACE}!"
 			return 1
 		fi
+	elif echo "${IP}" | grep -qE ':|,'
+	then
+		if is_interface_up
+		then
+			# CONFIG_IP_PNP probably caused kernel to bring up
+			# network for us. Due to presence of ":" or ","
+			# we can assume an advanced network configuration
+			# which we cannot reproduce...
+			warn_msg "Interface ${GK_NET_IFACE} is already up."
+			warn_msg "Skipping network setup; Will use existing network configuration ..."
+			run touch "${GK_NET_LOCKFILE}"
+			return 0
+		fi
+
+		warn_msg "Found advanced network configuration (check ip= kernel command-line argument)!"
+		warn_msg "Assuming user want to use kernel's IP PNP; Will not try to start network ..."
+		return 1
 	else
 		if is_interface_up
 		then
