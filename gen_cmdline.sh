@@ -805,7 +805,7 @@ parse_cmdline() {
 			print_info 3 "CMD_NICE: ${CMD_NICE}"
 			;;
 		--strip=*)
-			CMD_STRIP_TYPE=$(parse_opt "$*")
+			CMD_STRIP_TYPE="${*#*=}"
 			print_info 3 "CMD_STRIP_TYPE: ${CMD_STRIP_TYPE}"
 			;;
 		--no-strip)
