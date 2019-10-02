@@ -443,13 +443,6 @@ parse_cmdline() {
 		--bootloader=*)
 			CMD_BOOTLOADER="${*#*=}"
 			[ -z "${CMD_BOOTLOADER}" ] && CMD_BOOTLOADER="no"
-			case "${CMD_BOOTLOADER}" in
-				no|grub|grub2)
-					;;
-				*)
-					echo "Error: Bootloader '${CMD_BOOTLOADER}' is unsupported."
-					exit 1
-			esac
 			print_info 3 "CMD_BOOTLOADER: ${CMD_BOOTLOADER}"
 			;;
 		--no-bootloader)

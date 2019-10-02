@@ -557,6 +557,14 @@ determine_real_args() {
 		fi
 	fi
 
+	case "${BOOTLOADER}" in
+		no|grub|grub2)
+			;;
+		*)
+			gen_die "Invalid bootloader '${BOOTLOADER}'; --bootloader=<bootloader> requires one of: no, grub, grub2"
+			;;
+	esac
+
 	if isTrue "${KERNEL_SOURCES}"
 	then
 		if [ ! -d ${KERNEL_DIR} ]
