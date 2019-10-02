@@ -826,11 +826,11 @@ determine_real_args() {
 	fi
 
 	MICROCODE=${MICROCODE,,}
-	case ${MICROCODE} in
+	case "${MICROCODE}" in
 		all|amd|intel) ;;
 		y|yes|1|true|t) MICROCODE='all' ;;
 		n|no|none|0|false|f) MICROCODE='' ;;
-		*) gen_die "Invalid microcode '${MICROCODE}', --microcode=<type> requires one of: no, all, intel, amd" ;;
+		*) gen_die "Invalid microcode '${MICROCODE}'; --microcode=<type> requires one of: no, all, intel, amd" ;;
 	esac
 
 	if isTrue "${BUILD_RAMDISK}"  && isTrue "${MICROCODE_INITRAMFS}" && [[ -z "${MICROCODE}" ]]
