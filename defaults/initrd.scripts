@@ -2208,7 +2208,7 @@ start_sshd() {
 
 	if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
 	then
-		warn_msg "Changing gk.prompt.timeout=0 to 30 ..."
+		warn_msg "Changing gk.prompt.timeout=0 to 30 to allow remote user to answer prompts ..."
 		GK_PROMPT_TIMEOUT=30
 	fi
 
