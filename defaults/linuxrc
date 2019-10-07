@@ -882,6 +882,7 @@ do
 
 			if [ -f "${init_binary_fallback_file}" -a -x "${init_binary_fallback_file}" ]
 			then
+				REAL_INIT="${init_binary_fallback_file/${NEW_ROOT}}"
 				good_msg "Executable fallback file '${init_binary_fallback_file}' detected!" ${QUIET}
 				break
 			else
