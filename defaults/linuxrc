@@ -862,27 +862,30 @@ do
 		# else not a good root and start over.
 		if [ "${mountret}" = '0' ]
 		then
-			if [ -x "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ]
+			init_binary_file="${NEW_ROOT}${REAL_INIT:-/sbin/init}"
+			init_binary_fallback_file="${NEW_ROOT}/bin/sh"
+
+			if [ -f "${init_binary_file}" -a -x "${init_binary_file}" ]
 			then
 				break
 			else
-				warn_msg "${NEW_ROOT}${REAL_INIT:-/sbin/init} was not found or is not executable, maybe a symlink?" ${QUIET}
+				warn_msg "'${init_binary_file}' was not found, is not a file or is not executable, maybe a symlink?" ${QUIET}
 			fi
 
-			if [ -L "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ]
+			if [ -L "${init_binary_file}" ]
 			then
 				good_msg "Symlink detected! Assuming split /usr ..." ${QUIET}
 				break
 			else
-				warn_msg "${NEW_ROOT}${REAL_INIT:-/sbin/init} is not a symlink, do we have at least /bin/sh?" ${QUIET}
+				warn_msg "'${init_binary_file}' is not a symlink, do we have at least /bin/sh?" ${QUIET}
 			fi
 
-			if [ -x "${NEW_ROOT}/bin/sh" ]
+			if [ -f "${init_binary_fallback_file}" -a -x "${init_binary_fallback_file}" ]
 			then
-				good_msg "Executable ${NEW_ROOT}/bin/sh detected!" ${QUIET}
+				good_msg "Executable fallback file '${init_binary_fallback_file}' detected!" ${QUIET}
 				break
 			else
-				warn_msg "${NEW_ROOT}/bin/sh was not found or is not executable, maybe we are working with NFS?" ${QUIET}
+				warn_msg "'${init_binary_fallback_file}' was not found, is not a file or is not executable, maybe we are working with NFS?" ${QUIET}
 			fi
 
 			if [ "${REAL_ROOT}" = "/dev/nfs" ]
@@ -893,7 +896,9 @@ do
 				warn_msg "No NFS detected!" ${QUIET}
 			fi
 
-			bad_msg "The filesystem mounted at ${REAL_ROOT} does not appear to be a valid /!"
+			bad_msg "The filesystem mounted at ${REAL_ROOT} does not appear to be a valid /:"
+			bad_msg "Neither executable file '${init_binary_file}' nor '${init_binary_fallback_file}' was found."
+			bad_msg "If correct root device was specified, check 'root' or 'init' kernel command-line parameter!"
 			got_good_root=0
 		else
 			bad_msg "Could not mount specified ROOT!"
@@ -1297,7 +1302,7 @@ init=${REAL_INIT:-/sbin/init}
 if ! mountpoint "${CHROOT}" 1>/dev/null 2>&1
 then
 	bad_msg "${CHROOT} was not a mountpoint"
-elif chroot "${CHROOT}" /usr/bin/test ! -x /${init}
+elif chroot "${CHROOT}" /usr/bin/test ! -x /${init#/}
 then
 	bad_msg "init=${init} does not exist in the rootfs!"
 elif [ $$ != 1 ]
