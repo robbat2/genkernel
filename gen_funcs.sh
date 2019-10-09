@@ -1720,7 +1720,7 @@ check_disk_space_requirements() {
 			available_free_disk_space=${available_free_disk_space%M}
 			if [ ${available_free_disk_space} -lt ${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR} ]
 			then
-				gen_die "${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR} MB free disk space is required in '${BOOTDIR}' but only ${available_free_disk_space} MB is available!"
+				gen_die "${CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR} MB free disk space is required in '${KERNEL_OUTPUTDIR}' but only ${available_free_disk_space} MB is available!"
 			fi
 		else
 			print_warning 1 "Invalid df value; Skipping free disk space check for '${KERNEL_OUTPUTDIR}' ..."
