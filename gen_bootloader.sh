@@ -157,7 +157,8 @@ set_bootloader_grub_duplicate_default() {
 
 	# Find default entry
 	default=$(sed -rn '/^[[:space:]]*default[[:space:]=]/s/^.*default[[:space:]=]+([[:alnum:]]+).*$/\1/p' "${GRUB_CONF}")
-    if [ -z "${default}" ]; then
+	if [ -z "${default}" ]
+	then
 		print_warning 1 "No default entry found; Assuming 0 ..."
 		default=0
 	fi
