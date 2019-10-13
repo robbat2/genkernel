@@ -1835,7 +1835,7 @@ openLUKS() {
 		run umount "${mntkey}" >/dev/null 2>&1
 	fi
 
-	[ -d "${mntkey}" ] run rmdir -p "${mntkey}" >/dev/null 2>&1
+	[ -d "${mntkey}" ] && run rmdir -p "${mntkey}" >/dev/null 2>&1
 }
 
 iface_name() {
