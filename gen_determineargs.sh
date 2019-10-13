@@ -749,11 +749,21 @@ determine_real_args() {
 			fi
 		fi
 
-		if isTrue "${ZFS}" && isTrue "$(tc-is-cross-compiler)"
+		if isTrue "${ZFS}"
 		then
-			local error_msg="Using binpkg for ZFS is not supported."
-			error_msg+=" Therefore we cannot cross-compile like requested!"
-			gen_die "${error_msg}"
+			if isTrue "$(tc-is-cross-compiler)"
+			then
+				local error_msg="Using binpkg for ZFS is not supported."
+				error_msg+=" Therefore we cannot cross-compile like requested!"
+				gen_die "${error_msg}"
+			fi
+
+			if [ ! -x "/sbin/zfs" ]
+			then
+				local error_msg="'/sbin/zfs' is required for --zfs but file does not exist or is not executable!"
+				error_msg+=" Is sys-fs/zfs installed?"
+				gen_die "${error_msg}"
+			fi
 		fi
 
 		if isTrue "${MULTIPATH}"
