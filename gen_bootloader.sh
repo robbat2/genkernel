@@ -129,14 +129,14 @@ set_bootloader_grub() {
 }
 
 set_bootloader_grub_duplicate_default_replace_kernel_initrd() {
-	sed -r -e "/^[[:space:]]*kernel/s/kernel-[[:alnum:][:punct:]]+/${GK_FILENAME_KERNEL}/" - |
-	sed -r -e "/^[[:space:]]*initrd/s/init(rd|ramfs)-[[:alnum:][:punct:]]+/${GK_FILENAME_INITRAMFS}/"
+	sed -r -e "s/(^[[:space:]]*kernel[[:space:]=]*\/)(${GK_FILENAME_KERNEL%%-*}|${GK_FILENAME_KERNEL_SYMLINK%%-*}|kernel)(-[[:alnum:][:punct:]]+)?/\1${GK_FILENAME_KERNEL}/" - |
+	sed -r -e "s/(^[[:space:]]*initrd[[:space:]=]*\/)(${GK_FILENAME_INITRAMFS%%-*}|${GK_FILENAME_INITRAMFS_SYMLINK%%-*}|initrd|initramfs)(-[[:alnum:][:punct:]]+)?/\1${GK_FILENAME_INITRAMFS}/"
 }
 
 set_bootloader_grub_check_for_existing_entry() {
 	local GRUB_CONF=$1
-	if grep -q "^[[:space:]]*kernel[[:space:]=]*.*/${GK_FILENAME_KERNEL}\([[:space:]]\|$\)" "${GRUB_CONF}" &&
-		grep -q "^[[:space:]]*initrd[[:space:]=]*.*/${GK_FILENAME_INITRAMFS}\([[:space:]]\|$\)" "${GRUB_CONF}"
+	if grep -q "^[[:space:]]*kernel[[:space:]=]*/${GK_FILENAME_KERNEL}\([[:space:]]\|$\)" "${GRUB_CONF}" &&
+		grep -q "^[[:space:]]*initrd[[:space:]=]*/${GK_FILENAME_INITRAMFS}\([[:space:]]\|$\)" "${GRUB_CONF}"
 	then
 		return 0
 	fi
