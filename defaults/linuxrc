@@ -121,7 +121,6 @@ do
 			USE_DMRAID_NORMAL=1
 		;;
 		domultipath)
-			good_msg "Booting with multipath activated."
 			USE_MULTIPATH_NORMAL=1
 		;;
 		dozfs*)
