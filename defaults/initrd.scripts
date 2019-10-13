@@ -1848,7 +1848,9 @@ iface_name() {
 
 		for interface in /sys/class/net/*
 		do
-			if [ $(cat ${interface}/address) = "${mac}" ]
+			[ -e ${interface}/address ] || continue
+
+			if [ "$(cat ${interface}/address 2>/dev/null)" = "${mac}" ]
 			then
 				echo ${interface##*/}
 				return
