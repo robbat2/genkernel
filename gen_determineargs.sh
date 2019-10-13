@@ -756,6 +756,35 @@ determine_real_args() {
 			gen_die "${error_msg}"
 		fi
 
+		if isTrue "${MULTIPATH}"
+		then
+			if isTrue "$(tc-is-cross-compiler)"
+			then
+				local error_msg="Using binpkg for multipath-tools is not supported."
+				error_msg+=" Therefore we cannot cross-compile like requested!"
+				gen_die "${error_msg}"
+			fi
+
+			if [ ! -x "/sbin/multipath" ]
+			then
+				local error_msg="'/sbin/multipath' is required for --multipath but file does not exist or is not executable!"
+				error_msg+=" Is sys-fs/multipath-tools installed?"
+				gen_die "${error_msg}"
+			fi
+
+			if [ ! -x "/lib/udev/scsi_id" ]
+			then
+				local error_msg="'/lib/udev/scsi_id' is required for --multipath but file does not exist or is not executable!"
+				error_msg+=" This file is usually provided by sys-fs/{eudev,udev} or sys-apps/systemd!"
+				gen_die "${error_msg}"
+			fi
+
+			if [ ! -s "/etc/multipath.conf" ]
+			then
+				gen_die "'/etc/multipath.conf' is required for --multipath but file does not exist or is empty!"
+			fi
+		fi
+
 		if ! isTrue "${BUSYBOX}"
 		then
 			local -a FEATURES_REQUIRING_BUSYBOX

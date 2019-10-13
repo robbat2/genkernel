@@ -534,19 +534,22 @@ append_multipath() {
 		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	populate_binpkg ${PN}
-
 	mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
 
-	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+	local libdir=$(get_chost_libdir)
+
+	copy_binaries \
+		"${TDIR}"\
+		/sbin/multipath \
+		/sbin/kpartx \
+		/sbin/mpathpersist \
+		${libdir}/multipath/lib*.so \
+		/lib/udev/scsi_id
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
-	if [ -x /sbin/multipath ]
-	then
-		cp -aL /etc/multipath.conf "${TDIR}"/etc/multipath.conf 2>/dev/null \
-			|| gen_die "Failed to copy '/etc/multipath.conf'!"
-	fi
+	cp -aL /etc/multipath.conf "${TDIR}"/etc/multipath.conf 2>/dev/null \
+		|| gen_die "Failed to copy '/etc/multipath.conf'!"
 
 	# /etc/scsi_id.config does not exist in newer udevs
 	# copy it optionally.
