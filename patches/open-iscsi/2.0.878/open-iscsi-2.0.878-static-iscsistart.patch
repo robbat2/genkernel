@@ -1,0 +1,11 @@
+--- a/usr/Makefile
++++ b/usr/Makefile
+@@ -74,7 +74,7 @@ iscsiadm: $(ISCSI_LIB_SRCS) $(DISCOVERY_SRCS) iscsiadm.o session_mgmt.o mntcheck
+ 
+ iscsistart: $(ISCSI_LIB_SRCS) $(INITIATOR_SRCS) $(FW_BOOT_SRCS) \
+ 		iscsistart.o statics.o
+-	$(CC) $(CFLAGS) $^ -o $@ -lrt $(LDFLAGS) $(ISCSI_LIB)
++	$(CC) $(CFLAGS) $^ -o $@ -static -lrt $(LDFLAGS) $(ISCSI_LIB)
+ clean:
+ 	rm -f *.o $(PROGRAMS) .depend $(LIBSYS)
+ 

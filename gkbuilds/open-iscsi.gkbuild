@@ -2,8 +2,12 @@
 # Distributed under the terms of the GNU General Public License v2
 
 src_compile() {
+	append-cppflags -DNO_SYSTEMD
+	export NO_SYSTEMD=1
+
 	gkmake -C utils/sysdeps V=1
 	gkmake -C utils/fwparam_ibft V=1
+	gkmake -C libopeniscsiusr V=1
 	gkmake -C usr -j1 V=1 iscsistart
 }
 
