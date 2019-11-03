@@ -166,9 +166,9 @@ config_kernel() {
 	else
 		if ! "${diff_cmd}" -q "${KERNEL_OUTPUTDIR}"/.config "${KERNEL_CONFIG}" >/dev/null
 		then
-			print_warning 2 "$(get_indent 1)>> Will ignore kernel config from '${KERNEL_CONFIG}'"
-			print_warning 2 "$(get_indent 1)   in favor of already existing but different kernel config"
-			print_warning 2 "$(get_indent 1)   found in '${KERNEL_OUTPUTDIR}/.config' ..."
+			print_warning 1 "$(get_indent 1)>> Will ignore kernel config from '${KERNEL_CONFIG}'"
+			print_warning 1 "$(get_indent 1)   in favor of already existing but different kernel config"
+			print_warning 1 "$(get_indent 1)   found in '${KERNEL_OUTPUTDIR}/.config' ..."
 		else
 			print_info 3 "$(get_indent 1)>> Can keep using already existing '${KERNEL_OUTPUTDIR}/.config' which is identical to --kernel-config file  ..."
 		fi
