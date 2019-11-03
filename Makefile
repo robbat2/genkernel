@@ -72,6 +72,7 @@ verify-doc: doc/genkernel.8.txt
 		tr -s ' ' '\n' | \
 		sed -r \
 			-e 's,[[:space:]]*--(no-)?,,g' \
+			-e '/boot-font/s,=\(current\|<file>\|none\),,g' \
 			-e '/bootloader/s,=\(grub\|grub2\),,g' \
 			-e '/microcode/s,=\(all\|amd\|intel\),,g' \
 			-e '/ssh-host-keys/s,=\(create\|create-from-host\|runtime\),,g' | \

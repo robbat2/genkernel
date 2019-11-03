@@ -384,6 +384,16 @@ INITIALIZATION
     When set to *runtime*, genkernel will not embed any SSH host key in
     initramfs and dropbear will generate needed host key at runtime (`dropbear -R`).
 
+*--boot-font*=<current|<file>|none>::
+    When set to *current*, genkernel will use "setfont" to dump and embed
+    current active console font into initramfs.
+    When set to a *PC Screen Font file*, genkernel will embed that font
+    into initramfs.
+    When set to *none*, genkernel will not embed any font file in initramfs.
+    In case a font was embedded into initramfs, genkernel will load that
+    font early on boot. See *gk.bootfont.disabled* kernel parameter for
+    disabling that feature at runtime.
+
 *--bootloader*=<grub|grub2>::
     Add new kernel to GRUB or GRUB2 configuration.
 
@@ -771,6 +781,11 @@ when not set. This will allow remote user to provide answer through
 
 *debug*::
     Drop into a debug shell early in the process.
+
+*gk.bootfont.disabled*=<...>::
+    By default, if a bootfont is embedded within initramfs, genkernel
+    will load that font. This boolean option allows you to disable
+    loading of the user embedded bootfont.
 
 *gk.log.disabled*=<...>::
     By default, any shown message and external command calls will be logged

@@ -275,6 +275,14 @@ do
 		dosshd)
 			USE_SSH=1
 		;;
+		gk.bootfont.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				GK_BOOTFONT_DISABLED=1
+			fi
+			unset tmp_disabled
+		;;
 		gk.log.disabled=*)
 			tmp_disabled=${x#*=}
 			if is_true "${tmp_disabled}"
@@ -428,6 +436,11 @@ then
 	else
 		bad_msg "Unable to switch console: '${NEW_CONSOLE}' not found or not a character device!"
 	fi
+fi
+
+if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
+then
+	[ -x /usr/sbin/setfont ] && run /usr/sbin/setfont /lib/console/font -C ${CONSOLE} 2>&1
 fi
 
 quiet_kmsg

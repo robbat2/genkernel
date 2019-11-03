@@ -70,6 +70,7 @@ CDROOT_MARKER='/livecd'
 VERIFY=0
 
 IP='dhcp'
+GK_BOOTFONT_DISABLED=0
 GK_DEBUGMODE_STATEFILE="/tmp/debug.enabled"
 GK_INIT_LOG='/tmp/init.log'
 GK_INIT_LOG_COPYTO=

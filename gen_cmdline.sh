@@ -150,6 +150,10 @@ longusage() {
   echo "				if missing, CREATE host key(s) FROM current HOST running genkernel"
   echo "				(not recommended) or don't embed any host key in initramfs and"
   echo "				generate at RUNTIME (dropbear -R)"
+  echo "	--boot-font=(current|<file>|none)"
+  echo "				Embed CURRENT active console font from host running genkernel"
+  echo "				or specified PSF font file into initramfs and activate early on boot."
+  echo "				Use NONE (default) to not embed any PSF file."
   echo "	--bootloader=(grub|grub2)"
   echo "				Add new kernel to GRUB (grub) or GRUB2 (grub2) bootloader"
   echo "	--no-bootloader		Skip bootloader update"
@@ -439,6 +443,11 @@ parse_cmdline() {
 		--multipath|--no-multipath)
 			CMD_MULTIPATH=$(parse_optbool "$*")
 			print_info 3 "CMD_MULTIPATH: ${CMD_MULTIPATH}"
+			;;
+		--boot-font=*)
+			CMD_BOOTFONT="${*#*=}"
+			[ -z "${CMD_BOOTFONT}" ] && CMD_BOOTFONT="none"
+			print_info 3 "CMD_BOOTFONT: ${CMD_BOOTFONT}"
 			;;
 		--bootloader=*)
 			CMD_BOOTLOADER="${*#*=}"

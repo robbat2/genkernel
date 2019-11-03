@@ -251,6 +251,28 @@ is_gzipped() {
 	echo "${file_is_gzipped}"
 }
 
+is_psf_file() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local file_to_check=${1}
+
+	if [ ! -f "${file_to_check}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): File '${file_to_check}' does not exist!"
+	fi
+
+	local file_is_psf=no
+	local file_brief=$(file --brief "${file_to_check}" 2>/dev/null)
+
+	if [[ "${file_brief}" == *"PC Screen Font"* ]]
+	then
+		file_is_psf=yes
+	fi
+
+	echo "${file_is_psf}"
+}
+
 is_valid_ssh_host_keys_parameter_value() {
 	local parameter_value=${1}
 

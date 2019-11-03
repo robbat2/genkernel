@@ -339,6 +339,7 @@ determine_real_args() {
 	set_config_with_override BOOL   DMRAID                                CMD_DMRAID                                "no"
 	set_config_with_override BOOL   ISCSI                                 CMD_ISCSI                                 "no"
 	set_config_with_override BOOL   HYPERV                                CMD_HYPERV                                "no"
+	set_config_with_override STRING BOOTFONT                              CMD_BOOTFONT                              "none"
 	set_config_with_override STRING BOOTLOADER                            CMD_BOOTLOADER                            "no"
 	set_config_with_override BOOL   BUSYBOX                               CMD_BUSYBOX                               "yes"
 	set_config_with_override STRING BUSYBOX_CONFIG                        CMD_BUSYBOX_CONFIG
@@ -787,6 +788,43 @@ determine_real_args() {
 	then
 		INTEGRATED_INITRAMFS=0
 	else
+		if [[ "${CMD_BOOTFONT}" != "none" ]]
+		then
+			if [[ "${CMD_BOOTFONT}" == "current" ]]
+			then
+				SETFONT_COMMAND="$(which setfont 2>/dev/null)"
+				if [ -z "${SETFONT_COMMAND}" ]
+				then
+					gen_die "setfont not found. Is sys-apps/kbd installed?"
+				fi
+
+				"${SETFONT_COMMAND}" -O /dev/null 2>/dev/null
+				if [ $? -ne 0 ]
+				then
+					if [ ${UID} -eq 0 ]
+					then
+						gen_die "'${SETFONT_COMMAND}' cannot read from console. You cannot use --boot-font=current!"
+					else
+						gen_die "'${SETFONT_COMMAND}' cannot read from console. You probably need root permission or cannot use --boot-font=current!"
+					fi
+				fi
+			else
+				local bootfont_file=$(expand_file "${BOOTFONT}")
+				if [ -z "${bootfont_file}" ]
+				then
+					gen_die "--boot-file value '${BOOTFONT}' failed to expand!"
+				elif [ ! -e "${bootfont_file}" ]
+				then
+					gen_die "--boot-file file '${bootfont_file}' does not exist!"
+				elif ! isTrue $(is_psf_file "${bootfont_file}")
+				then
+					gen_die "--boot-font file '${bootfont_file}' is not a valid PC Screen Font (PSF)!"
+				else
+					BOOTFONT="${bootfont_file}"
+				fi
+			fi
+		fi
+
 		if isTrue "${CMD_DOKEYMAPAUTO}" && ! isTrue "${CMD_KEYMAP}"
 		then
 			gen_die "--do-keymap-auto requires --keymap but --no-keymap is set!"

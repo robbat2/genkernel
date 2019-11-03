@@ -256,6 +256,7 @@ append_base_layout() {
 		etc \
 		etc/mdev/helpers \
 		lib \
+		lib/console \
 		lib/dracut \
 		mnt \
 		proc \
@@ -318,7 +319,37 @@ append_base_layout() {
 	echo "$(cat "${TDIR}/etc/build_id") ($(cat "${TDIR}/etc/build_date"))" > "${TDIR}"/lib/dracut/dracut-gk-version.info \
 		|| gen_die "Failed to create '${TDIR}/lib/dracut/dracut-gk-version.info'!"
 
+	if [[ "${CMD_BOOTFONT}" == "none" ]]
+	then
+		print_info 3 "$(get_indent 2)>> --boot-font=none set; Not embedding console font ..."
+	else
+		local BOOTFONT_FILE="${TDIR}/lib/console/font"
+
+		if [[ "${CMD_BOOTFONT}" == "current" ]]
+		then
+			print_info 2 "$(get_indent 2)>> Embedding current active console font ..."
+			local -a setfont_cmd=( "${SETFONT_COMMAND}" )
+			setfont_cmd+=( "-O ${BOOTFONT_FILE}" )
+
+			print_info 3 "COMMAND: ${setfont_cmd[*]}" 1 0 1
+			eval "${setfont_cmd[@]}" || gen_die "Failed to dump current active console font!"
+
+			if ! isTrue $(is_psf_file "${BOOTFONT_FILE}")
+			then
+				gen_die "Sanity check failed: Dumped current active console font does NOT look like a valid PC Screen Font (PSF) file!"
+			fi
+		else
+			print_info 2 "$(get_indent 2)>> Embedding '${BOOTFONT}' as console font ..."
+
+			# Already validated in determine_real_args()
+			cp -aL "${BOOTFONT}" "${BOOTFONT_FILE}" \
+				|| gen_die "Failed to copy '${BOOTFONT}' to '${BOOTFONT_FILE}'!"
+		fi
+	fi
+
 	local -a build_parameters
+
+	build_parameters+=( --boot-font=${CMD_BOOTFONT} )
 
 	if isTrue "${KEYMAP}"
 	then
