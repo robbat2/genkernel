@@ -567,7 +567,7 @@ determine_real_args() {
 
 	if isTrue "${KERNEL_SOURCES}"
 	then
-		if [ ! -d ${KERNEL_DIR} ]
+		if [ ! -d "${KERNEL_DIR}" ]
 		then
 			gen_die "kernel source directory \"${KERNEL_DIR}\" was not found!"
 		fi
