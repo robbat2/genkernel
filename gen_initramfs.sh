@@ -1792,10 +1792,10 @@ create_initramfs() {
 	cd "${TEMP}" || gen_die "Failed to chdir to '${TEMP}'"
 
 	# NOTE: We do not work with ${KERNEL_CONFIG} here, since things like
-	#       "make oldconfig" or --noclean could be in effect.
-	if [ -f "${KERNEL_OUTPUTDIR}"/.config ]
+	#       "make oldconfig" or --no-clean could be in effect.
+	if [ -s "${KERNEL_OUTPUTDIR}/.config" ]
 	then
-		local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}"/.config
+		local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}/.config"
 	else
 		local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
 	fi
