@@ -17,12 +17,12 @@ for pid in $(pgrep sh)
 do
 	if ! echo " ${pids_to_keep} " | grep -q " ${pid} "
 	then
-		kill -9 ${pid}
+		kill -9 ${pid} &>/dev/null
 	fi
 done
 
 good_msg "Resuming boot process ..."
 [ -f "${GK_SSHD_LOCKFILE}" ] && run rm "${GK_SSHD_LOCKFILE}"
-[ "${PPID}" != '1' ] && kill -9 ${PPID}
+[ "${PPID}" != '1' ] && kill -9 ${PPID} &>/dev/null
 
 exit 0
