@@ -396,6 +396,12 @@ determine_real_args() {
 	# initialize $KERNEL_OUTPUTDIR...
 	set_config_with_override STRING KERNEL_OUTPUTDIR CMD_KERNEL_OUTPUTDIR "${KERNEL_DIR}"
 
+	LOGFILE=$(expand_file "${CMD_LOGFILE}" 2>/dev/null)
+	if [ -z "${LOGFILE}" ]
+	then
+		small_die "Failed to expand --logfile value '${CMD_LOGFILE}'!"
+	fi
+
 	local can_write_log=no
 	if [ -w "${LOGFILE}" ]
 	then
