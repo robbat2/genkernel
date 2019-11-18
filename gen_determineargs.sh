@@ -790,9 +790,10 @@ determine_real_args() {
 			local ssh_authorized_keys_file=$(expand_file "${SSH_AUTHORIZED_KEYS_FILE}")
 			if [ -z "${ssh_authorized_keys_file}" ]
 			then
-				# expand_file() will return also return an empty string when file
-				# doesn't exist!
-				gen_die "--ssh-authorized-keys value '${SSH_AUTHORIZED_KEYS_FILE}' is invalid! Does the file exists?"
+				gen_die "--ssh-authorized-keys value '${SSH_AUTHORIZED_KEYS_FILE}' failed to expand!"
+			elif [ ! -e "${ssh_authorized_keys_file}" ]
+			then
+				gen_die "authorized_keys file '${ssh_authorized_keys_file}' does not exist!"
 			elif [ ! -s "${ssh_authorized_keys_file}" ]
 			then
 				gen_die "authorized_keys file '${ssh_authorized_keys_file}' is empty!"
