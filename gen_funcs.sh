@@ -1752,6 +1752,12 @@ check_distfiles() {
 	fi
 }
 
+# @FUNCTION: expand_file
+# @USAGE: <file>
+# @DESCRIPTION:
+# Expands given file.
+#
+# Will return empty string on error.
 expand_file() {
 	if [[ "${#}" -lt 1 ]]
 	then
@@ -1759,6 +1765,9 @@ expand_file() {
 		echo ''
 		return
 	fi
+
+	[[ ${#} -gt 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes at most five arguments (${#} given)!"
 
 	local file="${1}"
 	local expanded_file=
@@ -1770,7 +1779,21 @@ expand_file() {
 		expanded_file=${file}
 	fi
 
-	expanded_file=$(realpath -q "${expanded_file}" 2>/dev/null)
+	# Try to emulate tilde expansion
+	if [[ "${expanded_file}" == ~+* ]]
+	then
+		expanded_file="${PWD}/${expanded_file:2}"
+	elif [[ "${expanded_file}" == ~-* ]]
+	then
+		expanded_file="${OLDPWD}/${expanded_file:2}"
+	elif [[ "${expanded_file}" == ~* ]]
+	then
+		# We don't support this tilde expansion
+		echo ''
+		return
+	fi
+
+	expanded_file=$(realpath -q -m "${expanded_file}" 2>/dev/null)
 
 	echo "${expanded_file}"
 }
