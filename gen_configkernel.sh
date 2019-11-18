@@ -42,7 +42,13 @@ determine_kernel_config_file() {
 				# This will allow user to copy previous kernel config file
 				# which includes LOV by default to new version when doing
 				# kernel upgrade since we add $ARCH to $LOV by default.
-				user_kconfig_candidates+=( "/etc/kernels/kernel-config-${VER}.${PAT}.${SUB}${EXV}${KERNEL_LOCALVERSION}" )
+				local user_kconfig="/etc/kernels/kernel-config-${VER}.${PAT}.${SUB}${EXV}${KERNEL_LOCALVERSION}"
+
+				# Don't check same file twice
+				if [[ "${user_kconfig_candidates[@]} " != *"${user_kconfig} "* ]]
+				then
+					user_kconfig_candidates+=( ${user_kconfig} )
+				fi
 			fi
 
 			# Look for genkernel-3.x configs for backward compatibility, too
