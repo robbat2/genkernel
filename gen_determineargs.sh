@@ -302,7 +302,6 @@ determine_real_args() {
 
 	set_config_with_override STRING CROSS_COMPILE                         CMD_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR                               CMD_BOOTDIR                               "/boot"
-	set_config_with_override STRING KERNEL_OUTPUTDIR                      CMD_KERNEL_OUTPUTDIR                      "${KERNEL_DIR}"
 	set_config_with_override STRING KERNEL_APPEND_LOCALVERSION            CMD_KERNEL_APPEND_LOCALVERSION
 	set_config_with_override STRING KERNEL_LOCALVERSION                   CMD_KERNEL_LOCALVERSION                   "-%%ARCH%%"
 	set_config_with_override STRING MODPROBEDIR                           CMD_MODPROBEDIR                           "/etc/modprobe.d"
@@ -373,6 +372,29 @@ determine_real_args() {
 	set_config_with_override STRING STRIP_TYPE                            CMD_STRIP_TYPE                            "modules"
 	set_config_with_override BOOL   INSTALL                               CMD_INSTALL                               "yes"
 	set_config_with_override BOOL   CLEANUP                               CMD_CLEANUP                               "yes"
+
+	# We need to expand and normalize provided $KERNEL_DIR and
+	# we need to do it early because $KERNEL_OUTPUTDIR will be
+	# set to $KERNEL_DIR by default.
+	KERNEL_DIR=$(cd -L "${CMD_KERNEL_DIR}" &>/dev/null && pwd -L 2>/dev/null)
+	if [ -z "${KERNEL_DIR}" ]
+	then
+		# We tried to use cd first to keep symlinks (i.e. to preserve
+		# a path like /usr/src/linux) which probably failed
+		# because $KERNEL_DIR does NOT exist. However, at this stage
+		# we don't know if $KERNEL_DIR is required so we have to
+		# accept an invalid value...
+		KERNEL_DIR=$(expand_file "${CMD_KERNEL_DIR}" 2>/dev/null)
+	fi
+
+	if [[ "${KERNEL_DIR}" != "${CMD_KERNEL_DIR}" ]]
+	then
+		print_info 5 "  KERNEL_DIR value \"${CMD_KERNEL_DIR}\" normalized to \"${KERNEL_DIR}\""
+	fi
+
+	# Now that $KERNEL_DIR value is expanded and normalized we can
+	# initialize $KERNEL_OUTPUTDIR...
+	set_config_with_override STRING KERNEL_OUTPUTDIR CMD_KERNEL_OUTPUTDIR "${KERNEL_DIR}"
 
 	local can_write_log=no
 	if [ -w "${LOGFILE}" ]
@@ -717,16 +739,35 @@ determine_real_args() {
 				;;
 		esac
 
+		if [[ "${KERNEL_DIR}" != "${KERNEL_OUTPUTDIR}" ]]
+		then
+			if [ -z "${KERNEL_OUTPUTDIR}" ]
+			then
+				gen_die "No --kernel-outputdir specified!"
+			fi
+
+			KERNEL_OUTPUTDIR=$(expand_file "${KERNEL_OUTPUTDIR}")
+			if [ -z "${KERNEL_OUTPUTDIR}" ]
+			then
+				gen_die "Failed to expand set --kernel-outputdir '${CMD_KERNEL_OUTPUTDIR}'!"
+			fi
+
+			if [[ "${KERNEL_OUTPUTDIR}" != "${CMD_KERNEL_OUTPUTDIR}" ]]
+			then
+				print_info 5 "KERNEL_OUTPUTDIR value '${CMD_KERNEL_OUTPUTDIR}' normalized to '${KERNEL_OUTPUTDIR}'"
+			fi
+
+			if [ ! -d "${KERNEL_OUTPUTDIR}" ]
+			then
+				print_warning 3 "Set --kernel-outputdir '${KERNEL_OUTPUTDIR}' does not exist; Will try to create ..."
+				mkdir -p "${KERNEL_OUTPUTDIR}" || gen_die "Failed to create '${KERNEL_OUTPUTDIR}'!"
+			fi
+		fi
+
 		if isTrue "$(has_space_characters "${KERNEL_OUTPUTDIR}")"
 		then
 			# Kernel Makefile doesn't support spaces in outputdir path...
 			gen_die "--kernel-outputdir '${KERNEL_OUTPUTDIR}' contains space character(s) which are not supported!"
-		fi
-
-		if [ "${KERNEL_DIR}" != "${KERNEL_OUTPUTDIR}" -a ! -d "${KERNEL_OUTPUTDIR}" ]
-		then
-			print_warning 3 "Set --kernel-outputdir '${KERNEL_OUTPUTDIR}' does not exist; Will try to create ..."
-			mkdir -p "${KERNEL_OUTPUTDIR}" || gen_die "Failed to create '${KERNEL_OUTPUTDIR}'!"
 		fi
 	fi
 
