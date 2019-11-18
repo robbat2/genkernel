@@ -420,6 +420,12 @@ determine_real_args() {
 
 	dump_debugcache
 
+	TMPDIR=$(expand_file "${CMD_TMPDIR}" 2>/dev/null)
+	if [ -z "${TMPDIR}" ]
+	then
+		gen_die "Failed to expand --tmpdir value '${CMD_TMPDIR}'!"
+	fi
+
 	if isTrue "$(has_space_characters "${TMPDIR}")"
 	then
 		# Packages like util-linux will fail to compile when path to
