@@ -10,10 +10,22 @@ determine_kernel_config_file() {
 		KERNEL_CONFIG=$(expand_file "${CMD_KERNEL_CONFIG}")
 		if [ -z "${KERNEL_CONFIG}" ]
 		then
-			error_msg="No kernel .config: Cannot use '${CMD_KERNEL_CONFIG}' value. "
-			error_msg+="Check --kernel-config value or unset "
-			error_msg+="to use default kernel config provided by genkernel."
-			gen_die "${error_msg}"
+			gen_die "--kernel-config value '${CMD_KERNEL_CONFIG}' failed to expand!"
+		elif [ ! -e "${KERNEL_CONFIG}" ]
+		then
+			gen_die "--kernel-config file '${KERNEL_CONFIG}' does not exist!"
+		fi
+
+		if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
+		then
+			local CONFGREP=zgrep
+		else
+			local CONFGREP=grep
+		fi
+
+		if ! ${CONFGREP} -qE '^CONFIG_.*=' "${KERNEL_CONFIG}" &>/dev/null
+		then
+			gen_die "--kernel-config file '${KERNEL_CONFIG}' does not look like a valid kernel config: File does not contain any CONFIG_* value!"
 		fi
 	else
 		local -a kconfig_candidates
