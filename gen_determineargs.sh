@@ -256,6 +256,17 @@ determine_real_args() {
 	done
 	unset tc_var tc_varname_build tc_vars
 
+	if ! hash realpath &>/dev/null
+	then
+		gen_die "realpath not found. Is sys-apps/coreutils installed?"
+	fi
+
+	realpath -m / &>/dev/null
+	if [ $? -ne 0 ]
+	then
+		gen_die "'realpath -m /' failed. We need a realpath version which supports '-m' mode!"
+	fi
+
 	print_info 4 "Resolving config file, command line, and arch default settings."
 
 	#                               Dest / Config File                    Command Line                              Arch Default
