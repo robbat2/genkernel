@@ -469,7 +469,7 @@ _src_prepare() {
 	then
 		if [[ ${checksum} != $(at_checksum) ]]
 		then
-			print_info 3 "$(get_indent 2)${P}: >> Will autoreconfigure due applied patches ..."
+			print_info 3 "$(get_indent 2)${P}: >> Will autoreconfigure due to applied patches ..."
 			want_autoreconf=yes
 		fi
 	fi
