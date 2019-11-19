@@ -374,6 +374,17 @@ determine_real_args() {
 	set_config_with_override BOOL   INSTALL                               CMD_INSTALL                               "yes"
 	set_config_with_override BOOL   CLEANUP                               CMD_CLEANUP                               "yes"
 
+	# Special case:  If --no-clean is specified on the command line,
+	# imply --no-mrproper.
+	if ! isTrue "${CLEAN}"
+	then
+		if isTrue "${MRPROPER}"
+		then
+			print_info 5 "  MRPROPER forced to \"no\" due to --no-clean."
+			MRPROPER="no"
+		fi
+	fi
+
 	# We need to expand and normalize provided $KERNEL_DIR and
 	# we need to do it early because $KERNEL_OUTPUTDIR will be
 	# set to $KERNEL_DIR by default.
@@ -633,16 +644,6 @@ determine_real_args() {
 		if [ "${KERNEL_DIR}" = '' ]
 		then
 			gen_die 'Kernel Cache specified but no kernel tree to verify against!'
-		fi
-	fi
-
-	# Special case:  If --no-clean is specified on the command line,
-	# imply --no-mrproper.
-	if [ "${CMD_CLEAN}" != '' ]
-	then
-		if ! isTrue "${CLEAN}"
-		then
-			MRPROPER="no"
 		fi
 	fi
 
