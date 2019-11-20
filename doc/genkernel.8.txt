@@ -787,6 +787,13 @@ when not set. This will allow remote user to provide answer through
     will load that font. This boolean option allows you to disable
     loading of the user embedded bootfont.
 
+*gk.hw.load-all*=<...>::
+    By default, genkernel loads various module groups (nvme, sata,
+    scsi, pata, usb...) until block device specified in *root* parameter
+    becomes available. This boolean option allows you to force
+    loading of all module groups regardless whether root device is
+    already available.
+
 *gk.log.disabled*=<...>::
     By default, any shown message and external command calls will be logged
     to '/tmp/init.log' in initramfs. This boolean option allows you to

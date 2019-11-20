@@ -283,6 +283,14 @@ do
 			fi
 			unset tmp_disabled
 		;;
+		gk.hw.load-all=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				GK_HW_LOAD_ALL_MODULES=1
+			fi
+			unset tmp_disabled
+		;;
 		gk.log.disabled=*)
 			tmp_disabled=${x#*=}
 			if is_true "${tmp_disabled}"

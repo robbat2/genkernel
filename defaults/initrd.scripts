@@ -29,6 +29,37 @@ modules_load() {
 modules_scan() {
 	local MODS
 	local loaded
+	local smart_loading=yes
+	local _root_dev
+	local root_dev_found="Root block device found, skipping loading of module group \"${1}\" ..."
+
+	if [ "${GK_HW_LOAD_ALL_MODULES}" = '1' ]
+	then
+		smart_loading=
+	elif [ "${1}" = "net" ]
+	then
+		# We already load network modules only when we need
+		# network so don't stop loading network modules when
+		# $REAL_ROOT is already present or we will probably
+		# end up without network we wanted ...
+		smart_loading=
+	elif [ "${1}" = "fs" ]
+	then
+		# We don't know if kernel supports root filesystem so
+		# better load all filesystems ...
+		smart_loading=
+	elif [ -n "${CRYPT_ROOT}" ] || [ -n "${CRYPT_SWAP}" ]
+	then
+		if [ "${1}" = "crypto" ]
+		then
+			smart_loading=
+		elif [ "${1}" = "usb" ]
+		then
+			# We don't know if user is using an USB keyboard to
+			# enter passphrase so better load USB ...
+			smart_loading=
+		fi
+	fi
 
 	MODS=$(cat /etc/modules/${1} 2>/dev/null)
 	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && \
@@ -54,10 +85,16 @@ modules_scan() {
 				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		elif [ "${MLOAD}" = "${MLIST}" ]
 		then
-			if [ "${ROOTFSTYPE}" != 'auto' ] && [ -b "${REAL_ROOT}" ]
+			if [ -n "${smart_loading}" ]
 			then
-				echo "Root block device found, continuing ..."
-				break
+				_root_dev=$(findfs "${REAL_ROOT}" 2>/dev/null)
+
+				if [ $? -eq 0 ] && [ -n "${_root_dev}" ] && [ -b "${_root_dev}" ]
+				then
+					log_msg "${root_dev_found}"
+					printf "%b" "${root_dev_found}"
+					break
+				fi
 			fi
 
 			if is_debug
