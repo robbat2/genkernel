@@ -503,6 +503,13 @@ then
 	FIRSTMODS="${FIRSTMODS} crc32_generic"
 fi
 
+if [ "${USE_BCACHE}" = '1' ]
+then
+	# Force loading of bcache module in case module loading would
+	# be skipped because $REAL_ROOT is already present
+	FIRSTMODS="${FIRSTMODS} bcache"
+fi
+
 splash 'init'
 
 cmdline_hwopts
