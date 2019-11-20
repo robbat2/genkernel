@@ -489,9 +489,9 @@ then
 	[ "${USE_ZFS}" = '1' ] && MY_HWOPTS="${MY_HWOPTS} zfs"
 fi
 
-# Hack for f2fs, which uses crc32 but does not depend on it (in many kernels at least):
 if [ "${ROOTFSTYPE}" = "f2fs" ]
 then
+	# Hack for f2fs, which uses crc32 but does not depend on it (in many kernels at least):
 	FIRSTMODS="${FIRSTMODS} crc32_generic"
 fi
 
