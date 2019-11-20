@@ -749,6 +749,9 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MMIO" "${newvirtio_setting}"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_MMIO_CMDLINE_DEVICES" "y"
 
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET_9P" "${newvirtio_setting}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_NET_9P_VIRTIO" "${newvirtio_setting}"
+
 		if [ ${KV_NUMERIC} -ge 4008 ]
 		then
 			local cfg_CONFIG_VSOCKETS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VSOCKETS")
