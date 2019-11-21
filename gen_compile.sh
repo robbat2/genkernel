@@ -342,68 +342,47 @@ compile_kernel() {
 }
 
 determine_busybox_config_file() {
-	print_info 2 "$(get_indent 2)busybox: >> Checking for suitable busybox configuration ..."
-
-	if [ -n "${CMD_BUSYBOX_CONFIG}" ]
+	if [ -n "${BUSYBOX_CONFIG}" ]
 	then
-		BUSYBOX_CONFIG=$(expand_file "${CMD_BUSYBOX_CONFIG}")
-		if [ -z "${BUSYBOX_CONFIG}" ]
-		then
-			error_msg="No busybox .config: Cannot use '${CMD_BUSYBOX_CONFIG}' value. "
-			error_msg+="Check --busybox-config value or unset "
-			error_msg+="to use default busybox config provided by genkernel."
-			gen_die "${error_msg}"
-		fi
-	else
-		local -a bbconfig_candidates=()
-		local busybox_version=$(get_gkpkg_version busybox)
-
-		if isTrue "${NETBOOT}"
-		then
-			bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config-${busybox_version}")" )
-			bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config")" )
-			bbconfig_candidates+=( "${GK_SHARE}/netboot/busy-config-${busybox_version}" )
-			bbconfig_candidates+=( "${GK_SHARE}/netboot/busy-config" )
-		fi
-		bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config-${busybox_version}")" )
-		bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config")" )
-		bbconfig_candidates+=( "${GK_SHARE}/defaults/busy-config-${busybox_version}" )
-		bbconfig_candidates+=( "${GK_SHARE}/defaults/busy-config" )
-
-		local f
-		for f in "${bbconfig_candidates[@]}"
-		do
-			[ -z "${f}" ] && continue
-
-			if [ -f "${f}" ]
-			then
-				BUSYBOX_CONFIG="$f"
-				break
-			else
-				print_info 3 "$(get_indent 3)- '${f}' not found; Skipping ..."
-			fi
-		done
-
-		if [ -z "${BUSYBOX_CONFIG}" ]
-		then
-			gen_die 'No busybox .config specified, or file not found!'
-		fi
+		print_info 2 "$(get_indent 2)busybox: >> Using user-specified busybox configuration from '${BUSYBOX_CONFIG}' ..."
+		return
 	fi
 
-	BUSYBOX_CONFIG="$(readlink -f "${BUSYBOX_CONFIG}")"
+	print_info 2 "$(get_indent 2)busybox: >> Checking for suitable busybox configuration ..."
 
-	# Validate the symlink result if any
-	if [ -z "${BUSYBOX_CONFIG}" -o ! -f "${BUSYBOX_CONFIG}" ]
+	local -a bbconfig_candidates=()
+	local busybox_version=$(get_gkpkg_version busybox)
+
+	if isTrue "${NETBOOT}"
 	then
-		if [ -n "${CMD_BUSYBOX_CONFIG}" ]
+		bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config-${busybox_version}")" )
+		bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/netboot-busy-config")" )
+		bbconfig_candidates+=( "${GK_SHARE}/netboot/busy-config-${busybox_version}" )
+		bbconfig_candidates+=( "${GK_SHARE}/netboot/busy-config" )
+	fi
+	bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config-${busybox_version}")" )
+	bbconfig_candidates+=( "$(arch_replace "${GK_SHARE}/arch/%%ARCH%%/busy-config")" )
+	bbconfig_candidates+=( "${GK_SHARE}/defaults/busy-config-${busybox_version}" )
+	bbconfig_candidates+=( "${GK_SHARE}/defaults/busy-config" )
+
+	local f
+	for f in "${bbconfig_candidates[@]}"
+	do
+		[ -z "${f}" ] && continue
+
+		if [ -f "${f}" ]
 		then
-			error_msg="No busybox .config: File '${CMD_BUSYBOX_CONFIG}' not found! "
-			error_msg+="Check --busybox-config value or unset "
-			error_msg+="to use default busybox config provided by genkernel."
-			gen_die "${error_msg}"
+			BUSYBOX_CONFIG="$f"
+			break
 		else
-			gen_die "No busybox .config: symlinked file '${BUSYBOX_CONFIG}' not found!"
+			print_info 3 "$(get_indent 3)- '${f}' not found; Skipping ..."
 		fi
+	done
+
+	if [ -z "${BUSYBOX_CONFIG}" ]
+	then
+		# Sanity check
+		gen_die 'No busybox .config specified or file not found!'
 	fi
 }
 

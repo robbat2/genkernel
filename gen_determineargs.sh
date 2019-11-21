@@ -923,6 +923,25 @@ determine_real_args() {
 				fi
 			done
 			unset FEATURE_REQUIRING_BUSYBOX FEATURES_REQUIRING_BUSYBOX
+		elif [ -n "${CMD_BUSYBOX_CONFIG}" ]
+		then
+			local BUSYBOX_CONFIG=$(expand_file "${CMD_BUSYBOX_CONFIG}")
+			if [ -z "${BUSYBOX_CONFIG}" ]
+			then
+				gen_die "--busybox-config value '${CMD_BUSYBOX_CONFIG}' failed to expand!"
+			elif [ ! -e "${BUSYBOX_CONFIG}" ]
+			then
+				gen_die "--busybox-config file '${BUSYBOX_CONFIG}' does not exist!"
+			fi
+
+			if ! grep -qE '^CONFIG_.*=' "${BUSYBOX_CONFIG}" &>/dev/null
+			then
+				gen_die "--busybox-config file '${BUSYBOX_CONFIG}' does not look like a valid busybox config: File does not contain any CONFIG_* value!"
+			elif ! grep -qE '^CONFIG_STATIC=y$' "${BUSYBOX_CONFIG}" &>/dev/null
+			then
+				# We cannot check all required options but check at least for CONFIG_STATIC...
+				gen_die "--busybox-config file '${BUSYBOX_CONFIG}' does not contain CONFIG_STATIC=y. This busybox config will not work with genkernel!"
+			fi
 		fi
 
 		DU_COMMAND="$(which du 2>/dev/null)"
