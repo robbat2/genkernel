@@ -340,6 +340,29 @@ config_kernel() {
 			&& required_kernel_options+=( 'CONFIG_BCACHE' )
 	fi
 
+	# Make sure all modues required for MD raid are enabled in the kernel, if --mdadm
+	if isTrue "${CMD_MDADM}"
+	then
+		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for MDADM support are set ..."
+		local cfg_CONFIG_BLK_DEV_MD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_MD")
+		case "${cfg_CONFIG_BLK_DEV_MD}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_BLK_DEV_MD=${newcfg_setting}
+		esac
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLOCK" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_DM" "${cfg_CONFIG_BLK_DEV_DM}" \
+			&& required_kernel_options+=( 'CONFIG_BLK_DEV_DM' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_MD" "${cfg_CONFIG_BLK_DEV_MD}" \
+			&& required_kernel_options+=( 'CONFIG_BLK_DEV_MD' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD_LINEAR" "${cfg_CONFIG_BLK_DEV_MD}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD_RAID0" "${cfg_CONFIG_BLK_DEV_MD}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD_RAID1" "${cfg_CONFIG_BLK_DEV_MD}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD_RAID10" "${cfg_CONFIG_BLK_DEV_MD}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MD_RAID456" "${cfg_CONFIG_BLK_DEV_MD}"
+	fi
+
 	# Make sure lvm modules are enabled in the kernel, if --lvm
 	if isTrue "${CMD_LVM}"
 	then
