@@ -167,7 +167,7 @@ do
 	print_info 2 "Override $v, default (${!v}), new value (${!newvar})"
 	eval "${v}='${!newvar}'"
 done
-unset v override_module_vars
+unset v override_module_vars newvar
 
 # Merge additional modules_load from config
 for group_modules in ${!AMODULES_*}
