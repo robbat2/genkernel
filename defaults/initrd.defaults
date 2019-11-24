@@ -127,7 +127,7 @@ DEFAULT_NFSOPTIONS="ro,nolock"
 # - keymap
 # - cache
 # - modules
-HWOPTS_BLK='nvme pata sata scsi usb firewire waitscan'
+HWOPTS_BLK='nvme sata scsi pata usb firewire waitscan'
 HWOPTS_OBSOLETE='pcmcia ataraid' # Obsolete stuff that might be useful on old hardware, do$X only.
 HWOPTS="keymap cache modules virtio hyperv ${HWOPTS_BLK} bcache lvm dmraid multipath mdadm zfs fs iscsi crypto"
 
