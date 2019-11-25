@@ -53,17 +53,17 @@ modules_scan() {
 		# We don't know if kernel supports root filesystem so
 		# better load all filesystems ...
 		smart_loading=
-	elif [ -n "${CRYPT_ROOT}" ] || [ -n "${CRYPT_SWAP}" ]
+	elif [ "${USE_MDADM}" = '1' ] \
+		|| [ "${USE_LVM_NORMAL}" = '1' ] \
+		|| [ "${USE_CRYPTSETUP}" = '1' ] \
+		|| [ "${USE_BTRFS}" = '1' ] \
+		|| [ "${USE_ZFS}" = '1' ] \
+		|| [ "${USE_DMRAID_NORMAL}" = '1' ]
 	then
-		if [ "${1}" = "crypto" ]
-		then
-			smart_loading=
-		elif [ "${1}" = "usb" ]
-		then
-			# We don't know if user is using an USB keyboard to
-			# enter passphrase so better load USB ...
-			smart_loading=
-		fi
+		# All of this will require the call of another program before
+		# root becomes available so checking for root after each module
+		# was loaded will only waste time.
+		smart_loading=
 	fi
 
 	MODS=$(cat /etc/modules/${1} 2>/dev/null)
