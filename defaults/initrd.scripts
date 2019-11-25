@@ -36,6 +36,11 @@ modules_scan() {
 	if [ "${GK_HW_LOAD_ALL_MODULES}" = '1' ]
 	then
 		smart_loading=
+	elif [ "${1}" = "virtio" ] || [ "${1}" = "hyperv" ]
+	then
+		# Virtio/HyperV modules group is special -- it's about
+		# hypervisor support in general, not root block device
+		smart_loading=
 	elif [ "${1}" = "net" ]
 	then
 		# We already load network modules only when we need
