@@ -6,8 +6,8 @@ src_prepare() {
 
 	local defs='-DNO_DLM -DNO_COROSYNC'
 	sed -i \
-		-e "/^CFLAGS = /s:^CFLAGS = \(.*\)$:CFLAGS = -Os ${defs}:" \
-		-e "/^CXFLAGS = /s:^CXFLAGS = \(.*\)$:CXFLAGS = -Os ${defs}:" \
+		-e "/^CFLAGS = /s:^CFLAGS = \(.*\)$:CFLAGS = ${CFLAGS} ${defs}:" \
+		-e "/^CXFLAGS = /s:^CXFLAGS = \(.*\)$:CXFLAGS = ${CFLAGS} ${defs}:" \
 		-e "/^CWFLAGS = /s:^CWFLAGS = \(.*\)$:CWFLAGS = -Wall:" \
 		-e "s/^# LDFLAGS = -static/LDFLAGS = -static/" \
 		Makefile \
