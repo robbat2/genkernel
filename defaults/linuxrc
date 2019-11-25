@@ -244,9 +244,11 @@ do
 		# Crypto
 		crypt_root=*)
 			CRYPT_ROOT=${x#*=}
+			USE_CRYPTSETUP=1
 		;;
 		crypt_swap=*)
 			CRYPT_SWAP=${x#*=}
+			USE_CRYPTSETUP=1
 		;;
 		root_key=*)
 			CRYPT_ROOT_KEY=${x#*=}
