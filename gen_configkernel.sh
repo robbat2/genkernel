@@ -790,6 +790,18 @@ config_kernel() {
 
 		[ ${KV_NUMERIC} -ge 4010 ] &&
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_DEV_VIRTIO" "${newvirtio_setting}"
+
+		if [ ${KV_NUMERIC} -ge 5004 ]
+		then
+			local cfg_CONFIG_FUSE_FS=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FUSE_FS")
+			case "${cfg_CONFIG_FUSE_FS}" in
+				y|m) ;; # Do nothing
+				*) cfg_CONFIG_FUSE_FS=${newvirtio_setting}
+			esac
+
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_FUSE_FS" "${cfg_CONFIG_FUSE_FS}"
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_VIRTIO_FS" "${cfg_CONFIG_FUSE_FS}"
+		fi
 	fi
 
 	# Microcode setting, intended for early microcode loading, if --microcode
