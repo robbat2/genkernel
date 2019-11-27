@@ -1114,6 +1114,8 @@ preserve_log() {
 		return 1
 	fi
 
+	log_msg "Determining mountpoint of '${logfile_target}' ..."
+
 	local logfile_mountpoint="${logfile_target_dir}"
 	while [ true ]
 	do
