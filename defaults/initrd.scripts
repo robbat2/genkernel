@@ -29,46 +29,17 @@ modules_load() {
 modules_scan() {
 	local MODS
 	local loaded
+	local x
 	local smart_loading=yes
 	local _root_dev
 	local root_dev_found="Root block device found, skipping loading of module group \"${1}\" ..."
 
-	if [ "${GK_HW_LOAD_ALL_MODULES}" = '1' ]
-	then
-		smart_loading=
-	elif [ "${1}" = "virtio" ] || [ "${1}" = "hyperv" ]
-	then
-		# Virtio/HyperV modules group is special -- it's about
-		# hypervisor support in general, not root block device
-		smart_loading=
-	elif [ "${1}" = "net" ]
-	then
-		# We already load network modules only when we need
-		# network so don't stop loading network modules when
-		# $REAL_ROOT is already present or we will probably
-		# end up without network we wanted ...
-		smart_loading=
-	elif [ "${1}" = "fs" ]
-	then
-		# We don't know if kernel supports root filesystem so
-		# better load all filesystems ...
-		smart_loading=
-	elif [ "${USE_MDADM}" = '1' ] \
-		|| [ "${USE_LVM_NORMAL}" = '1' ] \
-		|| [ "${USE_CRYPTSETUP}" = '1' ] \
-		|| [ "${USE_BTRFS}" = '1' ] \
-		|| [ "${USE_ZFS}" = '1' ] \
-		|| [ "${USE_DMRAID_NORMAL}" = '1' ]
-	then
-		# All of this will require the call of another program before
-		# root becomes available so checking for root after each module
-		# was loaded will only waste time.
-		smart_loading=
-	fi
-
 	MODS=$(cat /etc/modules/${1} 2>/dev/null)
-	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && \
-		printf "%b" "${BOLD}   ::${NORMAL} Loading from ${1}: "
+	if [ -z "${MODS}" ]
+	then
+		log_msg "/etc/modules/${1} is empty; Nothing to load for '${1}' ..."
+		return
+	fi
 
 	if [ -z "${MODULES_SCAN_WARNING_SHOWN}" ]
 	then
@@ -81,6 +52,43 @@ modules_scan() {
 		MODULES_SCAN_WARNING_SHOWN=yes
 	fi
 
+	if [ "${GK_HW_LOAD_ALL_MODULES}" = '1' ]
+	then
+		smart_loading=no
+	elif [ "${1}" = "virtio" ] || [ "${1}" = "hyperv" ]
+	then
+		# Virtio/HyperV modules group is special -- it's about
+		# hypervisor support in general, not root block device
+		smart_loading=no
+	elif [ "${1}" = "net" ]
+	then
+		# We already load network modules only when we need
+		# network so don't stop loading network modules when
+		# $REAL_ROOT is already present or we will probably
+		# end up without network we wanted ...
+		smart_loading=no
+	elif [ "${1}" = "fs" ]
+	then
+		# We don't know if kernel supports root filesystem so
+		# better load all filesystems ...
+		smart_loading=no
+	elif [ "${USE_MDADM}" = '1' ] \
+		|| [ "${USE_LVM_NORMAL}" = '1' ] \
+		|| [ "${USE_CRYPTSETUP}" = '1' ] \
+		|| [ "${USE_BTRFS}" = '1' ] \
+		|| [ "${USE_ZFS}" = '1' ] \
+		|| [ "${USE_DMRAID_NORMAL}" = '1' ]
+	then
+		# All of this will require the call of another program before
+		# root becomes available so checking for root after each module
+		# was loaded will only waste time.
+		smart_loading=no
+	fi
+
+	log_msg "Loading modules of module group '${1}' (smart loading: ${smart_loading}) ..."
+	[ -z "${QUIET}" ] && \
+		printf "%b" "${BOLD}   ::${NORMAL} Loading from ${1}: "
+
 	for x in ${MODS}
 	do
 		MLOAD=$(echo ${MLIST} | sed -e "s/.*${x}.*/${x}/")
@@ -90,7 +98,7 @@ modules_scan() {
 				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		elif [ "${MLOAD}" = "${MLIST}" ]
 		then
-			if [ -n "${smart_loading}" ]
+			if [ "${smart_loading}" = "yes" ]
 			then
 				_root_dev=$(findfs "${REAL_ROOT}" 2>/dev/null)
 
@@ -124,7 +132,7 @@ modules_scan() {
 				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		fi
 	done
-	[ -n "${MODS}" ] && [ -z "${QUIET}" ] && echo
+	[ -z "${QUIET}" ] && echo
 }
 
 uppercase() {
