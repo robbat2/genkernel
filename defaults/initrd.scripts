@@ -2275,7 +2275,6 @@ start_sshd() {
 
 	good_msg "Starting dropbear sshd ..." ${QUIET}
 	run /usr/sbin/dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
-	test_success "Failed to start dropbear"
 }
 
 wait_sshd() {
