@@ -1547,6 +1547,8 @@ start_volumes() {
 		then
 			bad_msg "dobcache invoked but '/sys/fs/bcache/register_quiet' does not exist; Skipping bcache initialization ..."
 		else
+			good_msg "Registering all block devices in bcache ..."
+
 			local i=
 			for i in $(awk '$4 !~ /^(name$|$)/ { print $4 }' /proc/partitions)
 			do
@@ -1567,6 +1569,8 @@ start_volumes() {
 	then
 		if [ -x '/sbin/btrfs' ]
 		then
+			good_msg "Scanning for BTRFS devices ..."
+
 			local btrfs_cmd="run /sbin/btrfs device scan 2>&1"
 			is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
 
