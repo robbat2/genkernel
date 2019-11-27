@@ -2250,12 +2250,6 @@ start_sshd() {
 		return
 	fi
 
-	if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
-	then
-		warn_msg "Changing gk.prompt.timeout=0 to 30 to allow remote user to answer prompts ..."
-		GK_PROMPT_TIMEOUT=30
-	fi
-
 	if [ ! -x "/usr/sbin/dropbear" ]
 	then
 		bad_msg "/usr/sbin/dropbear not found! Was initramfs built without --ssh parameter?"
@@ -2275,6 +2269,14 @@ start_sshd() {
 
 	good_msg "Starting dropbear sshd ..." ${QUIET}
 	run /usr/sbin/dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
+	if [ $? -eq 0 ]
+	then
+		if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
+		then
+			warn_msg "Changing gk.prompt.timeout=0 to 30 to allow remote user to answer prompts ..."
+			GK_PROMPT_TIMEOUT=30
+		fi
+	fi
 }
 
 wait_sshd() {
