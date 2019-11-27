@@ -1267,22 +1267,6 @@ cmdline_hwopts() {
 	MY_HWOPTS=${TMP_HWOPTS}
 }
 
-load_modules() {
-	# Load modules listed in MY_HWOPTS if /lib/modules exists for the running
-	# kernel version
-	if [ -d "/lib/modules/${KV}" ]
-	then
-		good_msg 'Loading modules ...'
-		# Load appropriate kernel modules
-		for modules in ${MY_HWOPTS}
-		do
-			modules_scan ${modules}
-		done
-	else
-		good_msg 'Skipping module load; no modules in the ramdisk!'
-	fi
-}
-
 setup_keymap() {
 	if [ "${DO_keymap}" ]
 	then
