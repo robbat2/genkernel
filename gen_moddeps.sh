@@ -9,7 +9,7 @@ gen_dep_list() {
 		rm -f "${TEMP}/moddeps" >/dev/null
 
 		local group_modules
-		for group_modules in ${!MODULES_*}
+		for group_modules in ${!MODULES_*} GK_INITRAMFS_ADDITIONAL_KMODULES
 		do
 			gen_deps ${!group_modules}
 		done

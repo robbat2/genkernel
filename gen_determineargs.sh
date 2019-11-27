@@ -787,6 +787,10 @@ determine_real_args() {
 
 	if isTrue "${BUILD_RAMDISK}"
 	then
+		# Internal module group to get modules used in genkernel features
+		# into initramfs.
+		GK_INITRAMFS_ADDITIONAL_KMODULES=""
+
 		if [[ "${CMD_BOOTFONT}" != "none" ]]
 		then
 			if [[ "${CMD_BOOTFONT}" == "current" ]]
@@ -849,6 +853,11 @@ determine_real_args() {
 			else
 				declare -gr DROPBEAR_AUTHORIZED_KEYS_FILE="${ssh_authorized_keys_file}"
 			fi
+		fi
+
+		if isTrue "${BCACHE}"
+		then
+			GK_INITRAMFS_ADDITIONAL_KMODULES+=" bcache"
 		fi
 
 		if isTrue "${ZFS}"
