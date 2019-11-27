@@ -785,10 +785,8 @@ determine_real_args() {
 		fi
 	fi
 
-	if ! isTrue "${BUILD_RAMDISK}"
+	if isTrue "${BUILD_RAMDISK}"
 	then
-		INTEGRATED_INITRAMFS=0
-	else
 		if [[ "${CMD_BOOTFONT}" != "none" ]]
 		then
 			if [[ "${CMD_BOOTFONT}" == "current" ]]
