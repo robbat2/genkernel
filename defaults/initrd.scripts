@@ -2258,7 +2258,7 @@ start_sshd() {
 
 	if [ ! -x "/usr/sbin/dropbear" ]
 	then
-		bad_msg "/usr/sbin/dropbear not found! Did you call genkernel with --ssh parameter?"
+		bad_msg "/usr/sbin/dropbear not found! Was initramfs built without --ssh parameter?"
 		return
 	fi
 
