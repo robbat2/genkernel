@@ -345,7 +345,7 @@ determine_real_args() {
 	set_config_with_override STRING BUSYBOX_CONFIG                        CMD_BUSYBOX_CONFIG
 	set_config_with_override BOOL   NFS                                   CMD_NFS                                   "yes"
 	set_config_with_override STRING MICROCODE                             CMD_MICROCODE                             "all"
-	set_config_with_override BOOL   MICROCODE_INITRAMFS                   CMD_MICROCODE_INITRAMFS                   "yes"
+	set_config_with_override BOOL   MICROCODE_INITRAMFS                   CMD_MICROCODE_INITRAMFS                   "no"
 	set_config_with_override BOOL   UNIONFS                               CMD_UNIONFS                               "no"
 	set_config_with_override BOOL   NETBOOT                               CMD_NETBOOT                               "no"
 	set_config_with_override STRING REAL_ROOT                             CMD_REAL_ROOT

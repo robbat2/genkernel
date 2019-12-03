@@ -334,6 +334,9 @@ INITIALIZATION
     But only when kernel configuration does support early microcode loading.
     See *--microcode* option to auto-update kernel configuration.
 
+NOTE: Embedding microcode updates into initramfs is *deprecated* when
+system is able to load multiple initramfs.
+
 *--*[*no-*]*dmraid*::
     Includes or excludes DMRAID support.
     When enabled, this will compile dmraid for you.
