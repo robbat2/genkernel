@@ -847,9 +847,9 @@ determine_real_args() {
 			elif [ ! -e "${ssh_authorized_keys_file}" ]
 			then
 				gen_die "authorized_keys file '${ssh_authorized_keys_file}' does not exist!"
-			elif [ ! -s "${ssh_authorized_keys_file}" ]
+			elif ! grep -qE '^(ecdsa|ssh)-' "${ssh_authorized_keys_file}" &>/dev/null
 			then
-				gen_die "authorized_keys file '${ssh_authorized_keys_file}' is empty!"
+				gen_die "authorized_keys file '${ssh_authorized_keys_file}' does not look like a valid authorized_keys file: File does not contain any entry matching regular expression '^(ecdsa|ssh)-'!"
 			else
 				declare -gr DROPBEAR_AUTHORIZED_KEYS_FILE="${ssh_authorized_keys_file}"
 			fi
