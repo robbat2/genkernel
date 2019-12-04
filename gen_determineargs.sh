@@ -900,9 +900,12 @@ determine_real_args() {
 				gen_die "${error_msg}"
 			fi
 
-			if [ ! -s "/etc/multipath.conf" ]
+			if [ ! -e "/etc/multipath.conf" ]
 			then
-				gen_die "'/etc/multipath.conf' is required for --multipath but file does not exist or is empty!"
+				gen_die "'/etc/multipath.conf' is required for --multipath but file does not exist!"
+			elif [[ -d "/etc/multipath.conf" || ! -s "/etc/multipath.conf" ]]
+			then
+				gen_die "'/etc/multipath.conf' is required for --multipath but it is either not a file or is empty!"
 			fi
 		fi
 
