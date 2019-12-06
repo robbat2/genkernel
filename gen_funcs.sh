@@ -728,7 +728,7 @@ dropbear_create_key() {
 
 	if isTrue "${SANDBOX}"
 	then
-		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}'" )
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
 	# set up worker signal handler
@@ -805,7 +805,7 @@ dropbear_generate_key_info_file() {
 
 	if isTrue "${SANDBOX}"
 	then
-		envvars+=( SANDBOX_WRITE="${LOGFILE}:${TEMP}" )
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
 	# set up worker signal handler
@@ -1397,7 +1397,7 @@ gkbuild() {
 
 	if isTrue "${SANDBOX}"
 	then
-		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}'" )
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
 	# set up gkbuild signal handler
@@ -1452,7 +1452,7 @@ unpack() {
 
 	if isTrue "${SANDBOX}"
 	then
-		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}'" )
+		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
 	# set up unpack signal handler
