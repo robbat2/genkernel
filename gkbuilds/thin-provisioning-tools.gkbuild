@@ -23,6 +23,7 @@ src_compile() {
 
 src_install() {
 	local MYMAKEOPTS=( "DESTDIR=${D}" )
+	MYMAKEOPTS+=( -j1 )
 	MYMAKEOPTS+=( "DATADIR=${D}/usr/share" )
 	MYMAKEOPTS+=( "install" )
 
