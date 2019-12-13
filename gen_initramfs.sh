@@ -459,9 +459,12 @@ append_busybox() {
 	done
 
 	# allow for DNS resolution
-	local libdir=$(get_chost_libdir)
-	mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
-	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so
+	if isTrue "$(is_glibc)"
+	then
+		local libdir=$(get_chost_libdir)
+		mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
+		copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so
+	fi
 
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
