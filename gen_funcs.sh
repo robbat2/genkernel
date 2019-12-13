@@ -225,6 +225,20 @@ has_space_characters() {
 	echo "${has_space_characters}"
 }
 
+is_glibc() {
+	if ! hash getconf &>/dev/null
+	then
+		gen_die "getconf not found. Unable to determine libc implementation!"
+	fi
+
+	local is_glibc=no
+
+	getconf GNU_LIBC_VERSION &>/dev/null
+	[ $? -eq 0 ] && is_glibc=yes
+
+	echo "${is_glibc}"
+}
+
 is_gzipped() {
 	[[ ${#} -ne 1 ]] \
 		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
