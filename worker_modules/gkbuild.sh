@@ -642,6 +642,21 @@ gkconf() {
 	: ${GKCONF_SOURCE:=.}
 	if [ -x "${GKCONF_SOURCE}/configure" ]
 	then
+		local pid=${BASHPID}
+		local x
+
+		if [ -e "/usr/share/gnuconfig/" ]
+		then
+			find "${WORKDIR}" -type f '(' \
+			-name config.guess -o -name config.sub ')' -print0 | \
+			while read -r -d $'\0' x ; do
+				print_info 3 "$(get_indent 2)${P}: >> Updating ${x/${WORKDIR}\/} with /usr/share/gnuconfig/${x##*/} ..."
+				# Make sure we do this atomically incase we're run in parallel. #487478
+				cp -f /usr/share/gnuconfig/"${x##*/}" "${x}.${pid}"
+				mv -f "${x}.${pid}" "${x}"
+			done
+		fi
+
 		local -a conf_args=()
 		local conf_help=$("${GKCONF_SOURCE}/configure" --help 2>/dev/null)
 
