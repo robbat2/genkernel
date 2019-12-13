@@ -1324,9 +1324,12 @@ append_dropbear() {
 		fi
 	fi
 
-	local libdir=$(get_chost_libdir)
-	mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
-	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_files.so
+	if isTrue "$(is_glibc)"
+	then
+		local libdir=$(get_chost_libdir)
+		mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
+		copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_files.so
+	fi
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
