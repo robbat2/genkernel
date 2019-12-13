@@ -860,10 +860,13 @@ debug_breakpoint() {
 get_chost_libdir() {
 	local cc=$(tc-getCC)
 
-	local test_file=$(${cc} -print-file-name=libnss_files.so 2>/dev/null)
+	local test_file=$(${cc} -print-file-name=libc.a 2>/dev/null)
 	if [ -z "${test_file}" ]
 	then
-		gen_die "$(get_useful_function_stack "${FUNCNAME}")Unable to determine CHOST's libdir: '${cc} -print-file-name=libnss_files.so' returned nothing!"
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Unable to determine CHOST's libdir: '${cc} -print-file-name=libc.a' returned nothing!"
+	elif [[ "${test_file}" == "libc.a" ]]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")Unable to determine CHOST's libdir: '${cc} -print-file-name=libc.a' returned no path!"
 	fi
 
 	local test_file_realpath=$(realpath "${test_file}" 2>/dev/null)

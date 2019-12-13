@@ -461,7 +461,7 @@ append_busybox() {
 	# allow for DNS resolution
 	local libdir=$(get_chost_libdir)
 	mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
-	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so.2
+	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so
 
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
@@ -955,7 +955,7 @@ append_linker() {
 		mkdir -p "${TDIR}"/sbin || gen_die "Failed to create '${TDIR}/sbin'!"
 
 		local libdir=$(get_chost_libdir)
-		copy_system_binaries "${TDIR}/sbin" "${libdir}/../sbin/ldconfig"
+		copy_system_binaries "${TDIR}/sbin" "${libdir}/../../sbin/ldconfig"
 	else
 		# Only copy /etc/ld.so.conf.d -- /etc/ld.so.conf was already
 		# added to CPIO via append_base_layout() and because we only
@@ -1323,7 +1323,7 @@ append_dropbear() {
 
 	local libdir=$(get_chost_libdir)
 	mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
-	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_files.so.2
+	copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_files.so
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
