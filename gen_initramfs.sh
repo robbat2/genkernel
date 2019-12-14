@@ -1853,32 +1853,67 @@ create_initramfs() {
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" \
 			|| gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
 
-		local compress_config='INITRAMFS_COMPRESSION_NONE'
-		case ${compress_ext} in
-			gz)   compress_config='INITRAMFS_COMPRESSION_GZIP' ;;
-			bz2)  compress_config='INITRAMFS_COMPRESSION_BZIP2' ;;
-			lzma) compress_config='INITRAMFS_COMPRESSION_LZMA' ;;
-			xz)   compress_config='INITRAMFS_COMPRESSION_XZ' ;;
-			lzo)  compress_config='INITRAMFS_COMPRESSION_LZO' ;;
-			lz4)  compress_config='INITRAMFS_COMPRESSION_LZ4' ;;
-			*)    compress_config='INITRAMFS_COMPRESSION_NONE' ;;
-		esac
+		local compress_config=NONE
+		local -a KNOWN_INITRAMFS_COMPRESSION_TYPES=()
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( NONE )
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( GZIP )
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( BZIP2 )
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZMA )
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( XZ )
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZO )
+		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZ4 )
 
-		# All N default except XZ, so there it gets used if the kernel does
-		# compression on it's own.
-		cat >>${KERNEL_OUTPUTDIR}/.config	<<-EOF
-		CONFIG_INITRAMFS_SOURCE="${CPIO_ARCHIVE}.cpio${compress_ext}"
-		CONFIG_INITRAMFS_ROOT_UID=0
-		CONFIG_INITRAMFS_ROOT_GID=0
-		CONFIG_INITRAMFS_COMPRESSION_NONE=n
-		CONFIG_INITRAMFS_COMPRESSION_GZIP=n
-		CONFIG_INITRAMFS_COMPRESSION_BZIP2=n
-		CONFIG_INITRAMFS_COMPRESSION_LZMA=n
-		CONFIG_INITRAMFS_COMPRESSION_XZ=y
-		CONFIG_INITRAMFS_COMPRESSION_LZO=n
-		CONFIG_INITRAMFS_COMPRESSION_LZ4=n
-		CONFIG_${compress_config}=y
-		EOF
+		if isTrue "${COMPRESS_INITRD}"
+		then
+			case ${COMPRESS_INITRD_TYPE} in
+				gz)
+					compress_config='GZIP'
+					;;
+				bz2)
+					compress_config='BZIP2'
+					;;
+				lzma)
+					compress_config='LZMA'
+					;;
+				xz|best|fastest)
+					compress_config='XZ'
+					;;
+				lzop)
+					compress_config='LZO'
+					;;
+				lz4)
+					compress_config='LZ4'
+					;;
+			esac
+		fi
+
+		print_info 1 "$(get_indent 1)>> --integrated-initramfs is set; Setting CONFIG_INITRAMFS_* options ..."
+
+		[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" "${CPIO_ARCHIVE}.cpio"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_UID" "0"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_GID" "0"
+
+		local KNOWN_INITRAMFS_COMPRESSION_TYPE
+		local KOPTION_VALUE
+		for KNOWN_INITRAMFS_COMPRESSION_TYPE in "${KNOWN_INITRAMFS_COMPRESSION_TYPES[@]}"
+		do
+			KOPTION_VALUE=n
+			if [[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "${compress_config}" ]]
+			then
+				KOPTION_VALUE=y
+			fi
+
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_COMPRESSION_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+		done
+
+		if [ -f "${KCONFIG_MODIFIED_MARKER}" ]
+		then
+			print_info 1 "$(get_indent 1)>> Running 'make olddefconfig' due to changed kernel options ..."
+			pushd "${KERNEL_DIR}" &>/dev/null || gen_die "Failed to chdir to '${KERNEL_DIR}'!"
+			compile_generic olddefconfig kernel 2>/dev/null
+			popd &>/dev/null || gen_die "Failed to chdir!"
+		fi
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
