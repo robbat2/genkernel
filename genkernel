@@ -432,7 +432,13 @@ then
 
 		if isTrue "${BUILD_RAMDISK}"
 		then
-			print_info 1 "You will find the initramfs in '${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}'."
+			if isTrue "${INTEGRATED_INITRAMFS}"
+			then
+				show_warning_initramfs_is_required=no
+				print_info 1 "Initramfs is integrated into kernel image."
+			else
+				print_info 1 "You will find the initramfs in '${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}'."
+			fi
 		fi
 	fi
 
