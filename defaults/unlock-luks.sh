@@ -45,10 +45,10 @@ main() {
 
 	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="${NAME}" LUKS_KEY='"${CRYPT_KEYFILE_'${TYPE}'}"'
 	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"' OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
-	local cryptsetup_options
 
 	while true
 	do
+		local cryptsetup_options=""
 		local gpg_cmd crypt_filter_ret
 
 		if [ -e "${OPENED_LOCKFILE}" ]

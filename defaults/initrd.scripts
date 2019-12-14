@@ -1717,10 +1717,12 @@ openLUKS() {
 	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"' LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
-	local mntkey="/mnt/key/" crypt_filter_ret= cryptsetup_options=''
+	local mntkey="/mnt/key/" crypt_filter_ret=
 
 	while true
 	do
+		local cryptsetup_options=''
+
 		local gpg_cmd=""
 		if [ -e "${OPENED_LOCKFILE}" ]
 		then
