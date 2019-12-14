@@ -95,8 +95,6 @@ determine_output_filenames() {
 	GK_FILENAME_TEMP_KERNELZ="kernelz-${ARCH}-${KV}"
 	GK_FILENAME_TEMP_SYSTEMMAP="System.map-${ARCH}-${KV}"
 
-	isTrue "${CMD_INSTALL}" || return
-
 	# Do we have values?
 	if [ -z "${KERNEL_FILENAME}" ]
 	then
