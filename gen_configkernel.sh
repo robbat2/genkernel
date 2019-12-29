@@ -224,6 +224,18 @@ config_kernel() {
 	local -a required_kernel_options
 	[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
 
+	# --integrated-initramfs handling
+	if isTrue "${INTEGRATED_INITRAMFS}"
+	then
+		local cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE")
+		if [[ -n "${cfg_CONFIG_INITRAMFS_SOURCE}" && ${#cfg_CONFIG_INITRAMFS_SOURCE} -gt 2 ]]
+		then
+			# Checking value length to allow 'CONFIG_INITRAMFS_SOURCE=' and 'CONFIG_INITRAMFS_SOURCE=""'
+			print_info 2 "$(get_indent 1)>> CONFIG_INITRAMFS_SOURCE is already set; Unsetting to avoid clashing with --integrated-initramfs ..."
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" ""
+		fi
+	fi
+
 	# Force this on if we are using --genzimage
 	if isTrue "${CMD_GENZIMAGE}"
 	then
