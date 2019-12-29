@@ -1890,7 +1890,8 @@ create_initramfs() {
 		print_info 1 "$(get_indent 1)>> --integrated-initramfs is set; Setting CONFIG_INITRAMFS_* options ..."
 
 		[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" "${CPIO_ARCHIVE}.cpio"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" "\"${CPIO_ARCHIVE}.cpio\""
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_UID" "0"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_GID" "0"
 
@@ -1904,7 +1905,23 @@ create_initramfs() {
 				KOPTION_VALUE=y
 			fi
 
-			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_COMPRESSION_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+			if [ ${KV_NUMERIC} -ge 4010 ]
+			then
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_COMPRESSION_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+
+				if [[ "${KOPTION_VALUE}" == "y" && "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" != "NONE" ]]
+				then
+					# Make sure that the kernel can decompress our initramfs
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+				fi
+			else
+				[[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "NONE" ]] && continue
+
+				# In <linux-4.10, to control used initramfs compression, we have to
+				# disable every supported compression type except compression type
+				# we want to use, (see $KERNEL_DIR/usr/Makefile).
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+			fi
 		done
 
 		if [ -f "${KCONFIG_MODIFIED_MARKER}" ]

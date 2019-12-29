@@ -364,6 +364,13 @@ if isTrue "${INTEGRATED_INITRAMFS}"
 then
 	print_info 1 '' 1 0
 
+	cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE")
+	if [[ "${cfg_CONFIG_INITRAMFS_SOURCE}" != "\"${CPIO_ARCHIVE}.cpio\"" ]]
+	then
+		gen_die "Sanity check failed: CONFIG_INITRAMFS_SOURCE is not set to '${CPIO_ARCHIVE}.cpio' in '${KERNEL_OUTPUTDIR}/.config'!"
+	fi
+	unset cfg_CONFIG_INITRAMFS_SOURCE
+
 	# We build the kernel a second time to include the initramfs
 	compile_kernel
 fi
