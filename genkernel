@@ -458,6 +458,13 @@ then
 		print_info 1 ''
 		print_info 1 'Where $ROOT is the device node for your root partition as the'
 		print_info 1 'one specified in /etc/fstab'
+
+		if isTrue "${INTEGRATED_INITRAMFS}" && isTrue "${BUILD_RAMDISK}"
+		then
+			show_warning_initramfs_is_required=no
+			print_info 1 ''
+			print_info 1 "Initramfs is integrated into kernel image."
+		fi
 	fi
 
 	if isTrue "${show_warning_initramfs_is_required}" && isTrue "${BUILD_RAMDISK}"
