@@ -7,17 +7,17 @@ src_prepare() {
 }
 
 src_configure() {
-	append-ldflags -static
-
 	local myconf=(
 		--with-optimisation=''
 		--disable-testing
+		--enable-static
 	)
 
 	gkconf "${myconf[@]}"
 }
 
 src_compile() {
+	MAKEOPTS+=" V="
 	gkmake
 }
 
