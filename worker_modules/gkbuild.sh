@@ -291,7 +291,7 @@ _initialize() {
 		die "Unable to build ${P}: '${GK_SHARE}/gkbuilds/${PN}.gkbuild' does NOT exist!"
 	fi
 
-	declare -gr WORKDIR=$(mktemp -d -p "${TEMP}" ${PN}.XXXXXXXX 2>/dev/null)
+	declare -gr WORKDIR=$(mktemp -d -p "${TEMP}" ${PN}_XXXXXXXX 2>/dev/null)
 	[ -z "${WORKDIR}" ] && die "mktemp failed!"
 
 	declare -gr BROOT="${WORKDIR}/buildroot"

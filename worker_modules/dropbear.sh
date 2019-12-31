@@ -35,7 +35,7 @@ __module_main() {
 			;;
 	esac
 
-	local dropbear_temp=$(mktemp -d -p "${TEMP}" dropbear.XXXXXXXX 2>/dev/null)
+	local dropbear_temp=$(mktemp -d -p "${TEMP}" dropbear_XXXXXXXX 2>/dev/null)
 	[ -z "${dropbear_temp}" ] && die "mktemp failed!"
 
 	cd "${dropbear_temp}" || die "Failed to chdir to '${dropbear_temp}'!"

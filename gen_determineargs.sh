@@ -448,8 +448,8 @@ determine_real_args() {
 		mkdir -p "${TMPDIR}" || gen_die "Failed to create '${TMPDIR}'!"
 	fi
 
-	declare -gr TEMP=$(mktemp -d -p "${TMPDIR}" gk.XXXXXXXX 2>/dev/null)
-	[ -z "${TEMP}" ] && gen_die "'mktemp -d -p \"${TMPDIR}\" gk.XXXXXXXX' failed!"
+	declare -gr TEMP=$(mktemp -d -p "${TMPDIR}" gk_XXXXXXXX 2>/dev/null)
+	[ -z "${TEMP}" ] && gen_die "'mktemp -d -p \"${TMPDIR}\" gk_XXXXXXXX' failed!"
 
 	if ! isTrue "${CLEANUP}"
 	then

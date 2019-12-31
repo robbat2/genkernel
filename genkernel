@@ -293,7 +293,7 @@ then
 		then
 			# We have to set $INSTALL_MOD_PATH to avoid installing files
 			# to /lib/modules because --no-install was set
-			INSTALL_MOD_PATH="$(mktemp -d -p "${TEMP}" kerncache-modules.XXXXXXX 2>/dev/null)"
+			INSTALL_MOD_PATH="$(mktemp -d -p "${TEMP}" kerncache-modules_XXXXXXX 2>/dev/null)"
 			if [ -z "${INSTALL_MOD_PATH}" ]
 			then
 				gen_die "Internal error: Variable 'INSTALL_MOD_PATH' is empty; mktemp() for kerncache modules failed!"
