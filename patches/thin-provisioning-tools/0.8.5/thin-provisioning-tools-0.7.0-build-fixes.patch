@@ -12,6 +12,15 @@
  
  ifeq ("@DEVTOOLS@", "yes")
  CXXFLAGS+=-DDEV_TOOLS
+@@ -346,7 +348,7 @@ LIBFT_OBJECTS=$(subst .c,.o,$(LIBFT_SOURCE))
+ 
+ lib/libft.so: $(LIBFT_OBJECTS)
+ 	@echo "    [LD]" $@
+-	$(V) gcc -shared -o $@ $+ -laio
++	$(V) $(CC) -shared -o $@ $+ -laio
+ 
+ .PHONEY: functional-test unit-test
+ 
 --- thin-provisioning-tools-0.7.0/unit-tests/Makefile.in
 +++ thin-provisioning-tools-0.7.0/unit-tests/Makefile.in
 @@ -25,7 +25,7 @@
