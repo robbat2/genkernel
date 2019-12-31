@@ -1811,7 +1811,7 @@ create_initramfs() {
 			print_info 1 "$(get_indent 1)>> Pre-generating initramfs' /etc/ld.so.cache ..."
 			# Need to disable sandbox which doesn't understand chroot(), bug #431038
 			SANDBOX_ON=0 ldconfig -f /etc/ld.so.conf -r "${TDIR}" 2>/dev/null \
-				|| gen_die "Failed to pre-generate '${TDIR}/etc/ld.so.cache'!"
+				|| print_warning 1 "Failed to pre-generate '${TDIR}/etc/ld.so.cache'! Probably due to sandbox/permission problem; Ignoring ..."
 		fi
 
 		find . -print0 | sort -z | "${CPIO_COMMAND}" ${CPIO_ARGS} --reproducible -F "${CPIO_ARCHIVE}" 2>/dev/null \
