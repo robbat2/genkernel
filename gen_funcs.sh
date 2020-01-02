@@ -407,6 +407,14 @@ gen_die() {
 		# We died in a subshell! Let's trigger trap function...
 		kill -s SIGTERM ${GK_MASTER_PID}
 	else
+		if [ -z "${GK_DIED_IN}" ]
+		then
+			GK_DIED_IN="$(get_useful_function_stack)"
+		else
+			# We are already dying
+			exit 1
+		fi
+
 		# Don't trust $LOGFILE before determine_real_args() was called
 		if [ -n "${CMD_LOGFILE}" -a -s "${LOGFILE}" ]
 		then
