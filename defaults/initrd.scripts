@@ -873,7 +873,7 @@ findnfsmount() {
 find_real_device() {
 	local DEVICE="${1}"
 	case "${DEVICE}" in
-		UUID\=*|LABEL\=*|PARTUUID\=*)
+		UUID\=*|LABEL\=*|PARTLABEL=*|PARTUUID\=*)
 			local REAL_DEVICE=""
 			local retval=1
 

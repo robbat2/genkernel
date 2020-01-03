@@ -609,7 +609,7 @@ then
 	if [ "${NORESUME}" != '1' ] && [ -n "${REAL_RESUME}" ]
 	then
 		case "${REAL_RESUME}" in
-			LABEL=*|UUID=*|PARTUUID=*)
+			LABEL=*|UUID=*|PARTLABEL=*|PARTUUID=*)
 				RESUME_DEV=""
 				retval=1
 
@@ -711,7 +711,7 @@ do
 		while [ "${got_good_root}" != '1' -a $(date +%s) -le ${ROOTDELAY_TIMEOUT} ]
 		do
 			case "${REAL_ROOT}" in
-				LABEL=*|UUID=*|PARTUUID=*)
+				LABEL=*|UUID=*|PARTLABEL=*|PARTUUID=*)
 					ROOT_DEV=""
 					retval=1
 
