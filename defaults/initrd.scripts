@@ -100,9 +100,16 @@ modules_scan() {
 		then
 			if [ "${smart_loading}" = "yes" ]
 			then
-				_root_dev=$(findfs "${REAL_ROOT}" 2>/dev/null)
+				if [ ! -f "${GK_ROOTFS_DETECTED_STATEFILE}" ]
+				then
+					_root_dev=$(findfs "${REAL_ROOT}" 2>/dev/null)
+					if [ $? -eq 0 ] && [ -n "${_root_dev}" ] && [ -b "${_root_dev}" ]
+					then
+						echo "${_root_dev}" > "${GK_ROOTFS_DETECTED_STATEFILE}"
+					fi
+				fi
 
-				if [ $? -eq 0 ] && [ -n "${_root_dev}" ] && [ -b "${_root_dev}" ]
+				if [ -f "${GK_ROOTFS_DETECTED_STATEFILE}" ]
 				then
 					log_msg "${root_dev_found}"
 					printf "%b" "${root_dev_found}"
