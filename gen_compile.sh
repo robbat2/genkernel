@@ -254,7 +254,20 @@ compile_modules() {
 	fi
 }
 
+# @FUNCTION: compile_kernel
+# @USAGE: <copy_kernel>
+# @DESCRIPTION:
+# Will compile and optionally copy compiled kernel and System.map
+# to its final location.
+#
+# <copy_kernel> Boolean which indicates if kernel and System.map should
+#               get copied to its final location
 compile_kernel() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local copy_kernel="${1}"
+
 	[ -z "${KERNEL_MAKE}" ] \
 		&& gen_die "KERNEL_MAKE undefined - I don't know how to compile a kernel for this arch!"
 
@@ -293,6 +306,12 @@ compile_kernel() {
 	elif [ ${KV_NUMERIC} -lt 4014 ]
 	then
 		print_info 1 "$(get_indent 1)>> Skipping installation of bundled firmware due to --no-firmware-install ..."
+	fi
+
+	if ! isTrue "${copy_kernel}"
+	then
+		print_info 5 "Not copying compiled kernel yet (${FUNCNAME} called with copy_kernel=no) ..."
+		return
 	fi
 
 	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})

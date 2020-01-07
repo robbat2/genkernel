@@ -250,7 +250,12 @@ then
 		print_info 2 "$(get_indent 1)>> Kernel version has not changed since genkernel start"
 	fi
 
-	compile_kernel
+	if isTrue "${INTEGRATED_INITRAMFS}"
+	then
+		compile_kernel no
+	else
+		compile_kernel yes
+	fi
 
 	# Compile modules
 	if isTrue "${BUILD_MODULES}" && ! isTrue "${BUILD_STATIC}"
@@ -372,7 +377,7 @@ then
 	unset cfg_CONFIG_INITRAMFS_SOURCE
 
 	# We build the kernel a second time to include the initramfs
-	compile_kernel
+	compile_kernel yes
 fi
 
 if [ -n "${KERNCACHE}" ]
