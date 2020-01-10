@@ -294,7 +294,7 @@ compile_kernel() {
 	elif isTrue "${FIRMWARE_INSTALL}"
 	then
 		local cfg_CONFIG_FIRMWARE_IN_KERNEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" CONFIG_FIRMWARE_IN_KERNEL)
-		if isTrue "$cfg_CONFIG_FIRMWARE_IN_KERNEL"
+		if isTrue "${cfg_CONFIG_FIRMWARE_IN_KERNEL}"
 		then
 			print_info 1 "$(get_indent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y) ..."
 		else
@@ -391,7 +391,7 @@ determine_busybox_config_file() {
 
 		if [ -f "${f}" ]
 		then
-			BUSYBOX_CONFIG="$f"
+			BUSYBOX_CONFIG="${f}"
 			break
 		else
 			print_info 3 "$(get_indent 3)- '${f}' not found; Skipping ..."

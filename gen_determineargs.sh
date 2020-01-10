@@ -72,8 +72,8 @@ determine_KV() {
 		fi
 	fi
 
-	KV_MAJOR=$(echo $KV | cut -f1 -d.)
-	KV_MINOR=$(echo $KV | cut -f2 -d.)
+	KV_MAJOR=$(echo ${KV} | cut -f1 -d.)
+	KV_MINOR=$(echo ${KV} | cut -f2 -d.)
 	KV_NUMERIC=$((${KV_MAJOR} * 1000 + ${KV_MINOR}))
 
 	if [ -n "${old_KV}" -a "${KV}" != "${old_KV}" ]
@@ -283,20 +283,20 @@ determine_real_args() {
 	set_config_with_override STRING CHECK_FREE_DISK_SPACE_BOOTDIR         CMD_CHECK_FREE_DISK_SPACE_BOOTDIR
 	set_config_with_override STRING CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR CMD_CHECK_FREE_DISK_SPACE_KERNELOUTPUTDIR
 
-	set_config_with_override STRING COMPRESS_INITRD                       CMD_COMPRESS_INITRD                       "$DEFAULT_COMPRESS_INITRD"
-	set_config_with_override STRING COMPRESS_INITRD_TYPE                  CMD_COMPRESS_INITRD_TYPE                  "$DEFAULT_COMPRESS_INITRD_TYPE"
-	set_config_with_override STRING MAKEOPTS                              CMD_MAKEOPTS                              "$DEFAULT_MAKEOPTS"
+	set_config_with_override STRING COMPRESS_INITRD                       CMD_COMPRESS_INITRD                       "${DEFAULT_COMPRESS_INITRD}"
+	set_config_with_override STRING COMPRESS_INITRD_TYPE                  CMD_COMPRESS_INITRD_TYPE                  "${DEFAULT_COMPRESS_INITRD_TYPE}"
+	set_config_with_override STRING MAKEOPTS                              CMD_MAKEOPTS                              "${DEFAULT_MAKEOPTS}"
 	set_config_with_override STRING NICE                                  CMD_NICE                                  "10"
-	set_config_with_override STRING KERNEL_MAKE                           CMD_KERNEL_MAKE                           "$DEFAULT_KERNEL_MAKE"
-	set_config_with_override STRING UTILS_CFLAGS                          CMD_UTILS_CFLAGS                          "$DEFAULT_UTILS_CFLAGS"
-	set_config_with_override STRING UTILS_MAKE                            CMD_UTILS_MAKE                            "$DEFAULT_UTILS_MAKE"
-	set_config_with_override STRING KERNEL_CC                             CMD_KERNEL_CC                             "$DEFAULT_KERNEL_CC"
-	set_config_with_override STRING KERNEL_LD                             CMD_KERNEL_LD                             "$DEFAULT_KERNEL_LD"
-	set_config_with_override STRING KERNEL_AS                             CMD_KERNEL_AS                             "$DEFAULT_KERNEL_AS"
-	set_config_with_override STRING UTILS_CC                              CMD_UTILS_CC                              "$DEFAULT_UTILS_CC"
-	set_config_with_override STRING UTILS_CXX                             CMD_UTILS_CXX                             "$DEFAULT_UTILS_CXX"
-	set_config_with_override STRING UTILS_LD                              CMD_UTILS_LD                              "$DEFAULT_UTILS_LD"
-	set_config_with_override STRING UTILS_AS                              CMD_UTILS_AS                              "$DEFAULT_UTILS_AS"
+	set_config_with_override STRING KERNEL_MAKE                           CMD_KERNEL_MAKE                           "${DEFAULT_KERNEL_MAKE}"
+	set_config_with_override STRING UTILS_CFLAGS                          CMD_UTILS_CFLAGS                          "${DEFAULT_UTILS_CFLAGS}"
+	set_config_with_override STRING UTILS_MAKE                            CMD_UTILS_MAKE                            "${DEFAULT_UTILS_MAKE}"
+	set_config_with_override STRING KERNEL_CC                             CMD_KERNEL_CC                             "${DEFAULT_KERNEL_CC}"
+	set_config_with_override STRING KERNEL_LD                             CMD_KERNEL_LD                             "${DEFAULT_KERNEL_LD}"
+	set_config_with_override STRING KERNEL_AS                             CMD_KERNEL_AS                             "${DEFAULT_KERNEL_AS}"
+	set_config_with_override STRING UTILS_CC                              CMD_UTILS_CC                              "${DEFAULT_UTILS_CC}"
+	set_config_with_override STRING UTILS_CXX                             CMD_UTILS_CXX                             "${DEFAULT_UTILS_CXX}"
+	set_config_with_override STRING UTILS_LD                              CMD_UTILS_LD                              "${DEFAULT_UTILS_LD}"
+	set_config_with_override STRING UTILS_AS                              CMD_UTILS_AS                              "${DEFAULT_UTILS_AS}"
 
 	set_config_with_override STRING CROSS_COMPILE                         CMD_CROSS_COMPILE
 	set_config_with_override STRING BOOTDIR                               CMD_BOOTDIR                               "/boot"

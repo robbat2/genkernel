@@ -1537,20 +1537,20 @@ set_default_gk_trap() {
 # - JRG
 #
 set_config_with_override() {
-	local VarType=$1
-	local CfgVar=$2
-	local OverrideVar=$3
-	local Default=$4
+	local VarType=${1}
+	local CfgVar=${2}
+	local OverrideVar=${3}
+	local Default=${4}
 	local Result
 
 	#
 	# Syntax check the function arguments.
 	#
-	case "$VarType" in
+	case "${VarType}" in
 		BOOL|STRING)
 			;;
 		*)
-			gen_die "Illegal variable type \"$VarType\" passed to set_config_with_override()."
+			gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Variable type \"${VarType}\" is unknown!"
 			;;
 	esac
 
@@ -1559,9 +1559,9 @@ set_config_with_override() {
 		Result=${!OverrideVar}
 		if [ -n "${!CfgVar}" ]
 		then
-			print_info 5 "  $CfgVar overridden on command line to \"$Result\"."
+			print_info 5 "  ${CfgVar} overridden on command line to \"${Result}\"."
 		else
-			print_info 5 "  $CfgVar set on command line to \"$Result\"."
+			print_info 5 "  ${CfgVar} set on command line to \"${Result}\"."
 		fi
 	else
 		if [ -n "${!CfgVar}" ]
@@ -1571,18 +1571,18 @@ set_config_with_override() {
 			eval ${OverrideVar}=\"${Result}\" \
 				|| small_die "Failed to set variable '${OverrideVar}=${Result}' !"
 
-			print_info 5 "  $CfgVar set in config file to \"${Result}\"."
+			print_info 5 "  ${CfgVar} set in config file to \"${Result}\"."
 		else
-			if [ -n "$Default" ]
+			if [ -n "${Default}" ]
 			then
 				Result=${Default}
 				# set OverrideVar to Result, otherwise CMD_* may not be initialized...
 				eval ${OverrideVar}=\"${Result}\" \
 					|| small_die "Failed to set variable '${OverrideVar}=${Result}' !"
 
-				print_info 5 "  $CfgVar defaulted to \"${Result}\"."
+				print_info 5 "  ${CfgVar} defaulted to \"${Result}\"."
 			else
-				print_info 5 "  $CfgVar not set."
+				print_info 5 "  ${CfgVar} not set."
 			fi
 		fi
 	fi
@@ -1688,7 +1688,7 @@ rootfs_type_is() {
 
 	# It is possible that the awk will return MULTIPLE lines, depending on your
 	# initramfs setup (one of the entries will be 'rootfs').
-	if awk '($2=="/"){print $3}' /proc/mounts | grep -sq --line-regexp "$fstype" ;
+	if awk '($2=="/"){print $3}' /proc/mounts | grep -sq --line-regexp "${fstype}"
 	then
 		echo yes
 	else
@@ -1854,7 +1854,7 @@ find_kernel_binary() {
 	do
 		if [ -e "${i}" ]
 		then
-			tmp_kernel_binary=$i
+			tmp_kernel_binary=${i}
 			break
 		fi
 	done
@@ -1889,7 +1889,7 @@ kconfig_set_opt() {
 	then
 		print_info 3 "$(get_indent ${indentlevel}) - Adding option '${optname}' with value '${optval}' to '${kconfig}'..."
 		echo "${optname}=${optval}" >> "${kconfig}" \
-			|| gen_die "Failed to add '${optname}=${optval}' to '$kconfig'"
+			|| gen_die "Failed to add '${optname}=${optval}' to '${kconfig}'"
 
 		[ ! -f "${TEMP}/.kconfig_modified" ] && touch "${TEMP}/.kconfig_modified"
 	elif [[ "${curropt}" != "*#*" && "${curropt#*=}" == "${optval}" ]]
@@ -1899,7 +1899,7 @@ kconfig_set_opt() {
 		print_info 3 "$(get_indent ${indentlevel}) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
 		sed -i "${kconfig}" \
 			-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
-			|| gen_die "Failed to set '${optname}=${optval}' in '$kconfig'"
+			|| gen_die "Failed to set '${optname}=${optval}' in '${kconfig}'"
 
 		[ ! -f "${KCONFIG_MODIFIED_MARKER}" ] && touch "${KCONFIG_MODIFIED_MARKER}"
 	fi

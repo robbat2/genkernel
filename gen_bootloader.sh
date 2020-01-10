@@ -70,7 +70,7 @@ set_bootloader_grub() {
 		local GRUB_BOOTFS
 		if [ -n "${BOOTFS}" ]
 		then
-			GRUB_BOOTFS=$BOOTFS
+			GRUB_BOOTFS=${BOOTFS}
 		else
 			GRUB_BOOTFS=$(set_bootloader_read_fstab | cut -d' ' -f2)
 		fi
@@ -101,7 +101,7 @@ set_bootloader_grub() {
 
 			# Add grub configuration to grub.conf
 			echo "# Genkernel generated entry, see GRUB documentation for details" >> ${GRUB_CONF}
-			echo "title=Gentoo Linux ($KV)" >> ${GRUB_CONF}
+			echo "title=Gentoo Linux (${KV})" >> ${GRUB_CONF}
 			printf "%b\n" "\tkernel /${GK_FILENAME_KERNEL} root=${GRUB_ROOTFS}" >> ${GRUB_CONF}
 			if isTrue "${BUILD_RAMDISK}"
 			then

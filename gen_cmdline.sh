@@ -273,7 +273,7 @@ usage() {
 parse_optbool() {
 	local opt=${1/--no-*/no} # false
 	opt=${opt/--*/yes} # true
-	echo $opt
+	echo ${opt}
 }
 
 parse_cmdline() {
@@ -394,7 +394,7 @@ parse_cmdline() {
 			;;
 		--microcode=*)
 			CMD_MICROCODE="${*#*=}"
-			print_info 3 "CMD_MICROCODE: $CMD_MICROCODE"
+			print_info 3 "CMD_MICROCODE: ${CMD_MICROCODE}"
 			;;
 		--microcode-initramfs|--no-microcode-initramfs)
 			CMD_MICROCODE_INITRAMFS=$(parse_optbool "$*")

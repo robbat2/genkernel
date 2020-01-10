@@ -79,11 +79,11 @@ determine_kernel_config_file() {
 
 			if [ -f "${f}" ]
 			then
-				if grep -sq THIS_CONFIG_IS_BROKEN "$f"
+				if grep -sq THIS_CONFIG_IS_BROKEN "${f}"
 				then
 					print_info 2 "$(get_indent 1)- '${f}' is marked as broken; Skipping ..."
 				else
-					KERNEL_CONFIG="$f" && break
+					KERNEL_CONFIG="${f}" && break
 				fi
 			else
 					print_info 2 "$(get_indent 1)- '${f}' not found; Skipping ..."
@@ -845,12 +845,12 @@ config_kernel() {
 			local k
 			for k in "${kconfigs_microcode[@]}"
 			do
-				local cfg=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "$k")
+				local cfg=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "${k}")
 				case "${cfg}" in
 					y) ;; # Do nothing
 					*) cfg='y'
 				esac
-				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "$k" "${cfg}"
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "${k}" "${cfg}"
 			done
 
 			required_kernel_options+=( 'CONFIG_MICROCODE' )
