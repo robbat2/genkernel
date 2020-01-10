@@ -491,7 +491,7 @@ then
 		if [ ! -x ${i} ]
 		then
 			USE_ZFS=0
-			bad_msg 'Aborting use of zfs because ${i} not found!'
+			bad_msg "Aborting use of ZFS because ${i} not found!"
 			break
 		fi
 	done
@@ -740,7 +740,7 @@ do
 					ROOT_DEV="${REAL_ROOT#*=}"
 					if [ "${ROOT_DEV}" != 'ZFS' ]
 					then
-						if [ "$(zfs get type -o value -H ${ROOT_DEV} 2>/dev/null)" = 'filesystem' ]
+						if [ "$(get_zfs_property "${ROOT_DEV}" type)" = 'filesystem' ]
 						then
 							got_good_root=1
 							REAL_ROOT=${ROOT_DEV}
@@ -753,7 +753,7 @@ do
 							continue
 						fi
 					else
-						BOOTFS=$(/sbin/zpool list -H -o bootfs 2>/dev/null)
+						BOOTFS=$(zpool list -H -o bootfs 2>/dev/null)
 						if [ "${BOOTFS}" != '-' ]
 						then
 							for i in ${BOOTFS}
@@ -801,6 +801,14 @@ do
 			echo
 		fi
 
+		if [ "${USE_ZFS}" = '1' ]
+		then
+			write_env_file \
+				"${ZFS_ENC_ENV_FILE}" \
+				REAL_ROOT \
+				ROOTFSTYPE
+		fi
+
 		# Check for a block device or /dev/nfs or zfs encryption
 		if [ -n "${REAL_ROOT}" ] && [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ] || [ -b "${REAL_ROOT}" ]
 		then
@@ -810,19 +818,29 @@ do
 				# let's check if this dataset is encrypted and ask for passphrase
 				if [ "$(zpool list -H -o feature@encryption "${REAL_ROOT%%/*}" 2>/dev/null)" = 'active' ]
 				then
-					ZFS_KEYSTATUS="$(zfs get -H -o value keystatus "${REAL_ROOT}" 2>/dev/null)"
-					ZFS_ENCRYPTIONROOT="$(zfs get -H -o value encryptionroot "${REAL_ROOT}" 2>/dev/null)"
-					if ! [ "${ZFS_ENCRYPTIONROOT}" = '-' ] || [ "${ZFS_KEYSTATUS}" = 'available' ]
+					ZFS_KEYSTATUS="$(get_zfs_property "${REAL_ROOT}" keystatus)"
+					ZFS_ENCRYPTIONROOT="$(get_zfs_property "${REAL_ROOT}" encryptionroot)"
+					if [ "${ZFS_ENCRYPTIONROOT}" != '-' ] && [ "${ZFS_KEYSTATUS}" = 'unavailable' ]
 					then
 						good_msg "Detected ZFS encryption, asking for key"
-						zfs load-key "${ZFS_ENCRYPTIONROOT}"
-						retval=$?
-						# if the key loaded fine, confirm got_good_root to exit second while loop
-						if [ ${retval} -ne 0 ]
+						run zfs load-key "${ZFS_ENCRYPTIONROOT}"
+
+						# Get new key status to check if load-key was successful
+						# or dataset has been opened by someone else in the meantime (through SSH for instance)
+						ZFS_KEYSTATUS="$(get_zfs_property "${REAL_ROOT}" keystatus)"
+
+						if [ "${ZFS_KEYSTATUS}" != 'available' ]
 						then
-							bad_msg "${ROOT_DEV} is encrypted and not mountable without key"
+							bad_msg "${REAL_ROOT} is encrypted and not mountable without key"
 							got_good_root=0
 							break
+						fi
+
+						if [ -f "${ZFS_ENC_OPENED_LOCKFILE}" ]
+						then
+							good_msg "${REAL_ROOT} device meanwhile was opened by someone else."
+						else
+							run touch "${ZFS_ENC_OPENED_LOCKFILE}"
 						fi
 					fi
 				fi
@@ -849,7 +867,7 @@ do
 
 		if [ "${ROOTFSTYPE}" = 'zfs' ]
 		then
-			if [ "$(zfs get -H -o value mountpoint "${REAL_ROOT}")" = 'legacy' ]
+			if [ "$(get_zfs_property "${REAL_ROOT}" mountpoint)" = 'legacy' ]
 			then
 				MOUNT_STATE=rw
 			else

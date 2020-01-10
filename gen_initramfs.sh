@@ -1342,6 +1342,9 @@ append_dropbear() {
 	cp -a "${GK_SHARE}"/defaults/unlock-luks.sh "${TDIR}"/usr/sbin/unlock-luks \
 		|| gen_die "Failed to copy '${GK_SHARE}/defaults/unlock-luks.sh' to '${TDIR}/usr/sbin/unlock-luks'"
 
+	cp -a "${GK_SHARE}"/defaults/unlock-zfs.sh "${TDIR}"/usr/sbin/unlock-zfs \
+		|| gen_die "Failed to copy '${GK_SHARE}/defaults/unlock-zfs.sh' to '${TDIR}/usr/sbin/unlock-zfs'"
+
 	cp -aL "${DROPBEAR_AUTHORIZED_KEYS_FILE}" "${TDIR}"/root/.ssh/ \
 		|| gen_die "Failed to copy '${DROPBEAR_AUTHORIZED_KEYS_FILE}'!"
 
@@ -1368,6 +1371,9 @@ append_dropbear() {
 
 	chmod 0755 "${TDIR}"/usr/sbin/unlock-luks \
 		|| gen_die "Failed to chmod of '${TDIR}/usr/sbin/unlock-luks'!"
+
+	chmod 0755 "${TDIR}"/usr/sbin/unlock-zfs \
+		|| gen_die "Failed to chmod of '${TDIR}/usr/sbin/unlock-zfs'!"
 
 	chmod 0640 "${TDIR}"/etc/shadow \
 		|| gen_die "Failed to chmod of '${TDIR}/etc/shadow'!"

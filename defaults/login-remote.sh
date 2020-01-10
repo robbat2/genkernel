@@ -105,6 +105,11 @@ else
 		good_msg "${NORMAL}To remote unlock LUKS-encrypted swap device, run '${BOLD}unlock-luks swap${NORMAL}'."
 	fi
 
+	if [ -e "${ZFS_ENC_ENV_FILE}" ] && [ ! -f "${ZFS_ENC_OPENED_LOCKFILE}" ]
+	then
+		good_msg "${NORMAL}To remote unlock ZFS root device, run '${BOLD}unlock-zfs${NORMAL}'."
+	fi
+
 	echo
 
 	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash

@@ -103,6 +103,9 @@ CRYPT_KEYFILE_SWAP='/tmp/swap.key'
 CRYPT_ROOT_OPENED_LOCKFILE='/tmp/ROOT.opened'
 CRYPT_SWAP_OPENED_LOCKFILE='/tmp/SWAP.opened'
 
+ZFS_ENC_ENV_FILE='/etc/ZFS_ENC_ENV.conf'
+ZFS_ENC_OPENED_LOCKFILE='/tmp/ZFS.opened'
+
 # Flag for if ok when using CDROOT
 got_good_root='0'
 # if LOOP found on root before mount, trigger Unpacking additional packages

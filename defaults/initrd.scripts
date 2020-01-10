@@ -1087,6 +1087,20 @@ warn_msg() {
 	[ "$2" != '1' ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
+write_env_file() {
+	local env_file=${1}
+	shift
+
+	run touch "${env_file}"
+
+	local varname= varvalue=
+	for varname in $*
+	do
+		eval varvalue=\$${varname}
+		echo "${varname}=${varvalue}" >> "${env_file}"
+	done
+}
+
 crypt_filter() {
 	if [ "${CRYPT_SILENT}" = '1' ]
 	then
@@ -2265,14 +2279,15 @@ start_sshd() {
 		return
 	fi
 
-	# setup environment variables for the ssh login shell
-	local varname= varvalue=
-	run touch "${CRYPT_ENV_FILE}"
-	for varname in CRYPT_ROOT CRYPT_ROOT_TRIM CRYPT_SILENT CRYPT_SWAP
-	do
-		eval varvalue=\$${varname}
-		echo "${varname}=${varvalue}" >> "${CRYPT_ENV_FILE}"
-	done
+	# setup environment variables for the remote rescue shell
+	# ZFS will use a different file because $REAL_ROOT for ZFS
+	# isn't known yet.
+	write_env_file \
+		"${CRYPT_ENV_FILE}" \
+		CRYPT_ROOT \
+		CRYPT_ROOT_TRIM \
+		CRYPT_SILENT \
+		CRYPT_SWAP
 
 	run touch /var/log/lastlog
 
@@ -2677,6 +2692,13 @@ get_mount_device() {
 		/^[[:blank:]]*#/ { next }
 		$2 == fs { print $1 }
 		' ${NEW_ROOT}/etc/fstab
+}
+
+get_zfs_property() {
+	local device=${1}
+	local propertyname=${2}
+
+	echo "$(zfs get -H -o value ${propertyname} "${device}" 2>/dev/null)"
 }
 
 # If the kernel is handed a mount option is does not recognize, it WILL fail to
