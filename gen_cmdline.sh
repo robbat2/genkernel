@@ -65,6 +65,8 @@ longusage() {
   echo "	--module-rebuild	Automatically run 'emerge @module-rebuild' when"
   echo "				necessary (and possible)"
   echo "	--no-module-rebuild	Don't automatically run 'emerge @module-rebuild'"
+  echo "	--module-rebuild-cmd=<...>"
+  echo "				Overwrite default --module-rebuild command"
   echo "	--callback=<...>	Run the specified arguments after the"
   echo "				kernel and modules have been compiled"
   echo "	--static		Build a static (monolithic kernel)"
@@ -605,6 +607,10 @@ parse_cmdline() {
 		--module-rebuild|--no-module-rebuild)
 			CMD_MODULEREBUILD=$(parse_optbool "$*")
 			print_info 3 "CMD_MODULEREBUILD: ${CMD_MODULEREBUILD}"
+			;;
+		--module-rebuild-cmd=*)
+			CMD_MODULEREBUILD_CMD="${*#--module-rebuild-cmd=}"
+			print_info 3 "CMD_MODULEREBUILD_CMD: ${CMD_MODULEREBUILD_CMD}"
 			;;
 		--callback=*)
 			CMD_CALLBACK="${*#*=}"

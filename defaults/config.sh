@@ -34,6 +34,8 @@ DEFAULT_COMPRESS_INITRD_TYPE=best
 PORTAGE_MAKEOPTS="$(portageq envvar MAKEOPTS)"
 DEFAULT_MAKEOPTS="${PORTAGE_MAKEOPTS:- -j2}"
 
+DEFAULT_MODULEREBUILD_CMD="emerge --ignore-default-opts --quiet @module-rebuild"
+
 DEFAULT_KERNEL_MAKE=make
 DEFAULT_UTILS_MAKE=make
 

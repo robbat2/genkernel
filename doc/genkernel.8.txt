@@ -196,10 +196,17 @@ specified.
     Copies or does not copy all kernel modules to the initrd.
 
 *--*[*no-*]*module-rebuild*::
-    Runs, or does not run "emerge @module-rebuild" to build out-of-tree
-    modules when possible, i.e. when non-static kernel and modules will be
-    build, installed, no custom INSTALL_MOD_PATH is set,
-    '/var/lib/module-rebuild/moduledb' exists and is not empty.
+    Runs, or does not run "emerge --ignore-default-opts --quiet @module-rebuild"
+    to build out-of-tree modules when possible, i.e. when non-static
+    kernel and modules will be build, installed, no custom
+    'INSTALL_MOD_PATH' is set, '/var/lib/module-rebuild/moduledb' exists
+    and is not empty.
+
+NOTE: Command can be customized using '--module-rebuild-cmd' command-line
+argument or 'MODULEREBUILD_CMD' in '/etc/genkernel.conf'.
+
+*--module-rebuild-cmd*=<...>::
+    Overwrite default *--module-rebuild* command.
 
 *--callback*=<...>::
     Run the specified arguments in the current environment after the

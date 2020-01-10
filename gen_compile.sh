@@ -2,53 +2,51 @@
 # $Id$
 
 compile_external_modules() {
-	local command="emerge --quiet @module-rebuild 2>&1"
-
 	if ! isTrue "${CMD_MODULEREBUILD}"
 	then
-		print_info 3 "$(get_indent 1)>> --no-module-rebuild set; Skipping 'emerge @module-rebuild' ..."
+		print_info 3 "$(get_indent 1)>> --no-module-rebuild set; Skipping '${MODULEREBUILD_CMD}' ..."
 		return
 	fi
 
 	if isTrue "$(tc-is-cross-compiler)"
 	then
-		print_info 3 "$(get_indent 1)>> Cross-compilation detected; Skipping 'emerge @module-rebuild' ..."
+		print_info 3 "$(get_indent 1)>> Cross-compilation detected; Skipping '${MODULEREBUILD_CMD}' ..."
 		return
 	fi
 
 	if ! isTrue "${CMD_INSTALL}"
 	then
-		print_info 3 "$(get_indent 1)>> --no-install set; Skipping 'emerge @module-rebuild' ..."
+		print_info 3 "$(get_indent 1)>> --no-install set; Skipping '${MODULEREBUILD_CMD}' ..."
 		return
 	fi
 
 	if [ -n "${INSTALL_MOD_PATH}" ]
 	then
 		# emerge would install to a different location
-		print_warning 1 "$(get_indent 1)>> INSTALL_MOD_PATH set; Skipping 'emerge @module-rebuild' ..."
+		print_warning 1 "$(get_indent 1)>> INSTALL_MOD_PATH set; Skipping '${MODULEREBUILD_CMD}' ..."
 		return
 	fi
 
 	local modulesdb_file="/var/lib/module-rebuild/moduledb"
 	if [ ! -s "${modulesdb_file}" ]
 	then
-		print_info 2 "$(get_indent 1)>> '${modulesdb_file}' does not exist or is empty; Skipping 'emerge @module-rebuild' ..."
+		print_info 2 "$(get_indent 1)>> '${modulesdb_file}' does not exist or is empty; Skipping '${MODULEREBUILD_CMD}' ..."
 		return
 	fi
 
 	local -x KV_OUT_DIR="${KERNEL_OUTPUTDIR}"
 
 	print_info 1 "$(get_indent 1)>> Compiling out-of-tree module(s) ..."
-	print_info 3 "COMMAND: ${command}" 1 0 1
+	print_info 3 "COMMAND: ${MODULEREBUILD_CMD}" 1 0 1
 
 	if [ "${LOGLEVEL}" -gt 3 ]
 	then
 		# Output to stdout and logfile
-		eval ${command} | tee -a "${LOGFILE}"
+		eval ${MODULEREBUILD_CMD} 2>&1 | tee -a "${LOGFILE}"
 		RET=${PIPESTATUS[0]}
 	else
 		# Output to logfile only
-		eval ${command} >> "${LOGFILE}"
+		eval ${MODULEREBUILD_CMD} 2>&1 >> "${LOGFILE}"
 		RET=$?
 	fi
 

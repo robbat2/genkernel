@@ -317,6 +317,7 @@ determine_real_args() {
 	set_config_with_override STRING MINKERNPACKAGE                        CMD_MINKERNPACKAGE
 	set_config_with_override STRING MODULESPACKAGE                        CMD_MODULESPACKAGE
 	set_config_with_override BOOL   MODULEREBUILD                         CMD_MODULEREBUILD                         "yes"
+	set_config_with_override STRING MODULEREBUILD_CMD                     CMD_MODULEREBUILD_CMD                     "${DEFAULT_MODULEREBUILD_CMD}"
 	set_config_with_override STRING KERNCACHE                             CMD_KERNCACHE
 	set_config_with_override BOOL   RAMDISKMODULES                        CMD_RAMDISKMODULES                        "yes"
 	set_config_with_override BOOL   ALLRAMDISKMODULES                     CMD_ALLRAMDISKMODULES                     "no"
@@ -780,6 +781,17 @@ determine_real_args() {
 		then
 			# Kernel Makefile doesn't support spaces in outputdir path...
 			gen_die "--kernel-outputdir '${KERNEL_OUTPUTDIR}' contains space character(s) which are not supported!"
+		fi
+
+		if isTrue "${CMD_MODULEREBUILD}"
+		then
+			if [ -z "${MODULEREBUILD_CMD}" ]
+			then
+				gen_die "--module-rebuild-cmd cannot be empty when --module-rebuild is set!"
+			elif [[ "${MODULEREBUILD_CMD}" == *[\$\&\|\>\(\)]* ]]
+			then
+				gen_die "--module-rebuild-cmd '${MODULEREBUILD_CMD}' contains at least one of the following disallowed characters: '\$&|>()'!"
+			fi
 		fi
 	fi
 
