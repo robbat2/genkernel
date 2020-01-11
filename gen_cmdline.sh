@@ -613,8 +613,8 @@ parse_cmdline() {
 			print_info 3 "CMD_MODULEREBUILD_CMD: ${CMD_MODULEREBUILD_CMD}"
 			;;
 		--callback=*)
-			CMD_CALLBACK="${*#*=}"
-			print_info 3 "CMD_CALLBACK: ${CMD_CALLBACK}/$*"
+			CMD_CALLBACK="${*#--callback=}"
+			print_info 3 "CMD_CALLBACK: ${CMD_CALLBACK}"
 			;;
 		--static|--no-static)
 			CMD_STATIC=$(parse_optbool "$*")
