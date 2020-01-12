@@ -291,6 +291,12 @@ config_kernel() {
 	local -a required_kernel_options
 	[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
 
+	# Ensure kernel supports initramfs
+	if isTrue "${BUILD_RAMDISK}"
+	then
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
+	fi
+
 	# --integrated-initramfs handling
 	if isTrue "${INTEGRATED_INITRAMFS}"
 	then
