@@ -113,6 +113,73 @@ determine_kernel_config_file() {
 	fi
 }
 
+set_initramfs_compression_method() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local kernel_config=${1}
+
+	local compress_config=NONE
+	local -a KNOWN_INITRAMFS_COMPRESSION_TYPES=()
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( NONE )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( GZIP )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( BZIP2 )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZMA )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( XZ )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZO )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZ4 )
+
+	case ${COMPRESS_INITRD_TYPE} in
+		gz)
+			compress_config='GZIP'
+			;;
+		bz2)
+			compress_config='BZIP2'
+			;;
+		lzma)
+			compress_config='LZMA'
+			;;
+		xz|best|fastest)
+			compress_config='XZ'
+			;;
+		lzop)
+			compress_config='LZO'
+			;;
+		lz4)
+			compress_config='LZ4'
+			;;
+	esac
+
+	local KNOWN_INITRAMFS_COMPRESSION_TYPE
+	local KOPTION_VALUE
+	for KNOWN_INITRAMFS_COMPRESSION_TYPE in "${KNOWN_INITRAMFS_COMPRESSION_TYPES[@]}"
+	do
+		KOPTION_VALUE=n
+		if [[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "${compress_config}" ]]
+		then
+			KOPTION_VALUE=y
+		fi
+
+		if [ ${KV_NUMERIC} -ge 4010 ]
+		then
+			kconfig_set_opt "${kernel_config}" "CONFIG_INITRAMFS_COMPRESSION_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+
+			if [[ "${KOPTION_VALUE}" == "y" && "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" != "NONE" ]]
+			then
+				# Make sure that the kernel can decompress our initramfs
+				kconfig_set_opt "${kernel_config}" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+			fi
+		else
+			[[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "NONE" ]] && continue
+
+			# In <linux-4.10, to control used initramfs compression, we have to
+			# disable every supported compression type except compression type
+			# we want to use, (see $KERNEL_DIR/usr/Makefile).
+			kconfig_set_opt "${kernel_config}" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+		fi
+	done
+}
+
 config_kernel() {
 	local diff_cmd="$(which zdiff 2>/dev/null)"
 	if [ -z "${diff_cmd}" ]

@@ -1859,40 +1859,6 @@ create_initramfs() {
 		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" \
 			|| gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
 
-		local compress_config=NONE
-		local -a KNOWN_INITRAMFS_COMPRESSION_TYPES=()
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( NONE )
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( GZIP )
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( BZIP2 )
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZMA )
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( XZ )
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZO )
-		KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZ4 )
-
-		if isTrue "${COMPRESS_INITRD}"
-		then
-			case ${COMPRESS_INITRD_TYPE} in
-				gz)
-					compress_config='GZIP'
-					;;
-				bz2)
-					compress_config='BZIP2'
-					;;
-				lzma)
-					compress_config='LZMA'
-					;;
-				xz|best|fastest)
-					compress_config='XZ'
-					;;
-				lzop)
-					compress_config='LZO'
-					;;
-				lz4)
-					compress_config='LZ4'
-					;;
-			esac
-		fi
-
 		print_info 1 "$(get_indent 1)>> --integrated-initramfs is set; Setting CONFIG_INITRAMFS_* options ..."
 
 		[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
@@ -1901,34 +1867,7 @@ create_initramfs() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_UID" "0"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_GID" "0"
 
-		local KNOWN_INITRAMFS_COMPRESSION_TYPE
-		local KOPTION_VALUE
-		for KNOWN_INITRAMFS_COMPRESSION_TYPE in "${KNOWN_INITRAMFS_COMPRESSION_TYPES[@]}"
-		do
-			KOPTION_VALUE=n
-			if [[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "${compress_config}" ]]
-			then
-				KOPTION_VALUE=y
-			fi
-
-			if [ ${KV_NUMERIC} -ge 4010 ]
-			then
-				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_COMPRESSION_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
-
-				if [[ "${KOPTION_VALUE}" == "y" && "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" != "NONE" ]]
-				then
-					# Make sure that the kernel can decompress our initramfs
-					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
-				fi
-			else
-				[[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "NONE" ]] && continue
-
-				# In <linux-4.10, to control used initramfs compression, we have to
-				# disable every supported compression type except compression type
-				# we want to use, (see $KERNEL_DIR/usr/Makefile).
-				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
-			fi
-		done
+		set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
 
 		if [ -f "${KCONFIG_MODIFIED_MARKER}" ]
 		then
