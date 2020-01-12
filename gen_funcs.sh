@@ -1846,21 +1846,24 @@ expand_file() {
 }
 
 find_kernel_binary() {
-	local kernel_binary=$*
-	local curdir=$(pwd)
+	local kernel_binary=${*}
+	local kernel_binary_found=
 
-	cd "${KERNEL_OUTPUTDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+	pushd "${KERNEL_OUTPUTDIR}" &>/dev/null || gen_die "Failed to chdir to '${KERNEL_OUTPUTDIR}'!"
+
+	local i
 	for i in ${kernel_binary}
 	do
 		if [ -e "${i}" ]
 		then
-			tmp_kernel_binary=${i}
+			kernel_binary_found=${i}
 			break
 		fi
 	done
 
-	cd "${curdir}" || gen_die "Failed to chdir to '${TDIR}'!"
-	echo "${tmp_kernel_binary}"
+	popd &>/dev/null || gen_die "Failed to chdir!"
+
+	echo "${kernel_binary_found}"
 }
 
 kconfig_get_opt() {
