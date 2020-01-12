@@ -301,6 +301,9 @@ config_kernel() {
 			print_info 2 "$(get_indent 1)>> CONFIG_INITRAMFS_SOURCE is already set; Unsetting to avoid clashing with --integrated-initramfs ..."
 			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" ""
 		fi
+	elif isTrue "${COMPRESS_INITRD}"
+	then
+		set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
 	fi
 
 	# Force this on if we are using --genzimage
