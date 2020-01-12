@@ -312,11 +312,12 @@ compile_kernel() {
 		return
 	fi
 
-	local tmp_kernel_binary=$(find_kernel_binary ${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}})
+	local tmp_kernel_binary_to_look_for="${KERNEL_BINARY_OVERRIDE:-${KERNEL_BINARY}}"
+	local tmp_kernel_binary=$(find_kernel_binary ${tmp_kernel_binary_to_look_for})
 	local tmp_kernel_binary2=$(find_kernel_binary ${KERNEL_BINARY_2})
 	if [ -z "${tmp_kernel_binary}" ]
 	then
-		gen_die "Cannot locate kernel binary"
+		gen_die "Failed to locate kernel binary '${tmp_kernel_binary_to_look_for}' in '${KERNEL_OUTPUTDIR}'!"
 	fi
 
 	# if source != outputdir, we need this:
