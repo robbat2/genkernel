@@ -53,7 +53,7 @@ distclean: clean
 	if grep -sq THIS_CONFIG_IS_BROKEN $< ; then \
 		cat $< >$@ ; \
 	else \
-		perl merge.pl $< $(BASE_KCONF) > $@ ; \
+		perl merge.pl $< $(BASE_KCONF) | sort > $@ ; \
 	fi ;
 
 %.8: doc/%.8.txt doc/asciidoc.conf Makefile genkernel
