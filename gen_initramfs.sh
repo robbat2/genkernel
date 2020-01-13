@@ -996,11 +996,6 @@ append_splash() {
 		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
-	if ! hash splash_geninitramfs &>/dev/null
-	then
-		gen_die "Unable to generate splash, 'splash_geninitramfs' was not found!"
-	fi
-
 	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 

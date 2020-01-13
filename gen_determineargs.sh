@@ -848,6 +848,14 @@ determine_real_args() {
 			gen_die "--multipath requires --lvm but --no-lvm is set!"
 		fi
 
+		if isTrue "${SPLASH}"
+		then
+			if ! hash splash_geninitramfs &>/dev/null
+			then
+				gen_die "splash_geninitramfs is required for --splash but was not found!"
+			fi
+		fi
+
 		if isTrue "${SSH}"
 		then
 			local ssh_authorized_keys_file=$(expand_file "${SSH_AUTHORIZED_KEYS_FILE}")
