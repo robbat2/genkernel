@@ -750,6 +750,7 @@ dropbear_create_key() {
 
 	if isTrue "${SANDBOX}"
 	then
+		envvars+=( "SANDBOX_LOG='$(get_temp_file "sandbox_XXXXXX.log")'" )
 		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
@@ -827,6 +828,7 @@ dropbear_generate_key_info_file() {
 
 	if isTrue "${SANDBOX}"
 	then
+		envvars+=( "SANDBOX_LOG='$(get_temp_file "sandbox_XXXXXX.log")'" )
 		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
@@ -1055,6 +1057,29 @@ get_tc_vars() {
 	tc_vars+=( PKG_CONFIG )
 
 	echo "${tc_vars[@]}"
+}
+
+# @FUNCTION: get_temp_file
+# @USAGE: [<TEMPLATE>] [<TMPDIR>]
+# @DESCRIPTION:
+# Create and return a temporary file (wrapper for mktemp with
+# built-in error checking and handling).
+#
+# <TEMPLATE> TEMPLATE must contain at least 3 consecutive 'X's in
+#            last component.
+#            Defaults to tmp_XXXXXXXX
+#
+# <TMPDIR>   Directory where the temporary file will be created in.
+#            Defaults to $TEMP
+get_temp_file() {
+	local template=${1:-"tmp_XXXXXXXX"}
+	local tmpdir=${2:-"${TEMP}"}
+	local tempfile=$(mktemp -p "${tmpdir}" ${template} 2>/dev/null)
+
+	[ -z "${tempfile}" ] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")'mktemp -p \"${tmpdir}\" ${template}' failed!"
+
+	echo "${tempfile}"
 }
 
 get_useful_function_stack() {
@@ -1422,6 +1447,7 @@ gkbuild() {
 
 	if isTrue "${SANDBOX}"
 	then
+		envvars+=( "SANDBOX_LOG='$(get_temp_file "sandbox_XXXXXX.log")'" )
 		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
@@ -1477,6 +1503,7 @@ unpack() {
 
 	if isTrue "${SANDBOX}"
 	then
+		envvars+=( "SANDBOX_LOG='$(get_temp_file "sandbox_XXXXXX.log")'" )
 		envvars+=( "SANDBOX_WRITE='${LOGFILE}:${TEMP}:/proc/thread-self/attr/fscreate'" )
 	fi
 
