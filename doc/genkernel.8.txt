@@ -196,7 +196,7 @@ specified.
     Copies or does not copy all kernel modules to the initrd.
 
 *--*[*no-*]*module-rebuild*::
-    Runs, or does not run "emerge --ignore-default-opts --quiet-build=y @module-rebuild"
+    Runs, or does not run "emerge --ignore-default-opts --buildpkg=n --usepkg=n --quiet-build=y @module-rebuild"
     to build out-of-tree modules when possible, i.e. when non-static
     kernel and modules will be build, installed, no custom
     'INSTALL_MOD_PATH' is set, '/var/lib/module-rebuild/moduledb' exists
