@@ -318,28 +318,28 @@ bootstrapCD() {
 	if [ "${VERIFY}" = '1' ]
 	then
 		cd "${CDROOT_PATH}"
+		checkfile=""
+		checker=""
 		if [ -r "isoroot_b2sums" ] && [ -x "$(command -v b2sum 2>&1)" ]
 		then
-			good_msg "Verifying BLAKE2 checksums, this may take some time ..."
-			if ! run b2sum -c isoroot_b2sums
-			then
-				bad_msg "Some checksums failed, press any key to poweroff ..."
-				read -n1 -s
-				poweroff -f
-			else
-				good_msg "BLAKE2 checksums all valid, continuing boot ..."
-			fi
-			cd "${OLDPWD}"
+			checkfile="isoroot_b2sums"
+			checker="b2sum"
 		elif [ -r "isoroot_checksums" ]
 		then
-			good_msg "Verifying SHA512 checksums, this may take some time ..."
-			if ! run sha512sum -c isoroot_checksums
+			checkfile="isoroot_checksums"
+			checker="sha512sum"
+		fi
+
+		if [ -n "${checkfile}" ]
+		then
+			good_msg "Verifying ${checkfile}, this may take some time ..."
+			if ! run "${checker}" -c "${checkfile}"
 			then
 				bad_msg "Some checksums failed, press any key to poweroff ..."
 				read -n1 -s
 				poweroff -f
 			else
-				good_msg "SHA512 checksums all valid, continuing boot ..."
+				good_msg "${checkfile} all valid, continuing boot ..."
 			fi
 			cd "${OLDPWD}"
 		else
