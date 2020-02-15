@@ -168,6 +168,8 @@ longusage() {
   echo "	--no-luks		Exclude LUKS support"
   echo "	--gpg			Include GPG-armored LUKS key support"
   echo "	--no-gpg		Exclude GPG-armored LUKS key support"
+  echo "	--b2sum			Include b2sum"
+  echo "	--no-b2sum		Exclude b2sum"
   echo "	--busybox		Include busybox"
   echo "	--no-busybox		Exclude busybox"
   echo "	--unionfs		Include support for unionfs"
@@ -382,6 +384,10 @@ parse_cmdline() {
 		--mdadm-config=*)
 			CMD_MDADM_CONFIG="${*#*=}"
 			print_info 3 "CMD_MDADM_CONFIG: ${CMD_MDADM_CONFIG}"
+			;;
+		--b2sum|--no-b2sum)
+			CMD_B2SUM=$(parse_optbool "$*")
+			print_info 3 "CMD_B2SUM: ${CMD_B2SUM}"
 			;;
 		--busybox|--no-busybox)
 			CMD_BUSYBOX=$(parse_optbool "$*")

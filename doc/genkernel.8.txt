@@ -430,6 +430,10 @@ system is able to load multiple initramfs.
     `gpg --symmetric -o /path/to/LUKS-key.gpg /path/to/LUKS-key` .
     After that, re-point the *root_key* argument to the new .gpg file.
 
+*--*[*no-*]*b2sum*::
+    Includes or excludes b2sum in the initramfs.
+    When enabled, this will compile coreutils' b2sum for you.
+
 *--*[*no-*]*busybox*::
     Includes or excludes busybox in the initramfs.
     When enabled, this will compile busybox for you.

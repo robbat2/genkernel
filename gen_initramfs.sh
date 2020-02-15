@@ -363,6 +363,7 @@ append_base_layout() {
 	isTrue "${MICROCODE_INITRAMFS}" && build_parameters+=( --microcode-initramfs ) || build_parameters+=( --no-microcode-initramfs )
 	isTrue "${RAMDISKMODULES}" && build_parameters+=( --ramdisk-modules ) || build_parameters+=( --no-ramdisk-modules )
 	isTrue "${BUSYBOX}" && build_parameters+=( --busybox ) || build_parameters+=( --no-busybox )
+	isTrue "${B2SUM}" && build_parameters+=( --b2sum ) || build_parameters+=( --no-b2sum )
 	isTrue "${DISKLABEL}" && build_parameters+=( --disklabel ) || build_parameters+=( --no-disklabel )
 	isTrue "${BTRFS}" && build_parameters+=( --btrfs ) || build_parameters+=( --no-btrfs )
 	isTrue "${ISCSI}" && build_parameters+=( --iscsi ) || build_parameters+=( --no-iscsi )
@@ -496,6 +497,33 @@ append_e2fsprogs() {
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
+}
+
+append_b2sum() {
+	local PN="coreutils"
+	local TDIR="${TEMP}/initramfs-b2sum-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	log_future_cpio_content
+	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
+		|| gen_die "Failed to append b2sum to cpio!"
 
 	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
 	if isTrue "${CLEANUP}"
@@ -1742,9 +1770,10 @@ create_initramfs() {
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
 	append_data 'auxilary' "${BUSYBOX}"
-	append_data 'blkid' "${DISKLABEL}"
-	append_data 'btrfs' "${BTRFS}"
 	append_data 'busybox' "${BUSYBOX}"
+	append_data 'blkid' "${DISKLABEL}"
+	append_data 'b2sum' "${B2SUM}"
+	append_data 'btrfs' "${BTRFS}"
 	append_data 'dmraid' "${DMRAID}"
 	append_data 'dropbear' "${SSH}"
 	append_data 'e2fsprogs' "${E2FSPROGS}"

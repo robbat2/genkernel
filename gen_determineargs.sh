@@ -340,6 +340,7 @@ determine_real_args() {
 	set_config_with_override BOOL   HYPERV                                CMD_HYPERV                                "no"
 	set_config_with_override STRING BOOTFONT                              CMD_BOOTFONT                              "none"
 	set_config_with_override STRING BOOTLOADER                            CMD_BOOTLOADER                            "no"
+	set_config_with_override BOOL   B2SUM                                 CMD_B2SUM                                 "no"
 	set_config_with_override BOOL   BUSYBOX                               CMD_BUSYBOX                               "yes"
 	set_config_with_override STRING BUSYBOX_CONFIG                        CMD_BUSYBOX_CONFIG
 	set_config_with_override BOOL   NFS                                   CMD_NFS                                   "yes"
