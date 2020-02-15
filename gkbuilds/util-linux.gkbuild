@@ -23,7 +23,7 @@ src_configure() {
 
 src_install() {
 	local MYMAKEOPTS=( "V=1" )
-	MYMAKEOPTS+=( "DESTDIR=${DESTDIR}" )
+	MYMAKEOPTS+=( "DESTDIR=${D}" )
 	MYMAKEOPTS+=( "install-pkgconfigDATA" )
 	MYMAKEOPTS+=( "install-nodist_blkidincHEADERS" )
 	MYMAKEOPTS+=( "install-nodist_mountincHEADERS" )
@@ -33,9 +33,9 @@ src_install() {
 
 	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
 
-	cp -a blkid.static "${DESTDIR}"/sbin/blkid \
-		|| die "Failed to copy '${S}/blkid.static' to '${DESTDIR}/sbin/blkid'!"
+	cp -a blkid.static "${D}"/sbin/blkid \
+		|| die "Failed to copy '${S}/blkid.static' to '${D}/sbin/blkid'!"
 
-	"${STRIP}" --strip-all "${DESTDIR}"/sbin/blkid \
-		|| die "Failed to strip '${DESTDIR}/sbin/blkid'!"
+	"${STRIP}" --strip-all "${D}"/sbin/blkid \
+		|| die "Failed to strip '${D}/sbin/blkid'!"
 }
