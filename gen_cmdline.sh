@@ -193,6 +193,8 @@ longusage() {
   echo "	--postclear		Clear all tmp files and caches after genkernel has run"
   echo "	--no-postclear		Do not clean up after genkernel has run"
   echo "  Output Settings"
+  echo "	--kernel-config-filename=<...>"
+  echo "				Set kernel config filename"
   echo "	--kernel-filename=<...>"
   echo "				Set kernel filename"
   echo "	--kernel-symlink-name=<...>"
@@ -700,6 +702,10 @@ parse_cmdline() {
 		--kerncache=*)
 			CMD_KERNCACHE="${*#*=}"
 			print_info 3 "KERNCACHE: ${CMD_KERNCACHE}"
+			;;
+		--kernel-config-filename=*)
+			CMD_KERNEL_CONFIG_FILENAME="${*#*=}"
+			print_info 3 "CMD_KERNEL_CONFIG_FILENAME: ${CMD_KERNEL_CONFIG_FILENAME}"
 			;;
 		--kernel-filename=*)
 			CMD_KERNEL_FILENAME="${*#*=}"

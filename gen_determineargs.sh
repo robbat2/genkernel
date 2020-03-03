@@ -87,7 +87,6 @@ determine_KV() {
 determine_output_filenames() {
 	print_info 5 '' 1 0
 
-	GK_FILENAME_CONFIG="kernel-config-${KV}"
 	GK_FILENAME_KERNELZ="kernelz-${KV}"
 	GK_FILENAME_TEMP_CONFIG="config-${ARCH}-${KV}"
 	GK_FILENAME_TEMP_INITRAMFS="initramfs-${ARCH}-${KV}"
@@ -96,7 +95,10 @@ determine_output_filenames() {
 	GK_FILENAME_TEMP_SYSTEMMAP="System.map-${ARCH}-${KV}"
 
 	# Do we have values?
-	if [ -z "${KERNEL_FILENAME}" ]
+	if [ -z "${KERNEL_CONFIG_FILENAME}" ]
+	then
+		gen_die "--kernel-config-filename must be set to a non-empty value!"
+	elif [ -z "${KERNEL_FILENAME}" ]
 	then
 		gen_die "--kernel-filename must be set to a non-empty value!"
 	elif [ -z "${KERNEL_SYMLINK_NAME}" ]
@@ -114,6 +116,17 @@ determine_output_filenames() {
 	elif [ -z "${INITRAMFS_FILENAME}" ]
 	then
 		gen_die "--initramfs-filename must be set to a non-empty value!"
+	fi
+
+	# Kernel .config
+	GK_FILENAME_CONFIG=$(arch_replace "${KERNEL_CONFIG_FILENAME}")
+	GK_FILENAME_CONFIG=$(kv_replace "${GK_FILENAME_CONFIG}")
+
+	if [ -z "${GK_FILENAME_CONFIG}" ]
+	then
+		gen_die "Internal error: Variable 'GK_FILENAME_CONFIG' is empty!"
+	else
+		print_info 5 "GK_FILENAME_CONFIG set to '${GK_FILENAME_CONFIG}' (was: '${KERNEL_CONFIG_FILENAME}')"
 	fi
 
 	# Kernel
@@ -221,6 +234,7 @@ determine_output_filenames() {
 	fi
 
 	local -a filename_vars
+	filename_vars+=( 'GK_FILENAME_CONFIG;--kernel-config-filename' )
 	filename_vars+=( 'GK_FILENAME_KERNEL;--kernel-filename' )
 	filename_vars+=( 'GK_FILENAME_KERNEL_SYMLINK;--kernel-symlink-name' )
 	filename_vars+=( 'GK_FILENAME_INITRAMFS;--initramfs-filename' )
@@ -275,6 +289,7 @@ determine_real_args() {
 	set_config_with_override BOOL   KERNEL_SOURCES                        CMD_KERNEL_SOURCES                        "yes"
 	set_config_with_override STRING INITRAMFS_FILENAME                    CMD_INITRAMFS_FILENAME                    "${DEFAULT_INITRAMFS_FILENAME}"
 	set_config_with_override STRING INITRAMFS_SYMLINK_NAME                CMD_INITRAMFS_SYMLINK_NAME                "${DEFAULT_INITRAMFS_SYMLINK_NAME}"
+	set_config_with_override STRING KERNEL_CONFIG_FILENAME                CMD_KERNEL_CONFIG_FILENAME                "${DEFAULT_KERNEL_CONFIG_FILENAME}"
 	set_config_with_override STRING KERNEL_FILENAME                       CMD_KERNEL_FILENAME                       "${DEFAULT_KERNEL_FILENAME}"
 	set_config_with_override STRING KERNEL_SYMLINK_NAME                   CMD_KERNEL_SYMLINK_NAME                   "${DEFAULT_KERNEL_SYMLINK_NAME}"
 	set_config_with_override STRING SYSTEMMAP_FILENAME                    CMD_SYSTEMMAP_FILENAME                    "${DEFAULT_SYSTEMMAP_FILENAME}"

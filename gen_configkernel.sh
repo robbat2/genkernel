@@ -44,7 +44,7 @@ determine_kernel_config_file() {
 		else
 			local -a user_kconfig_candidates
 
-			# Always prefer kernel config based on actual $KV reading
+			# Always prefer kernel config based on set --kernel-config-filename
 			user_kconfig_candidates+=( "/etc/kernels/${GK_FILENAME_CONFIG}" )
 
 			if [ -n "${KERNEL_LOCALVERSION}" -a "${KERNEL_LOCALVERSION}" != "UNSET" ]

@@ -506,6 +506,12 @@ NOTE: No modules outside of the initramfs will be included!
     Archive file created using tar containing kernel binary, content of
     '/lib/modules' and the kernel config after the callbacks have run.
 
+*--kernel-config-filename*=<...>::
+Set the kernel config filename used by *--save-config*. Please see
+*--kernel-filename* option for available placeholders and restrictions.
++
+By default, kernel config filename will be set to 'kernel-config-%%KV%%'.
+
 *--kernel-filename*=<...>::
 Set kernel filename which will be used when kernel will be installed
 into *BOOTDIR* (implies *--install* option). The following placeholders
