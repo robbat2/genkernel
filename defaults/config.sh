@@ -33,7 +33,7 @@ DEFAULT_COMPRESS_INITRD=yes
 DEFAULT_COMPRESS_INITRD_TYPE=best
 
 PORTAGE_MAKEOPTS="$(portageq envvar MAKEOPTS)"
-DEFAULT_MAKEOPTS="${PORTAGE_MAKEOPTS:- -j2}"
+DEFAULT_MAKEOPTS="${PORTAGE_MAKEOPTS:- -j$(nproc)}"
 
 DEFAULT_MODULEREBUILD_CMD="emerge --ignore-default-opts --buildpkg=n --usepkg=n --quiet-build=y @module-rebuild"
 
