@@ -42,6 +42,11 @@ then
 
 	for GK_SETTING in "${GK_SETTINGS[@]}"
 	do
+		if [[ "${GK_SETTING}" == "MAKEOPTS" ]]
+		then
+			continue
+		fi
+
 		for var_to_unset in ${GK_SETTING} CMD_${GK_SETTING}
 		do
 			if [ -n "${!var_to_unset}" ]
