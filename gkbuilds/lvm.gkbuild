@@ -34,6 +34,9 @@ src_configure() {
 		myconf+=( --with-cache-${texec}=/usr/sbin/cache_${texec} )
 	done
 
+	# Hard-wire this to bash as some shells (dash) don't know
+	# "-o pipefail" #682404, #716496
+	CONFIG_SHELL="/bin/bash" \
 	gkconf "${myconf[@]}"
 }
 
