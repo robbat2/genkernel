@@ -320,14 +320,27 @@ bootstrapCD() {
 		cd "${CDROOT_PATH}"
 		checkfile=""
 		checker=""
-		if [ -r "isoroot_b2sums" ] && [ -x "$(command -v b2sum 2>&1)" ]
-		then
-			checkfile="isoroot_b2sums"
-			checker="b2sum"
-		elif [ -r "isoroot_checksums" ]
+		if [ -r "isoroot_checksums" ] && [ -z "${checkfile}" ]
 		then
 			checkfile="isoroot_checksums"
 			checker="sha512sum"
+		fi
+		if [ -r "isoroot_b2sums" ]
+		then
+			if [ -x "$(command -v b2sum 2>&1)" ]
+			then
+				checkfile="isoroot_b2sums"
+				checker="b2sum"
+			else
+				bad_msg "Unable to verify isoroot_b2sums due to missing b2sums"
+				bad_msg "Please use 'genkernel --b2sums' to generate initramfs"
+				if [ -z "${checkfile" ]
+				then
+					bad_msg "Press any key to skip ..."
+					read -n1 -s
+					return
+				fi
+			fi
 		fi
 
 		if [ -n "${checkfile}" ]
