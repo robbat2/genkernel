@@ -186,6 +186,7 @@ findmediamount() {
 				# don't skip device mapper devices. Even the craziest scenario
 				# deserves a fair chance.
 				#
+				# shellcheck disable=SC2045
 				for part in $(ls /sys/block/${bsn}/${bsn}*[0-9]* 2>/dev/null)
 				do
 					skip=1
