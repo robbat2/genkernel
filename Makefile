@@ -35,7 +35,7 @@ else
 	@true
 endif
 
-dist: verify-doc check-git-repository distclean $(EXTRA_DIST)
+dist: verify-shellscripts-initramfs verify-doc check-git-repository distclean $(EXTRA_DIST)
 	mkdir "$(distdir)"
 	git ls-files -z | xargs -0 cp --no-dereference --parents --target-directory="$(distdir)" \
 		$(EXTRA_DIST)
@@ -89,3 +89,13 @@ verify-doc: doc/genkernel.8.txt
 		exit 1 ; \
 	fi ; \
 	rm -f faildoc
+
+verify-shellscripts-initramfs:
+# we need to check every file because a fatal error in
+# an included file (SC1094) is just a warning at the moment
+	shellcheck \
+		--external-sources \
+		--source-path SCRIPTDIR \
+		--severity error \
+		defaults/linuxrc \
+		defaults/initrd.scripts
