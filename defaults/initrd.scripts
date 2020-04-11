@@ -334,7 +334,7 @@ bootstrapCD() {
 			else
 				bad_msg "Unable to verify isoroot_b2sums due to missing b2sums"
 				bad_msg "Please use 'genkernel --b2sums' to generate initramfs"
-				if [ -z "${checkfile" ]
+				if [ -z "${checkfile}" ]
 				then
 					bad_msg "Press any key to skip ..."
 					read -n1 -s
