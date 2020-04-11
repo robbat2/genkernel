@@ -1012,7 +1012,7 @@ determine_real_args() {
 		SANDBOX_COMMAND=
 		if isTrue "${SANDBOX}"
 		then
-			if [ ${SANDBOX_ON} -eq 1 ]
+			if [[ "${SANDBOX_ON}" == "1" ]]
 			then
 				gen_die "SANDBOX_ON=1 detected -- You cannot use --sandbox when already running within a sandbox!"
 			fi
