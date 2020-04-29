@@ -631,6 +631,12 @@ config_kernel() {
 		fi
 	fi
 
+	# Make sure all modules required for ykchalresp/YubiKey are enabled in the kernel, if --yubikey
+	if isTrue "${CMD_YUBIKEY}"
+	then
+		print_info 2 "$(get_indent 1)>> Would ensure that required kernel options for YubiKey are set ..."
+    fi
+
 	# Make sure multipath modules are enabled in the kernel, if --multipath
 	if isTrue "${CMD_MULTIPATH}"
 	then

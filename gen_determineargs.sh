@@ -432,6 +432,7 @@ determine_real_args() {
 	set_config_with_override BOOL   NETBOOT                               CMD_NETBOOT                               "no"
 	set_config_with_override STRING REAL_ROOT                             CMD_REAL_ROOT
 	set_config_with_override BOOL   LUKS                                  CMD_LUKS                                  "no"
+	set_config_with_override BOOL   YUBIKEY                               CMD_YUBIKEY                                "no"
 	set_config_with_override BOOL   GPG                                   CMD_GPG                                   "no"
 	set_config_with_override BOOL   KEYCTL                                CMD_KEYCTL                                "no"
 	set_config_with_override BOOL   MDADM                                 CMD_MDADM                                 "no"
@@ -1101,6 +1102,7 @@ determine_real_args() {
 			FEATURES_REQUIRING_BUSYBOX+=( LVM )
 			FEATURES_REQUIRING_BUSYBOX+=( LUKS )
 			FEATURES_REQUIRING_BUSYBOX+=( KEYCTL )
+			FEATURES_REQUIRING_BUSYBOX+=( YUBIKEY )
 			FEATURES_REQUIRING_BUSYBOX+=( MDADM )
 			FEATURES_REQUIRING_BUSYBOX+=( MULTIPATH )
 			FEATURES_REQUIRING_BUSYBOX+=( SPLASH )

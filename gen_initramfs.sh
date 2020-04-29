@@ -487,6 +487,7 @@ append_base_layout() {
 	isTrue "${KEYCTL}" && build_parameters+=( --keyctl ) || build_parameters+=( --no-keyctl )
 	isTrue "${GPG}" && build_parameters+=( --gpg ) || build_parameters+=( --no-gpg )
 	isTrue "${LUKS}" && build_parameters+=( --luks ) || build_parameters+=( --no-luks )
+	isTrue "${YUBIKEY}" && build_parameters+=( --yubikey ) || build_parameters+=( --no-yubikey )
 	isTrue "${FIRMWARE}" && build_parameters+=( --firmware ) || build_parameters+=( --no-firmware )
 	[ -n "${FIRMWARE_DIR}" ] && build_parameters+=( --firmware-dir="${FIRMWARE_DIR}" )
 	[ -n "${FIRMWARE_FILES}" ] && build_parameters+=( --firmware-files="${FIRMWARE_FILES}" )
@@ -1689,6 +1690,42 @@ append_dropbear() {
 	fi
 }
 
+append_yubikey() {
+	local PN=yubikey
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	local _yubikey_error_format="Yubikey support cannot be included: %s.  Please emerge sys-auth/ykpers."
+	local _ykchalresp_source=/usr/bin/ykchalresp
+	local _ykchalresp_dest=/usr/bin/ykchalresp
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	mkdir -p "${TDIR}/lib/yubikey/"
+	mkdir -p "${TDIR}/usr/bin"
+	cd "${TDIR}"
+
+	if isTrue "${YUBIKEY}"
+	then
+		[ -x "${_ykchalresp_source}" ] \
+				|| gen_die "$(printf "${_yubikey_error_format}" "no file ${_ykchalresp_source}")"
+		print_info 2 "$(get_indent 2)${PN}: >> Adding YubiKey support into initramfs ..."
+		copy_binaries "${TDIR}/" "${_ykchalresp_dest}"
+	fi
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+	log_future_cpio_content
+
+	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
+}
+
 append_firmware() {
 	local TDIR="${TEMP}/initramfs-firmware-temp"
 	if [ -d "${TDIR}" ]
@@ -2089,9 +2126,10 @@ create_initramfs() {
 	append_data 'strace' "${STRACE}"
 	append_data 'unionfs_fuse' "${UNIONFS}"
 	append_data 'xfsprogs' "${XFSPROGS}"
+	append_data 'yubikey' "${YUBIKEY}"
 	append_data 'zfs' "${ZFS}"
 
-	if isTrue "${ZFS}"
+	if isTrue "${ZFS}" || isTrue "${LUKS}" || isTrue "${YUBIKEY}"
 	then
 		append_data 'libgcc_s'
 	fi

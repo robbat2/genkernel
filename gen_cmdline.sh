@@ -179,6 +179,8 @@ longusage() {
   echo "	--genzimage		Make and install kernelz image (PowerPC)"
   echo "	--luks			Include LUKS support"
   echo "	--no-luks		Exclude LUKS support"
+  echo "	--yubikey		Include Yubikey-armored LUKS key support"
+  echo "	--no-yubikey		Exclude Yubikey-armored LUKS key support"
   echo "	--gpg			Include GPG-armored LUKS key support"
   echo "	--no-gpg		Exclude GPG-armored LUKS key support"
   echo "	--keyctl		Include keyctl support for loading LUKS passphrase into a keyring"
@@ -834,6 +836,10 @@ parse_cmdline() {
 		--luks|--no-luks)
 			CMD_LUKS=$(parse_optbool "$*")
 			print_info 3 "CMD_LUKS: ${CMD_LUKS}"
+			;;
+		--yubikey|--no-yubikey)
+			CMD_YUBIKEY=$(parse_optbool "$*")
+			print_info 3 "CMD_YUBIKEY: ${CMD_YUBIKEY}"
 			;;
 		--gpg|--no-gpg)
 			CMD_GPG=$(parse_optbool "$*")

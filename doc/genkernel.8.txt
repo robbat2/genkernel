@@ -462,6 +462,9 @@ system is able to load multiple initramfs.
     Includes or excludes LUKS support.
     When enabled, this will compile cryptsetup for you.
 
+*--*[*no-*]*yubikey*::
+    Includes or excludes Yubikey support.
+
 *--*[*no-*]*gpg*::
     Includes or excludes support for GnuPG 1.x, the portable standalone branch
     of GnuPG. A key can be made from
