@@ -135,11 +135,6 @@ copy_system_binaries() {
 			print_info 5 "System binary dirname set to '${base_dir}'."
 		fi
 
-		if LC_ALL=C "${LDDTREE_COMMAND}" "${binary}" 2>&1 | fgrep -q 'not found'
-		then
-			gen_die "$(get_useful_function_stack)System binary '${binary}' is linked to missing libraries and may need to be re-built!"
-		fi
-
 		local is_first=1
 		while IFS= read -r -u 3 binary_dependency
 		do
