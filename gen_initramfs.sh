@@ -1239,8 +1239,8 @@ append_dropbear() {
 			then
 				print_info 3 "$(get_indent 2)${PN}: >> Will use existing '${dropbear_command}' program from path to create missing keys ..."
 			else
-				local error_msg="Need to generate '${required_host_keys[*]}' but '${dropbear_command}'"
-				error_msg=" program is missing. Please install net-misc/dropbear and re-run genkernel!"
+				local error_msg="Need to generate '${required_dropbear_host_keys[*]}' but '${dropbear_command}'"
+				error_msg+=" program is missing. Please install net-misc/dropbear and re-run genkernel!"
 				gen_die "${error_msg}"
 			fi
 
