@@ -789,6 +789,9 @@ dropbear_get_key_type_from_filename() {
 		*_ecdsa_*)
 			type=ecdsa
 			;;
+		*_ed25519_*)
+			type=ed25519
+			;;
 		*_rsa_*)
 			type=rsa
 			;;
