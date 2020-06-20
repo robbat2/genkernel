@@ -5,7 +5,10 @@ src_prepare() {
 	default
 
 	# Disable DSS support
-	echo "#define DROPBEAR_DSS 0" > localoptions.h || die "Failed to disable DSS support"
+	echo "#define DROPBEAR_DSS 0" >> localoptions.h || die "Failed to disable DSS support"
+
+	# Enable AES GCM support
+	echo "#define DROPBEAR_ENABLE_GCM_MODE 1" >> localoptions.h || die "Failed to enable AES GCM support"
 }
 
 src_configure() {
