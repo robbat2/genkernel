@@ -154,7 +154,7 @@ _dropbear_install() {
 		mkdir -p "${key_destdir}" || die "Failed to create '${key_destdir}'!"
 	fi
 
-	cp -a "${keyfile}" "${DROPBEAR_KEY_FILE}" || die "Failed copy '${keyfile}' to '${DROPBEAR_KEY_FILE}'!"
+	cp -a "${keyfile}" "${DROPBEAR_KEY_FILE}" || die "Failed to copy '${keyfile}' to '${DROPBEAR_KEY_FILE}'!"
 
 	# end here -- sandbox is open!
 	exit 0
