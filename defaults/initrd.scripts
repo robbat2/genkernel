@@ -2525,7 +2525,13 @@ do_resume() {
 swsusp_resume() {
 	# determine swap resume partition
 	local device=$(ls -lL "${REAL_RESUME}" | sed 's/\  */ /g' | cut -d \  -f 5-6 | sed 's/,\ */:/')
-	[ -f /sys/power/resume ] && echo "${device}" > /sys/power/resume
+	if [ -f /sys/power/resume ]
+	then
+		log_msg "Trying to resume using swsusp ..."
+		log_msg "COMMAND: 'echo \"${device}\" > /sys/power/resume'"
+		echo "${device}" > /sys/power/resume
+		log_msg "System is not resuming, probably because it wasn't suspended; Continue normal booting ..."
+	fi
 }
 
 tuxonice_resume() {
@@ -2585,8 +2591,13 @@ tuxonice_resume() {
 		fi
 
 	fi
+
+	log_msg "Trying to resume using TuxOnIce ..."
+	log_msg "COMMAND: 'echo \"${REAL_RESUME}\" > ${tuxonice_resumedev}'"
 	echo "${REAL_RESUME}" > "${tuxonice_resumedev}"
+	log_msg "COMMAND: 'echo > ${tuxonice_do_resume}'"
 	echo > "${tuxonice_do_resume}"
+	log_msg "System is not resuming, probably because it wasn't suspended; Continue normal booting ..."
 }
 
 find_loop() {
