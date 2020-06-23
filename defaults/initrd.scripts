@@ -1037,8 +1037,8 @@ test_success() {
 	if [ "${retcode}" != '0' ]
 	then
 		error_string=${1}
-		error_string="${error_string:-run command}"
-		bad_msg 'Failed to ${1}; failing back to the shell ...'
+		error_string="${error_string:-Failed to run command}"
+		bad_msg "${error_string}; Failing back to the shell ..."
 		run_shell
 	fi
 }
