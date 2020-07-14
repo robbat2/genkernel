@@ -1294,11 +1294,7 @@ tc-getRANLIB() {
 }
 
 tc-getSTRIP() {
-	tc-getPROG STRIP strip
-}
-
-tc-getSTRIP() {
-	tc-getPROG STRIP strip "$@";
+	tc-getPROG STRIP strip "$@"
 }
 
 tc-is-cross-compiler() {
