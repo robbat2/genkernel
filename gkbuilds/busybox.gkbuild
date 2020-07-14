@@ -1,8 +1,25 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_prepare() {
 	default
+
+	# flag cleanup
+	sed -i -r \
+		-e 's:[[:space:]]?-(Werror|Os|falign-(functions|jumps|loops|labels)=1|fomit-frame-pointer)\>::g' \
+		Makefile.flags || gen_die
+
+	sed -i \
+		-e "/^CROSS_COMPILE/s:=.*:= ${CHOST}-:" \
+		-e "/^CC\>/s:=.*:= $(tc-getCC):" \
+		-e "/^HOSTCC/s:=.*:= $(tc-getBUILD_CC):" \
+		-e "/^HOSTCXX/s:=.*:= $(tc-getBUILD_CXX):" \
+		-e "/^PKG_CONFIG\>/s:=.*:= $(tc-getPKG_CONFIG):" \
+		Makefile || gen_die
+
+	sed -i \
+		-e 's:-static-libgcc::' \
+		Makefile.flags || die
 
 	cp "${TEMP}"/busybox-config "${S}"/.config \
 		|| die "Failed top copy '${TEMP}/busybox-config' to '${S}/.config'!"

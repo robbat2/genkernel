@@ -261,7 +261,7 @@ determine_output_filenames() {
 determine_real_args() {
 	# Unset known variables which will interfere with _tc-getPROG().
 	local tc_var tc_varname_build tc_vars=$(get_tc_vars)
-	for tc_var in ${tc_vars}
+	for tc_var in ${tc_vars} BROOT
 	do
 		tc_varname_build="BUILD_${tc_var}"
 		unset ${tc_var} ${tc_varname_build}

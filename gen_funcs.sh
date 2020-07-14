@@ -1304,6 +1304,15 @@ tc-getOBJDUMP() {
 	tc-getPROG OBJDUMP objdump "$@"
 }
 
+tc-getPKG_CONFIG() {
+	if [ -n "${BROOT}" ]
+	then
+		echo "${BROOT}/usr/bin/pkg-config-wrapper"
+	else
+		tc-getPROG PKG_CONFIG pkg-config "$@"
+	fi
+}
+
 tc-getREADELF() {
 	tc-getPROG READELF readelf "$@"
 }
