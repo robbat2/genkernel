@@ -300,6 +300,7 @@ determine_real_args() {
 
 	set_config_with_override STRING COMPRESS_INITRD                       CMD_COMPRESS_INITRD                       "${DEFAULT_COMPRESS_INITRD}"
 	set_config_with_override STRING COMPRESS_INITRD_TYPE                  CMD_COMPRESS_INITRD_TYPE                  "${DEFAULT_COMPRESS_INITRD_TYPE}"
+	set_config_with_override STRING CHOST                                 CMD_CHOST                                 "${DEFAULT_CHOST}"
 	set_config_with_override STRING MAKEOPTS                              CMD_MAKEOPTS                              "${DEFAULT_MAKEOPTS}"
 	set_config_with_override STRING NICE                                  CMD_NICE                                  "10"
 	set_config_with_override STRING KERNEL_MAKE                           CMD_KERNEL_MAKE                           "${DEFAULT_KERNEL_MAKE}"
@@ -563,17 +564,15 @@ determine_real_args() {
 	ARCH_CONFIG="${GK_SHARE}/arch/${ARCH}/config.sh"
 	[ -f "${ARCH_CONFIG}" ] || gen_die "${ARCH} not yet supported by genkernel. Please add the arch-specific config file '${ARCH_CONFIG}'!"
 
-	# set CBUILD and CHOST
-	local build_cc=$(tc-getBUILD_CC)
-	CBUILD=$(${build_cc} -dumpmachine 2>/dev/null)
-	if [ -z "${CBUILD}" ]
+	# Set CBUILD and CHOST
+	if ! isTrue "$(is_valid_triplet "${CHOST}")"
 	then
-		gen_die "Failed to determine CBUILD using '${build_cc} -dumpmachine' command!"
+		gen_die "Set CHOST '${CHOST}' does NOT represent a valid triplet!"
 	else
+		# Initialize CBUILD with CHOST value
+		CBUILD=${CHOST}
 		print_info 5 "CBUILD set to '${CBUILD}' ..."
-		CHOST="${CBUILD}"
 	fi
-	unset build_cc
 
 	if [ -n "${CMD_CROSS_COMPILE}" ]
 	then
