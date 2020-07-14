@@ -1167,8 +1167,16 @@ _tc-getPROG() {
 		type=KERNEL
 	fi
 
-	local prog_default_varname="DEFAULT_${type}_${var}"
-	local prog_override_varname="${type}_${var}"
+	local prog_default_varname=
+	local prog_override_varname=
+	for v in ${vars} ; do
+		prog_default_varname="DEFAULT_${type}_${v}"
+		if [[ -n "${!prog_default_varname}" ]]
+		then
+			prog_override_varname="${type}_${v}"
+			break
+		fi
+	done
 
 	if [[ -n "${!prog_default_varname}" ]] \
 		&& [[ "${!prog_override_varname}" != "${!prog_default_varname}" ]]
