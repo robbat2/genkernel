@@ -264,7 +264,7 @@ determine_real_args() {
 	for tc_var in ${tc_vars}
 	do
 		tc_varname_build="BUILD_${tc_var}"
-		unset tc_var ${tc_varname_build}
+		unset ${tc_var} ${tc_varname_build}
 	done
 	unset tc_var tc_varname_build tc_vars
 
