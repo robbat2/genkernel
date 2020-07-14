@@ -1240,12 +1240,29 @@ tc-getAS() {
 	tc-getPROG AR ar "$@"
 }
 
+tc-getBUILD_AR() {
+	tc-getBUILD_PROG AR ar "$@"
+}
+
 tc-getBUILD_CC() {
 	tc-getBUILD_PROG CC gcc "$@"
 }
 
+tc-getBUILD_CPP() {
+	local cc=$(tc-getBUILD_CC)
+	tc-getPROG CPP "${cc} -E" "$@"
+}
+
 tc-getBUILD_CXX() {
 	tc-getBUILD_PROG CXX g++ "$@"
+}
+
+tc-getBUILD_LD() {
+	tc-getBUILD_PROG LD ld "$@"
+}
+
+tc-getBUILD_READELF() {
+	tc-getBUILD_PROG READELF readelf "$@"
 }
 
 tc-getCC() {
@@ -1275,6 +1292,10 @@ tc-getOBJCOPY() {
 
 tc-getOBJDUMP() {
 	tc-getPROG OBJDUMP objdump "$@"
+}
+
+tc-getREADELF() {
+	tc-getPROG READELF readelf "$@"
 }
 
 tc-getBUILD_PROG() {
@@ -1442,6 +1463,7 @@ gkbuild() {
 		"OBJCOPY='$(tc-getOBJCOPY)'"
 		"OBJDUMP='$(tc-getOBJDUMP)'"
 		"RANLIB='$(tc-getRANLIB)'"
+		"READELF='$(tc-getREADELF)'"
 		"STRIP='$(tc-getSTRIP)'"
 	)
 

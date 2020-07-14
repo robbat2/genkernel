@@ -80,85 +80,42 @@ compile_generic() {
 	local argstype=${2}
 	local RET
 
+	local -a compile_cmd=()
+
+	if [ ${NICE} -ne 0 ]
+	then
+		compile_cmd+=( nice "-n${NICE}" )
+	fi
+
 	case "${argstype}" in
 		kernel|kernelruntask)
 			if [ -z "${KERNEL_MAKE}" ]
 			then
 				gen_die "KERNEL_MAKE undefined - I don't know how to compile a kernel for this arch!"
 			else
-				local MAKE=${KERNEL_MAKE}
+				local -x MAKE=${KERNEL_MAKE}
+				compile_cmd+=( "${MAKE}" "${MAKEOPTS}" )
 			fi
 
-			# Build kernel compile parameter.
-			local ARGS=""
-
-			# Allow for CC/LD... user override!
-			local -a kernel_vars
-			kernel_vars+=( 'ARCH' )
-			kernel_vars+=( 'AS' )
-			kernel_vars+=( 'CC' )
-			kernel_vars+=( 'LD' )
-
-			local kernel_var=
-			for kernel_var in "${kernel_vars[@]}"
-			do
-				local kernel_varname="KERNEL_${kernel_var}"
-				local kernel_default_varname="DEFAULT_${kernel_varname}"
-
-				if [[ -z "${!kernel_default_varname}" ]] \
-					|| [[ -n "${!kernel_default_varname}" ]] \
-					&& [[ "${!kernel_varname}" != "${!kernel_default_varname}" ]]
-				then
-					ARGS="${ARGS} ${kernel_var}=\"${!kernel_varname}\""
-				fi
-			done
-			unset kernel_var kernel_vars kernel_varname kernel_default_varname
-
-			if isTrue "$(tc-is-cross-compiler)"
+			if [[ "${argstype}" == 'kernelruntask' ]]
 			then
-				local can_tc_cross_compile=no
-				local cpu_cbuild=${CBUILD%%-*}
-				local cpu_chost=${CHOST%%-*}
-
-				case "${cpu_cbuild}" in
-					powerpc64*)
-						if [[ "${cpu_chost}" == "powerpc" ]]
-						then
-							can_tc_cross_compile=yes
-						fi
-						;;
-					x86_64*)
-						if [[ "${cpu_chost}" == "i686" ]]
-						then
-							can_tc_cross_compile=yes
-						fi
-						;;
-				esac
-
-				if isTrue "${can_tc_cross_compile}"
-				then
-					local -a kernel_vars
-					kernel_vars+=( 'AS' )
-					kernel_vars+=( 'CC' )
-					kernel_vars+=( 'LD' )
-
-					local kernel_var=
-					for kernel_var in "${kernel_vars[@]}"
-					do
-						if [[ "${ARGS}" == *${kernel_var}=* ]]
-						then
-							# User wants to run specific program ...
-							continue
-						else
-							ARGS="${ARGS} ${kernel_var}=\"$(tc-get${kernel_var})\""
-						fi
-					done
-					unset kernel_var kernel_vars
-				else
-					ARGS="${ARGS} CROSS_COMPILE=\"${CHOST}-\""
-				fi
-				unset can_tc_cross_compile cpu_cbuild cpu_chost
+				# silent operation, forced -j1
+				compile_cmd+=( -s -j1 )
 			fi
+
+			# Pass kernel compile parameter
+			compile_cmd+=( "ARCH='${KERNEL_ARCH}'" )
+
+			local tc_var
+			for tc_var in AS AR CC LD NM OBJCOPY OBJDUMP READELF STRIP
+			do
+				compile_cmd+=( "${tc_var}='$(TC_PROG_TYPE=KERNEL tc-get${tc_var})'" )
+			done
+
+			compile_cmd+=( "HOSTAR='$(tc-getBUILD_AR)'" )
+			compile_cmd+=( "HOSTCC='$(tc-getBUILD_CC)'" )
+			compile_cmd+=( "HOSTCXX='$(tc-getBUILD_CXX)'" )
+			compile_cmd+=( "HOSTLD='$(tc-getBUILD_LD)'" )
 
 			if [ -n "${KERNEL_OUTPUTDIR}" -a "${KERNEL_OUTPUTDIR}" != "${KERNEL_DIR}" ]
 			then
@@ -174,7 +131,7 @@ compile_generic() {
 					error_message+=" Please re-install a fresh kernel source!"
 					gen_die "${error_message}"
 				else
-					ARGS="${ARGS} O=\"${KERNEL_OUTPUTDIR}\""
+					compile_cmd+=( "O='${KERNEL_OUTPUTDIR}'" )
 				fi
 			fi
 			;;
@@ -184,34 +141,30 @@ compile_generic() {
 			gen_die "${error_msg}"
 			;;
 	esac
-	shift 2
 
-	if [ ${NICE} -ne 0 ]
-	then
-		NICEOPTS="nice -n${NICE} "
-	else
-		NICEOPTS=""
-	fi
+	compile_cmd+=( "${target}" )
+
+	print_info 3 "COMMAND: ${compile_cmd[*]}" 1 0 1
 
 	# the eval usage is needed in the next set of code
 	# as ARGS can contain spaces and quotes, eg:
 	# ARGS='CC="ccache gcc"'
-	if [ "${argstype}" == 'kernelruntask' ]
+	if [[ "${argstype}" == 'kernelruntask' ]]
 	then
-		# Silent operation, forced -j1
-		print_info 3 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} -j1 ${ARGS} ${target} $*" 1 0 1
-		eval ${NICEOPTS}${MAKE} -s ${MAKEOPTS} -j1 ${ARGS} ${target} $*
+		eval "${compile_cmd[@]}"
 		RET=$?
 	elif [ "${LOGLEVEL}" -gt 3 ]
 	then
 		# Output to stdout and logfile
-		print_info 3 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
-		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* 2>&1 | tee -a "${LOGFILE}"
+		compile_cmd+=( "2>&1 | tee -a '${LOGFILE}'" )
+
+		eval "${compile_cmd[@]}"
 		RET=${PIPESTATUS[0]}
 	else
 		# Output to logfile only
-		print_info 3 "COMMAND: ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $*" 1 0 1
-		eval ${NICEOPTS}${MAKE} ${MAKEOPTS} ${ARGS} ${target} $* >> "${LOGFILE}" 2>&1
+		compile_cmd+=( ">> '${LOGFILE}' 2>&1" )
+
+		eval "${compile_cmd[@]}"
 		RET=$?
 	fi
 
