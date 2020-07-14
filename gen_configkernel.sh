@@ -119,63 +119,105 @@ set_initramfs_compression_method() {
 
 	local kernel_config=${1}
 
-	local compress_config=NONE
 	local -a KNOWN_INITRAMFS_COMPRESSION_TYPES=()
 	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( NONE )
-	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( GZIP )
-	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( BZIP2 )
-	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZMA )
-	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( XZ )
-	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZO )
-	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( LZ4 )
+	KNOWN_INITRAMFS_COMPRESSION_TYPES+=( $(get_initramfs_compression_method_by_compression) )
 
-	case ${COMPRESS_INITRD_TYPE} in
-		gz)
-			compress_config='GZIP'
-			;;
-		bz2)
-			compress_config='BZIP2'
-			;;
-		lzma)
-			compress_config='LZMA'
-			;;
-		xz|best|fastest)
-			compress_config='XZ'
-			;;
-		lzop)
-			compress_config='LZO'
-			;;
-		lz4)
-			compress_config='LZ4'
-			;;
-	esac
+	if [[ "${COMPRESS_INITRD_TYPE}" =~ ^(BEST|FASTEST)$ ]]
+	then
+		print_info 5 "Determining '${COMPRESS_INITRD_TYPE}' compression method for initramfs ..."
+		local ranked_methods
+		if [[ "${COMPRESS_INITRD_TYPE}" == "BEST" ]]
+		then
+			ranked_methods=( $(get_initramfs_compression_method_by_compression) )
+		else
+			ranked_methods=( $(get_initramfs_compression_method_by_speed) )
+		fi
+
+		local ranked_method
+		for ranked_method in "${ranked_methods[@]}"
+		do
+			print_info 5 "Checking if we can use '${ranked_method}' compression ..."
+
+			# Do we have the user space tool?
+			local compression_tool=${GKICM_LOOKUP_TABLE_CMD[${ranked_method}]/%\ */}
+			if ! hash ${compression_tool} &>/dev/null
+			then
+				print_info 5 "Cannot use '${ranked_method}' compression, the tool '${compression_tool}' to compress initramfs was not found. Is ${GKICM_LOOKUP_TABLE_PKG[${ranked_method}]} installed?"
+				continue
+			fi
+
+			# Is the kernel able to decompress?
+			local koption="CONFIG_RD_${ranked_method}"
+			local value_koption=$(kconfig_get_opt "${kernel_config}" "${koption}")
+			if [[ "${value_koption}" != "y" ]]
+			then
+				print_info 5 "Cannot use '${ranked_method}' compression, kernel option '${koption}' is not set!"
+				continue
+			fi
+
+			print_info 5 "Will use '${ranked_method}' compression -- all requirements are met!"
+			COMPRESS_INITRD_TYPE=${ranked_method}
+			break
+		done
+		unset ranked_method ranked_methods koption value_koption
+
+		if [[ "${COMPRESS_INITRD_TYPE}" =~ ^(BEST|FASTEST)$ ]]
+		then
+			gen_die "None of the initramfs compression methods we tried are supported by your kernel (config file \"${kernel_config}\"), strange!?"
+		fi
+	fi
+
+	local KOPTION_PREFIX=CONFIG_RD_
+	[ ${KV_NUMERIC} -ge 4010 ] && KOPTION_PREFIX=CONFIG_INITRAMFS_COMPRESSION_
+
+	# CONFIG_INITRAMFS_<TYPE> options are only used when CONFIG_INITRAMFS_SOURCE
+	# is set. However, we cannot just check for INTEGRATED_INITRAMFS option here
+	# because on first run kernel will still get compiled without
+	# CONFIG_INITRAMFS_SOURCE set.
+	local has_initramfs_source=no
+	local cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${kernel_config}" "CONFIG_INITRAMFS_SOURCE")
+	[[ -n "${cfg_CONFIG_INITRAMFS_SOURCE}" && ${#cfg_CONFIG_INITRAMFS_SOURCE} -gt 2 ]] && has_initramfs_source=yes
 
 	local KNOWN_INITRAMFS_COMPRESSION_TYPE
-	local KOPTION_VALUE
+	local KOPTION_VALUE KOPTION_CURRENT_VALUE
 	for KNOWN_INITRAMFS_COMPRESSION_TYPE in "${KNOWN_INITRAMFS_COMPRESSION_TYPES[@]}"
 	do
 		KOPTION_VALUE=n
-		if [[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "${compress_config}" ]]
+		if [[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "${COMPRESS_INITRD_TYPE}" ]]
 		then
 			KOPTION_VALUE=y
 		fi
 
-		if [ ${KV_NUMERIC} -ge 4010 ]
+		if isTrue "${has_initramfs_source}"
 		then
-			kconfig_set_opt "${kernel_config}" "CONFIG_INITRAMFS_COMPRESSION_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
-
-			if [[ "${KOPTION_VALUE}" == "y" && "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" != "NONE" ]]
+			KOPTION_CURRENT_VALUE=$(kconfig_get_opt "${kernel_config}" "${KOPTION_PREFIX}${KNOWN_INITRAMFS_COMPRESSION_TYPE}")
+			if [[ -n "${KOPTION_CURRENT_VALUE}" ]] \
+				&& [[ "${KOPTION_VALUE}" != "${KOPTION_CURRENT_VALUE}" ]]
 			then
-				# Make sure that the kernel can decompress our initramfs
-				kconfig_set_opt "${kernel_config}" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+				# We have to ensure that only the initramfs compression
+				# we want to use is enabled or the last one listed in
+				# $KERNEL_DIR/usr/Makefile will be used
+				# However, no need to set =n value when option isn't set
+				# at all (this will save us one additional "make oldconfig"
+				# run due to changed kernel options).
+				kconfig_set_opt "${kernel_config}" "${KOPTION_PREFIX}${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
 			fi
-		else
-			[[ "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" == "NONE" ]] && continue
 
-			# In <linux-4.10, to control used initramfs compression, we have to
-			# disable every supported compression type except compression type
-			# we want to use, (see $KERNEL_DIR/usr/Makefile).
+			if [[ "${KOPTION_VALUE}" == "y" ]]
+			then
+				echo "${KOPTION_PREFIX}${KNOWN_INITRAMFS_COMPRESSION_TYPE}" >> "${KCONFIG_REQUIRED_OPTIONS}" \
+					|| gen_die "Failed to add '${KOPTION_PREFIX}${KNOWN_INITRAMFS_COMPRESSION_TYPE}' to '${KCONFIG_REQUIRED_OPTIONS}'!"
+			fi
+		fi
+
+		if [[ "${KOPTION_VALUE}" == "y" && "${KNOWN_INITRAMFS_COMPRESSION_TYPE}" != "NONE" ]]
+		then
+			# Make sure that the kernel can always decompress our initramfs
 			kconfig_set_opt "${kernel_config}" "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" "${KOPTION_VALUE}"
+
+			echo "CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}" >> "${KCONFIG_REQUIRED_OPTIONS}" \
+				|| gen_die "Failed to add 'CONFIG_RD_${KNOWN_INITRAMFS_COMPRESSION_TYPE}' to '${KCONFIG_REQUIRED_OPTIONS}'!"
 		fi
 	done
 }
@@ -963,6 +1005,12 @@ config_kernel() {
 		else
 			print_info 1 "$(get_indent 1)>> Running 'make olddefconfig' due to changed kernel options ..."
 			compile_generic olddefconfig kernel 2>/dev/null
+		fi
+
+		if [ -f "${KCONFIG_REQUIRED_OPTIONS}" ]
+		then
+			# Pick up required options from other functions
+			required_kernel_options+=( $(cat "${KCONFIG_REQUIRED_OPTIONS}" | sort -u) )
 		fi
 
 		print_info 2 "$(get_indent 1)>> Checking if required kernel options are still present ..."

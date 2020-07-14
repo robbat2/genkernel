@@ -479,6 +479,8 @@ determine_real_args() {
 
 	declare -gr KCONFIG_MODIFIED_MARKER="${TEMP}/.kconfig_modified"
 
+	declare -gr KCONFIG_REQUIRED_OPTIONS="${TEMP}/.kconfig_required_options"
+
 	if [ -n "${CMD_CROSS_COMPILE}" ]
 	then
 		if ! isTrue "$(is_valid_triplet "${CMD_CROSS_COMPILE}")"
