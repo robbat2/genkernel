@@ -1290,7 +1290,7 @@ tc-getPROG() {
 }
 
 tc-getRANLIB() {
-	tc-getPROG RANLIB ranlib
+	tc-getPROG RANLIB ranlib "$@"
 }
 
 tc-getSTRIP() {
