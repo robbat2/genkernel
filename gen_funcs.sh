@@ -1080,7 +1080,9 @@ get_tc_vars() {
 	tc_vars+=( STRIP )
 	tc_vars+=( NM )
 	tc_vars+=( RANLIB )
+	tc_vars+=( READELF )
 	tc_vars+=( OBJCOPY )
+	tc_vars+=( OBJDUMP )
 	tc_vars+=( PKG_CONFIG )
 
 	echo "${tc_vars[@]}"
