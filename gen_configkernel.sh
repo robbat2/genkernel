@@ -333,25 +333,35 @@ config_kernel() {
 	local -a required_kernel_options
 	[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
 
-	# Ensure kernel supports initramfs
 	if isTrue "${BUILD_RAMDISK}"
 	then
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
-	fi
+		# We really need this or we will fail to boot
+		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for genkernel's initramfs usage are set ..."
 
-	# --integrated-initramfs handling
-	if isTrue "${INTEGRATED_INITRAMFS}"
-	then
-		local cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE")
-		if [[ -n "${cfg_CONFIG_INITRAMFS_SOURCE}" && ${#cfg_CONFIG_INITRAMFS_SOURCE} -gt 2 ]]
+		# Ensure kernel supports initramfs
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
+
+		# Stuff required by init script
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TTY" "y" \
+			&& required_kernel_options+=( 'CONFIG_TTY' )
+
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UNIX98_PTYS" "y" \
+			&& required_kernel_options+=( 'CONFIG_UNIX98_PTYS' )
+
+		# --integrated-initramfs handling
+		if isTrue "${INTEGRATED_INITRAMFS}"
 		then
-			# Checking value length to allow 'CONFIG_INITRAMFS_SOURCE=' and 'CONFIG_INITRAMFS_SOURCE=""'
-			print_info 2 "$(get_indent 1)>> CONFIG_INITRAMFS_SOURCE is already set; Unsetting to avoid clashing with --integrated-initramfs ..."
-			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" ""
+			local cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE")
+			if [[ -n "${cfg_CONFIG_INITRAMFS_SOURCE}" && ${#cfg_CONFIG_INITRAMFS_SOURCE} -gt 2 ]]
+			then
+				# Checking value length to allow 'CONFIG_INITRAMFS_SOURCE=' and 'CONFIG_INITRAMFS_SOURCE=""'
+				print_info 2 "$(get_indent 1)>> CONFIG_INITRAMFS_SOURCE is already set; Unsetting to avoid clashing with --integrated-initramfs ..."
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" ""
+			fi
+		elif isTrue "${COMPRESS_INITRD}"
+		then
+			set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
 		fi
-	elif isTrue "${COMPRESS_INITRD}"
-	then
-		set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
 	fi
 
 	# Force this on if we are using --genzimage
@@ -441,17 +451,6 @@ config_kernel() {
 			print_warning 1 "${_no_modules_support_warning}"
 			BUILD_STATIC="yes"
 		fi
-	fi
-
-	if isTrue "${BUILD_RAMDISK}"
-	then
-		# We really need this or we will fail to boot
-		print_info 2 "$(get_indent 1)>> Ensure that required kernel options for genkernel's initramfs usage are set ..."
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TTY" "y" \
-			&& required_kernel_options+=( 'CONFIG_TTY' )
-
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UNIX98_PTYS" "y" \
-			&& required_kernel_options+=( 'CONFIG_UNIX98_PTYS' )
 	fi
 
 	# If the user has configured DM as built-in, we need to respect that.
