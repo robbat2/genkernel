@@ -619,6 +619,73 @@ determine_real_args() {
 	done
 	unset v pn pn_varname pkg_prefixes
 
+	declare -gA GKICM_LOOKUP_TABLE_CMD=()
+	declare -gA GKICM_LOOKUP_TABLE_EXT=()
+	declare -gA GKICM_LOOKUP_TABLE_PKG=()
+	local known_initramfs_compression_methods_by_compression=( $(get_initramfs_compression_method_by_compression) )
+	local known_initramfs_compression_methods_by_speed=( $(get_initramfs_compression_method_by_speed) )
+	local initramfs_compression_methods=( $(compgen -A variable |grep '^GKICM_.*_KOPTNAME$') )
+	local initramfs_compression_method key var_name var_prefix
+	for initramfs_compression_method in "${initramfs_compression_methods[@]}"
+	do
+		if [ -z "${!initramfs_compression_method}" ]
+		then
+			gen_die "Invalid config found: Check value of '${initramfs_compression_method}'!"
+		fi
+
+		if [[ "${known_initramfs_compression_methods_by_compression[@]} " != *"${!initramfs_compression_method}"* ]]
+		then
+			gen_die "Internal error: Initramfs compression method '${!initramfs_compression_method}' was not added to get_initramfs_compression_method_by_compression()!"
+		else
+			known_initramfs_compression_methods_by_compression=( $(printf '%s\n' "${known_initramfs_compression_methods_by_compression[@]//${!initramfs_compression_method}/}") )
+		fi
+
+		if [[ "${known_initramfs_compression_methods_by_speed[@]} " != *"${!initramfs_compression_method}"* ]]
+		then
+			gen_die "Internal error: Initramfs compression method '${!initramfs_compression_method}' was not added to get_initramfs_compression_method_by_speed()!"
+		else
+			known_initramfs_compression_methods_by_speed=( $(printf '%s\n' "${known_initramfs_compression_methods_by_speed[@]//${!initramfs_compression_method}/}") )
+		fi
+
+		var_prefix="${initramfs_compression_method%_KOPTNAME}"
+
+		for key in CMD EXT PKG
+		do
+			var_name="${var_prefix}_${key}"
+			if [ -z "${!var_name}" ]
+			then
+				gen_die "Internal error: Variable '${var_name}' is not set!"
+			fi
+
+			case ${key} in
+				CMD)
+					GKICM_LOOKUP_TABLE_CMD[${!initramfs_compression_method}]="${!var_name}"
+					;;
+				EXT)
+					GKICM_LOOKUP_TABLE_EXT[${!initramfs_compression_method}]="${!var_name}"
+					;;
+				PKG)
+					GKICM_LOOKUP_TABLE_PKG[${!initramfs_compression_method}]="${!var_name}"
+					;;
+			esac
+		done
+	done
+	unset initramfs_compression_methods initramfs_compression_method key var_name var_prefix
+
+	# It is enough to check just one data set because we validated
+	# both data sets above.
+	if [[ ${#known_initramfs_compression_methods_by_compression[@]} -gt 0 ]]
+	then
+		local unhandled_method
+		for unhandled_method in "${known_initramfs_compression_methods_by_compression[@]}"
+		do
+			print_error 1 "Do not know how to handle initramfs compression type '${unhandled_method}'!"
+		done
+
+		gen_die "Internal error: Not all known initramfs compression methods are defined!"
+	fi
+	unset known_initramfs_compression_methods_by_compression known_initramfs_compression_methods_by_speed
+
 	if [ -n "${CMD_BOOTLOADER}" ]
 	then
 		BOOTLOADER="${CMD_BOOTLOADER}"
@@ -1007,6 +1074,30 @@ determine_real_args() {
 			# and selected Python version isn't supported by pax-utils or
 			# dev-python/pyelftools yet, #618056.
 			gen_die "'\"${LDDTREE_COMMAND}\" -l \"${CPIO_COMMAND}\"' failed -- cannot generate initramfs without working lddtree!"
+		fi
+
+		if isTrue "${COMPRESS_INITRD}"
+		then
+			local pattern_auto='^(BEST|FASTEST)$'
+			local pattern_manual="$(get_initramfs_compression_method_by_speed)"
+			pattern_manual=${pattern_manual// /|}
+			pattern_manual="^(${pattern_manual})$"
+
+			if [[ "${COMPRESS_INITRD_TYPE^^}" =~ ${pattern_auto} ]]
+			then
+				# Will be handled in set_initramfs_compression_method()
+				:;
+			elif [[ ! "${COMPRESS_INITRD_TYPE^^}" =~ ${pattern_manual} ]]
+			then
+				gen_die "Specified --compress-initramfs-type '${COMPRESS_INITRD_TYPE}' is unknown"
+			elif ! hash ${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE^^}]/%\ */} &>/dev/null
+			then
+				gen_die "'${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE^^}]/%\ */}', the tool to compress initramfs based on selected --compress-initramfs-type was not found. Is ${GKICM_LOOKUP_TABLE_PKG[${COMPRESS_INITRD_TYPE^^}]} installed?"
+			fi
+			unset pattern_auto pattern_manual
+
+			# Ensure that value matches keys in GKICM_* arrays
+			COMPRESS_INITRD_TYPE=${COMPRESS_INITRD_TYPE^^}
 		fi
 
 		SANDBOX_COMMAND=

@@ -464,6 +464,30 @@ get_indent() {
 	echo "${_indent}"
 }
 
+get_initramfs_compression_method_by_compression() {
+	local -a methods=()
+	methods+=( XZ )
+	methods+=( LZMA )
+	methods+=( GZIP )
+	methods+=( BZIP2 )
+	methods+=( LZO )
+	methods+=( LZ4 )
+
+	echo "${methods[@]}"
+}
+
+get_initramfs_compression_method_by_speed() {
+	local -a methods=()
+	methods+=( LZ4 )
+	methods+=( LZO )
+	methods+=( GZIP )
+	methods+=( BZIP2 )
+	methods+=( LZMA )
+	methods+=( XZ )
+
+	echo "${methods[@]}"
+}
+
 setup_cache_dir() {
 	if [ ! -d "${GK_V_CACHEDIR}" ]
 	then

@@ -1770,7 +1770,6 @@ append_data() {
 }
 
 create_initramfs() {
-	local compress_ext=""
 	print_info 1 "initramfs: >> Initializing ..."
 
 	# Create empty cpio
@@ -1894,6 +1893,8 @@ create_initramfs() {
 		print_info 1 "$(get_indent 1)>> --integrated-initramfs is set; Setting CONFIG_INITRAMFS_* options ..."
 
 		[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
+		[ -f "${KCONFIG_REQUIRED_OPTIONS}" ] && rm "${KCONFIG_REQUIRED_OPTIONS}"
+
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" "\"${CPIO_ARCHIVE}.cpio\""
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_UID" "0"
@@ -1911,66 +1912,10 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			local cmd_xz=$(type -p xz)
-			local cmd_lzma=$(type -p lzma)
-			local cmd_bzip2=$(type -p bzip2)
-			local cmd_gzip=$(type -p gzip)
-			local cmd_lzop=$(type -p lzop)
-			local cmd_lz4=$(type -p lz4)
-			local pkg_xz='app-arch/xz-utils'
-			local pkg_lzma='app-arch/xz-utils'
-			local pkg_bzip2='app-arch/bzip2'
-			local pkg_gzip='app-arch/gzip'
-			local pkg_lzop='app-arch/lzop'
-			local pkg_lz4='app-arch/lz4'
-			local compression
-			case ${COMPRESS_INITRD_TYPE} in
-				xz|lzma|bzip2|gzip|lzop|lz4) compression=${COMPRESS_INITRD_TYPE} ;;
-				lzo) compression=lzop ;;
-				best|fastest)
-					local tuple
-					for tuple in \
-							'CONFIG_RD_XZ    cmd_xz    xz' \
-							'CONFIG_RD_LZMA  cmd_lzma  lzma' \
-							'CONFIG_RD_BZIP2 cmd_bzip2 bzip2' \
-							'CONFIG_RD_GZIP  cmd_gzip  gzip' \
-							'CONFIG_RD_LZO   cmd_lzop  lzop' \
-							'CONFIG_RD_LZ4   cmd_lz4   lz4' \
-							; do
-						set -- ${tuple}
-						local kernel_option=${1}
-						local cmd_variable_name=${2}
-						if ${CONFGREP} -q "^${kernel_option}=y" "${ACTUAL_KERNEL_CONFIG}" && test -n "${!cmd_variable_name}" ; then
-							compression=${3}
-							[[ ${COMPRESS_INITRD_TYPE} == best ]] && break
-						fi
-					done
-					[[ -z "${compression}" ]] && gen_die "None of the initramfs compression methods we tried are supported by your kernel (config file \"${ACTUAL_KERNEL_CONFIG}\"), strange!?"
-					;;
-				*)
-					gen_die "Compression '${COMPRESS_INITRD_TYPE}' unknown"
-					;;
-			esac
-
-			# Check for actual availability
-			local cmd_variable_name=cmd_${compression}
-			local pkg_variable_name=pkg_${compression}
-			[[ -z "${!cmd_variable_name}" ]] && gen_die "Compression '${compression}' is not available. Please install package '${!pkg_variable_name}'."
-
-			local compress_ext compress_cmd
-			case ${compression} in
-				xz) compress_ext='.xz' compress_cmd="${cmd_xz} -e --check=none -z -f -9" ;;
-				lzma) compress_ext='.lzma' compress_cmd="${cmd_lzma} -z -f -9" ;;
-				bzip2) compress_ext='.bz2' compress_cmd="${cmd_bzip2} -z -f -9" ;;
-				gzip) compress_ext='.gz' compress_cmd="${cmd_gzip} -f -9" ;;
-				lzop) compress_ext='.lzo' compress_cmd="${cmd_lzop} -f -9" ;;
-				lz4) compress_ext='.lz4' compress_cmd="${cmd_lz4} -f -9 -l -q" ;;
-			esac
-
-			print_info 1 "$(get_indent 1)>> Compressing cpio data (${compress_ext}) ..."
-			print_info 3 "COMMAND: ${compress_cmd} ${CPIO_ARCHIVE}" 1 0 1
-			${compress_cmd} "${CPIO_ARCHIVE}" || gen_die "Compression (${compress_cmd}) failed"
-			mv -f "${CPIO_ARCHIVE}${compress_ext}" "${CPIO_ARCHIVE}" || gen_die "Rename failed"
+			print_info 1 "$(get_indent 1)>> Compressing cpio data (${GKICM_LOOKUP_TABLE_EXT[${COMPRESS_INITRD_TYPE}]}) ..."
+			print_info 3 "COMMAND: ${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE}]} ${CPIO_ARCHIVE}" 1 0 1
+			${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE}]} "${CPIO_ARCHIVE}" || gen_die "Initramfs compression using '${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE}]}' failed"
+			mv -f "${CPIO_ARCHIVE}${GKICM_LOOKUP_TABLE_EXT[${COMPRESS_INITRD_TYPE}]}" "${CPIO_ARCHIVE}" || gen_die "Rename failed"
 		else
 			print_info 3 "$(get_indent 1)>> --no-compress-initramfs is set; Skipping compression of initramfs ..."
 		fi

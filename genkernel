@@ -69,6 +69,7 @@ source "${_GENKERNEL_CONF}" || small_die "Could not read ${_GENKERNEL_CONF}"
 LOGLEVEL=${LOGLEVEL:-1}
 
 # Start sourcing other scripts
+source "${GK_SHARE}"/defaults/compression_methods.sh || small_die "Could not read '${GK_SHARE}/defaults/compression_methods.sh'"
 source "${GK_SHARE}"/defaults/software.sh || small_die "Could not read '${GK_SHARE}/defaults/software.sh'"
 source "${GK_SHARE}"/defaults/config.sh || small_die "Could not read '${GK_SHARE}/defaults/config.sh'"
 source "${GK_SHARE}"/gen_funcs.sh || small_die "Could not read '${GK_SHARE}/gen_funcs.sh'"
