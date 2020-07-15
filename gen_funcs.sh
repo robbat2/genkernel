@@ -468,6 +468,7 @@ get_initramfs_compression_method_by_compression() {
 	local -a methods=()
 	methods+=( XZ )
 	methods+=( LZMA )
+	methods+=( ZSTD )
 	methods+=( GZIP )
 	methods+=( BZIP2 )
 	methods+=( LZO )
@@ -479,6 +480,7 @@ get_initramfs_compression_method_by_compression() {
 get_initramfs_compression_method_by_speed() {
 	local -a methods=()
 	methods+=( LZ4 )
+	methods+=( ZSTD )
 	methods+=( LZO )
 	methods+=( GZIP )
 	methods+=( BZIP2 )

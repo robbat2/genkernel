@@ -598,7 +598,8 @@ NOTE: System.map filename and System.map symlink name must be different.
     Deprecated alias for *--*[*no-*]*compress-initramfs*.
 
 *--compress-initramfs-type*=<arg>::
-    Compression type for initramfs (best, bzip2, fastest, gzip, lz4, lzma, lza, xz).
+    Compression type for initramfs (best, bzip2, fastest, gzip, lz4, lzma,
+    lza, xz, zstd).
 +
 *best* will select the algorithm providing best compression
 from those selected in your kernel configuration.
