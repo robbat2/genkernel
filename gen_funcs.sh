@@ -1806,7 +1806,7 @@ check_disk_space_requirements() {
 }
 
 check_distfiles() {
-	local source_files=( $(compgen -A variable |grep '^GKPKG_.*SRCTAR$') )
+	local source_files=( $(compgen -A variable |grep '^GKPKG_.*_SRCTAR$') )
 
 	local -a missing_sources
 	local source_file=
