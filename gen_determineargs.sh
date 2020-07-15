@@ -591,8 +591,8 @@ determine_real_args() {
 	vars_to_initialize+=( "BUSYBOX_CONFIG" )
 	vars_to_initialize+=( "DEFAULT_KERNEL_CONFIG" )
 
-	local binpkgs=( $(compgen -A variable |grep '^GKPKG_.*BINPKG$') )
-	local binpkg=
+	local binpkgs=( $(compgen -A variable |grep '^GKPKG_.*_BINPKG$') )
+	local binpkg
 	for binpkg in "${binpkgs[@]}"
 	do
 		pkg_prefixes+=( "${binpkg%_BINPKG}" )
@@ -608,7 +608,7 @@ determine_real_args() {
 	done
 	unset v vars_to_initialize
 
-	declare -gA GKPKG_LOOKUP_TABLE=
+	declare -gA GKPKG_LOOKUP_TABLE=()
 	local pn_varname= pn=
 	for v in "${pkg_prefixes[@]}"
 	do
