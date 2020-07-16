@@ -835,6 +835,14 @@ genkernel's initramfs will only mount root filesystem by default. If you
 want to store the log file in '/var/log/genkernel-boot.log' for example
 make sure that this mountpoint is accessible, see *initramfs.mounts*.
 
+*gk.userinteraction.disabled*=<...>::
+By default, genkernel will prompt on errors. In case this is not wanted
+or desired, e.g. for a kiosk system, this boolean option will disable
+any prompting, including the rescue shell.
+
+NOTE: Because no user interaction is possible when this option is set,
+system will automatically reboot on error after a timeout.
+
 *noload*=<...>::
     List of modules to skip loading.
     Separate using commas or spaces.

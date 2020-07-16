@@ -356,6 +356,14 @@ do
 			fi
 			unset tmp_wait
 		;;
+		gk.userinteraction.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				touch "${GK_USERINTERACTION_DISABLED_STATEFILE}"
+			fi
+			unset tmp_disabled
+		;;
 		gk.prompt.timeout=*)
 			tmp_timeout=${x#*=}
 			if is_int "${tmp_timeout}"

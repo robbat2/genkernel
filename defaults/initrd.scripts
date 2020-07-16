@@ -959,6 +959,12 @@ run() {
 }
 
 run_shell() {
+	if [ -f "${GK_USERINTERACTION_DISABLED_STATEFILE}" ]
+	then
+		bad_msg "gk.userinteraction.disabled is set; Spawning a shell is disabled!"
+		return
+	fi
+
 	[ -x /bin/sh ] && SH=/bin/sh || SH=/bin/ash
 
 	run touch "${GK_SHELL_LOCKFILE}"
@@ -1114,6 +1120,15 @@ warn_msg() {
 	[ "$2" != '1' ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
+warn_msg_n() {
+	local msg_string=${1}
+	msg_string="${msg_string:-...}"
+
+	log_msg "[**] ${msg_string}"
+
+	[ "$2" != '1' ] && printf "%b" "${WARN}**${NORMAL}${BOLD} ${msg_string}"
+}
+
 write_env_file() {
 	local env_file=${1}
 	shift
@@ -1233,6 +1248,43 @@ prompt_user() {
 	[ -n "${3}" ] && local explnt=" or : ${3}" || local explnt="."
 
 	bad_msg "Could not find the ${2} in ${oldvalue}${explnt}"
+
+	if [ -f "${GK_USERINTERACTION_DISABLED_STATEFILE}" ]
+	then
+		bad_msg "gk.userinteraction.disabled is set; No user interaction allowed!"
+
+		wait_sshd
+
+		if [ -f "${GK_SSHD_LOCKFILE}" ]
+		then
+			warn_msg "The lockfile at '${GK_SSHD_LOCKFILE}' exists."
+			warn_msg "The boot process will be paused until the lock is removed."
+			while true
+			do
+				if [ -f "${GK_SSHD_LOCKFILE}" ]
+				then
+					sleep 1
+				else
+					break
+				fi
+			done
+		fi
+
+		local timeout=${GK_PROMPT_TIMEOUT}
+		[ ${timeout} -eq 0 ] && timeout=10
+
+		warn_msg_n "System will automatically reboot in ${timeout} seconds ..."
+		while [ ${timeout} -gt 0 ]
+		do
+			let timeout=${timeout}-1
+			sleep 1
+			printf "."
+		done
+		echo
+
+		reboot -f
+	fi
+
 	bad_msg "Please specify another value or:"
 	bad_msg "- press Enter for the same"
 	bad_msg '- type "shell" for a shell'
