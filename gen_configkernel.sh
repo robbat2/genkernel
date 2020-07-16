@@ -348,17 +348,17 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_UNIX98_PTYS" "y" \
 			&& required_kernel_options+=( 'CONFIG_UNIX98_PTYS' )
 
-		# --integrated-initramfs handling
-		if isTrue "${INTEGRATED_INITRAMFS}"
+		# Make sure that CONFIG_INITRAMFS_SOURCE is unset so we don't clash
+		# with any other genkernel functionality.
+		local cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE")
+		if [[ -n "${cfg_CONFIG_INITRAMFS_SOURCE}" && ${#cfg_CONFIG_INITRAMFS_SOURCE} -gt 2 ]]
 		then
-			local cfg_CONFIG_INITRAMFS_SOURCE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE")
-			if [[ -n "${cfg_CONFIG_INITRAMFS_SOURCE}" && ${#cfg_CONFIG_INITRAMFS_SOURCE} -gt 2 ]]
-			then
-				# Checking value length to allow 'CONFIG_INITRAMFS_SOURCE=' and 'CONFIG_INITRAMFS_SOURCE=""'
-				print_info 2 "$(get_indent 1)>> CONFIG_INITRAMFS_SOURCE is already set; Unsetting to avoid clashing with --integrated-initramfs ..."
-				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" ""
-			fi
-		elif isTrue "${COMPRESS_INITRD}"
+			# Checking value length to allow 'CONFIG_INITRAMFS_SOURCE=' and 'CONFIG_INITRAMFS_SOURCE=""'
+			print_info 2 "$(get_indent 1)>> CONFIG_INITRAMFS_SOURCE is set; Unsetting to avoid problems ..."
+			kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" ""
+		fi
+
+		if isTrue "${COMPRESS_INITRD}"
 		then
 			set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
 		fi
