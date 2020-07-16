@@ -533,8 +533,15 @@ config_kernel() {
 			then
 				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA1_SSSE3" "${cfg_CONFIG_CRYPTO_AES}"
 				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256_SSSE3" "${cfg_CONFIG_CRYPTO_AES}"
-				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_X86_64" "${cfg_CONFIG_CRYPTO_AES}"
-			else
+
+				if [ ${KV_NUMERIC} -lt 5004 ]
+				then
+					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_X86_64" "${cfg_CONFIG_CRYPTO_AES}"
+				fi
+			fi
+
+			if [ ${KV_NUMERIC} -lt 5004 ]
+			then
 				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_586" "${cfg_CONFIG_CRYPTO_AES}"
 			fi
 		fi
