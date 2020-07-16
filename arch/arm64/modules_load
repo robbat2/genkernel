@@ -4,5 +4,8 @@
 # Hardware (IDE/SCSI/SATA/NVMe)
 MODULES_SATA+=" ahci_xgene"
 
+# Hardware (Network)
+MODULES_NET+=" xgene_enet"
+
 # Crypto
 MODULES_CRYPTO+=" aes-ce-blk"

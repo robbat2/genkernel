@@ -3,3 +3,6 @@
 
 # Hardware (IDE/SCSI/SATA/NVMe)
 MODULES_SATA+=" ahci_xgene"
+
+# Hardware (Network)
+MODULES_NET+=" xgene_enet"
