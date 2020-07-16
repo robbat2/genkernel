@@ -1,5 +1,8 @@
 # arm64 module groups for genkernel initramfs auto-loading
 # (extending defaults/modules_load)
 
+# Hardware (IDE/SCSI/SATA/NVMe)
+MODULES_SATA+=" ahci_xgene"
+
 # Crypto
 MODULES_CRYPTO+=" aes-ce-blk"
