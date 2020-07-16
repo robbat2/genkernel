@@ -1912,6 +1912,13 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
+			if ! isTrue "${BUILD_KERNEL}"
+			then
+				# We need to initialize COMPRESS_INITRD_TYPE in case it was set
+				# to best/fastest
+				set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
+			fi
+
 			print_info 1 "$(get_indent 1)>> Compressing cpio data (${GKICM_LOOKUP_TABLE_EXT[${COMPRESS_INITRD_TYPE}]}) ..."
 			print_info 3 "COMMAND: ${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE}]} ${CPIO_ARCHIVE}" 1 0 1
 			${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE}]} "${CPIO_ARCHIVE}" || gen_die "Initramfs compression using '${GKICM_LOOKUP_TABLE_CMD[${COMPRESS_INITRD_TYPE}]}' failed"
