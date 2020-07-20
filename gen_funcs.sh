@@ -1249,7 +1249,7 @@ tc-getAR() {
 }
 
 tc-getAS() {
-	tc-getPROG AR ar "$@"
+	tc-getPROG AS as "$@"
 }
 
 tc-getBUILD_AR() {
