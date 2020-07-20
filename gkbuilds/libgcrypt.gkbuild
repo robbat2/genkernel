@@ -23,11 +23,18 @@ src_install() {
 		"${D}"/usr/bin/mpicalc \
 		"${D}"/usr/share
 
+	# remove hardcoded $BROOT
+	sed -i \
+		-e 's/-L\/[^-"]*//' \
+		-e 's/-I\/[^"]*//' \
+		"${D}"/usr/bin/libgcrypt-config  \
+		|| die
+
 	# libgcrypt-config tries to be smart and will omit include
 	# and lib dir due to set prefix
 	sed -i \
-		-e "s|/usr/include|/dont-try-to-be-smart|" \
-		-e "s|/usr/lib|/dont-try-to-be-smart|" \
+		-e "s|x/usr/include|x/dont-try-to-be-smart|" \
+		-e "s|x/usr/lib|x/dont-try-to-be-smart|" \
 		"${D}"/usr/bin/libgcrypt-config \
 		|| die "Failed to make libgcrypt-config dumb!"
 
