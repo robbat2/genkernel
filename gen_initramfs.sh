@@ -775,6 +775,8 @@ append_dmraid() {
 
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
 
+	mkdir -p "${TDIR}"/run/lock/dmraid || gen_die "Failed to create '${TDIR}/run/lock/dmraid'!"
+
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	# Delete unneeded files

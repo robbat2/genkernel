@@ -1548,10 +1548,12 @@ start_volumes() {
 
 	if [ "${USE_DMRAID_NORMAL}" = '1' ]
 	then
-		if [ -x '/sbin/dmraid' ]
+		if ! hash dmraid >/dev/null 2>&1
 		then
+			bad_msg "dodmraid invoked but 'dmraid' not found; Skipping dmraid activation ..."
+		else
 			good_msg "Activating Device-Mapper RAID(s) ..."
-			local dmraid_cmd="run /sbin/dmraid -ay"
+			local dmraid_cmd="run dmraid -ay"
 			if [ -z "${DMRAID_OPTS}" ]
 			then
 				dmraid_cmd="${dmraid_cmd} 2>&1"
@@ -1559,16 +1561,14 @@ start_volumes() {
 				dmraid_cmd="${dmraid_cmd} ${DMRAID_OPTS} 2>&1"
 			fi
 			is_log_enabled && dmraid_cmd="${dmraid_cmd} | tee -a '${GK_INIT_LOG}'"
-			eval "${dmraid_cmd}"
 
-			if [ -x '/sbin/kpartx' ]
+			eval "${dmraid_cmd}"
+			if [ $? -ne 0 ]
 			then
-				dmraid_cmd="run /sbin/dmsetup ls --exec '/sbin/kpartx -a -s' 2>&1"
-				is_log_enabled && dmraid_cmd="${dmraid_cmd} | tee -a '${GK_INIT_LOG}'"
-				eval "${dmraid_cmd}"
+				bad_msg "Activation of Device-Mapper RAID(s) failed!"
+			else
+				udevsettle
 			fi
-		else
-			bad_msg "dodmraid invoked but /sbin/dmraid not found; Skipping dmraid activation ..."
 		fi
 	fi
 
