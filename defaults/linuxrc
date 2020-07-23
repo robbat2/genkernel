@@ -783,15 +783,18 @@ do
 					fi
 				;;
 				*)
-					if [ -b "${REAL_ROOT}" ]
+					ROOT_DEV=$(readlink -f "${REAL_ROOT}")
+					if [ -b "${ROOT_DEV}" ]
 					then
 						got_good_root=1
+						REAL_ROOT=${ROOT_DEV}
 						echo
 						good_msg "Root device detected as ${REAL_ROOT}!"
 						break
 					fi
 				;;
 			esac
+			unset ROOT_DEV
 
 			if [ "${got_good_root}" != '1' ]
 			then

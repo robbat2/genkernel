@@ -905,31 +905,39 @@ findnfsmount() {
 }
 
 find_real_device() {
-	local DEVICE="${1}"
-	case "${DEVICE}" in
+	local device="${1}"
+	local real_device=
+	local candidate=
+	case "${device}" in
 		UUID\=*|LABEL\=*|PARTLABEL=*|PARTUUID\=*)
-			local REAL_DEVICE=""
 			local retval=1
 
 			if [ ${retval} -ne 0 ]
 			then
-				REAL_DEVICE=$(findfs "${DEVICE}" 2>/dev/null)
+				candidate=$(findfs "${device}" 2>/dev/null)
 				retval=$?
 			fi
 
 			if [ ${retval} -ne 0 ]
 			then
-				REAL_DEVICE=$(blkid -o device -l -t "${DEVICE}" 2>/dev/null)
+				candidate=$(blkid -o device -l -t "${device}" 2>/dev/null)
 				retval=$?
 			fi
 
-			if [ ${retval} -eq 0 ] && [ -n "${REAL_DEVICE}" ]
+			if [ ${retval} -eq 0 ] && [ -n "${candidate}" ]
 			then
-				DEVICE="${REAL_DEVICE}"
+				real_device="${candidate}"
 			fi
 		;;
+		*)
+			candidate=$(readlink -f "${device}")
+			if [ -b "${candidate}" ]
+			then
+				real_device="${candidate}"
+			fi
 	esac
-	printf "%s" "${DEVICE}"
+
+	printf "%s" "${real_device}"
 }
 
 check_loop() {
