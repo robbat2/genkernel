@@ -701,15 +701,40 @@ append_multipath() {
 
 	mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
 
+	mkdir -p "${TDIR}"/usr/lib/udev/rules.d || gen_die "Failed to create '${TDIR}/usr/lib/udev/rules.d'!"
+
 	local libdir=$(get_chost_libdir)
+	if [[ "${libdir}" =~ ^/usr ]]
+	then
+		libdir=${libdir/\/usr/}
+	fi
 
 	copy_binaries \
-		"${TDIR}"\
+		"${TDIR}" \
 		/sbin/multipath \
 		/sbin/kpartx \
 		/sbin/mpathpersist \
-		${libdir}/multipath/lib*.so \
-		/lib/udev/scsi_id
+		${libdir}/multipath/lib*.so
+
+	local udevdir=$(get_udevdir)
+	local udevdir_initramfs="/usr/lib/udev"
+	local udev_files=( $(qlist -e sys-fs/multipath-tools:0 \
+		| xargs --no-run-if-empty realpath \
+		| grep -E -- "^${udevdir}")
+	)
+
+	if [ ${#udev_files[@]} -eq 0 ]
+	then
+		gen_die "Something went wrong: Did not found any udev-related files for sys-fs/multipath-tools!"
+	fi
+
+	local udev_files
+	for udev_file in "${udev_files[@]}"
+	do
+		local dest_file="${TDIR%/}${udev_file/${udevdir}/${udevdir_initramfs}}"
+		cp -aL "${udev_file}" "${dest_file}" \
+			|| gen_die "Failed to copy '${udev_file}' to '${dest_file}'"
+	done
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 

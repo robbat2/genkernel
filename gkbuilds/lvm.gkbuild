@@ -63,11 +63,12 @@ src_install() {
 	ln -s dmsetup "${D}"/usr/sbin/dmstats \
 		|| die "Failed to create symlink '${D}/usr/sbin/dmstats' to '${D}/usr/sbin/dmsetup'!"
 
-	# For backward compatibility
+	# For backward compatibility (packages like multipath-tools are
+	# expecting /sbin/dmsetup in udev rules).
 	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
 
 	ln -s ../usr/sbin/dmsetup "${D}"/sbin/dmsetup \
-		|| die "Failed to create symlink '${D}/sbin/dmstats' to '${D}/usr/sbin/dmstats'!"
+		|| die "Failed to create symlink '${D}/sbin/dmsetup' to '${D}/usr/sbin/dmsetup'!"
 
 	ln -s ../usr/sbin/dmstats "${D}"/sbin/dmstats \
 		|| die "Failed to create symlink '${D}/sbin/dmstats' to '${D}/usr/sbin/dmstats'!"

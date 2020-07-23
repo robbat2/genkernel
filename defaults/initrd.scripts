@@ -1527,48 +1527,22 @@ start_volumes() {
 
 	if [ "${USE_MULTIPATH_NORMAL}" = '1' ]
 	then
-		for multipath_path in /sbin/multipath /bin/multipath MISSING
-		do
-			[ -x "${multipath_path}" ] && break
-		done
-
-		for dmsetup_path in /usr/sbin/dmsetup /sbin/dmsetup /bin/dmsetup MISSING
-		do
-			[ -x "${dmsetup_path}" ] && break
-		done
-
-		for kpartx_path in /sbin/kpartx /bin/kpartx MISSING
-		do
-			[ -x "${kpartx_path}" ] && break
-		done
-
-		fail=0
-		[ "${multipath_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but multipath binary missing! Skipping multipath"
-		[ "${dmsetup_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but dmsetup binary missing! Skipping multipath"
-		[ "${kpartx_path}" = "MISSING" ] && fail=1 && bad_msg "domultipath called, but kpartx binary missing! Skipping multipath"
-
-		if [ ${fail} -eq 0 ]
+		if ! hash multipath >/dev/null 2>&1
 		then
+			bad_msg "domultipath called, but multipath binary missing! Skipping multipath"
+		else
 			good_msg "Scanning for multipath devices"
-			good_msg ":: Populating scsi_id info for libudev queries"
-			run mkdir -p /run/udev/data
 
-			local ech
-			for ech in /sys/block/*
-			do
-				local tgtfile=b$(cat ${ech}/dev)
-				run /lib/udev/scsi_id -g -x /dev/${ech##*/} | sed -e 's/^/E:/' >/run/udev/data/${tgtfile}
-			done
-
-			local multipath_cmd="run ${multipath_path} -v 0 2>&1"
+			local multipath_cmd="run multipath -v 0 2>&1"
 			is_log_enabled && multipath_cmd="${multipath_cmd} | tee -a '${GK_INIT_LOG}'"
-			eval "${multipath_cmd}"
-			sleep 2
 
-			good_msg "Activating multipath devices ..."
-			multipath_cmd="run ${dmsetup_path} ls --target multipath --exec '${kpartx_path} -a -v' 2>&1"
-			is_log_enabled && multipath_cmd="${multipath_cmd} | tee -a '${GK_INIT_LOG}'"
 			eval "${multipath_cmd}"
+			if [ $? -ne 0 ]
+			then
+				bad_msg "Scanning for multipath devices failed!"
+			else
+				udevsettle
+			fi
 		fi
 	fi
 
