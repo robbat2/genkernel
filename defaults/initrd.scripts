@@ -2608,7 +2608,7 @@ swsusp_resume() {
 		log_msg "Trying to resume using swsusp ..."
 		log_msg "COMMAND: 'echo \"${device}\" > /sys/power/resume'"
 		echo "${device}" > /sys/power/resume
-		log_msg "System is not resuming, probably because it wasn't suspended; Continue normal booting ..."
+		log_msg "System is not resuming from ${REAL_RESUME}, probably because it wasn't suspended; Continue normal booting ..."
 	fi
 }
 
@@ -2675,7 +2675,7 @@ tuxonice_resume() {
 	echo "${REAL_RESUME}" > "${tuxonice_resumedev}"
 	log_msg "COMMAND: 'echo > ${tuxonice_do_resume}'"
 	echo > "${tuxonice_do_resume}"
-	log_msg "System is not resuming, probably because it wasn't suspended; Continue normal booting ..."
+	log_msg "System is not resuming from ${REAL_RESUME}, probably because it wasn't suspended; Continue normal booting ..."
 }
 
 find_loop() {
