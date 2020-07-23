@@ -1,17 +1,25 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_configure() {
 	export ac_cv_header_security_pam_misc_h=no
 	export ac_cv_header_security_pam_appl_h=no
 
+	# devicemapper needs to find udev
+	append-ldflags -Wl,-rpath-link,${BROOT}/usr/lib
+
 	local myconf=(
 		--enable-internal-argon2
 		--sbindir=/sbin
 		--disable-nls
+		--disable-selinux
+		--disable-veritysetup
+		--disable-cryptsetup-reencrypt
+		--disable-integritysetup
 		--enable-static=yes
 		--enable-shared=no
 		--enable-static-cryptsetup
+		--enable-udev
 		--with-crypto_backend=gcrypt
 	)
 
