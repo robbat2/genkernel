@@ -488,7 +488,6 @@ append_e2fsprogs() {
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
-
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
@@ -515,7 +514,6 @@ append_b2sum() {
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
-
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append b2sum to cpio!"
@@ -835,7 +833,6 @@ append_xfsprogs() {
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
-
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
@@ -913,7 +910,6 @@ append_btrfs() {
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
-
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
@@ -1086,7 +1082,6 @@ append_strace() {
 
 append_overlay() {
 	cd "${INITRAMFS_OVERLAY}"  || gen_die "Failed to chdir to '${INITRAMFS_OVERLAY}'!"
-
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append overlay to cpio!"
@@ -1417,7 +1412,6 @@ append_dropbear() {
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
-
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
 
