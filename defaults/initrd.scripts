@@ -1641,12 +1641,11 @@ start_volumes() {
 
 			local zfs_cmd="run /sbin/zpool import -N -a ${ZPOOL_CACHE} ${ZPOOL_FORCE} 2>&1"
 			is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+
 			eval "${zfs_cmd}"
-			if [ $? -eq 0 ]
+			if [ $? -ne 0 ]
 			then
-				good_msg "Importing ZFS pools succeeded!"
-			else
-				bad_msg "Imported ZFS pools failed!"
+				bad_msg "Importing ZFS pools failed!"
 			fi
 		else
 
@@ -1660,22 +1659,33 @@ start_volumes() {
 
 					local zfs_cmd="run /sbin/zpool export -f '${ZFS_POOL}' 2>&1"
 					is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+
 					eval "${zfs_cmd}"
+					if [ $? -ne 0 ]
+					then
+						bad_msg "Exporting ZFS pools failed!"
+					else
+						udevsettle
+					fi
 
 					zfs_cmd="run /sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} '${ZFS_POOL}' 2>&1"
 					is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+
 					eval "${zfs_cmd}"
+					if [ $? -ne 0 ]
+					then
+						bad_msg "Re-importing ZFS pools failed!"
+					fi
 				fi
 			else
 				good_msg "Importing ZFS pool ${ZFS_POOL} ..."
 
 				local zfs_cmd="run /sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} '${ZFS_POOL}' 2>&1"
 				is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
+
 				eval "${zfs_cmd}"
-				if [ $? -eq 0 ]
+				if [ $? -ne 0 ]
 				then
-					good_msg "Import of ${ZFS_POOL} succeeded!"
-				else
 					bad_msg "Import of ${ZFS_POOL} failed!"
 				fi
 			fi

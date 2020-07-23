@@ -992,7 +992,6 @@ append_zfs() {
 	fi
 
 	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
-	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
 	mkdir -p "${TDIR}"/etc/zfs || gen_die "Failed to create '${TDIR}/etc/zfs'!"
 
@@ -1021,6 +1020,28 @@ append_zfs() {
 	fi
 
 	copy_binaries "${TDIR}" /sbin/{mount.zfs,zdb,zfs,zpool}
+
+	local udevdir=$(get_udevdir)
+	local udevdir_initramfs="/usr/lib/udev"
+	local udev_files=( $(qlist -e sys-fs/zfs:0 \
+		| xargs --no-run-if-empty realpath \
+		| grep -E -- "^${udevdir}")
+	)
+
+	if [ ${#udev_files[@]} -eq 0 ]
+	then
+		gen_die "Something went wrong: Did not found any udev-related files for sys-fs/zfs!"
+	fi
+
+	mkdir -p "${TDIR}"/usr/lib/udev/rules.d || gen_die "Failed to create '${TDIR}/usr/lib/udev/rules.d'!"
+
+	local udev_files
+	for udev_file in "${udev_files[@]}"
+	do
+		local dest_file="${TDIR%/}${udev_file/${udevdir}/${udevdir_initramfs}}"
+		cp -aL "${udev_file}" "${dest_file}" \
+			|| gen_die "Failed to copy '${udev_file}' to '${dest_file}'"
+	done
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
