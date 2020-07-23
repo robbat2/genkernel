@@ -1525,24 +1525,6 @@ start_volumes() {
 		run ln -sf /dev/device-mapper /dev/mapper/control
 	fi
 
-	if [ "${USE_MDADM}" = '1' ]
-	then
-		if [ -x '/sbin/mdadm' ]
-		then
-			local mdadm_cmd="run /sbin/mdadm --assemble --scan 2>&1"
-			is_log_enabled && mdadm_cmd="${mdadm_cmd} | tee -a '${GK_INIT_LOG}'"
-			eval "${mdadm_cmd}"
-
-			#Intel Matrix RAID (and possibly others) have a container layer above the actual volumes,
-			#So we have to look for volumes that haven't been activated.
-			mdadm_cmd="run /sbin/mdadm -IRs 2>&1"
-			is_log_enabled && mdadm_cmd="${mdadm_cmd} | tee -a '${GK_INIT_LOG}'"
-			eval "${mdadm_cmd}"
-		else
-			bad_msg "domdadm invoked but /sbin/mdadm not found; Skipping mdadm raid assembly ..."
-		fi
-	fi
-
 	if [ "${USE_MULTIPATH_NORMAL}" = '1' ]
 	then
 		for multipath_path in /sbin/multipath /bin/multipath MISSING
@@ -1887,7 +1869,6 @@ openLUKS() {
 				continue
 			fi
 
-			setup_md_device ${LUKS_DEVICE}
 			if ! run cryptsetup isLuks ${LUKS_DEVICE}
 			then
 				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" ${CRYPT_SILENT}
@@ -2568,25 +2549,6 @@ setup_btrfsctl() {
 
 		eval "${btrfs_cmd}"
 		udevsettle
-	fi
-}
-
-setup_md_device() {
-	local device
-
-	[ -z "$1" ] && device="${REAL_ROOT}" || device="$1"
-	[ -z "${device}" ] && return # LiveCD
-
-	if [ $(echo ${device}|sed -e 's#\(luks:\)\?\(/dev/md\)[[:digit:]]\+#\2#') = "/dev/md" ]
-	then
-		good_msg 'Detected real_root as a md device. Setting up the device node ...'
-		MD_NUMBER=$(echo ${device}|sed -e 's#\(luks:\)\?/dev/md\([[:digit:]]\+\)#\2#')
-		if [ ! -e /dev/md${MD_NUMBER} ]
-		then
-			run mknod /dev/md${MD_NUMBER} b 9 ${MD_NUMBER} >/dev/null 2>&1
-			[ $? -ne 0 ] && bad_msg "Creation of /dev/md${MD_NUMBER} failed ..."
-		fi
-		run raidautorun /dev/md${MD_NUMBER}
 	fi
 }
 

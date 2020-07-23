@@ -10,6 +10,7 @@ src_prepare() {
 		-e "/^CXFLAGS = /s:^CXFLAGS = \(.*\)$:CXFLAGS = ${CFLAGS} ${defs}:" \
 		-e "/^CWFLAGS = /s:^CWFLAGS = \(.*\)$:CWFLAGS = -Wall:" \
 		-e "s/^# LDFLAGS = -static/LDFLAGS = -static/" \
+		-e "s|^UDEVDIR := .*|UDEVDIR = $(get_udevdir)|" \
 		Makefile \
 		|| die "Failed to sed mdadm Makefile"
 }
@@ -19,6 +20,8 @@ src_compile() {
 }
 
 src_install() {
+	gkmake V=1 DESTDIR="${D}" install-udev
+
 	mkdir -p "${D}"/sbin || die "Failed to create '${D}/sbin'!"
 
 	cp -a mdadm "${D}"/sbin/ \

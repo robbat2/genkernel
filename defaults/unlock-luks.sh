@@ -63,7 +63,6 @@ main() {
 				exit 1
 			fi
 
-			setup_md_device "${LUKS_DEVICE}"
 			if ! run cryptsetup isLuks "${LUKS_DEVICE}"
 			then
 				bad_msg "The LUKS device ${LUKS_DEVICE} does not contain a LUKS header" "${CRYPT_SILENT}"
