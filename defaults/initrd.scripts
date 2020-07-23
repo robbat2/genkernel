@@ -2574,6 +2574,15 @@ rundebugshell() {
 }
 
 do_resume() {
+	local device=$(find_real_device "${REAL_RESUME}")
+	if [ -z "${device}" ]
+	then
+		warn_msg "REAL_RESUME (${REAL_RESUME}) device not found; Skipping resume ..."
+		return 0
+	else
+		REAL_RESUME="${device}"
+	fi
+
 	if [ -d /proc/suspend2 -o -d /sys/power/suspend2 -o -d /sys/power/tuxonice ]
 	then
 		tuxonice_resume
