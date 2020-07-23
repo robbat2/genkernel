@@ -1884,7 +1884,8 @@ openLUKS() {
 					then
 						REAL_LUKS_KEYDEV=$(find_real_device "${LUKS_KEYDEV}")
 						if [ -b "${REAL_LUKS_KEYDEV}" ]
-						then good_msg "Using key device ${REAL_LUKS_KEYDEV}." ${CRYPT_SILENT}
+						then
+							good_msg "Using key device ${REAL_LUKS_KEYDEV}." ${CRYPT_SILENT}
 						else
 							good_msg "Please insert removable device ${LUKS_KEYDEV} for ${LUKS_NAME}" ${CRYPT_SILENT}
 							# abort after 10 secs
