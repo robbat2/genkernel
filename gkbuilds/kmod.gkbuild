@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_prepare() {
@@ -24,6 +24,12 @@ src_configure() {
 
 src_install() {
 	default
+
+	# remove hardcoded $BROOT
+	sed -i \
+		-e 's/-L\/[^ ]*/-L${libdir}/' \
+		"${D}"/usr/lib*/pkgconfig/*.pc \
+		|| die
 
 	rm -rf \
 		"${D}"/usr/share/
