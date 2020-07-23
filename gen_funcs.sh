@@ -1113,6 +1113,24 @@ get_temp_file() {
 	echo "${tempfile}"
 }
 
+get_udevdir() {
+	local pkg_config=$(tc-getPKG_CONFIG)
+
+	if ${pkg_config} --exists udev
+	then
+		local udevdir="$(${pkg_config} --variable=udevdir udev)"
+
+		if [ -n "${BROOT}" ]
+		then
+			udevdir="${udevdir#${BROOT%/}}"
+		fi
+	else
+		udevdir="/lib/udev"
+	fi
+
+	echo "${udevdir}"
+}
+
 get_useful_function_stack() {
 	local end_function=${1:-${FUNCNAME}}
 	local n_functions=${#FUNCNAME[@]}

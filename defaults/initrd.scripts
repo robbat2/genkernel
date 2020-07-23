@@ -463,6 +463,12 @@ aufs_insert_dir() {
 	fi
 }
 
+udevsettle() {
+	local timeout=${1-${GK_UDEV_TIMEOUT}}
+
+	run udevadm settle --timeout=${timeout}
+}
+
 # Insert all modules found in $1, usually $CDROOT_PATH
 # added to allow users to add their own apps.
 union_insert_modules() {
@@ -1612,44 +1618,38 @@ start_volumes() {
 
 	if [ "${USE_LVM_NORMAL}" = '1' ]
 	then
-		for lvm_path in /sbin/lvm /bin/lvm MISSING
-		do
-			[ -x "${lvm_path}" ] && break
-		done
-
-		if [ "${lvm_path}" = "MISSING" ]
+		if ! hash lvm >/dev/null 2>&1
 		then
 			bad_msg "dolvm invoked but LVM binary not available; Skipping LVM volume group activation ..."
 		else
-			for dev in ${RAID_DEVICES}
-			do
-				setup_md_device "${dev}"
-			done
-
-			local lvm_cmd
-
 			# If there is a cache, update it. Unbreak at least dmcrypt
 			if [ -d /etc/lvm/cache ]
 			then
 				good_msg "Scanning for volume groups ..."
-				lvm_cmd="run ${lvm_path} vgscan 2>&1"
+
+				local lvm_cmd="run lvm vgscan 2>&1"
 				is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
+
 				eval "${lvm_cmd}"
+				if [ $? -ne 0 ]
+				then
+					bad_msg "Scanning for volume groups failed!"
+				else
+					udevsettle
+				fi
 			fi
 
 			good_msg "Activating volume groups ..."
 
 			# To activate volumegroups on all devices in the cache
-			local lvm_cmd="run ${lvm_path} vgchange -ay --sysinit 2>&1"
+			local lvm_cmd="run lvm vgchange -ay --sysinit 2>&1"
 			is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
-			eval "${lvm_cmd}"
 
-			# To create symlinks so users can use root=/dev/vg/root
-			# This needs to run after vgchange, using vgchange --mknodes is too
-			# early.
-			local lvm_cmd="run ${lvm_path} vgmknodes --ignorelockingfailure 2>&1"
-			is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
 			eval "${lvm_cmd}"
+			if [ $? -ne 0 ]
+			then
+				bad_msg "Activation of volume groups failed!"
+			fi
 		fi
 	fi
 
@@ -1750,6 +1750,8 @@ start_volumes() {
 		fi
 		unset ZPOOL_IMPORT_UDEV_TIMEOUT_MS
 	fi
+
+	udevsettle
 }
 
 start_iscsi() {
@@ -1761,7 +1763,14 @@ start_iscsi() {
 
 		iscsi_cmd="run iscsistart -b 2>&1"
 		is_log_enabled && iscsi_cmd="${iscsi_cmd} | tee -a '${GK_INIT_LOG}'"
+
 		eval "${iscsi_cmd}"
+		if [ $? -ne 0 ]
+		then
+			bad_msg "Activation of iSCSI via iBFT failed!"
+		else
+			udevsettle
+		fi
 	fi
 
 	if [ -n "${ISCSI_INITIATORNAME}" ] && [ -n "${ISCSI_TARGET}" ] && [ -n "${ISCSI_ADDRESS}" ]
@@ -1807,7 +1816,14 @@ start_iscsi() {
 
 		iscsi_cmd="run iscsistart -i '${ISCSI_INITIATORNAME}' -t '${ISCSI_TARGET}' -a '${ISCSI_ADDRESS}' ${ADDITIONAL} 2>&1"
 		is_log_enabled && iscsi_cmd="${iscsi_cmd} | tee -a '${GK_INIT_LOG}'"
+
 		eval "${iscsi_cmd}"
+		if [ $? -ne 0 ]
+		then
+			bad_msg "Activation of iSCSI via cmdline failed!"
+		else
+			udevsettle
+		fi
 	fi
 }
 
@@ -1991,6 +2007,8 @@ openLUKS() {
 		fi
 	done
 
+	udevsettle
+
 	if run mountpoint "${mntkey}" >/dev/null 2>&1
 	then
 		run umount "${mntkey}" >/dev/null 2>&1
@@ -2028,6 +2046,7 @@ start_network() {
 	# Load network modules only when we need them to avoid possible
 	# firmware problems for people not using network that early
 	modules_scan net
+	udevsettle
 
 	# At least gk.net.iface can only be processed after sysfs was
 	# mounted.
@@ -2548,6 +2567,7 @@ setup_btrfsctl() {
 		is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
 
 		eval "${btrfs_cmd}"
+		udevsettle
 	fi
 }
 

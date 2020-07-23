@@ -365,7 +365,7 @@ _initialize() {
 	# https://git.dereferenced.org/pkgconf/pkgconf/issues/30
 	unset PKG_CONFIG_PATH PKG_CONFIG_DIR LIBRARY_PATH
 
-	export PKG_CONFIG_LIBDIR=\${SYSROOT}/usr/lib/pkgconfig
+	export PKG_CONFIG_LIBDIR=\${SYSROOT}/usr/lib/pkgconfig:\${SYSROOT}/usr/share/pkgconfig
 	export PKG_CONFIG_SYSROOT_DIR=\${SYSROOT}
 
 	exec pkg-config "\$@"

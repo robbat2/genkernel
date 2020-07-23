@@ -178,6 +178,43 @@ log_future_cpio_content() {
 	print_info 3 "=================================================================" 1 0 1
 }
 
+append_devicemanager() {
+	local PN="lvm"
+	local TDIR="${TEMP}/initramfs-dm-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	# Delete unneeded files
+	rm -rf \
+		sbin/lvm \
+		usr/include \
+		usr/lib/device-mapper \
+		usr/lib/pkgconfig \
+		usr/lib/lib* \
+		usr/sbin/lvm \
+		usr/share
+
+	log_future_cpio_content
+	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
+		|| gen_die "Failed to append bcache to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
+}
+
 append_devices() {
 	if isTrue "${BUSYBOX}"
 	then
@@ -217,10 +254,13 @@ append_devices() {
 		dir /dev 0755 0 0
 		nod /dev/console 660 0 0 c 5 1
 		nod /dev/null 666 0 0 c 1 3
-		nod /dev/zero 666 0 0 c 1 5
+		nod /dev/random 600 0 0 c 1 8
 		nod /dev/tty0 600 0 0 c 4 0
 		nod /dev/tty1 600 0 0 c 4 1
 		nod /dev/ttyS0 600 0 0 c 4 64
+		nod /dev/ttyS1 600 0 0 c 4 65
+		nod /dev/urandom 600 0 0 c 1 9
+		nod /dev/zero 666 0 0 c 1 5
 		EOF
 
 		print_info 3 "=================================================================" 1 0 1
@@ -249,13 +289,12 @@ append_base_layout() {
 		bin \
 		dev \
 		etc \
-		etc/mdev/helpers \
 		lib \
 		lib/console \
 		lib/dracut \
 		mnt \
 		proc \
-		run \
+		run/lock \
 		sbin \
 		sys \
 		tmp \
@@ -269,6 +308,7 @@ append_base_layout() {
 	done
 
 	ln -s ../run var/run || gen_die "Failed to create symlink '${TDIR}/var/run' to '${TDIR}/run'!"
+	ln -s ../run/lock var/lock || gen_die "Failed to create symlink '${TDIR}/var/lock' to '${TDIR}/run/lock'!"
 
 	chmod 1777 "${TDIR}"/tmp || gen_die "Failed to chmod of '${TDIR}/tmp' to 1777!"
 
@@ -391,16 +431,6 @@ append_base_layout() {
 	dd if=/dev/zero of="${TDIR}/run/utmp" bs=1 count=0 seek=0 &>/dev/null \
 		|| die "Failed to create '${TDIR}/run/utmp'!"
 
-	print_info 2 "$(get_indent 2)>> Adding mdev config ..."
-	install -m 644 -t "${TDIR}"/etc "${GK_SHARE}"/mdev/mdev.conf \
-		|| gen_die "Failed to install '${GK_SHARE}/mdev/mdev.conf'!"
-
-	install -m 755 -t "${TDIR}"/etc/mdev/helpers "${GK_SHARE}"/mdev/helpers/nvme \
-		|| gen_die "Failed to install '${GK_SHARE}/mdev/helpers/nvme'!"
-
-	install -m 755 -t "${TDIR}"/etc/mdev/helpers "${GK_SHARE}"/mdev/helpers/storage-device \
-		|| gen_die "Failed to install '${GK_SHARE}/mdev/helpers/storage-device'!"
-
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
@@ -488,6 +518,59 @@ append_e2fsprogs() {
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+	log_future_cpio_content
+	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
+}
+
+append_eudev() {
+	local PN=eudev
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	populate_binpkg ${PN}
+	populate_binpkg hwids
+
+	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+	unpack "$(get_gkpkg_binpkg hwids)" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	if isTrue "$(can_run_programs_compiled_by_genkernel)"
+	then
+		print_info 2 "$(get_indent 2)${PN}: >> Pre-generating initramfs' /etc/udev/hwdb.bin ..."
+
+		local gen_hwdb_cmd=( "${TDIR}/usr/bin/udevadm" )
+		gen_hwdb_cmd+=( hwdb --update --root "${TDIR}" )
+		print_info 3 "COMMAND: ${gen_hwdb_cmd[*]}" 1 0 1
+		eval "${gen_hwdb_cmd[@]}" || gen_die "Failed to pre-generate initramfs' /etc/udev/hwdb.bin!"
+
+		# Now that we have a pre-generated hwdb in initramfs
+		# we can delete source files
+		rm -rf usr/lib/udev/hwdb.d/
+	fi
+
+	# Delete unneeded files
+	rm -rf usr/include \
+		usr/lib/libu* \
+		usr/lib/pkgconfig \
+		usr/share
+
+	# Disable predictable network interface names in initramfs
+	echo "" > usr/lib/udev/rules.d/80-net-name-slot.rules \
+		|| gen_die "Failed to disable predictable network interface naming rule"
+
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
@@ -648,8 +731,6 @@ append_dmraid() {
 		usr/share \
 		usr/include
 
-	mkdir -p "${TDIR}"/var/lock/dmraid || gen_die "Failed to create '${TDIR}/var/lock/dmraid'!"
-
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append dmraid to cpio!"
@@ -715,7 +796,10 @@ append_lvm() {
 
 	# Delete unneeded files
 	rm -rf \
-		usr/lib \
+		usr/lib/device-mapper \
+		usr/lib/pkgconfig \
+		usr/lib/lib* \
+		usr/sbin/dm* \
 		usr/share \
 		usr/include
 
@@ -743,7 +827,8 @@ append_lvm() {
 		# Some LVM config options need changing, because the functionality is
 		# not compiled in:
 		sed -r -i \
-			-e '/^[[:space:]]*obtain_device_list_from_udev/s,=.*,= 0,g' \
+			-e '/^[[:space:]]*obtain_device_list_from_udev/s,=.*,= 1,g' \
+			-e '/^[[:space:]]*udev_sync/s,=.*,= 1,g' \
 			-e '/^[[:space:]]*use_lvmetad/s,=.*,= 0,g' \
 			-e '/^[[:space:]]*use_lvmlockd/s,=.*,= 0,g' \
 			-e '/^[[:space:]]*use_lvmpolld/s,=.*,= 0,g' \
@@ -1770,6 +1855,8 @@ create_initramfs() {
 	CPIO_ARCHIVE="${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}"
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
+	append_data 'eudev'
+	append_data 'devicemanager'
 	append_data 'auxilary' "${BUSYBOX}"
 	append_data 'busybox' "${BUSYBOX}"
 	append_data 'blkid' "${DISKLABEL}"

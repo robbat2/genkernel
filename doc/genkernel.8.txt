@@ -725,6 +725,10 @@ recognized by the kernel itself.
 *gk.net.timeout.interface*=<...>::
     By default we will wait up to 10 seconds for interface to show up.
 
+*gk.udev.timeout*=<...>::
+    By default we will wait up to 120 seconds (UDEV default) for
+    UDEV event queue to become empty.
+
 *gk.prompt.timeout*=<...>::
 By default a prompt within genkernel initramfs like shown when set
 *root* could not be found will never timeout. Use this option to set

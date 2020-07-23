@@ -109,6 +109,8 @@ main() {
 		fi
 	done
 
+	udevsettle
+
 	if [ -s "${LUKS_KEY}" ]
 	then
 		if  ! is_debug

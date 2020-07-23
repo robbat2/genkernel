@@ -11,13 +11,13 @@
 # Basic /dev content, we need it as fast as possible.
 [ ! -e /dev/console ]  && mknod /dev/console c 5 1
 [ ! -e /dev/null ]     && mknod /dev/null c 1 3
+[ ! -e /dev/random ]   && mknod /dev/random c 1 8
 [ ! -e /dev/tty ]      && mknod /dev/tty c 5 0
 [ ! -e /dev/tty0 ]     && mknod /dev/tty0 c 4 0
 [ ! -e /dev/tty1 ]     && mknod /dev/tty1 c 4 1
 [ ! -e /dev/ttyS0 ]    && mknod /dev/ttyS0 c 4 64
 [ ! -e /dev/ttyS1 ]    && mknod /dev/ttyS1 c 4 65
 [ ! -e /dev/urandom ]  && mknod /dev/urandom c 1 9
-[ ! -e /dev/random ]   && mknod /dev/random c 1 8
 [ ! -e /dev/zero ]     && mknod /dev/zero c 1 5
 
 # Take control
@@ -33,6 +33,7 @@ fi
 
 mount -t proc -o noexec,nosuid,nodev proc /proc >/dev/null 2>&1
 mount -o remount,rw / >/dev/null 2>&1
+mount -t tmpfs -o rw,nosuid,nodev,relatime,mode=755 none /run 2>&1
 
 # Prevent superfluous printks from being printed to the console
 echo 1 > /proc/sys/kernel/printk
@@ -356,6 +357,16 @@ do
 			fi
 			unset tmp_wait
 		;;
+		gk.udev.timeout=*)
+			tmp_timeout=${x#*=}
+			if is_int "${tmp_timeout}"
+			then
+				GK_UDEV_TIMEOUT=${tmp_timeout}
+			else
+				warn_msg "'${x}' does not look like a valid time (second) value -- ignored!"
+			fi
+			unset tmp_timeout
+		;;
 		gk.userinteraction.disabled=*)
 			tmp_disabled=${x#*=}
 			if is_true "${tmp_disabled}"
@@ -532,17 +543,10 @@ mount_devfs
 # Mount sysfs
 mount_sysfs
 
-# Initialize mdev
-good_msg 'Activating mdev ...'
-
-# Serialize hotplug events
-run touch /dev/mdev.seq
-
-# Setup hotplugging for firmware loading
-if [ -f "/proc/sys/kernel/hotplug" ]
+if [ -e /proc/sys/kernel/hotplug ]
 then
-	log_msg "COMMAND: 'echo /sbin/mdev > /proc/sys/kernel/hotplug'"
-	echo /sbin/mdev > /proc/sys/kernel/hotplug
+	log_msg "COMMAND: 'echo "" > /proc/sys/kernel/hotplug'"
+	echo "" > /proc/sys/kernel/hotplug
 fi
 
 # Load modules listed in MY_HWOPTS if /lib/modules exists for the running kernel
@@ -572,8 +576,31 @@ else
 	good_msg 'Skipping module load; no modules in the ramdisk!'
 fi
 
-# Ensure that device nodes are properly configured
-run mdev -s || bad_msg "mdev -s failed"
+# Initialize udev
+if [ ! -f "/etc/udev/hwdb.bin" ]
+then
+	good_msg 'Generating /etc/udev/hwdb.bin ...'
+	run udevadm hwdb --update \
+		|| bad_msg 'Failed to generate /etc/udev/hwdb.bin!'
+fi
+
+good_msg 'Activating udev ...'
+
+udevd_cmd="run udevd --resolve-names=never"
+if is_debug
+then
+	udevd_cmd="${udevd_cmd} --debug > /tmp/udev.debug 2>&1 &"
+else
+	udevd_cmd="${udevd_cmd} --daemon"
+fi
+eval "${udevd_cmd}"
+if [ $? -eq 0 ]
+then
+	run udevadm trigger --action=add
+	udevsettle
+else
+	bad_msg "udevd failed to run"
+fi
 
 cd /
 
@@ -1326,18 +1353,31 @@ fi
 
 cleanup
 
+udevsettle
+run udevadm control --exit
+if pgrep udevd >/dev/null 2>&1
+then
+	warn_msg "udevd is still running -- Trying to kill it ..."
+	run pkill -9 udevd >/dev/null 2>&1
+fi
+
 # If devtmpfs is mounted, try move it to the new root
 # If that fails, try to unmount all possible mounts of
 # devtmpfs as stuff breaks otherwise
-for fs in /dev /sys /proc
+for fs in /run /dev /sys /proc
 do
 	if grep -qs "${fs}" /proc/mounts
 	then
+		chroot_dir="${CHROOT}${fs}"
+		[ ! -d "${chroot_dir}" ] && run mkdir -p "${chroot_dir}"
+
 		if ! run mount -o move ${fs} "${CHROOT}"${fs}
 		then
 			run umount ${fs} || \
 			bad_msg "Failed to move and unmount the ramdisk ${fs}!"
 		fi
+
+		unset chroot_dir
 	fi
 done
 
