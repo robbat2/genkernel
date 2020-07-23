@@ -37,7 +37,7 @@ then
 fi
 
 main() {
-	if [ ! -x /sbin/cryptsetup ]
+	if ! hash cryptsetup >/dev/null 2>&1
 	then
 		bad_msg "cryptsetup program is missing. Was initramfs built without --luks parameter?"
 		exit 1

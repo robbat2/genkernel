@@ -718,7 +718,7 @@ setup_aufs() {
 
 					if ! hash e2fsck >/dev/null 2>&1
 					then
-						bad_msg "/sbin/e2fsck not found! aborting filesystem check"
+						bad_msg "e2fsck not found! aborting filesystem check"
 						bad_msg "Moving ${aufs_union_file#*/} to ${aufs_union_file#*/}.bad"
 
 						run mv "${aufs_dev_mnt}${aufs_union_file}" "${aufs_dev_mnt}${aufs_union_file}.bad"
@@ -1675,16 +1675,20 @@ start_volumes() {
 
 	if [ "${USE_BTRFS}" = '1' ]
 	then
-		if [ -x '/sbin/btrfs' ]
+		if ! hash btrfs >/dev/null 2>&1
 		then
+			bad_msg "dobtrfs invoked but 'btrfs' not found; Skipping btrfs device scanning ..."
+		else
 			good_msg "Scanning for BTRFS devices ..."
 
-			local btrfs_cmd="run /sbin/btrfs device scan 2>&1"
+			local btrfs_cmd="run btrfs device scan 2>&1"
 			is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
 
 			eval "${btrfs_cmd}"
-		else
-			bad_msg "dobtrfs invoked but /sbin/btrfs not found; Skipping btrfs device scanning ..."
+			if [ $? -ne 0 ]
+			then
+				bad_msg "Scanning for BTRFS devices failed!"
+			fi
 		fi
 	fi
 
@@ -1808,7 +1812,7 @@ start_iscsi() {
 # It is either the root or a swap, other devices are supported in the scripts provided with sys-fs/cryptsetup
 # $1 - root/swap
 openLUKS() {
-	if [ ! -x /sbin/cryptsetup ]
+	if ! hash cryptsetup >/dev/null 2>&1
 	then
 		bad_msg "cryptsetup program is missing. Was initramfs built without --luks parameter?"
 		exit 1
@@ -1945,7 +1949,7 @@ openLUKS() {
 
 					if [ "$(echo ${LUKS_KEY} | grep -o '.gpg$')" = ".gpg" ]
 					then
-						if [ ! -x '/usr/bin/gpg' ]
+						if ! hash gpg >/dev/null 2>&1
 						then
 							bad_msg "GPG-encrypted key file provided but gpg program is missing. Was initramfs built without --gpg parameter?"
 							bad_msg "Falling back to passphrase usage!"
@@ -1953,7 +1957,7 @@ openLUKS() {
 							[ -e /dev/tty ] && run mv /dev/tty /dev/tty.org
 							run mknod /dev/tty c 5 1
 							cryptsetup_options="${cryptsetup_options} -d -"
-							gpg_cmd="/usr/bin/gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
+							gpg_cmd="gpg --logger-file /dev/null --quiet --decrypt ${mntkey}${LUKS_KEY} |"
 						fi
 					else
 						cryptsetup_options="${cryptsetup_options} -d ${mntkey}${LUKS_KEY}"
@@ -2363,7 +2367,7 @@ start_sshd() {
 		return
 	fi
 
-	if [ ! -x "/usr/sbin/dropbear" ]
+	if ! hash dropbear >/dev/null 2>&1
 	then
 		bad_msg "/usr/sbin/dropbear not found! Was initramfs built without --ssh parameter?"
 		return
@@ -2382,7 +2386,7 @@ start_sshd() {
 	run touch /var/log/lastlog
 
 	good_msg "Starting dropbear sshd ..." ${QUIET}
-	run /usr/sbin/dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
+	run dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
 	if [ $? -eq 0 ]
 	then
 		if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
@@ -2534,9 +2538,9 @@ cdupdate() {
 
 setup_btrfsctl() {
 	# start BTRFS volume detection, if available
-	if [ -x /sbin/btrfsctl ]
+	if hash btrfsctl >/dev/null 2>&1
 	then
-		local btrfs_cmd="run /sbin/btrfsctl -a 2>&1"
+		local btrfs_cmd="run btrfsctl -a 2>&1"
 		is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
 
 		eval "${btrfs_cmd}"

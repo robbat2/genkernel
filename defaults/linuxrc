@@ -40,11 +40,11 @@ echo 1 > /proc/sys/kernel/printk
 if [ ! -s /etc/ld.so.cache ]
 then
 	# Looks like we were unable to run ldconfig during initramfs generation
-	[ -x /sbin/ldconfig ] && run /sbin/ldconfig
+	hash ldconfig >/dev/null 2>&1 && run ldconfig
 fi
 
 # Set up symlinks
-run /bin/busybox --install -s
+run busybox --install -s
 
 gk_ver="$(cat /etc/build_id)"
 gk_build_date="$(cat /etc/build_date)"
@@ -460,7 +460,7 @@ fi
 
 if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
 then
-	[ -x /usr/sbin/setfont ] && run /usr/sbin/setfont /lib/console/font -C ${CONSOLE} 2>&1
+	hash setfont >/dev/null 2>&1 && run setfont /lib/console/font -C ${CONSOLE} 2>&1
 fi
 
 quiet_kmsg
@@ -578,7 +578,7 @@ run mdev -s || bad_msg "mdev -s failed"
 cd /
 
 # Start iSCSI
-if [ -e /bin/iscsistart ]
+if hash iscsistart >/dev/null 2>&1
 then
 	start_iscsi
 fi
@@ -1148,7 +1148,7 @@ FSTAB
 				do
 					tarname=$(basename ${targz})
 					good_msg "Adding additional package ${tarname}"
-					(cd ${NEW_ROOT} ; /bin/tar -xf ${targz})
+					(cd ${NEW_ROOT} ; tar -xf ${targz})
 				done
 		fi
 	fi
@@ -1359,15 +1359,15 @@ init=${REAL_INIT:-/sbin/init}
 if ! mountpoint "${CHROOT}" 1>/dev/null 2>&1
 then
 	bad_msg "${CHROOT} was not a mountpoint"
-elif chroot "${CHROOT}" /usr/bin/test ! -x /${init#/}
+elif chroot "${CHROOT}" test ! -x /${init#/}
 then
 	bad_msg "init=${init} does not exist in the rootfs!"
 elif [ $$ != 1 ]
 then
 	bad_msg "PID was not 1! switch_root would fail"
 else
-	good_msg "Switching to real root: /sbin/switch_root -c /dev/console ${CHROOT} ${init} ${init_opts}"
-	exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${init}" ${init_opts}
+	good_msg "Switching to real root: switch_root -c /dev/console ${CHROOT} ${init} ${init_opts}"
+	exec switch_root -c "/dev/console" "${CHROOT}" "${init}" ${init_opts}
 fi
 
 # If we get here, something bad has happened
