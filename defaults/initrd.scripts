@@ -1043,6 +1043,10 @@ mount_devfs() {
 		run mkdir -m 0755 /dev/pts
 		run mount -t devpts -o gid=5,mode=0620 devpts /dev/pts || bad_msg "Failed to mount /dev/pts"
 	fi
+
+	run mkdir -m 1777 /dev/shm
+	run mount -t tmpfs -o mode=1777,nosuid,nodev,strictatime tmpfs /dev/shm \
+		|| bad_msg "Failed to mount /dev/shm"
 }
 
 test_success() {
