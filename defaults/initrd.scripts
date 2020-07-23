@@ -1635,30 +1635,6 @@ start_volumes() {
 		fi
 	fi
 
-	if [ "${USE_BCACHE}" = '1' ]
-	then
-		if [ ! -e /sys/fs/bcache/register_quiet ]
-		then
-			bad_msg "dobcache invoked but '/sys/fs/bcache/register_quiet' does not exist; Skipping bcache initialization ..."
-		else
-			good_msg "Registering all block devices in bcache ..."
-
-			local i=
-			for i in $(awk '$4 !~ /^(name$|$)/ { print $4 }' /proc/partitions)
-			do
-				if [ -e "/dev/${i}" ]
-				then
-					# Push all the block devices to register_quiet
-					# If its bcache, it will bring it up, if not, it will simply ignore it.
-					log_msg "COMMAND: 'echo \"/dev/${i}\" >/sys/fs/bcache/register_quiet'"
-					echo "/dev/${i}" >/sys/fs/bcache/register_quiet 2>/dev/null
-				else
-					warn_msg "'/dev/${i}' should exist but is missing; Ignoring ..."
-				fi
-			done
-		fi
-	fi
-
 	if [ "${USE_BTRFS}" = '1' ]
 	then
 		if ! hash btrfs >/dev/null 2>&1

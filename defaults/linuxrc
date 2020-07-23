@@ -147,9 +147,6 @@ do
 				;;
 			esac
 		;;
-		dobcache)
-			USE_BCACHE=1
-		;;
 		dobtrfs)
 			USE_BTRFS=1
 		;;
@@ -524,13 +521,6 @@ if [ "${ROOTFSTYPE}" = "f2fs" ]
 then
 	# Hack for f2fs, which uses crc32 but does not depend on it (in many kernels at least):
 	FIRSTMODS="${FIRSTMODS} crc32_generic"
-fi
-
-if [ "${USE_BCACHE}" = '1' ]
-then
-	# Force loading of bcache module in case module loading would
-	# be skipped because $REAL_ROOT is already present
-	FIRSTMODS="${FIRSTMODS} bcache"
 fi
 
 splash 'init'

@@ -9,6 +9,13 @@
 # - This file should not override previously defined variables, as their values may
 #   originate from user changes to /etc/genkernel.conf .
 
+GKPKG_BCACHE_TOOLS_PN="bcache-tools"
+GKPKG_BCACHE_TOOLS_PV="${GKPKG_BCACHE_TOOLS_PV:-VERSION_BCACHE_TOOLS}"
+GKPKG_BCACHE_TOOLS_DEPS="util-linux eudev"
+GKPKG_BCACHE_TOOLS_SRCTAR="${GKPKG_BCACHE_TOOLS_SRCTAR:-${DISTDIR}/bcache-tools-${GKPKG_BCACHE_TOOLS_PV}.tar.gz}"
+GKPKG_BCACHE_TOOLS_SRCDIR="${GKPKG_BCACHE_TOOLS_SRCDIR:-bcache-tools-399021549984ad27bf4a13ae85e458833fe003d7}"
+GKPKG_BCACHE_TOOLS_BINPKG="${GKPKG_BCACHE_TOOLS_BINPKG:-%%CACHE%%/bcache-tools-${GKPKG_BCACHE_TOOLS_PV}-%%ARCH%%.tar.xz}"
+
 GKPKG_BOOST_PN="boost"
 GKPKG_BOOST_PV="${GKPKG_BOOST_PV:-VERSION_BOOST}"
 GKPKG_BOOST_DEPS="boost-build"

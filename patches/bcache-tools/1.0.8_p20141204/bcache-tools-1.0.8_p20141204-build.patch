@@ -1,0 +1,88 @@
+--- a/Makefile
++++ b/Makefile
+@@ -1,32 +1,63 @@
++CC ?= gcc
++PREFIX = /usr
++UDEVLIBDIR = /lib/udev
++DRACUTLIBDIR = /lib/dracut
++INSTALL ?= install
++CFLAGS ?= -O2 -Wall -g
++PKG_CONFIG ?= pkg-config
+ 
+-PREFIX=/usr
+-UDEVLIBDIR=/lib/udev
+-DRACUTLIBDIR=/lib/dracut
+-INSTALL=install
+-CFLAGS+=-O2 -Wall -g
++BCACHE_TEST_LIBS = $(shell $(PKG_CONFIG) --libs openssl) -lm
++
++MAKE_BCACHE_CFLAGS = $(shell $(PKG_CONFIG) --cflags uuid blkid)
++MAKE_BCACHE_LIBS = $(shell $(PKG_CONFIG) --libs uuid blkid)
++
++PROBE_BCACHE_CFLAGS = $(shell $(PKG_CONFIG) --cflags uuid blkid)
++PROBE_BCACHE_LIBS = $(shell $(PKG_CONFIG) --libs uuid blkid)
++
++BCACHE_SUPER_SHOW_CFLAGS = -std=gnu99 $(shell $(PKG_CONFIG) --cflags uuid)
++BCACHE_SUPER_SHOW_LIBS = $(shell $(PKG_CONFIG) --libs uuid)
+ 
+ all: make-bcache probe-bcache bcache-super-show bcache-register
+ 
+ install: make-bcache probe-bcache bcache-super-show
+-	$(INSTALL) -m0755 make-bcache bcache-super-show	$(DESTDIR)${PREFIX}/sbin/
+-	$(INSTALL) -m0755 probe-bcache bcache-register		$(DESTDIR)$(UDEVLIBDIR)/
+-	$(INSTALL) -m0644 69-bcache.rules	$(DESTDIR)$(UDEVLIBDIR)/rules.d/
++	$(INSTALL) -m0755 -d $(DESTDIR)${PREFIX}/sbin
++	$(INSTALL) -D -m0755 make-bcache bcache-super-show $(DESTDIR)${PREFIX}/sbin/
++	$(INSTALL) -m0755 -d $(DESTDIR)$(UDEVLIBDIR)/rules.d
++	$(INSTALL) -m0755 probe-bcache bcache-register $(DESTDIR)$(UDEVLIBDIR)/
++	$(INSTALL) -m0644 69-bcache.rules $(DESTDIR)$(UDEVLIBDIR)/rules.d/
++	$(INSTALL) -m0755 -d $(DESTDIR)${PREFIX}/share/man/man8
+ 	$(INSTALL) -m0644 -- *.8 $(DESTDIR)${PREFIX}/share/man/man8/
+-	$(INSTALL) -D -m0755 initramfs/hook	$(DESTDIR)/usr/share/initramfs-tools/hooks/bcache
+-	$(INSTALL) -D -m0755 initcpio/install	$(DESTDIR)/usr/lib/initcpio/install/bcache
++	$(INSTALL) -D -m0755 initramfs/hook $(DESTDIR)/usr/share/initramfs-tools/hooks/bcache
++	$(INSTALL) -D -m0755 initcpio/install $(DESTDIR)/usr/lib/initcpio/install/bcache
+ 	$(INSTALL) -D -m0755 dracut/module-setup.sh $(DESTDIR)$(DRACUTLIBDIR)/modules.d/90bcache/module-setup.sh
+ #	$(INSTALL) -m0755 bcache-test $(DESTDIR)${PREFIX}/sbin/
+ 
+ clean:
+-	$(RM) -f make-bcache probe-bcache bcache-super-show bcache-test -- *.o
+-
+-bcache-test: LDLIBS += `pkg-config --libs openssl` -lm
+-make-bcache: LDLIBS += `pkg-config --libs uuid blkid`
+-make-bcache: CFLAGS += `pkg-config --cflags uuid blkid`
+-make-bcache: bcache.o
+-probe-bcache: LDLIBS += `pkg-config --libs uuid blkid`
+-probe-bcache: CFLAGS += `pkg-config --cflags uuid blkid`
+-bcache-super-show: LDLIBS += `pkg-config --libs uuid`
+-bcache-super-show: CFLAGS += -std=gnu99
+-bcache-super-show: bcache.o
++	$(RM) -f make-bcache probe-bcache bcache-register bcache-super-show bcache-test -- *.o
++
++make-bcache: bcache.o make-bcache.o
++	$(CC) -o $@ $^ $(LDFLAGS) $(MAKE_BCACHE_LIBS)
++
++bcache.o: bcache.c bcache.h
++	$(CC) -c $(CFLAGS) $< -o $@
++
++make-bcache.o: make-bcache.c
++	$(CC) -c $(CFLAGS) $(MAKE_BCACHE_CFLAGS) $< -o $@
++
++probe-bcache: probe-bcache.o
++	$(CC) -o $@ $^ $(LDFLAGS) $(PROBE_BCACHE_LIBS)
++
++probe-bcache.o: probe-bcache.c
++	$(CC) -c $(CFLAGS) $(PROBE_BCACHE_CFLAGS) $< -o $@
++
++bcache-super-show: bcache.o bcache-super-show.o
++	$(CC) -o $@ $^ $(LDFLAGS) $(BCACHE_SUPER_SHOW_LIBS)
++
++bcache-super-show.o: bcache-super-show.c
++	$(CC) -c $(CFLAGS) $(BCACHE_SUPER_SHOW_CFLAGS) $< -o $@
++
+ bcache-register: bcache-register.o
++	$(CC) -o $@ $^ $(LDFLAGS) $(BCACHE_SUPER_SHOW_LIBS)
++
++bcache-register.o: bcache-register.c
++	$(CC) -c $(CFLAGS) $< -o $@
+ 

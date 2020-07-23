@@ -507,7 +507,6 @@ then
 	print_warning 1 "${BOLD}WARNING... WARNING... WARNING...${NORMAL}"
 	print_warning 1 'Additional kernel parameters that *may* be required to boot properly:'
 	isTrue "${SPLASH}"    && print_warning 1 "- Add \"vga=791 splash=silent,theme:${SPLASH_THEME} console=tty1 quiet\" if you use a splash framebuffer ]"
-	isTrue "${BCACHE}"    && print_warning 1 '- Add "dobcache" for bcache support'
 	isTrue "${BTRFS}"     && print_warning 1 '- Add "dobtrfs" for Btrfs device scanning support'
 	isTrue "${MULTIPATH}" && print_warning 1 '- Add "domultipath" for multipath support'
 	isTrue "${ISCSI}"     && print_warning 1 '- For iSCSI support, add at least:'
