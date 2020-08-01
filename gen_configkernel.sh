@@ -16,14 +16,8 @@ determine_kernel_config_file() {
 			gen_die "--kernel-config file '${KERNEL_CONFIG}' does not exist!"
 		fi
 
-		if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
-		then
-			local CONFGREP=zgrep
-		else
-			local CONFGREP=grep
-		fi
-
-		if ! ${CONFGREP} -qE '^CONFIG_.*=' "${KERNEL_CONFIG}" &>/dev/null
+		local confgrep_cmd=$(get_grep_cmd_for_file "${KERNEL_CONFIG}")
+		if ! "${confgrep_cmd}" -qE '^CONFIG_.*=' "${KERNEL_CONFIG}" &>/dev/null
 		then
 			gen_die "--kernel-config file '${KERNEL_CONFIG}' does not look like a valid kernel config: File does not contain any CONFIG_* value!"
 		fi

@@ -530,22 +530,14 @@ then
 		print_warning 1 '"man genkernel" explains "dozfs" in detail.'
 	fi
 
-	if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
-	then
-		# Support --kernel-config=/proc/config.gz, mainly
-		CONFGREP=zgrep
-	else
-		CONFGREP=grep
-	fi
-
-	if [ $(${CONFGREP} 'CONFIG_EXT[0-9]_FS=' "${KERNEL_CONFIG}" | wc -l) -ge 2 ]
+	CONFGREP_CMD=$(get_grep_cmd_for_file "${KERNEL_CONFIG}")
+	if [ $("${CONFGREP_CMD}" 'CONFIG_EXT[0-9]_FS=' "${KERNEL_CONFIG}" | wc -l) -ge 2 ]
 	then
 		print_warning 1 ''
 		print_warning 1 'With support for several ext* filesystems available, it may be needed to'
 		print_warning 1 'add "rootfstype=ext3" or "rootfstype=ext4" to the list of boot parameters.'
 	fi
-
-	unset CONFGREP
+	unset CONFGREP_CMD
 fi
 
 isTrue "${CMD_INSTALL}" && restore_boot_mount_state

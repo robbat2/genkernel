@@ -440,6 +440,27 @@ gen_die() {
 	exit 1
 }
 
+get_grep_cmd_for_file() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local config_file=${1}
+
+	local grep_cmd=${GREP_CMD}
+	if isTrue "$(is_gzipped "${config_file}")"
+	then
+		grep_cmd=${ZGREP_CMD}
+	fi
+
+	# zgrep for example is optional
+	if [ -z "${grep_cmd}" ]
+	then
+		gen_die "$(get_useful_function_stack "${FUNCNAME}")No grep implementation found which can process '${config_file}'!"
+	fi
+
+	echo "${grep_cmd}"
+}
+
 # @FUNCTION: get_indent
 # @USAGE: <level>
 # @DESCRIPTION:

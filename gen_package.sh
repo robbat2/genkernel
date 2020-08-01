@@ -259,14 +259,8 @@ gen_kerncache_is_valid() {
 					local test1=$(grep -v "^#" "${TEMP}/${GK_FILENAME_TEMP_CONFIG}" | md5sum | cut -d " " -f 1)
 				fi
 
-				if isTrue "$(is_gzipped "${KERNEL_CONFIG}")"
-				then
-					# Support --kernel-config=/proc/config.gz, mainly
-					local CONFGREP=zgrep
-				else
-					local CONFGREP=grep
-				fi
-				local test2=$("${CONFGREP}" -v "^#" "${KERNEL_CONFIG}" | md5sum | cut -d " " -f 1)
+				local confgrep_cmd=$(get_grep_cmd_for_file "${KERNEL_CONFIG}")
+				local test2=$("${confgrep_cmd}" -v "^#" "${KERNEL_CONFIG}" | md5sum | cut -d " " -f 1)
 
 				if [[ "${test1}" == "${test2}" ]]
 				then
