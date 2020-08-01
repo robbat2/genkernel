@@ -263,10 +263,15 @@ then
 	if isTrue "${SAVE_CONFIG}"
 	then
 		print_info 1 "$(get_indent 1)>> Saving config of successful build to '/etc/kernels/${GK_FILENAME_CONFIG}' ..."
-		[ ! -e '/etc/kernels' ] && mkdir -p /etc/kernels
-		cp "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/${GK_FILENAME_CONFIG}" || \
-			print_warning 1 "Unable to copy the kernel configuration file; Ignoring non-fatal error ..."
-			# Just a warning because ordinary users are not allowed to write in /etc
+
+		if [ ! -d '/etc/kernels' ]
+		then
+			mkdir -p /etc/kernels \
+				|| gen_die "Failed to create '/etc/kernels'!"
+		fi
+
+		cp -aL "${KERNEL_OUTPUTDIR}/.config" "/etc/kernels/${GK_FILENAME_CONFIG}" \
+			|| gen_die "Failed to copy kernel configuration to '/etc/kernels'!"
 	fi
 elif [[ -n "${KERNEL_LOCALVERSION}" && "${KERNEL_LOCALVERSION}" != "${LOV}" ]]
 then
