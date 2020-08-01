@@ -112,16 +112,6 @@ print_info 1 "Using genkernel configuration from '${_GENKERNEL_CONF}' ..."
 unset _GENKERNEL_CONF
 print_info 1 "Running with options: ${GK_OPTIONS}"
 
-if ! hash grep &>/dev/null
-then
-	gen_die "grep not found. Is sys-apps/grep installed?"
-fi
-
-if ! hash zgrep &>/dev/null
-then
-	print_warning 1 "zgrep not found. Is app-arch/gzip installed? You will be unable to use compressed config files!"
-fi
-
 # Save any customizations of MODULES_* first.
 override_module_vars="$(compgen -A variable |grep '^MODULES_')"
 for v in ${override_module_vars}

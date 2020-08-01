@@ -279,6 +279,20 @@ determine_real_args() {
 		gen_die "'realpath -m /' failed. We need a realpath version which supports '-m' mode!"
 	fi
 
+	if hash grep &>/dev/null
+	then
+		GREP_CMD=grep
+	else
+		gen_die "grep not found. Is sys-apps/grep installed?"
+	fi
+
+	if hash zgrep &>/dev/null
+	then
+		ZGREP_CMD=zgrep
+	else
+		print_warning 1 "zgrep not found. Is app-arch/gzip installed? You will be unable to use compressed config files!"
+	fi
+
 	print_info 4 "Resolving config file, command line, and arch default settings."
 
 	#                               Dest / Config File                    Command Line                              Arch Default
