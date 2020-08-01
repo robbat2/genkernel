@@ -204,15 +204,18 @@ gen_kerncache_extract_kernel() {
 }
 
 gen_kerncache_extract_modules() {
-	print_info 1 "Extracting kerncache kernel modules from '${KERNCACHE}' ..."
-	if [ -n "${INSTALL_MOD_PATH}" ]
+	local modules_dir=/lib
+	[ -n "${INSTALL_MOD_PATH}" ] && modules_dir="${INSTALL_MOD_PATH}/lib"
+
+	if [ ! -d "${modules_dir}" ]
 	then
-		"${TAR_COMMAND}" -xf "${KERNCACHE}" --strip-components 1 -C "${INSTALL_MOD_PATH}"/lib \
-			|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${INSTALL_MOD_PATH}/lib'!"
-	else
-		"${TAR_COMMAND}" -xf "${KERNCACHE}" --strip-components 1 -C /lib \
-			|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${INSTALL_MOD_PATH}/lib'!"
+		mkdir -p "${modules_dir}" ||  gen_die "Failed to create '${modules_dir}'!"
 	fi
+
+	print_info 1 "Extracting kerncache kernel modules from '${KERNCACHE}' into '${modules_dir}' ..."
+
+	"${TAR_COMMAND}" -xf "${KERNCACHE}" --strip-components 1 -C "${modules_dir}" \
+		|| gen_die "Failed to extract kerncache modules from '${KERNCACHE}' to '${modules_dir}'!"
 }
 
 gen_kerncache_extract_config() {
