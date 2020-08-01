@@ -891,6 +891,21 @@ determine_real_args() {
 				gen_die "--module-rebuild-cmd '${MODULEREBUILD_CMD}' contains at least one of the following disallowed characters: '\$&|>()'!"
 			fi
 		fi
+
+		if isTrue "${SAVE_CONFIG}"
+		then
+			local kconf_savedir=/etc/kernels
+			if [ ! -d "${kconf_savedir}" ]
+			then
+				kconf_savedir=/etc
+				[ ! -d "${kconf_savedir}" ] && kconf_savedir=/
+			fi
+
+			if [ ! -w "${kconf_savedir}" ]
+			then
+				gen_die "Cannot write to '${kconf_savedir}' but --save-config is set!"
+			fi
+		fi
 	fi
 
 	if isTrue "${BUILD_RAMDISK}"
