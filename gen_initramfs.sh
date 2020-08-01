@@ -2022,21 +2022,21 @@ create_initramfs() {
 
 	cd "${TEMP}" || gen_die "Failed to chdir to '${TEMP}'"
 
-	# NOTE: We do not work with ${KERNEL_CONFIG} here, since things like
-	#       "make oldconfig" or --no-clean could be in effect.
-	if [ -s "${KERNEL_OUTPUTDIR}/.config" ]
+	local kconfig_file_used="${KERNEL_CONFIG}"
+	if isTrue "${BUILD_KERNEL}"
 	then
-		local ACTUAL_KERNEL_CONFIG="${KERNEL_OUTPUTDIR}/.config"
-	else
-		local ACTUAL_KERNEL_CONFIG="${KERNEL_CONFIG}"
+		kconfig_file_used="${KERNEL_OUTPUTDIR}/.config"
 	fi
 
-	if isTrue "$(is_gzipped "${ACTUAL_KERNEL_CONFIG}")"
+	if isTrue "$(is_gzipped "${kconfig_file_used}")"
 	then
-		# Support --kernel-config=/proc/config.gz, mainly
-		local CONFGREP=zgrep
-	else
-		local CONFGREP=grep
+		print_info 5 "Compressed kernel config '${kconfig_file_used}' found; Must decompress to temporary file ..."
+
+		local kconfig_file_tmp="${TEMP}/current_kernel.config"
+		zcat "${kconfig_file_used}" > "${kconfig_file_tmp}" \
+			|| gen_die "Failed to decompress '${kconfig_file_used}' to '${kconfig_file_tmp}'!"
+
+		kconfig_file_used="${kconfig_file_tmp}"
 	fi
 
 	if isTrue "${INTEGRATED_INITRAMFS}"
@@ -2044,20 +2044,18 @@ create_initramfs() {
 		# Explicitly do not compress if we are integrating into the kernel.
 		# The kernel will do a better job of it than us.
 		mv "${CPIO_ARCHIVE}" "${CPIO_ARCHIVE}.cpio"
-		sed -i '/^.*CONFIG_INITRAMFS_SOURCE=.*$/d' "${KERNEL_OUTPUTDIR}/.config" \
-			|| gen_die "failed to delete CONFIG_INITRAMFS_SOURCE from '${KERNEL_OUTPUTDIR}/.config'"
 
 		print_info 1 "$(get_indent 1)>> --integrated-initramfs is set; Setting CONFIG_INITRAMFS_* options ..."
 
 		[ -f "${KCONFIG_MODIFIED_MARKER}" ] && rm "${KCONFIG_MODIFIED_MARKER}"
 		[ -f "${KCONFIG_REQUIRED_OPTIONS}" ] && rm "${KCONFIG_REQUIRED_OPTIONS}"
 
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_SOURCE" "\"${CPIO_ARCHIVE}.cpio\""
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_UID" "0"
-		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_INITRAMFS_ROOT_GID" "0"
+		kconfig_set_opt "${kconfig_file_used}" "CONFIG_BLK_DEV_INITRD" "y"
+		kconfig_set_opt "${kconfig_file_used}" "CONFIG_INITRAMFS_SOURCE" "\"${CPIO_ARCHIVE}.cpio\""
+		kconfig_set_opt "${kconfig_file_used}" "CONFIG_INITRAMFS_ROOT_UID" "0"
+		kconfig_set_opt "${kconfig_file_used}" "CONFIG_INITRAMFS_ROOT_GID" "0"
 
-		set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
+		set_initramfs_compression_method "${kconfig_file_used}"
 
 		if [ -f "${KCONFIG_MODIFIED_MARKER}" ]
 		then
@@ -2072,8 +2070,9 @@ create_initramfs() {
 			if ! isTrue "${BUILD_KERNEL}" || isTrue "${KERNCACHE_IS_VALID}"
 			then
 				# We need to initialize COMPRESS_INITRD_TYPE in case it was set
-				# to best/fastest
-				set_initramfs_compression_method "${KERNEL_OUTPUTDIR}/.config"
+				# to best/fastest and validate if used kernel config can decompress
+				# set COMPRESS_INITRD_TYPE at all.
+				set_initramfs_compression_method "${kconfig_file_used}"
 			fi
 
 			print_info 1 "$(get_indent 1)>> Compressing cpio data (${GKICM_LOOKUP_TABLE_EXT[${COMPRESS_INITRD_TYPE}]}) ..."
@@ -2090,9 +2089,9 @@ create_initramfs() {
 		## be before the other cpio archives in the stream.
 		if isTrue "${MICROCODE_INITRAMFS}"
 		then
-			local cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE)
-			local cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_INTEL)
-			local cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}"/.config CONFIG_MICROCODE_AMD)
+			local cfg_CONFIG_MICROCODE=$(kconfig_get_opt "${kconfig_file_used}" CONFIG_MICROCODE)
+			local cfg_CONFIG_MICROCODE_INTEL=$(kconfig_get_opt "${kconfig_file_used}" CONFIG_MICROCODE_INTEL)
+			local cfg_CONFIG_MICROCODE_AMD=$(kconfig_get_opt "${kconfig_file_used}" CONFIG_MICROCODE_AMD)
 			print_info 1 "$(get_indent 1)>> Adding early-microcode support ..."
 			local UCODEDIR="${TEMP}/ucode_tmp/kernel/x86/microcode/"
 			mkdir -p "${UCODEDIR}" || gen_die "Failed to create '${UCODEDIR}'!"
