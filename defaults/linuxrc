@@ -1062,7 +1062,7 @@ then
 					bad_msg "Squashfs filesystem could not be mounted, dropping into shell."
 					if [ -e /proc/filesystems ]
 					then
-						fgrep -q squashfs /proc/filesystems || \
+						grep -Fq squashfs /proc/filesystems || \
 							bad_msg "HINT: Your kernel does not know filesystem \"squashfs\"."
 					fi
 					run_shell
@@ -1279,7 +1279,7 @@ do
 	# and not a mountpoint
 	[ -z "${dev}" ] && continue
 	fstype=$(get_mount_fstype ${fs})
-	if get_mount_options ${fs} | fgrep -q bind
+	if get_mount_options ${fs} | grep -Fq bind
 	then
 		opts='bind'
 		dev=${NEW_ROOT}${dev}

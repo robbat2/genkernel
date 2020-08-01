@@ -606,7 +606,7 @@ determine_real_args() {
 	vars_to_initialize+=( "BUSYBOX_CONFIG" )
 	vars_to_initialize+=( "DEFAULT_KERNEL_CONFIG" )
 
-	local binpkgs=( $(compgen -A variable |grep '^GKPKG_.*_BINPKG$') )
+	local binpkgs=( $(compgen -A variable | grep '^GKPKG_.*_BINPKG$') )
 	local binpkg
 	for binpkg in "${binpkgs[@]}"
 	do
@@ -639,7 +639,7 @@ determine_real_args() {
 	declare -gA GKICM_LOOKUP_TABLE_PKG=()
 	local known_initramfs_compression_methods_by_compression=( $(get_initramfs_compression_method_by_compression) )
 	local known_initramfs_compression_methods_by_speed=( $(get_initramfs_compression_method_by_speed) )
-	local initramfs_compression_methods=( $(compgen -A variable |grep '^GKICM_.*_KOPTNAME$') )
+	local initramfs_compression_methods=( $(compgen -A variable | grep '^GKICM_.*_KOPTNAME$') )
 	local initramfs_compression_method key var_name var_prefix
 	for initramfs_compression_method in "${initramfs_compression_methods[@]}"
 	do

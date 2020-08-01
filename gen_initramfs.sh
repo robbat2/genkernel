@@ -37,7 +37,7 @@ copy_binaries() {
 		[[ -e "${binary}" ]] \
 			|| gen_die "Binary ${binary} could not be found"
 
-		if LC_ALL=C "${LDDTREE_COMMAND}" "${binary}" 2>&1 | fgrep -q 'not found'
+		if LC_ALL=C "${LDDTREE_COMMAND}" "${binary}" 2>&1 | grep -F -q 'not found'
 		then
 			gen_die "Binary ${binary} is linked to missing libraries and may need to be re-built"
 		fi

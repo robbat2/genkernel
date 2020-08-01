@@ -1908,7 +1908,7 @@ check_disk_space_requirements() {
 }
 
 check_distfiles() {
-	local source_files=( $(compgen -A variable |grep '^GKPKG_.*_SRCTAR$') )
+	local source_files=( $(compgen -A variable | grep '^GKPKG_.*_SRCTAR$') )
 
 	local -a missing_sources
 	local source_file=
@@ -2046,7 +2046,7 @@ make_bootdir_writable() {
 	local bootdir_status=unknown
 
 	# Based on mount-boot.eclass code
-	local fstabstate=$(awk "!/^#|^[[:blank:]]+#|^${BOOTDIR//\//\\/}/ {print \$2}" /etc/fstab 2>/dev/null | egrep "^${BOOTDIR}$" )
+	local fstabstate=$(awk "!/^#|^[[:blank:]]+#|^${BOOTDIR//\//\\/}/ {print \$2}" /etc/fstab 2>/dev/null | grep -E "^${BOOTDIR}$" )
 	local procstate=$(awk "\$2 ~ /^${BOOTDIR//\//\\/}\$/ {print \$2}" /proc/mounts 2>/dev/null)
 	local proc_ro=$(awk '{ print $2 " ," $4 "," }' /proc/mounts 2>/dev/null | sed -n "/^${BOOTDIR//\//\\/} .*,ro,/p")
 

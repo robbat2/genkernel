@@ -1,4 +1,4 @@
-#PACKAGE_VERSION = $(shell /bin/fgrep GK_V= genkernel | sed "s/.*GK_V='\([^']\+\)'/\1/")
+#PACKAGE_VERSION = $(shell /bin/grep -F -- GK_V= genkernel | sed "s/.*GK_V='\([^']\+\)'/\1/")
 PACKAGE_VERSION = $(shell git describe --tags |sed 's,^v,,g')
 distdir = genkernel-$(PACKAGE_VERSION)
 MANPAGE = genkernel.8
@@ -78,7 +78,7 @@ verify-doc: doc/genkernel.8.txt
 			-e '/ssh-host-keys/s,=\(create\|create-from-host\|runtime\),,g' | \
 		while read opt ; do \
 			regex="^*--(...no-...)?$$opt" ; \
-			if ! egrep -e "$$regex" $< -sq ; then \
+			if ! grep -Ee "$$regex" $< -sq ; then \
 				touch faildoc ; \
 				echo "Undocumented option: $$opt" ; \
 			fi ; \
