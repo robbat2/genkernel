@@ -119,7 +119,7 @@ set_initramfs_compression_method() {
 
 	if [[ "${COMPRESS_INITRD_TYPE}" =~ ^(BEST|FASTEST)$ ]]
 	then
-		print_info 5 "Determining '${COMPRESS_INITRD_TYPE}' compression method for initramfs ..."
+		print_info 5 "Determining '${COMPRESS_INITRD_TYPE}' compression method for initramfs using kernel config '${kernel_config}' ..."
 		local ranked_methods
 		if [[ "${COMPRESS_INITRD_TYPE}" == "BEST" ]]
 		then
@@ -160,6 +160,20 @@ set_initramfs_compression_method() {
 		then
 			gen_die "None of the initramfs compression methods we tried are supported by your kernel (config file \"${kernel_config}\"), strange!?"
 		fi
+	fi
+
+	if ! isTrue "${BUILD_KERNEL}"
+	then
+		local cfg_DECOMPRESS_SUPPORT=$(kconfig_get_opt "${kernel_config}" "CONFIG_RD_${COMPRESS_INITRD_TYPE}")
+		if [[ "${cfg_DECOMPRESS_SUPPORT}" != "y" ]]
+		then
+			gen_die "The kernel config '${kernel_config}' this initramfs will be build for cannot decompress set --compress-initrd-type '${COMPRESS_INITRD_TYPE}'!"
+		fi
+
+		# If we are not building kernel, there is no point in
+		# changing kernel config file at all so exit function
+		# here.
+		return
 	fi
 
 	local KOPTION_PREFIX=CONFIG_RD_
