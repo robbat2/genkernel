@@ -2069,7 +2069,7 @@ create_initramfs() {
 	else
 		if isTrue "${COMPRESS_INITRD}"
 		then
-			if ! isTrue "${BUILD_KERNEL}"
+			if ! isTrue "${BUILD_KERNEL}" || isTrue "${KERNCACHE_IS_VALID}"
 			then
 				# We need to initialize COMPRESS_INITRD_TYPE in case it was set
 				# to best/fastest
