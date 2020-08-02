@@ -1678,8 +1678,6 @@ append_modules() {
 	local modules_dstdir="${TDIR}/lib/modules/${KV}"
 	local modules_srcdir="/lib/modules/${KV}"
 
-	print_info 2 "$(get_indent 2)modules: >> Copying modules to initramfs ..."
-
 	if [ -n "${KERNEL_MODULES_PREFIX}" ]
 	then
 		modules_srcdir="${KERNEL_MODULES_PREFIX%/}${modules_srcdir}"
@@ -1694,6 +1692,8 @@ append_modules() {
 	fi
 
 	cd "${modules_srcdir}" || gen_die "Failed to chdir to '${modules_srcdir}'!"
+
+	print_info 2 "$(get_indent 2)modules: >> Copying modules from '${modules_srcdir}' to initramfs ..."
 
 	local i= mymod=
 	local MOD_EXT="$(modules_kext)"
