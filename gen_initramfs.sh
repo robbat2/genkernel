@@ -1680,9 +1680,9 @@ append_modules() {
 
 	print_info 2 "$(get_indent 2)modules: >> Copying modules to initramfs ..."
 
-	if [ -n "${INSTALL_MOD_PATH}" ]
+	if [ -n "${KERNEL_MODULES_PREFIX}" ]
 	then
-		modules_srcdir="${INSTALL_MOD_PATH%/}${modules_srcdir}"
+		modules_srcdir="${KERNEL_MODULES_PREFIX%/}${modules_srcdir}"
 	fi
 
 	if [ ! -d "${modules_srcdir}" ]

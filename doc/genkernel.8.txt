@@ -198,8 +198,8 @@ specified.
 *--*[*no-*]*module-rebuild*::
     Runs, or does not run "emerge --ignore-default-opts --buildpkg=n --usepkg=n --quiet-build=y @module-rebuild"
     to build out-of-tree modules when possible, i.e. when non-static
-    kernel and modules will be build, installed, no custom
-    'INSTALL_MOD_PATH' is set, '/var/lib/module-rebuild/moduledb' exists
+    kernel and modules will be build, installed,
+    *--kernel-modules-prefix* is not set, '/var/lib/module-rebuild/moduledb' exists
     and is not empty.
 
 NOTE: Command can be customized using '--module-rebuild-cmd' command-line
@@ -231,7 +231,7 @@ KERNEL LOCATIONS
     Use the special value 'default' to force usage of default kernel
     config.
 
-*--module-prefix*=<dir>::
+*--kernel-modules-prefix*=<dir>::
     Prefix to kernel module destination, modules will be installed in
     '<prefix>/lib/modules'.
 

@@ -38,6 +38,7 @@ if [ ${#GK_SETTINGS[@]} -gt 0 ]
 then
 	GK_SETTINGS+=( CALLBACK )
 	GK_SETTINGS+=( EXTRAVERSION )
+	GK_SETTINGS+=( INSTALL_MOD_PATH )
 	GK_SETTINGS+=( MOD_INSTALL )
 
 	for GK_SETTING in "${GK_SETTINGS[@]}"
@@ -295,18 +296,18 @@ then
 
 	if ! isTrue "${BUILD_STATIC}"
 	then
-		if ! isTrue "${CMD_INSTALL}" && [ -z "${INSTALL_MOD_PATH}" ]
+		if ! isTrue "${CMD_INSTALL}" && [ -z "${KERNEL_MODULE_PREFIX}" ]
 		then
-			# We have to set $INSTALL_MOD_PATH to avoid installing files
+			# We have to set $KERNEL_MODULE_PREFIX to avoid installing files
 			# to /lib/modules because --no-install was set
-			INSTALL_MOD_PATH="$(mktemp -d -p "${TEMP}" kerncache-modules_XXXXXXX 2>/dev/null)"
-			if [ -z "${INSTALL_MOD_PATH}" ]
+			KERNEL_MODULE_PREFIX="$(mktemp -d -p "${TEMP}" kerncache-modules_XXXXXXX 2>/dev/null)"
+			if [ -z "${KERNEL_MODULE_PREFIX}" ]
 			then
-				gen_die "Internal error: Variable 'INSTALL_MOD_PATH' is empty; mktemp() for kerncache modules failed!"
+				gen_die "Internal error: Variable 'KERNEL_MODULE_PREFIX' is empty; mktemp() for kerncache modules failed!"
 			else
 				print_info 5 '' 1 0
-				print_info 5 "INSTALL_MOD_PATH set to '${INSTALL_MOD_PATH}' because --kerncache is used but --no-install was set ..."
-				mkdir "${INSTALL_MOD_PATH}/lib" || gen_die "Failed to create '${INSTALL_MOD_PATH}/lib'!"
+				print_info 5 "KERNEL_MODULE_PREFIX set to '${KERNEL_MODULE_PREFIX}' because --kerncache is used but --no-install was set ..."
+				mkdir "${KERNEL_MODULE_PREFIX}/lib" || gen_die "Failed to create '${KERNEL_MODULE_PREFIX}/lib'!"
 			fi
 		fi
 

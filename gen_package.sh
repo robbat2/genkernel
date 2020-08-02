@@ -89,14 +89,14 @@ gen_minkernpackage() {
 }
 
 gen_modulespackage() {
-	if [ -d "${INSTALL_MOD_PATH}/lib/modules/${KV}" ]
+	if [ -d "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" ]
 	then
 		print_info 1 "modulespkg: >> Creating modules package in '${MODULESPACKAGE}' ..."
 		rm -rf "${TEMP}/modulespackage" >/dev/null 2>&1
 		mkdir "${TEMP}/modulespackage" || gen_die "Failed to create '${TEMP}/modulespackage'!"
 
 		mkdir -p "${TEMP}/modulespackage/lib/modules" || gen_die "Failed to create '${TEMP}/modulespackage/lib/modules'!"
-		cp -arP "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
+		cp -arP "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" "${TEMP}/modulespackage/lib/modules"
 
 		cd "${TEMP}/modulespackage" || gen_die "Failed to chdir to '${TEMP}/modulespackage'!"
 
@@ -106,7 +106,7 @@ gen_modulespackage() {
 		print_info 3 "COMMAND: ${tar_cmd[*]}" 1 0 1
 		eval "${tar_cmd[@]}" || gen_die "Failed to create compressed modules package '${MODULESPACKAGE}'!"
 	else
-		print_info 1 "modulespkg: >> '${INSTALL_MOD_PATH}/lib/modules/${KV}' was not found; Skipping creation of modules package in '${MODULESPACKAGE}' ..."
+		print_info 1 "modulespkg: >> '${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}' was not found; Skipping creation of modules package in '${MODULESPACKAGE}' ..."
 	fi
 }
 
@@ -165,9 +165,9 @@ gen_kerncache() {
 	mkdir -p "${TEMP}/kerncache/lib/modules/" \
 		|| gen_die "Failed to create '${TEMP}/kerncache/lib/modules'"
 
-	if [ -d "${INSTALL_MOD_PATH}/lib/modules/${KV}" ]
+	if [ -d "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" ]
 	then
-		cp -arP "${INSTALL_MOD_PATH}/lib/modules/${KV}" "${TEMP}/kerncache/lib/modules"
+		cp -arP "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" "${TEMP}/kerncache/lib/modules"
 	fi
 
 	cd "${TEMP}/kerncache" || gen_die "Failed to chdir to '${TEMP}/kerncache'!"
@@ -204,8 +204,7 @@ gen_kerncache_extract_kernel() {
 }
 
 gen_kerncache_extract_modules() {
-	local modules_dir=/lib
-	[ -n "${INSTALL_MOD_PATH}" ] && modules_dir="${INSTALL_MOD_PATH}/lib"
+	local modules_dir="${KERNEL_MODULES_PREFIX%/}/lib"
 
 	if [ ! -d "${modules_dir}" ]
 	then

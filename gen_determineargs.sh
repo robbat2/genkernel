@@ -300,6 +300,7 @@ determine_real_args() {
 	set_config_with_override STRING TMPDIR                                CMD_TMPDIR                                "/var/tmp/genkernel"
 	set_config_with_override STRING LOGFILE                               CMD_LOGFILE                               "/var/log/genkernel.conf"
 	set_config_with_override STRING KERNEL_DIR                            CMD_KERNEL_DIR                            "${DEFAULT_KERNEL_SOURCE}"
+	set_config_with_override STRING KERNEL_MODULES_PREFIX                 CMD_KERNEL_MODULES_PREFIX
 	set_config_with_override BOOL   KERNEL_SOURCES                        CMD_KERNEL_SOURCES                        "yes"
 	set_config_with_override STRING INITRAMFS_FILENAME                    CMD_INITRAMFS_FILENAME                    "${DEFAULT_INITRAMFS_FILENAME}"
 	set_config_with_override STRING INITRAMFS_SYMLINK_NAME                CMD_INITRAMFS_SYMLINK_NAME                "${DEFAULT_INITRAMFS_SYMLINK_NAME}"
@@ -356,7 +357,6 @@ determine_real_args() {
 	set_config_with_override BOOL   BUILD_STATIC                          CMD_STATIC                                "no"
 	set_config_with_override BOOL   SAVE_CONFIG                           CMD_SAVE_CONFIG                           "yes"
 	set_config_with_override BOOL   SYMLINK                               CMD_SYMLINK                               "no"
-	set_config_with_override STRING INSTALL_MOD_PATH                      CMD_INSTALL_MOD_PATH
 	set_config_with_override BOOL   OLDCONFIG                             CMD_OLDCONFIG                             "yes"
 	set_config_with_override BOOL   SANDBOX                               CMD_SANDBOX                               "yes"
 	set_config_with_override BOOL   SSH                                   CMD_SSH                                   "no"

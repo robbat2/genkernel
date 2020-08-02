@@ -80,7 +80,8 @@ longusage() {
   echo "	--kernel-localversion=<...>"
   echo "				Set kernel CONFIG_LOCALVERSION, use special value"
   echo "				'UNSET' to unset any set LOCALVERSION"
-  echo "	--module-prefix=<dir>	Prefix to kernel module destination, modules"
+  echo "	--kernel-modules-prefix=<dir>"
+  echo "				Prefix to kernel module destination, modules"
   echo "				will be installed in <prefix>/lib/modules"
   echo "  Low-Level Compile settings"
   echo "	--cross-compile=<target-triplet>"
@@ -680,9 +681,9 @@ parse_cmdline() {
 			CMD_KERNEL_LOCALVERSION="${*#*=}"
 			print_info 3 "CMD_KERNEL_LOCALVERSION: ${CMD_KERNEL_LOCALVERSION}"
 			;;
-		--module-prefix=*)
-			CMD_INSTALL_MOD_PATH="${*#*=}"
-			print_info 3 "CMD_INSTALL_MOD_PATH: ${CMD_INSTALL_MOD_PATH}"
+		--kernel-modules-prefix=*)
+			CMD_KERNEL_MODULES_PREFIX="${*#*=}"
+			print_info 3 "CMD_KERNEL_MODULES_PREFIX: ${CMD_KERNEL_MODULES_PREFIX}"
 			;;
 		--cachedir=*)
 			CACHE_DIR="${*#*=}"

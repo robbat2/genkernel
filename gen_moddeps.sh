@@ -4,7 +4,7 @@
 gen_dep_list() {
 	if isTrue "${ALLRAMDISKMODULES}"
 	then
-		strip_mod_paths $(find "${INSTALL_MOD_PATH}/lib/modules/${KV}" -name "*$(modules_kext)") | sort
+		strip_mod_paths $(find "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" -name "*$(modules_kext)") | sort
 	else
 		rm -f "${TEMP}/moddeps" >/dev/null
 
@@ -48,9 +48,9 @@ gen_deps() {
 
 modules_dep_list() {
 	KEXT=$(modules_kext)
-	if [ -f ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep ]
+	if [ -f "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}/modules.dep" ]
 	then
-		cat ${INSTALL_MOD_PATH}/lib/modules/${KV}/modules.dep | grep ${1}${KEXT}\: | cut -d\:  -f2
+		cat "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}/modules.dep" | grep ${1}${KEXT}\: | cut -d\:  -f2
 	fi
 }
 

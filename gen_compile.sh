@@ -20,10 +20,10 @@ compile_external_modules() {
 		return
 	fi
 
-	if [ -n "${INSTALL_MOD_PATH}" ]
+	if [ -n "${KERNEL_MODULES_PREFIX}" ]
 	then
 		# emerge would install to a different location
-		print_warning 1 "$(get_indent 1)>> INSTALL_MOD_PATH set; Skipping '${MODULEREBUILD_CMD}' ..."
+		print_warning 1 "$(get_indent 1)>> KERNEL_MODULES_PREFIX set; Skipping '${MODULEREBUILD_CMD}' ..."
 		return
 	fi
 
@@ -182,7 +182,7 @@ compile_modules() {
 
 	compile_generic modules kernel
 
-	[ -n "${INSTALL_MOD_PATH}" ] && local -x INSTALL_MOD_PATH="${INSTALL_MOD_PATH}"
+	[ -n "${KERNEL_MODULES_PREFIX}" ] && local -x INSTALL_MOD_PATH="${KERNEL_MODULES_PREFIX%/}"
 	if [ "${CMD_STRIP_TYPE}" == "all" -o "${CMD_STRIP_TYPE}" == "modules" ]
 	then
 		print_info 1 "$(get_indent 1)>> Installing ${KV} modules (and stripping) ..."
@@ -195,10 +195,10 @@ compile_modules() {
 	compile_generic "modules_install" kernel
 
 	print_info 1 "$(get_indent 1)>> Generating module dependency data ..."
-	if [ -n "${INSTALL_MOD_PATH}" ]
+	if [ -n "${KERNEL_MODULES_PREFIX}" ]
 	then
-		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${INSTALL_MOD_PATH}" ${KV} \
-			|| gen_die "depmod (INSTALL_MOD_PATH=${INSTALL_MOD_PATH}) failed!"
+		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map -b "${KERNEL_MODULES_PREFIX%/}" ${KV} \
+			|| gen_die "depmod (INSTALL_MOD_PATH=${KERNEL_MODULES_PREFIX%/}) failed!"
 	else
 		depmod -a -e -F "${KERNEL_OUTPUTDIR}"/System.map ${KV} \
 			|| gen_die "depmod failed!"
@@ -250,8 +250,8 @@ compile_kernel() {
 			print_info 1 "$(get_indent 1)>> Not installing firmware as it's included in the kernel already (CONFIG_FIRMWARE_IN_KERNEL=y) ..."
 		else
 			print_info 1 "$(get_indent 1)>> Installing firmware ('make firmware_install') due to CONFIG_FIRMWARE_IN_KERNEL != y ..."
-			[ "${INSTALL_MOD_PATH}" != '' ] && export INSTALL_MOD_PATH
-			[ "${INSTALL_FW_PATH}" != '' ] && export INSTALL_FW_PATH
+			[ -n "${KERNEL_MODULES_PREFIX}" ] && local -x INSTALL_MOD_PATH="${KERNEL_MODULES_PREFIX%/}"
+			[ -n "${INSTALL_FW_PATH}" ] && export INSTALL_FW_PATH
 			MAKEOPTS="${MAKEOPTS} -j1" compile_generic "firmware_install" kernel
 		fi
 	elif [ ${KV_NUMERIC} -lt 4014 ]
