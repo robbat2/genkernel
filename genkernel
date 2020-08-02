@@ -296,21 +296,6 @@ then
 
 	if ! isTrue "${BUILD_STATIC}"
 	then
-		if ! isTrue "${CMD_INSTALL}" && [ -z "${KERNEL_MODULE_PREFIX}" ]
-		then
-			# We have to set $KERNEL_MODULE_PREFIX to avoid installing files
-			# to /lib/modules because --no-install was set
-			KERNEL_MODULE_PREFIX="$(mktemp -d -p "${TEMP}" kerncache-modules_XXXXXXX 2>/dev/null)"
-			if [ -z "${KERNEL_MODULE_PREFIX}" ]
-			then
-				gen_die "Internal error: Variable 'KERNEL_MODULE_PREFIX' is empty; mktemp() for kerncache modules failed!"
-			else
-				print_info 5 '' 1 0
-				print_info 5 "KERNEL_MODULE_PREFIX set to '${KERNEL_MODULE_PREFIX}' because --kerncache is used but --no-install was set ..."
-				mkdir "${KERNEL_MODULE_PREFIX}/lib" || gen_die "Failed to create '${KERNEL_MODULE_PREFIX}/lib'!"
-			fi
-		fi
-
 		print_info 1 '' 1 0
 		gen_kerncache_extract_modules
 	fi

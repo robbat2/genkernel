@@ -1170,6 +1170,31 @@ determine_real_args() {
 		fi
 	fi
 
+	if ! isTrue "${CMD_INSTALL}"
+	then
+		if [ -n "${KERNEL_MODULES_PREFIX}" ]
+		then
+			print_warning 1 '--no-install is set; Ignoring --kernel-modules-prefix ...'
+		fi
+
+		# User does not want that anything will get installed
+		# so install modules into our temporary directory instead.
+		KERNEL_MODULES_PREFIX="${TEMP}/mod_prefix"
+	elif [ -n "${KERNEL_MODULES_PREFIX}" ]
+	then
+		KERNEL_MODULES_PREFIX=$(expand_file "${CMD_KERNEL_MODULES_PREFIX}")
+		if [ -z "${KERNEL_MODULES_PREFIX}" ]
+		then
+			gen_die "Failed to expand set --kernel-modules-prefix '${CMD_KERNEL_MODULES_PREFIX}'!"
+		fi
+
+		if [ ! -d "${KERNEL_MODULES_PREFIX}" ]
+		then
+			print_warning 3 "Set --kernel-modules-prefix '${KERNEL_MODULES_PREFIX}' does not exist; Will try to create ..."
+			mkdir -p "${KERNEL_MODULES_PREFIX}" || gen_die "Failed to create '${KERNEL_MODULES_PREFIX}'!"
+		fi
+	fi
+
 	MICROCODE=${MICROCODE,,}
 	case "${MICROCODE}" in
 		all|amd|intel) ;;
