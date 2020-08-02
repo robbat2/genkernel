@@ -1795,18 +1795,14 @@ append_auxilary() {
 	done
 
 	local mylinuxrc=
-	if [ -f "${CMD_LINUXRC}" ]
+	if [ -n "${LINUXRC}" ]
 	then
-		mylinuxrc="${CMD_LINUXRC}"
+		mylinuxrc="${LINUXRC}"
 		print_info 2 "$(get_indent 2)>> Copying user specified linuxrc '${mylinuxrc}' to '/init' ..."
-		cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
-			|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
 	elif isTrue "${NETBOOT}"
 	then
 		mylinuxrc="${GK_SHARE}/netboot/linuxrc.x"
 		print_info 2 "$(get_indent 2)>> Copying netboot specific linuxrc '${mylinuxrc}' to '/init' ..."
-		cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
-			|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
 	else
 		if [ -f "${GK_SHARE}/arch/${ARCH}/linuxrc" ]
 		then
@@ -1816,9 +1812,10 @@ append_auxilary() {
 		fi
 
 		print_info 2 "$(get_indent 2)>> Copying '${mylinuxrc}' to '/init' ..."
-		cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
-			|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
 	fi
+
+	cp -aL "${mylinuxrc}" "${TDIR}"/init 2>/dev/null \
+		|| gen_die "Failed to copy '${mylinuxrc}' to '${TDIR}/init'!"
 
 	# Make sure it's executable
 	chmod 0755 "${TDIR}"/init || gen_die "Failed to chmod of '${TDIR}/init' to 0755!"

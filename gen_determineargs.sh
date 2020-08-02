@@ -353,6 +353,7 @@ determine_real_args() {
 	set_config_with_override BOOL   RAMDISKMODULES                        CMD_RAMDISKMODULES                        "yes"
 	set_config_with_override BOOL   ALLRAMDISKMODULES                     CMD_ALLRAMDISKMODULES                     "no"
 	set_config_with_override STRING INITRAMFS_OVERLAY                     CMD_INITRAMFS_OVERLAY
+	set_config_with_override STRING LINUXRC                               CMD_LINUXRC
 	set_config_with_override BOOL   MOUNTBOOT                             CMD_MOUNTBOOT                             "yes"
 	set_config_with_override BOOL   BUILD_STATIC                          CMD_STATIC                                "no"
 	set_config_with_override BOOL   SAVE_CONFIG                           CMD_SAVE_CONFIG                           "yes"
@@ -1142,6 +1143,18 @@ determine_real_args() {
 			if [ -z "${SANDBOX_COMMAND}" ]
 			then
 				gen_die "Sandbox not found. Is sys-apps/sandbox installed?"
+			fi
+		fi
+
+		if [ -n "${LINUXRC}" ]
+		then
+			LINUXRC=$(expand_file "${CMD_LINUXRC}" 2>/dev/null)
+			if [ -z "${LINUXRC}" ]
+			then
+				gen_die "--linuxrc value '${CMD_LINUXRC}' failed to expand!"
+			elif [ ! -e "${LINUXRC}" ]
+			then
+				gen_die "--linuxrc file '${LINUXRC}' does not exist!"
 			fi
 		fi
 
