@@ -1501,17 +1501,6 @@ copyKeymap() {
 	fi
 }
 
-# This helper function is to be called using call_func_timeout.
-# It enables us to wait a reasonable amount of time until /dev/zfs appears.
-waitForZFS() {
-	while [ ! -c /dev/zfs ]
-	do
-		echo >/dev/null
-	done
-
-	exit 1
-}
-
 splash() {
 	return 0
 }
@@ -1631,7 +1620,7 @@ start_volumes() {
 	if [ "${USE_ZFS}" = '1' ]
 	then
 		# Avoid race involving asynchronous module loading
-		if call_func_timeout waitForZFS 5
+		if [ ! -e /dev/zfs ]
 		then
 			bad_msg "Cannot import ZFS pool because /dev/zfs is missing"
 		elif [ -z "${ZFS_POOL}" ]
