@@ -1170,6 +1170,14 @@ determine_real_args() {
 		fi
 	fi
 
+	if isTrue "${INTEGRATED_INITRAMFS}"
+	then
+		if  ! isTrue "${BUILD_KERNEL}" || ! isTrue "${BUILD_RAMDISK}"
+		then
+			gen_die "Invalid action specified: --integrated-initramfs option requires action \"all\", i.e. building of kernel and initramfs at the same time!"
+		fi
+	fi
+
 	if ! isTrue "${CMD_INSTALL}"
 	then
 		if [ -n "${KERNEL_MODULES_PREFIX}" ]
