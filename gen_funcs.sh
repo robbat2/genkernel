@@ -2033,7 +2033,7 @@ kconfig_set_opt() {
 	else
 		print_info 3 "$(get_indent ${indentlevel}) - Setting option '${optname}' to '${optval}' in '${kconfig}'..."
 		sed -i "${kconfig}" \
-			-e "s/^#\? \?${optname}[ =].*/${optname}=${optval}/g" \
+			-e "s|^#\? \?${optname}[ =].*|${optname}=${optval}|g" \
 			|| gen_die "Failed to set '${optname}=${optval}' in '${kconfig}'"
 
 		[ ! -f "${KCONFIG_MODIFIED_MARKER}" ] && touch "${KCONFIG_MODIFIED_MARKER}"
