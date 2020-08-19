@@ -930,6 +930,11 @@ do
 		# else not a good root and start over.
 		if [ "${mountret}" = '0' ]
 		then
+			# Make sure that entries from $NEWROOT/etc/initramfs.mounts
+			# are mounted before validating $REAL_INIT in case init isn't
+			# located on $REAL_ROOT.
+			process_initramfs_mounts
+
 			init_binary_file="${NEW_ROOT}${REAL_INIT:-/sbin/init}"
 			init_binary_fallback_file="${NEW_ROOT}/bin/sh"
 
@@ -1261,40 +1266,8 @@ else
 	fi
 fi # if [ "${CDROOT}" = '1' ]
 
-# Mount the additional things as required by udev & systemd
-if [ -f ${NEW_ROOT}/etc/initramfs.mounts ]
-then
-	fslist=$(get_mounts_list)
-else
-	fslist="/usr"
-fi
-
-for fs in ${fslist}
-do
-	dev=$(get_mount_device ${fs})
-	[ -z "${dev}" ] && continue
-	# Resolve it like util-linux mount does
-	[ -L ${dev} ] && dev=$(readlink ${dev})
-	# In this case, it's probably part of the filesystem
-	# and not a mountpoint
-	[ -z "${dev}" ] && continue
-	fstype=$(get_mount_fstype ${fs})
-	if get_mount_options ${fs} | grep -Fq bind
-	then
-		opts='bind'
-		dev=${NEW_ROOT}${dev}
-	else
-		# ro must be trailing, and the options will always contain at least 'defaults'
-		opts="$(get_mount_options ${fs} | strip_mount_options),ro"
-	fi
-	mnt=${NEW_ROOT}${fs}
-	cmd="mount -t ${fstype} -o ${opts} ${dev} ${mnt}"
-	good_msg "Mounting ${dev} as ${fs}: ${cmd}"
-	if ! ${cmd}
-	then
-		bad_msg "Unable to mount ${dev} for ${fs}"
-	fi
-done # for fs in $fslist; do
+# Re-run to ensure $NEWROOT/etc/initramfs.mounts was processed at least once
+process_initramfs_mounts
 
 # Execute script on the cdrom just before boot to update things if necessary
 cdupdate
