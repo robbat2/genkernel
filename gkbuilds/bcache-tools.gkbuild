@@ -6,7 +6,7 @@ src_configure() {
 }
 
 src_compile() {
-	PKG_CONFIG="$(tc-getPKG_CONFIG) -static" \
+	PKG_CONFIG="$(tc-getPKG_CONFIG) --static" \
 	gkmake V=1
 }
 
