@@ -542,12 +542,21 @@ config_kernel() {
 			y|m) ;; # Do nothing
 			*) cfg_CONFIG_CRYPTO_AES=${newcfg_setting}
 		esac
+
+		local cfg_CONFIG_CRYPTO_SERPENT=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SERPENT")
+		case "${cfg_CONFIG_CRYPTO_SERPENT}" in
+			y|m) ;; # Do nothing
+			*) cfg_CONFIG_CRYPTO_SERPENT=${newcfg_setting}
+		esac
+
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_XTS" "${cfg_CONFIG_CRYPTO_AES}" \
 			&& required_kernel_options+=( 'CONFIG_CRYPTO_XTS' )
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256" "${cfg_CONFIG_CRYPTO_AES}" \
 			&& required_kernel_options+=( 'CONFIG_CRYPTO_SHA256' )
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES" "${cfg_CONFIG_CRYPTO_AES}" \
 			&& required_kernel_options+=( 'CONFIG_CRYPTO_AES' )
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SERPENT" "${cfg_CONFIG_CRYPTO_SERPENT}" \
+			&& required_kernel_options+=( 'CONFIG_CRYPTO_SERPENT' )
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_HASH" "${cfg_CONFIG_CRYPTO_AES}" \
 			&& required_kernel_options+=( 'CONFIG_CRYPTO_USER_API_HASH' )
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_USER_API_SKCIPHER" "${cfg_CONFIG_CRYPTO_AES}" \
@@ -582,6 +591,9 @@ config_kernel() {
 			then
 				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA1_SSSE3" "${cfg_CONFIG_CRYPTO_AES}"
 				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SHA256_SSSE3" "${cfg_CONFIG_CRYPTO_AES}"
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SERPENT_SSE2_X86_64" "${cfg_CONFIG_CRYPTO_SERPENT}"
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SERPENT_AVX_X86_64" "${cfg_CONFIG_CRYPTO_SERPENT}"
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SERPENT_AVX2_X86_64" "${cfg_CONFIG_CRYPTO_SERPENT}"
 
 				if [ ${KV_NUMERIC} -lt 5004 ]
 				then
@@ -592,6 +604,8 @@ config_kernel() {
 				then
 					kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_AES_586" "${cfg_CONFIG_CRYPTO_AES}"
 				fi
+
+				kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_CRYPTO_SERPENT_SSE2_586" "${cfg_CONFIG_CRYPTO_SERPENT}"
 			fi
 		fi
 	fi

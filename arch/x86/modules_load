@@ -2,4 +2,4 @@
 # (extending defaults/modules_load)
 
 # Crypto
-MODULES_CRYPTO+=" crc32c-intel crc32-pclmul aes_586 aesni-intel"
+MODULES_CRYPTO+=" crc32c-intel crc32-pclmul aes_586 aesni-intel serpent-sse2-i586"
