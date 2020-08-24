@@ -51,8 +51,6 @@ gk_ver="$(cat /etc/build_id)"
 gk_build_date="$(cat /etc/build_date)"
 kernel_ver="$(uname -r)"
 
-good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
-
 if [ "$0" = '/init' ]
 then
 	[ -e /linuxrc ] && run rm /linuxrc
@@ -465,6 +463,8 @@ then
 		bad_msg "Unable to switch console: '${NEW_CONSOLE}' not found or not a character device!"
 	fi
 fi
+
+good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
 
 if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
 then
