@@ -1024,7 +1024,6 @@ append_zfs() {
 	local udevdir=$(get_udevdir)
 	local udevdir_initramfs="/usr/lib/udev"
 	local udev_files=( $(qlist -e sys-fs/zfs:0 \
-		| xargs --no-run-if-empty realpath \
 		| grep -E -- "^${udevdir}")
 	)
 
