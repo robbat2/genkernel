@@ -1721,6 +1721,11 @@ append_modules() {
 	cp -ax --parents --target-directory "${modules_dstdir}" modules* 2>/dev/null \
 		|| gen_die "Failed to copy '${modules_srcdir}/modules*' to '${modules_dstdir}'!"
 
+	print_info 2 "$(get_indent 2)modules: Updating modules.dep ..."
+	local a depmod_cmd=( depmod -a -b "${TDIR}" ${KV} )
+	print_info 3 "COMMAND: ${depmod_cmd[*]}" 1 0 1
+	eval "${depmod_cmd[@]}" || gen_die "Failed to run '${depmod_cmd[*]}'!"
+
 	local group_modules= group=
 	for group_modules in ${!MODULES_*}
 	do
