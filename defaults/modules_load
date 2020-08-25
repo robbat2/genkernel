@@ -33,7 +33,7 @@ MODULES_FS="ext2 ext3 ext4 btrfs reiserfs jfs nfs xfs zfs f2fs fuse virtiofs loo
 MODULES_CRYPTO="sha256_generic cbc crc32 crc32c crc32c_generic crc32_generic aes_generic xts af_alg algif_skcipher algif_hash algif_aead algif_rng serpent_generic"
 
 # Hyper-V
-MODULES_HYPERV="hv_utils hv_vmbus hv_balloon hyperv_keyboard hid_hyperv hv_utils hyperv_fb hv_storvsc"
+MODULES_HYPERV="hv_utils hv_vmbus hv_balloon hyperv-keyboard hid_hyperv hv_utils hyperv_fb hv_storvsc"
 
 # Virtio
 MODULES_VIRTIO="virtio_scsi virtio_blk virtio_console virtio-rng virtio virtio_balloon virtio_input virtio_ring virtio_pci virtio_mmio virtio_crypto"
