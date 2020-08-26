@@ -4,6 +4,7 @@
 src_compile() {
 	append-cppflags -DNO_SYSTEMD
 	export NO_SYSTEMD=1
+	export PKG_CONFIG="$(tc-getPKG_CONFIG) --static"
 
 	gkmake -C utils/sysdeps V=1
 	gkmake -C utils/fwparam_ibft V=1
