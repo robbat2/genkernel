@@ -2,11 +2,6 @@
 # Distributed under the terms of the GNU General Public License v2
 
 src_prepare() {
-	# gen-lock-obj.sh is missing in 1.38 release tarball
-	# and patch can't add non-existing files
-	echo "dummy" > "${S}"/src/gen-lock-obj.sh || die
-	chmod 0755 "${S}"/src/gen-lock-obj.sh || die
-
 	default
 
 	if [[ ! -f "${S}/src/syscfg/lock-obj-pub.${CHOST}.h" ]]
