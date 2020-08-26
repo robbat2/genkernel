@@ -7,16 +7,24 @@ src_prepare() {
 	sed -i \
 		-e '/--enable-static is not supported by kmod/s:as_fn_error:echo:' \
 		configure || die "Failed to re-enable static support"
+
+	# List of symbols which are clashing with (e)udev
+	cat <<-EOF >> kmod.syms
+	mkdir_p                 _kmod_mkdir_p
+	mkdir_parents           _kmod_mkdir_parents
+	path_is_absolute        _kmod_path_is_absolute
+	path_make_absolute_cwd  _kmod_path_make_absolute_cwd
+	EOF
 }
 
 src_configure() {
 	local myconf=(
-		--without-xz
-		--with-zlib
-		--without-openssl
+		--enable-static
 		--disable-python
 		--disable-tools
-		--enable-static
+		--with-xz
+		--with-zlib
+		--without-openssl
 	)
 
 	gkconf "${myconf[@]}"
@@ -27,8 +35,14 @@ src_install() {
 
 	# remove hardcoded $BROOT
 	sed -i \
-		-e 's/-L\/[^ ]*/-L${libdir}/' \
+		-e 's/-L\/[^ ]*/-L${libdir}/g' \
 		"${D}"/usr/lib*/pkgconfig/*.pc \
+		|| die
+
+	# rename internal symbols to avoid clashing with (e)udev
+	$(tc-getOBJCOPY) \
+		--redefine-syms=kmod.syms \
+		"${D}"/usr/lib*/libkmod.a \
 		|| die
 
 	rm -rf \

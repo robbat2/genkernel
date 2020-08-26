@@ -10,10 +10,8 @@ src_configure() {
 		--disable-selinux
 		--disable-rule-generator
 		--disable-hwdb
+		--enable-kmod
 	)
-
-	# Cannot link against static kmod, https://lists.freedesktop.org/archives/systemd-devel/2013-June/011173.html
-	myconf+=( --disable-kmod )
 
 	gkconf "${myconf[@]}"
 }
