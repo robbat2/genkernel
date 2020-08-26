@@ -823,6 +823,12 @@ when not set. This will allow remote user to provide answer through
     loading of all module groups regardless whether root device is
     already available.
 
+*gk.hw.use-modules_load*=<...>::
+    By default, genkernel relies on UDEV's capability to load required
+    kernel modules. This boolean option allows you to force old module
+    loading depending on modules_load file until *root* device becomes
+    available.
+
 *gk.log.disabled*=<...>::
     By default, any shown message and external command calls will be logged
     to '/tmp/init.log' in initramfs. This boolean option allows you to
@@ -848,15 +854,14 @@ NOTE: Because no user interaction is possible when this option is set,
 system will automatically reboot on error after a timeout.
 
 *noload*=<...>::
-    List of modules to skip loading.
-    Separate using commas or spaces.
+List of modules to skip loading.
+Separate using commas or spaces.
 
-*nodetect*::
-    Skipping scanning modules using "modprobe <MODULE> -n".
-    Use *doload=* for specifying a whitelist of exceptions.
+NOTE: This option has only an effect when *gk.hw.use-modules_load* is
+enabled.
 
 *doload*=<...>::
-    List of modules to load despite *nodetect*.
+    List of modules which should always be loaded.
 
 *domodules*::
 *nomodules*::

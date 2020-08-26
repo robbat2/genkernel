@@ -2019,10 +2019,13 @@ iface_name() {
 start_network() {
 	good_msg "Starting network ..."
 
-	# Load network modules only when we need them to avoid possible
-	# firmware problems for people not using network that early
-	modules_scan net
-	udevsettle
+	if [ "${GK_HW_USE_MODULES_LOAD}" = '1' ]
+	then
+		# Load network modules only when we need them to avoid possible
+		# firmware problems for people not using network that early
+		modules_scan net
+		udevsettle
+	fi
 
 	# At least gk.net.iface can only be processed after sysfs was
 	# mounted.

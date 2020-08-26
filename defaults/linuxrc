@@ -175,9 +175,6 @@ do
 		doload=*)
 			MDOLIST=$(echo ${MDOLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 		;;
-		nodetect)
-			NODETECT=1
-		;;
 		noload=*)
 			MLIST=$(echo ${MLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 			export MLIST
@@ -288,6 +285,14 @@ do
 			if is_true "${tmp_disabled}"
 			then
 				GK_HW_LOAD_ALL_MODULES=1
+			fi
+			unset tmp_disabled
+		;;
+		gk.hw.use-modules_load=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				GK_HW_USE_MODULES_LOAD=1
 			fi
 			unset tmp_disabled
 		;;
@@ -542,26 +547,31 @@ fi
 # Load modules listed in MY_HWOPTS if /lib/modules exists for the running kernel
 if [ -z "${DO_modules}" ]
 then
-	good_msg 'Skipping module load; disabled via commandline'
+	good_msg 'Skipping module load; disabled via command-line'
 elif [ -d "/lib/modules/${KV}" ]
 then
-	good_msg 'Loading modules ...'
 	if [ -n "${FIRSTMODS}" ]
 	then
+		good_msg 'Loading first modules ...'
 		# try these modules first -- detected modules for root device:
 		modules_load firstmods ${FIRSTMODS}
 	fi
 
 	# Load appropriate kernel modules
-	if [ "${NODETECT}" != '1' ]
+	if [ "${GK_HW_USE_MODULES_LOAD}" = '1' ]
 	then
+		good_msg 'Loading modules ...'
 		for modules in ${MY_HWOPTS}
 		do
 			modules_scan ${modules}
 		done
 	fi
-	# Always eval doload=...
-	modules_load extra_load ${MDOLIST}
+
+	if [ -n "${MDOLIST}" ]
+	then
+		good_msg 'Loading modules from command-line ...'
+		modules_load extra_load ${MDOLIST}
+	fi
 else
 	good_msg 'Skipping module load; no modules in the ramdisk!'
 fi
