@@ -3,6 +3,11 @@
 
 src_configure() {
 	local myconf=(
+		--exec-prefix=
+		--bindir=/usr/bin
+		--sbindir=/usr/sbin
+		--includedir=/usr/include
+		--libdir=/usr/lib
 		--enable-static
 		--enable-blkid
 		--disable-introspection
