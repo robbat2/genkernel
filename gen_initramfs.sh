@@ -429,8 +429,8 @@ append_base_layout() {
 	dd if=/dev/zero of="${TDIR}/var/log/wtmp" bs=1 count=0 seek=0 &>/dev/null \
 		|| die "Failed to create '${TDIR}/var/log/wtmp'!"
 
-	dd if=/dev/zero of="${TDIR}/run/utmp" bs=1 count=0 seek=0 &>/dev/null \
-		|| die "Failed to create '${TDIR}/run/utmp'!"
+	dd if=/dev/zero of="${TDIR}/var/run/utmp" bs=1 count=0 seek=0 &>/dev/null \
+		|| die "Failed to create '${TDIR}/var/run/utmp'!"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
