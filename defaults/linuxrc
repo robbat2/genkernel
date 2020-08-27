@@ -576,6 +576,9 @@ else
 	good_msg 'Skipping module load; no modules in the ramdisk!'
 fi
 
+# Run debug shell if requested
+rundebugshell "before starting udevd"
+
 # Initialize udev
 if [ ! -f "/etc/udev/hwdb.bin" ]
 then
