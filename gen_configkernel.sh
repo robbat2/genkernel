@@ -350,6 +350,11 @@ config_kernel() {
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_BLK_DEV_INITRD" "y"
 
 		# Stuff required by init script
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_MMU" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_SHMEM" "y"
+		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TMPFS" "y" \
+			&& required_kernel_options+=( 'CONFIG_TMPFS' )
+
 		kconfig_set_opt "${KERNEL_OUTPUTDIR}/.config" "CONFIG_TTY" "y" \
 			&& required_kernel_options+=( 'CONFIG_TTY' )
 
