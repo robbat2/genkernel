@@ -925,7 +925,7 @@ do
 		else
 			# If $REAL_ROOT is a symlink
 			# Resolve it like util-linux mount does
-			[ -L ${REAL_ROOT} ] && REAL_ROOT=$(readlink ${REAL_ROOT})
+			[ -L ${REAL_ROOT} ] && REAL_ROOT=$(readlink -f ${REAL_ROOT})
 			# mount ro so fsck doesn't barf later
 			if [ "${REAL_ROOTFLAGS}" = '' ]
 			then
