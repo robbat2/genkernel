@@ -345,8 +345,17 @@ append_base_layout() {
 	date -u '+%Y-%m-%d %H:%M:%S UTC' > "${TDIR}"/etc/build_date \
 		|| gen_die "Failed to create '${TDIR}/etc/build_date'!"
 
-	echo "Genkernel $GK_V" > "${TDIR}"/etc/build_id \
+	echo "Genkernel ${GK_V}" > "${TDIR}"/etc/build_id \
 		|| gen_die "Failed to create '${TDIR}/etc/build_id'!"
+
+	cat >"${TDIR}"/etc/initrd-release <<-EOF
+	NAME="genkernel"
+	VERSION="genkernel-${GK_V}"
+	ID=genkernel
+	VERSION_ID=${GK_V}
+	PRETTY_NAME="Gentoo/Linux genkernel-${GK_V} (Initramfs)"
+	ANSI_COLOR="0;34"
+	EOF
 
 	cp -a "${GK_SHARE}"/defaults/gksosreport.sh "${TDIR}"/usr/sbin/gksosreport \
 		|| gen_die "Failed to copy '${GK_SHARE}/defaults/gksosreport.sh' to '${TDIR}/usr/sbin/gksosreport'"
