@@ -2,7 +2,7 @@
 # $Id$
 
 PATH="${PATH}:/sbin:/usr/sbin"
-GK_V='4.1.1'
+GK_V='4.1.2'
 
 GK_TIME_START=$(date +%s)
 
