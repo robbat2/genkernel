@@ -1220,6 +1220,7 @@ _tc-getPROG() {
 	done
 
 	if [[ -n "${!prog_default_varname}" ]] \
+		&& [[ -n "${!prog_override_varname}" ]] \
 		&& [[ "${!prog_override_varname}" != "${!prog_default_varname}" ]]
 	then
 		# User wants to run specific program
