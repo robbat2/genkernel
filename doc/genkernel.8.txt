@@ -416,10 +416,6 @@ system is able to load multiple initramfs.
 *--genzimage*::
     Make and install kernelz image from 'arch/powerpc/boot/zImage.initrd'.
 
-*--*[*no-*]*disklabel*::
-    Includes or excludes disk label and uuid support in your initramfs.
-    When enabled, this will compile util-linux for you.
-
 *--*[*no-*]*luks*::
     Includes or excludes LUKS support.
     When enabled, this will compile cryptsetup for you.

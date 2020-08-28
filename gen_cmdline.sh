@@ -163,8 +163,6 @@ longusage() {
   echo "	--linuxrc=<file>	Specifies a user created linuxrc"
   echo "	--busybox-config=<file>	Specifies a user created busybox config"
   echo "	--genzimage		Make and install kernelz image (PowerPC)"
-  echo "	--disklabel		Include disk label and uuid support in your initramfs"
-  echo "	--no-disklabel		Exclude disk label and uuid support in your initramfs"
   echo "	--luks			Include LUKS support"
   echo "	--no-luks		Exclude LUKS support"
   echo "	--gpg			Include GPG-armored LUKS key support"
@@ -760,10 +758,6 @@ parse_cmdline() {
 			print_info 3 "CMD_GENZIMAGE: ${CMD_GENZIMAGE}"
 #			ENABLE_PEGASOS_HACKS="yes"
 #			print_info 3 "ENABLE_PEGASOS_HACKS: ${ENABLE_PEGASOS_HACKS}"
-			;;
-		--disklabel|--no-disklabel)
-			CMD_DISKLABEL=$(parse_optbool "$*")
-			print_info 3 "CMD_DISKLABEL: ${CMD_DISKLABEL}"
 			;;
 		--luks|--no-luks)
 			CMD_LUKS=$(parse_optbool "$*")

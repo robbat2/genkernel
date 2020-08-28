@@ -400,7 +400,6 @@ append_base_layout() {
 	isTrue "${BUSYBOX}" && build_parameters+=( --busybox ) || build_parameters+=( --no-busybox )
 	isTrue "${BCACHE}" && build_parameters+=( --bcache ) || build_parameters+=( --no-bcache )
 	isTrue "${B2SUM}" && build_parameters+=( --b2sum ) || build_parameters+=( --no-b2sum )
-	isTrue "${DISKLABEL}" && build_parameters+=( --disklabel ) || build_parameters+=( --no-disklabel )
 	isTrue "${BTRFS}" && build_parameters+=( --btrfs ) || build_parameters+=( --no-btrfs )
 	isTrue "${ISCSI}" && build_parameters+=( --iscsi ) || build_parameters+=( --no-iscsi )
 	isTrue "${MULTIPATH}" && build_parameters+=( --multipath ) || build_parameters+=( --no-multipath )

@@ -396,7 +396,6 @@ determine_real_args() {
 	set_config_with_override BOOL   UNIONFS                               CMD_UNIONFS                               "no"
 	set_config_with_override BOOL   NETBOOT                               CMD_NETBOOT                               "no"
 	set_config_with_override STRING REAL_ROOT                             CMD_REAL_ROOT
-	set_config_with_override BOOL   DISKLABEL                             CMD_DISKLABEL                             "yes"
 	set_config_with_override BOOL   LUKS                                  CMD_LUKS                                  "no"
 	set_config_with_override BOOL   GPG                                   CMD_GPG                                   "no"
 	set_config_with_override BOOL   MDADM                                 CMD_MDADM                                 "no"
