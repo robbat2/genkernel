@@ -35,6 +35,12 @@ mount -t proc -o noexec,nosuid,nodev proc /proc >/dev/null 2>&1
 mount -o remount,rw / >/dev/null 2>&1
 mount -t tmpfs -o rw,nosuid,nodev,relatime,mode=755 none /run 2>&1
 
+if [ ! -d /run/initramfs ]
+then
+	mkdir -p /run/initramfs
+	chmod 0750 /run/initramfs
+fi
+
 # Prevent superfluous printks from being printed to the console
 echo 1 > /proc/sys/kernel/printk
 
@@ -305,37 +311,6 @@ do
 				touch "${GK_INIT_LOG_DISABLED}"
 			fi
 			unset tmp_disabled
-		;;
-		gk.log.keep=*)
-			case "${x#*=}" in
-				[Tt][Rr][Uu][Ee])
-					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
-				;;
-				[Yy][Ee][Ss])
-					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
-				;;
-				[Yy])
-					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
-				;;
-				1)
-					GK_INIT_LOG_COPYTO="${GK_INIT_LOG_COPYTO_DEFAULT}"
-				;;
-				[Ff][Aa][Ll][Ss][Ee])
-					GK_INIT_LOG_COPYTO=
-				;;
-				[Nn][Oo])
-					GK_INIT_LOG_COPYTO=
-				;;
-				[Nn])
-					GK_INIT_LOG_COPYTO=
-				;;
-				0)
-					GK_INIT_LOG_COPYTO=
-				;;
-				*)
-					GK_INIT_LOG_COPYTO=${x#*=}
-				;;
-			esac
 		;;
 		gk.sshd.port=*)
 			tmp_port=${x#*=}
@@ -1337,8 +1312,6 @@ fi
 
 # Run debug shell if requested
 rundebugshell "before entering switch_root"
-
-preserve_log
 
 # init_opts is set in the environment by the kernel when it parses the command line
 init=${REAL_INIT:-/sbin/init}

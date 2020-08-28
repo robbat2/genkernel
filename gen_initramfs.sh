@@ -294,7 +294,7 @@ append_base_layout() {
 		lib/dracut \
 		mnt \
 		proc \
-		run/lock \
+		run \
 		sbin \
 		sys \
 		tmp \
@@ -303,12 +303,10 @@ append_base_layout() {
 		usr/lib \
 		usr/sbin \
 		var/log \
+		var/run/lock \
 	; do
 		mkdir -p "${TDIR}"/${mydir} || gen_die "Failed to create '${TDIR}/${mydir}'!"
 	done
-
-	ln -s ../run var/run || gen_die "Failed to create symlink '${TDIR}/var/run' to '${TDIR}/run'!"
-	ln -s ../run/lock var/lock || gen_die "Failed to create symlink '${TDIR}/var/lock' to '${TDIR}/run/lock'!"
 
 	chmod 1777 "${TDIR}"/tmp || gen_die "Failed to chmod of '${TDIR}/tmp' to 1777!"
 
@@ -476,7 +474,7 @@ append_busybox() {
 	done
 
 	# Set up a few default symlinks
-	local required_applets='[ ash sh mknod mount uname echo cut cat'
+	local required_applets='[ ash sh mkdir mknod mount uname echo cut cat touch'
 	local required_applet=
 	for required_applet in ${required_applets}
 	do
@@ -772,8 +770,6 @@ append_dmraid() {
 	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 
 	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
-
-	mkdir -p "${TDIR}"/run/lock/dmraid || gen_die "Failed to create '${TDIR}/run/lock/dmraid'!"
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 

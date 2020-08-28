@@ -1177,78 +1177,6 @@ crypt_filter() {
 	fi
 }
 
-preserve_log() {
-	is_log_enabled || return
-	[ ! -s "${GK_INIT_LOG}" ] && return
-	[ -z "${GK_INIT_LOG_COPYTO}" ] && return
-
-	local have_errors=0
-
-	local logfile_target="${CHROOT}/${GK_INIT_LOG_COPYTO#/}"
-	if ! echo "${logfile_target}" | grep -qE '^.*/[A-Za-z0-9._-]+$'
-	then
-		# The test above will make sure that a filename was given
-		# so we can be sure that dirname() will always return a
-		# path.
-		warn_msg "gk.log.keep value '${GK_INIT_LOG_COPYTO}' is invalid; Will copy log to '${GK_INIT_LOG_COPYTO_DEFAULT}' instead ..."
-		logfile_target="${CHROOT}/${GK_INIT_LOG_COPYTO_DEFAULT#/}"
-	fi
-
-	local fail_msg="Failed to copy '${GK_INIT_LOG}' to '${logfile_target}'"
-	local logfile_target_dir="$(dirname "${logfile_target}")"
-
-	if [ -z "${logfile_target_dir}" ]
-	then
-		bad_msg "${fail_msg}: Failed to determine dirname of '${logfile_target}'!"
-		return 1
-	fi
-
-	log_msg "Determining mountpoint of '${logfile_target}' ..."
-
-	local logfile_mountpoint="${logfile_target_dir}"
-	while [ true ]
-	do
-		if run mountpoint "${logfile_mountpoint}" 1>/dev/null 2>&1
-		then
-			if run mount -o remount,rw "${logfile_mountpoint}" 1>/dev/null 2>&1
-			then
-				break
-			else
-				bad_msg "${fail_msg}: 'mount -o remount,rw \"${logfile_mountpoint}\"' failed!"
-				return 1
-			fi
-		fi
-
-		logfile_mountpoint="$(dirname "${logfile_mountpoint}")"
-		if [ "${logfile_mountpoint}" = "/" ]
-		then
-			# Stop here
-			bad_msg "${fail_msg}: Failed to determine mountpoint for '${logfile_target}'!"
-			return 1
-		fi
-	done
-
-	if [ ! -d "${logfile_target_dir}" ]
-	then
-		if ! run mkdir -p "${logfile_target_dir}" 2>/dev/null
-		then
-			bad_msg "${fail_msg}: Failed to create '${logfile_target_dir}'!"
-			return 1
-		fi
-	fi
-
-	good_msg "gk.log.keep set; Copying '${GK_INIT_LOG}' to '${logfile_target}' ..."
-	if ! run cp -f "${GK_INIT_LOG}" "${logfile_target}" 2>/dev/null
-	then
-		bad_msg "${fail_msg}!"
-	fi
-
-	if ! run mount -o remount,ro "${logfile_mountpoint}" 1>/dev/null 2>&1
-	then
-		bad_msg "Failed to re-mount ${logfile_mountpoint} read-only!"
-	fi
-}
-
 process_initramfs_mounts() {
 	local fslist=
 
@@ -2388,7 +2316,7 @@ start_sshd() {
 	run touch /var/log/lastlog
 
 	good_msg "Starting dropbear sshd ..." ${QUIET}
-	run dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/var/log/dropbear.log
+	run dropbear -p ${GK_SSHD_PORT} -R -P "${GK_SSHD_PIDFILE}" 2>/run/initramfs/dropbear.log
 	if [ $? -eq 0 ]
 	then
 		if [ "${GK_PROMPT_TIMEOUT}" = '0' ]
