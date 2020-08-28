@@ -20,7 +20,7 @@ src_configure() {
 		--disable-uuidd
 		--disable-debugfs
 		--disable-imager
-		--disable-resizer
+		--enable-resizer
 		--disable-defrag
 	)
 
@@ -38,6 +38,7 @@ src_install() {
 	for file in \
 		e2fsck/e2fsck \
 		misc/mke2fs \
+		resize/resize2fs \
 	; do
 		cp -a "${S}"/${file} "${D}"/sbin/ \
 			|| die "Failed to copy '${S}/${file}' to '${D}/sbin/'!"
