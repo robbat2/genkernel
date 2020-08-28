@@ -1071,7 +1071,7 @@ then
 						grep -Fq squashfs /proc/filesystems || \
 							bad_msg "HINT: Your kernel does not know filesystem \"squashfs\"."
 					fi
-					run_shell
+					run_emergency_shell
 				}
 			fi
 
@@ -1188,7 +1188,7 @@ FSTAB
 		) ||
 		{
 			bad_msg "Copying failed, dropping into a shell."
-			run_shell
+			run_emergency_shell
 		}
 
 		# Now we do the links.

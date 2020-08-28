@@ -983,7 +983,7 @@ check_loop() {
 		bad_msg 'Please export LOOP with a valid location, or reboot and pass a proper loop=...'
 		bad_msg 'kernel command line!'
 
-		run_shell
+		run_emergency_shell
 	fi
 }
 
@@ -999,6 +999,14 @@ run() {
 	fi
 
 	return ${retval}
+}
+
+run_emergency_shell() {
+	echo
+	gksosreport
+	good_msg 'You might want to save "/run/initramfs/gksosreport.txt" to a USB stick or /boot'
+	good_msg 'after mounting them and attach it to a bug report.'
+	run_shell
 }
 
 run_shell() {
@@ -1092,7 +1100,7 @@ test_success() {
 		error_string=${1}
 		error_string="${error_string:-Failed to run command}"
 		bad_msg "${error_string}; Failing back to the shell ..."
-		run_shell
+		run_emergency_shell
 	fi
 }
 
@@ -1347,7 +1355,7 @@ prompt_user() {
 		'shell')
 			eval ${1}'='${oldvalue}
 			warn_msg "To leave and try again just press <Ctrl>+D"
-			run_shell
+			run_emergency_shell
 			;;
 		'')
 			eval ${1}'='${oldvalue}
@@ -1799,7 +1807,7 @@ openLUKS() {
 		# if crypt_silent=1 and some error occurs, enter shell quietly
 		elif [ \( ${CRYPT_SILENT} -eq 1 \) -a \( \( \( ${DEV_ERROR} -eq 1 \) -o \( ${KEY_ERROR} -eq 1 \) \) -o \( ${KEYDEV_ERROR} -eq 1 \) \) ]
 		then
-			run_shell
+			run_emergency_shell
 		elif [ ${DEV_ERROR} -eq 1 ]
 		then
 			prompt_user "LUKS_DEVICE" "${LUKS_NAME}"
@@ -2487,7 +2495,7 @@ cdupdate() {
 			if [ "$?" != '0' ]
 			then
 				bad_msg "Executing cdupdate.sh failed!"
-				run_shell
+				run_emergency_shell
 			fi
 		else
 			good_msg 'No cdupdate.sh script found, skipping ...'
@@ -2511,6 +2519,8 @@ rundebugshell() {
 	if is_debug
 	then
 		good_msg 'Starting debug shell as requested by "debug" option.'
+		good_msg "Run '${BOLD}gksosreport${NORMAL}' to generate debug report"
+		good_msg "in case you want to file a bug report."
 	else
 		return 0
 	fi

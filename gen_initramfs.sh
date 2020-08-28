@@ -348,6 +348,12 @@ append_base_layout() {
 	echo "Genkernel $GK_V" > "${TDIR}"/etc/build_id \
 		|| gen_die "Failed to create '${TDIR}/etc/build_id'!"
 
+	cp -a "${GK_SHARE}"/defaults/gksosreport.sh "${TDIR}"/usr/sbin/gksosreport \
+		|| gen_die "Failed to copy '${GK_SHARE}/defaults/gksosreport.sh' to '${TDIR}/usr/sbin/gksosreport'"
+
+	chmod 0755 "${TDIR}"/usr/sbin/gksosreport \
+		|| gen_die "Failed to chmod of '${TDIR}/usr/sbin/gksosreport'!"
+
 	# Allow lsinitrd from dracut to process our initramfs
 	echo "$(cat "${TDIR}/etc/build_id") ($(cat "${TDIR}/etc/build_date"))" > "${TDIR}"/lib/dracut/dracut-gk-version.info \
 		|| gen_die "Failed to create '${TDIR}/lib/dracut/dracut-gk-version.info'!"
@@ -474,7 +480,7 @@ append_busybox() {
 	done
 
 	# Set up a few default symlinks
-	local required_applets='[ ash sh mkdir mknod mount uname echo cut cat touch'
+	local required_applets='[ ash sh mkdir mknod mount uname echo chmod cut cat touch'
 	local required_applet=
 	for required_applet in ${required_applets}
 	do
