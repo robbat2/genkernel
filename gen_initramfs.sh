@@ -363,6 +363,9 @@ append_base_layout() {
 	chmod 0755 "${TDIR}"/usr/sbin/gksosreport \
 		|| gen_die "Failed to chmod of '${TDIR}/usr/sbin/gksosreport'!"
 
+	ln -s /proc/self/mounts "${TDIR}"/etc/mtab \
+		|| gen_die "Failed to symlink '/etc/mtab' to '/proc/self/mounts'!"
+
 	# Allow lsinitrd from dracut to process our initramfs
 	echo "$(cat "${TDIR}/etc/build_id") ($(cat "${TDIR}/etc/build_date"))" > "${TDIR}"/lib/dracut/dracut-gk-version.info \
 		|| gen_die "Failed to create '${TDIR}/lib/dracut/dracut-gk-version.info'!"
