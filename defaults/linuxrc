@@ -910,6 +910,10 @@ do
 			# If $REAL_ROOT is a symlink
 			# Resolve it like util-linux mount does
 			[ -L ${REAL_ROOT} ] && REAL_ROOT=$(readlink -f ${REAL_ROOT})
+
+			# determine fs -- 'auto' will not trigger module loading!
+			ROOTFSTYPE=$(determine_fs "${REAL_ROOT}" "${ROOTFSTYPE}")
+
 			# mount ro so fsck doesn't barf later
 			if [ "${REAL_ROOTFLAGS}" = '' ]
 			then
@@ -1028,7 +1032,7 @@ then
 				MOUNTTYPE="ext2"
 				;;
 			*)
-				MOUNTTYPE="${LOOPTYPE}"
+				MOUNTTYPE=$(determine_fs "/dev/mapper/root" "${MOUNTTYPE}")
 				;;
 		esac
 		run mount -t "${MOUNTTYPE}" -o ro /dev/mapper/root "${NEW_ROOT}/mnt/livecd"

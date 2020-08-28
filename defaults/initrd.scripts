@@ -198,6 +198,8 @@ findmediamount() {
 				fi
 				good_msg "Attempting to mount media: ${x}" ${CRYPT_SILENT}
 
+				CDROOT_TYPE=$(determine_fs "${x}" "${CDROOT_TYPE}")
+
 				run mount -t ${CDROOT_TYPE} ${x} ${mntcddir} >/dev/null 2>&1
 				if [ $? -eq 0 ]
 				then
@@ -231,6 +233,31 @@ findmediamount() {
 	eval local result='$'${vrbl}
 
 	[ -n "${result}" ] || bad_msg "Media not found" ${CRYPT_SILENT}
+}
+
+determine_fs() {
+	local _dev="${1}"
+	local _orig="${2:-auto}"
+	local _fs line
+
+	_fs=$(udevadm info --query=env --name="$_dev" 2>/dev/null | \
+		while read line || [ -n "${line}" ]
+		do
+			if str_starts ${line} "ID_FS_TYPE="
+			then
+				echo ${line#ID_FS_TYPE=}
+				break
+			fi
+		done
+	)
+	_fs=${_fs:-auto}
+
+	if [ "${_fs}" = "auto" ]
+	then
+		_fs="${_orig}"
+	fi
+
+	echo "${_fs}"
 }
 
 devicelist() {
@@ -697,7 +724,9 @@ setup_aufs() {
 		then
 			good_msg "Mounting ${aufs_dev} to ${aufs_memory} for aufs support"
 
-			if ! run mount -t auto "${aufs_dev}" "${aufs_dev_mnt}" >/dev/null 2>&1
+			local mounttype=$(determine_fs "${aufs_dev}" "auto")
+
+			if ! run mount -t ${mounttype} "${aufs_dev}" "${aufs_dev_mnt}" >/dev/null 2>&1
 			then
 				bad_msg "Mount of ${aufs_dev} failed, falling back to ramdisk based aufs"
 				unset aufs_dev
@@ -2725,6 +2754,17 @@ get_zfs_property() {
 	local propertyname=${2}
 
 	echo "$(zfs get -H -o value ${propertyname} "${device}" 2>/dev/null)"
+}
+
+# Returns TRUE if $1 contains literal string $2 at the
+# beginning and is not empty
+str_starts() {
+	if [ "${1#"${2}"*}" != "${1}" ]
+	then
+		return 0
+	fi
+
+	return 1
 }
 
 # If the kernel is handed a mount option is does not recognize, it WILL fail to
