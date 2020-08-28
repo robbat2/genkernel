@@ -509,15 +509,16 @@ esac
 # Verify that it is safe to use ZFS
 if [ "${USE_ZFS}" = '1' ]
 then
-	for i in /sbin/zfs /sbin/zpool
+	for i in zfs zpool
 	do
-		if [ ! -x ${i} ]
+		if ! hash ${i} >/dev/null 2>&1
 		then
 			USE_ZFS=0
-			bad_msg "Aborting use of ZFS because ${i} not found!"
+			bad_msg "Aborting use of ZFS because '${i}' not found!"
 			break
 		fi
 	done
+	unset i
 
 	[ "${USE_ZFS}" = '1' ] && MY_HWOPTS="${MY_HWOPTS} zfs"
 fi
