@@ -332,6 +332,14 @@ do
 			fi
 			unset tmp_wait
 		;;
+		gk.udev.debug=*)
+			tmp_enabled=${x#*=}
+			if is_true "${tmp_enabled}"
+			then
+				GK_UDEV_DEBUG=1
+			fi
+			unset tmp_enabled
+		;;
 		gk.udev.timeout=*)
 			tmp_timeout=${x#*=}
 			if is_int "${tmp_timeout}"
@@ -566,7 +574,7 @@ fi
 good_msg 'Activating udev ...'
 
 udevd_cmd="run udevd --resolve-names=never"
-if is_debug
+if [ "${GK_UDEV_DEBUG}" = '1' ]
 then
 	udevd_cmd="${udevd_cmd} --debug > ${GK_UDEV_LOG} 2>&1 &"
 else

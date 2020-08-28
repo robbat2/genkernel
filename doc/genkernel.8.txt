@@ -721,6 +721,10 @@ recognized by the kernel itself.
 *gk.net.timeout.interface*=<...>::
     By default we will wait up to 10 seconds for interface to show up.
 
+*gk.udev.debug*=<...>::
+    This boolean option allows you to run udevd in debug mode. Output
+    will be logged to '/run/initramfs/udevd.log'.
+
 *gk.udev.timeout*=<...>::
     By default we will wait up to 120 seconds (UDEV default) for
     UDEV event queue to become empty.
