@@ -1335,34 +1335,6 @@ then
 	run pkill -9 udevd >/dev/null 2>&1
 fi
 
-# If devtmpfs is mounted, try move it to the new root
-# If that fails, try to unmount all possible mounts of
-# devtmpfs as stuff breaks otherwise
-for fs in /run /dev /sys /proc
-do
-	if grep -qs "${fs}" /proc/mounts
-	then
-		chroot_dir="${CHROOT}${fs}"
-		[ ! -d "${chroot_dir}" ] && run mkdir -p "${chroot_dir}"
-
-		if ! run mount -o move ${fs} "${CHROOT}"${fs}
-		then
-			run umount ${fs} || \
-			bad_msg "Failed to move and unmount the ramdisk ${fs}!"
-		fi
-
-		unset chroot_dir
-	fi
-done
-
-if [ ! -e "${CHROOT}/dev/console" ] || [ ! -e "${CHROOT}/dev/null" ]
-then
-	bad_msg "ERROR: your real /dev is missing console and null"
-elif [ -e /etc/initrd.splash -a ! -e "${CHROOT}/dev/tty1" ]
-then
-	bad_msg "ERROR: your real /dev is missing tty1, required for splash"
-fi
-
 # Run debug shell if requested
 rundebugshell "before entering switch_root"
 
@@ -1380,8 +1352,8 @@ elif [ $$ != 1 ]
 then
 	bad_msg "PID was not 1! switch_root would fail"
 else
-	good_msg "Switching to real root: switch_root -c /dev/console ${CHROOT} ${init} ${init_opts}"
-	exec switch_root -c "/dev/console" "${CHROOT}" "${init}" ${init_opts}
+	good_msg "Switching to real root: switch_root ${CHROOT} ${init} ${init_opts}"
+	exec switch_root "${CHROOT}" "${init}" ${init_opts}
 fi
 
 # If we get here, something bad has happened

@@ -635,9 +635,35 @@ append_bcache() {
 	fi
 }
 
-append_blkid() {
+append_unionfs_fuse() {
+	local PN=unionfs-fuse
+	local TDIR="${TEMP}/initramfs-${PN}-temp"
+	if [ -d "${TDIR}" ]
+	then
+		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
+	fi
+
+	populate_binpkg ${PN}
+
+	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
+
+	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+	log_future_cpio_content
+	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
+		|| gen_die "Failed to append ${PN} to cpio!"
+
+	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
+	if isTrue "${CLEANUP}"
+	then
+		rm -rf "${TDIR}"
+	fi
+}
+
+append_util-linux() {
 	local PN="util-linux"
-	local TDIR="${TEMP}/initramfs-blkid-temp"
+	local TDIR="${TEMP}/initramfs-util-linux-temp"
 	if [ -d "${TDIR}" ]
 	then
 		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
@@ -654,32 +680,6 @@ append_blkid() {
 	# Delete unneeded files
 	rm -rf usr/
 
-	log_future_cpio_content
-	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
-		|| gen_die "Failed to append blkid to cpio!"
-
-	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
-	if isTrue "${CLEANUP}"
-	then
-		rm -rf "${TDIR}"
-	fi
-}
-
-append_unionfs_fuse() {
-	local PN=unionfs-fuse
-	local TDIR="${TEMP}/initramfs-${PN}-temp"
-	if [ -d "${TDIR}" ]
-	then
-		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
-	fi
-
-	populate_binpkg ${PN}
-
-	mkdir -p "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
-
-	unpack "$(get_gkpkg_binpkg "${PN}")" "${TDIR}"
-
-	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
 		|| gen_die "Failed to append ${PN} to cpio!"
@@ -1930,11 +1930,11 @@ create_initramfs() {
 	CPIO_ARCHIVE="${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}"
 	append_data 'devices' # WARNING, must be first!
 	append_data 'base_layout'
+	append_data 'util-linux'
 	append_data 'eudev'
 	append_data 'devicemanager'
 	append_data 'auxilary' "${BUSYBOX}"
 	append_data 'busybox' "${BUSYBOX}"
-	append_data 'blkid' "${DISKLABEL}"
 	append_data 'b2sum' "${B2SUM}"
 	append_data 'btrfs' "${BTRFS}"
 	append_data 'dmraid' "${DMRAID}"

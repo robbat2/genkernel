@@ -1,6 +1,18 @@
 # Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
+src_prepare() {
+	default
+
+	# Build static switch_root
+	sed -i \
+		-e '/^switch_root_SOURCES =.*/a switch_root_LDFLAGS = -all-static' \
+		sys-utils/Makemodule.am \
+		|| die
+
+	gkautoreconf
+}
+
 src_configure() {
 	export ac_cv_header_security_pam_misc_h=no
 	export ac_cv_header_security_pam_appl_h=no
@@ -16,6 +28,7 @@ src_configure() {
 		--disable-widechar
 		--without-python
 		--disable-pylibmount
+		--enable-switch_root
 		--enable-static-programs=blkid
 	)
 
@@ -37,6 +50,15 @@ src_install() {
 	cp -a blkid.static "${D}"/sbin/blkid \
 		|| die "Failed to copy '${S}/blkid.static' to '${D}/sbin/blkid'!"
 
-	"${STRIP}" --strip-all "${D}"/sbin/blkid \
-		|| die "Failed to strip '${D}/sbin/blkid'!"
+	cp -a switch_root "${D}"/sbin/switch_root \
+		|| die "Failed to copy '${S}/switch_root' to '${D}/sbin/switch_root'!"
+
+	local sbin
+	for sbin in \
+		"${D}/sbin/blkid" \
+		"${D}/sbin/switch_root" \
+	; do
+		"${STRIP}" --strip-all "${sbin}" \
+			|| die "Failed to strip '${sbin}'!"
+	done
 }
