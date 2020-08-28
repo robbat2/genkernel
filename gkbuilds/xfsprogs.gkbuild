@@ -32,15 +32,24 @@ src_configure() {
 }
 
 src_compile() {
-	gkmake V=1 headers repair
+	gkmake V=1 headers growfs repair
 }
 
 src_install() {
 	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
 
+	cp growfs/xfs_growfs "${D}"/sbin \
+		|| die "Failed to copy '${S}/repair/xfs_growfs' to '${D}/sbin/'!"
+
 	cp repair/xfs_repair "${D}"/sbin \
 		|| die "Failed to copy '${S}/repair/xfs_repair' to '${D}/sbin/'!"
 
-	"${STRIP}" --strip-all "${D}"/sbin/xfs_repair \
-		|| die "Failed to strip '${D}/sbin/xfs_repair'!"
+	local sbin
+	for sbin in \
+		"${D}/sbin/xfs_growfs" \
+		"${D}/sbin/xfs_repair" \
+	; do
+		"${STRIP}" --strip-all "${sbin}" \
+			|| die "Failed to strip '${sbin}'!"
+	done
 }
