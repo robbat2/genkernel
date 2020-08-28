@@ -14,8 +14,8 @@ src_configure() {
 		--bindir=/bin
 		--with-root-prefix=""
 		--disable-nls
-		--disable-libblkid
-		--disable-libuuid
+		--enable-libblkid
+		--enable-libuuid
 		--disable-fsck
 		--disable-uuidd
 		--disable-debugfs
