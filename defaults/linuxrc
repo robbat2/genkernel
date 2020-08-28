@@ -568,7 +568,7 @@ good_msg 'Activating udev ...'
 udevd_cmd="run udevd --resolve-names=never"
 if is_debug
 then
-	udevd_cmd="${udevd_cmd} --debug > /tmp/udev.debug 2>&1 &"
+	udevd_cmd="${udevd_cmd} --debug > ${GK_UDEV_LOG} 2>&1 &"
 else
 	udevd_cmd="${udevd_cmd} --daemon"
 fi
