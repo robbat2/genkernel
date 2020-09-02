@@ -790,7 +790,8 @@ when not set. This will allow remote user to provide answer through
 *rootfstype*=<...>::
     Specify the file system type to mount the real root filesystem as.
     This can be useful when support for ext2/ext3/ext4 are
-    in competition.  Default is "auto".
+    in competition or used filesystem was not built into kernel.
+    Default is "auto".
 
 *docache*::
 *nocache*::
