@@ -45,7 +45,7 @@ main() {
 
 	local LUKS_NAME="${NAME}"
 	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"'
-	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
+	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEYFILE}"'
 	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 
