@@ -43,8 +43,11 @@ main() {
 		exit 1
 	fi
 
-	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="${NAME}" LUKS_KEY='"${CRYPT_KEYFILE_'${TYPE}'}"'
-	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"' OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
+	local LUKS_NAME="${NAME}"
+	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"'
+	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
+	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
+	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 
 	while true
 	do
