@@ -646,6 +646,9 @@ recognized by the kernel itself.
     root_key.   If unset while using root_key, it will automatically
     look for the device in every boot.
 
+*root_keydev_fstype*=<...>::
+    Used filesystem for *root_keydev*. See *rootfstype* for more details.
+
 *root_trim*=(yes|no)::
     Enables TRIM support for a LUKS-based root device.  Only useful
     with SSD setups.  Have a look at 'https://en.wikipedia.org/wiki/TRIM'
@@ -656,6 +659,9 @@ recognized by the kernel itself.
 
 *swap_keydev*=<...>::
     Same as root_keydev for swap.
+
+*swap_keydev_fstype*=<...>::
+    Used filesystem for *swap_keydev*. See *rootfstype* for more details.
 
 *crypt_silent*::
     Set this to silent all the output related to the cryptographic

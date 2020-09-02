@@ -1780,7 +1780,7 @@ openLUKS() {
 		exit 1
 	fi
 
-	case $1 in
+	case ${1} in
 		root)
 			local TYPE=ROOT
 			;;
@@ -1789,8 +1789,12 @@ openLUKS() {
 			;;
 	esac
 
-	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"' LUKS_NAME="$1" LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
-	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"' LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
+	local LUKS_NAME="${1}"
+	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"'
+	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
+	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"'
+	eval local LUKS_KEYDEV_FSTYPE='"${CRYPT_'${TYPE}'_KEYDEV_FSTYPE}"'
+	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
 	local mntkey="/mnt/key/" crypt_filter_ret=
@@ -1886,7 +1890,10 @@ openLUKS() {
 						# At this point a device was recognized, now let's see if the key is there
 						[ ! -d "${mntkey}" ] && mkdir -p "${mntkey}" >/dev/null 2>&1
 
-						if ! run mount -n -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>&1
+						# determine fs -- 'auto' will not trigger module loading!
+						LUKS_KEYDEV_FSTYPE=$(determine_fs "${REAL_LUKS_KEYDEV}" "${LUKS_KEYDEV_FSTYPE}")
+
+						if ! run mount -n -t ${LUKS_KEYDEV_FSTYPE} -o ro ${REAL_LUKS_KEYDEV} ${mntkey} >/dev/null 2>&1
 						then
 							KEYDEV_ERROR=1
 							bad_msg "Mounting of device ${REAL_LUKS_KEYDEV} failed." ${CRYPT_SILENT}

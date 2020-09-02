@@ -257,6 +257,9 @@ do
 		root_keydev=*)
 			CRYPT_ROOT_KEYDEV=${x#*=}
 		;;
+		root_keydev_fstype=*)
+			CRYPT_ROOT_KEYDEV_FSTYPE=${x#*=}
+		;;
 		root_trim=*)
 			CRYPT_ROOT_TRIM=${x#*=}
 		;;
@@ -265,6 +268,9 @@ do
 		;;
 		swap_keydev=*)
 			CRYPT_SWAP_KEYDEV=${x#*=}
+		;;
+		swap_keydev_fstype=*)
+			CRYPT_SWAP_KEYDEV_FSTYPE=${x#*=}
 		;;
 		real_resume=*|resume=*)
 			REAL_RESUME=${x#*=}
