@@ -24,10 +24,10 @@ fi
 receivefile() {
 	case ${1} in
 		root)
-			file=${CRYPT_KEYFILE_ROOT}
+			file=${CRYPT_ROOT_KEYFILE}
 			;;
 		swap)
-			file=${CRYPT_KEYFILE_SWAP}
+			file=${CRYPT_SWAP_KEYFILE}
 			;;
 		'')
 			bad_msg "No keyfile specified." "${CRYPT_SILENT}"
