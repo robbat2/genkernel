@@ -151,9 +151,6 @@ do
 				;;
 			esac
 		;;
-		dobtrfs)
-			USE_BTRFS=1
-		;;
 		quiet|quiet_genkernel)
 			QUIET=1
 		;;
@@ -614,9 +611,6 @@ fi
 
 # Apply scan delay if specified
 sdelay
-
-# Setup btrfs, see bug 303529
-setup_btrfsctl
 
 # Scan volumes
 start_volumes

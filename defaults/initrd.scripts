@@ -75,7 +75,6 @@ modules_scan() {
 	elif [ "${USE_MDADM}" = '1' ] \
 		|| [ "${USE_LVM_NORMAL}" = '1' ] \
 		|| [ "${USE_CRYPTSETUP}" = '1' ] \
-		|| [ "${USE_BTRFS}" = '1' ] \
 		|| [ "${USE_ZFS}" = '1' ] \
 		|| [ "${USE_DMRAID_NORMAL}" = '1' ]
 	then
@@ -1612,25 +1611,6 @@ start_volumes() {
 		fi
 	fi
 
-	if [ "${USE_BTRFS}" = '1' ]
-	then
-		if ! hash btrfs >/dev/null 2>&1
-		then
-			bad_msg "dobtrfs invoked but 'btrfs' not found; Skipping btrfs device scanning ..."
-		else
-			good_msg "Scanning for BTRFS devices ..."
-
-			local btrfs_cmd="run btrfs device scan 2>&1"
-			is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
-
-			eval "${btrfs_cmd}"
-			if [ $? -ne 0 ]
-			then
-				bad_msg "Scanning for BTRFS devices failed!"
-			fi
-		fi
-	fi
-
 	if [ "${USE_ZFS}" = '1' ]
 	then
 		# Avoid race involving asynchronous module loading
@@ -2507,18 +2487,6 @@ cdupdate() {
 		else
 			good_msg 'No cdupdate.sh script found, skipping ...'
 		fi
-	fi
-}
-
-setup_btrfsctl() {
-	# start BTRFS volume detection, if available
-	if hash btrfsctl >/dev/null 2>&1
-	then
-		local btrfs_cmd="run btrfsctl -a 2>&1"
-		is_log_enabled && btrfs_cmd="${btrfs_cmd} | tee -a '${GK_INIT_LOG}'"
-
-		eval "${btrfs_cmd}"
-		udevsettle
 	fi
 }
 
