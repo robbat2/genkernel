@@ -1833,7 +1833,7 @@ is_static() {
 	return $?
 }
 
-append_auxilary() {
+append_auxiliary() {
 	local TDIR="${TEMP}/initramfs-aux-temp"
 	if [ -d "${TDIR}" ]
 	then
@@ -1956,7 +1956,7 @@ append_auxilary() {
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
 	find . -print0 | "${CPIO_COMMAND}" ${CPIO_ARGS} --append -F "${CPIO_ARCHIVE}" \
-		|| gen_die "Failed to append auxilary to cpio!"
+		|| gen_die "Failed to append auxiliary to cpio!"
 
 	cd "${TEMP}" || die "Failed to chdir to '${TEMP}'!"
 	if isTrue "${CLEANUP}"
@@ -1987,7 +1987,7 @@ create_initramfs() {
 	append_data 'util-linux'
 	append_data 'eudev'
 	append_data 'devicemanager'
-	append_data 'auxilary' "${BUSYBOX}"
+	append_data 'auxiliary' "${BUSYBOX}"
 	append_data 'busybox' "${BUSYBOX}"
 	append_data 'b2sum' "${B2SUM}"
 	append_data 'btrfs' "${BTRFS}"
