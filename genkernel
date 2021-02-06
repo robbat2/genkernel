@@ -4,6 +4,12 @@
 PATH="${PATH}:/sbin:/usr/sbin"
 GK_V='4.1.2'
 
+# Normalize locales
+export LC_ALL=C
+export LANG=C
+unset LC_MESSAGES
+unset LC_CTYPE
+
 GK_TIME_START=$(date +%s)
 
 TODEBUGCACHE=yes # Until an error occurs or LOGFILE is fully qualified.
