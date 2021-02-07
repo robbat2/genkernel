@@ -244,9 +244,15 @@ do
 			CRYPT_ROOT=${x#*=}
 			USE_CRYPTSETUP=1
 		;;
+		crypt_root_options=*)
+			CRYPT_ROOT_OPTIONS=$(echo ${CRYPT_ROOT_OPTIONS} ${x#*=} | sed -e 's/,/ /g')
+		;;
 		crypt_swap=*)
 			CRYPT_SWAP=${x#*=}
 			USE_CRYPTSETUP=1
+		;;
+		crypt_swap_options=*)
+			CRYPT_SWAP_OPTIONS=$(echo ${CRYPT_SWAP_OPTIONS} ${x#*=} | sed -e 's/,/ /g')
 		;;
 		root_key=*)
 			CRYPT_ROOT_KEY=${x#*=}
@@ -258,7 +264,12 @@ do
 			CRYPT_ROOT_KEYDEV_FSTYPE=${x#*=}
 		;;
 		root_trim=*)
-			CRYPT_ROOT_TRIM=${x#*=}
+			tmp_enabled=${x#*=}
+			if is_true "${tmp_enabled}"
+			then
+				CRYPT_ROOT_OPTIONS="${CRYPT_ROOT_OPTIONS} --allow-discards"
+			fi
+			unset tmp_enabled
 		;;
 		swap_key=*)
 			CRYPT_SWAP_KEY=${x#*=}

@@ -1193,7 +1193,7 @@ write_env_file() {
 	for varname in $*
 	do
 		eval varvalue=\$${varname}
-		echo "${varname}=${varvalue}" >> "${env_file}"
+		echo "${varname}='${varvalue}'" >> "${env_file}"
 	done
 }
 
@@ -1774,15 +1774,13 @@ openLUKS() {
 	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
 	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"'
 	eval local LUKS_KEYDEV_FSTYPE='"${CRYPT_'${TYPE}'_KEYDEV_FSTYPE}"'
-	eval local LUKS_TRIM='"${CRYPT_'${TYPE}'_TRIM}"'
+	eval local cryptsetup_options='"${CRYPT_'${TYPE}'_OPTIONS}"'
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
 	local mntkey="/mnt/key/" crypt_filter_ret=
 
 	while true
 	do
-		local cryptsetup_options=''
-
 		local gpg_cmd=""
 		if [ -e "${OPENED_LOCKFILE}" ]
 		then
@@ -1819,10 +1817,9 @@ openLUKS() {
 				DEV_ERROR=1
 				continue
 			else
-				if [ "x${LUKS_TRIM}" = "xyes" ]
+				if [ -n "${cryptsetup_options}" ]
 				then
-					good_msg "Enabling TRIM support for ${LUKS_NAME} ..." ${CRYPT_SILENT}
-					cryptsetup_options="${cryptsetup_options} --allow-discards"
+					good_msg "Using the following cryptsetup options for ${LUKS_NAME}: ${cryptsetup_options}" ${CRYPT_SILENT}
 				fi
 
 				# Handle keys
@@ -2333,9 +2330,10 @@ start_sshd() {
 	write_env_file \
 		"${CRYPT_ENV_FILE}" \
 		CRYPT_ROOT \
-		CRYPT_ROOT_TRIM \
+		CRYPT_ROOT_OPTIONS \
 		CRYPT_SILENT \
-		CRYPT_SWAP
+		CRYPT_SWAP \
+		CRYPT_SWAP_OPTIONS
 
 	run touch /var/log/lastlog
 

@@ -633,8 +633,18 @@ recognized by the kernel itself.
     This specifies the device encrypted by LUKS, which contains the
     root filesystem to mount.
 
+*crypt_root_options*=<...>::
+    This specifies additional options, which should get passed to
+    cryptsetup when opening root volume. Can be specified multiple
+    times or separate multiple options with a comma.
+
 *crypt_swap*=<...>::
     This specifies the swap device encrypted by LUKS.
+
+*crypt_swap_options*=<...>::
+    This specifies additional options, which should get passed to
+    cryptsetup when opening swap volume. Can be specified multiple
+    times or separate multiple options with a comma.
 
 *root_key*=<...>::
     In case your root is encrypted with a key, you can use a device
