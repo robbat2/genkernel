@@ -1,0 +1,54 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	export ac_cv_sys_symbol_underscore=no
+
+	local myconf=(
+		--enable-static=yes
+		--disable-padlock-support
+		--enable-static=yes
+	)
+
+	CC_FOR_BUILD="$(tc-getBUILD_CC)" \
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	rm -rf \
+		"${D}"/usr/bin/dumpsexp \
+		"${D}"/usr/bin/hmac256 \
+		"${D}"/usr/bin/mpicalc \
+		"${D}"/usr/share
+
+	# remove hardcoded $BROOT
+	sed -i \
+		-e 's/-L\/[^-"]*//' \
+		-e 's/-I\/[^"]*//' \
+		"${D}"/usr/bin/libgcrypt-config  \
+		|| die
+
+	# libgcrypt-config tries to be smart and will omit include
+	# and lib dir due to set prefix
+	sed -i \
+		-e "s|x/usr/include|x/dont-try-to-be-smart|" \
+		-e "s|x/usr/lib|x/dont-try-to-be-smart|" \
+		"${D}"/usr/bin/libgcrypt-config \
+		|| die "Failed to make libgcrypt-config dumb!"
+
+	mv "${D}"/usr/bin/libgcrypt-config "${D}"/usr/bin/libgcrypt-config.ori \
+		|| die "Failed to rename '${D}/usr/bin/libgcrypt-config' to '${D}/usr/bin/libgcrypt-config.ori'!" 
+
+	cat >"${D}"/usr/bin/libgcrypt-config <<-EOF
+	#!/bin/sh
+
+	SYSROOT=\$(dirname "\$(dirname "\$(dirname "\$(readlink -fm "\$0")")")")
+
+	exec "\${SYSROOT}"/usr/bin/libgcrypt-config.ori "\$@" | sed -e 's#/#'\${SYSROOT}'/#'
+	EOF
+
+	chmod +x "${D}"/usr/bin/libgcrypt-config \
+		|| die "Failed to chmod of '${D}/bin/libgcrypt-config'!"
+}

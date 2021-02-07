@@ -1,0 +1,27 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -279,7 +279,7 @@ TOOLS:=\
+ 
+ MANPAGES:=$(patsubst %,man8/%.8,$(TOOLS))
+ 
+-install: bin/pdata_tools $(MANPAGES)
++install: bin/pdata_tools
+ 	$(INSTALL_DIR) $(BINDIR)
+ 	$(INSTALL_PROGRAM) bin/pdata_tools $(BINDIR)
+ 	$(STRIP) $(BINDIR)/pdata_tools
+@@ -302,6 +302,7 @@ install: bin/pdata_tools $(MANPAGES)
+ 	ln -s -f pdata_tools $(BINDIR)/era_dump
+ 	ln -s -f pdata_tools $(BINDIR)/era_invalidate
+ 	ln -s -f pdata_tools $(BINDIR)/era_restore
++ifeq ("@INSTALLMANPAGES@", "yes")
+ 	$(INSTALL_DIR) $(MANPATH)/man8
+ 	$(INSTALL_DATA) man8/cache_check.8 $(MANPATH)/man8
+ 	$(INSTALL_DATA) man8/cache_dump.8 $(MANPATH)/man8
+@@ -322,6 +323,7 @@ install: bin/pdata_tools $(MANPAGES)
+ 	$(INSTALL_DATA) man8/era_restore.8 $(MANPATH)/man8
+ 	$(INSTALL_DATA) man8/era_invalidate.8 $(MANPATH)/man8
+ 	$(INSTALL_DATA) man8/thin_trim.8 $(MANPATH)/man8
++endif
+ ifeq ("@DEVTOOLS@", "yes")
+ 	ln -s -f pdata_tools $(BINDIR)/thin_show_duplicates
+ 	ln -s -f pdata_tools $(BINDIR)/thin_ll_dump

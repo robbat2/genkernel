@@ -8,12 +8,10 @@ KERNEL_MAKE_DIRECTIVE_2=""
 KERNEL_BINARY="./vmlinux"
 
 # Initrd/Initramfs Options
-USECOLOR="yes"
-NOINITRDMODULES="yes"
-BUSYBOX=1
-DMRAID=0
-DISKLABEL=0
+RAMDISKMODULES="no"
+BUSYBOX="yes"
+DMRAID="no"
 
 # genkernel on mips is only used for LiveCDs && netboots.  Catalyst
 # will know where to get the kernels at.
-CMD_INSTALL=0
+INSTALL="no"

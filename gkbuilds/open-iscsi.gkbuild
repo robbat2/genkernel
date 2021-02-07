@@ -1,0 +1,23 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_compile() {
+	append-cppflags -DNO_SYSTEMD
+	export NO_SYSTEMD=1
+	export PKG_CONFIG="$(tc-getPKG_CONFIG) --static"
+
+	gkmake -C utils/sysdeps V=1
+	gkmake -C utils/fwparam_ibft V=1
+	gkmake -C libopeniscsiusr V=1
+	gkmake -C usr -j1 V=1 iscsistart
+}
+
+src_install() {
+	mkdir "${D}"/bin || die "Failed to create '${D}/bin'!"
+
+	cp -a usr/iscsistart "${D}"/bin/ \
+		|| die "Failed to copy '${S}/usr/iscsistart' to '${D}/bin/'!"
+
+	"${STRIP}" --strip-all "${D}"/bin/iscsistart \
+		|| die "Failed to strip '${D}/bin/iscsistart'!"
+}

@@ -1,15 +1,26 @@
 #!/bin/sh
 
+# shellcheck source=initrd.defaults
 . /etc/initrd.defaults
+# shellcheck source=initrd.scripts
 . /etc/initrd.scripts
 
-splash() {
-	return 0
-}
-
+# shellcheck source=/dev/null
 [ -e /etc/initrd.splash ] && . /etc/initrd.splash
 
-# Clean input/output
+# Basic /dev content, we need it as fast as possible.
+[ ! -e /dev/console ]  && mknod /dev/console c 5 1
+[ ! -e /dev/null ]     && mknod /dev/null c 1 3
+[ ! -e /dev/random ]   && mknod /dev/random c 1 8
+[ ! -e /dev/tty ]      && mknod /dev/tty c 5 0
+[ ! -e /dev/tty0 ]     && mknod /dev/tty0 c 4 0
+[ ! -e /dev/tty1 ]     && mknod /dev/tty1 c 4 1
+[ ! -e /dev/ttyS0 ]    && mknod /dev/ttyS0 c 4 64
+[ ! -e /dev/ttyS1 ]    && mknod /dev/ttyS1 c 4 65
+[ ! -e /dev/urandom ]  && mknod /dev/urandom c 1 9
+[ ! -e /dev/zero ]     && mknod /dev/zero c 1 5
+
+# Take control
 exec >${CONSOLE} <${CONSOLE} 2>&1
 
 if [ "$$" != '1' ]
@@ -22,16 +33,33 @@ fi
 
 mount -t proc -o noexec,nosuid,nodev proc /proc >/dev/null 2>&1
 mount -o remount,rw / >/dev/null 2>&1
+mount -t tmpfs -o rw,nosuid,nodev,relatime,mode=755 none /run 2>&1
+
+if [ ! -d /run/initramfs ]
+then
+	mkdir -p /run/initramfs
+	chmod 0750 /run/initramfs
+fi
 
 # Prevent superfluous printks from being printed to the console
 echo 1 > /proc/sys/kernel/printk
 
+if [ ! -s /etc/ld.so.cache ]
+then
+	# Looks like we were unable to run ldconfig during initramfs generation
+	hash ldconfig >/dev/null 2>&1 && run ldconfig
+fi
+
 # Set up symlinks
-/bin/busybox --install -s
+run busybox --install -s
+
+gk_ver="$(cat /etc/build_id)"
+gk_build_date="$(cat /etc/build_date)"
+kernel_ver="$(uname -r)"
 
 if [ "$0" = '/init' ]
 then
-	[ -e /linuxrc ] && rm /linuxrc
+	[ -e /linuxrc ] && run rm /linuxrc
 fi
 
 CMDLINE=$(cat /proc/cmdline)
@@ -43,7 +71,7 @@ ROOTFSTYPE='auto'
 CRYPT_SILENT=0
 QUIET=''
 
-mkdir -p /etc/cmdline /etc/modprobe.d
+run mkdir -p /etc/cmdline /etc/modprobe.d
 for x in ${CMDLINE}
 do
 	case "${x}" in
@@ -90,10 +118,6 @@ do
 		dolvm)
 			USE_LVM_NORMAL=1
 		;;
-		dolvm2)
-			bad_msg 'Using dolvm2 is deprecated, use dolvm, instead.'
-			USE_LVM_NORMAL=1
-		;;
 		domdadm)
 			USE_MDADM=1
 		;;
@@ -105,7 +129,6 @@ do
 			USE_DMRAID_NORMAL=1
 		;;
 		domultipath)
-			good_msg "Booting with multipath activated."
 			USE_MULTIPATH_NORMAL=1
 		;;
 		dozfs*)
@@ -119,7 +142,8 @@ do
 
 			case "${x#*=}" in
 				*cache*)
-					if [ -s "/etc/zfs/zpool.cache" ]; then
+					if [ -s "/etc/zfs/zpool.cache" ]
+					then
 						ZPOOL_CACHE="-c /etc/zfs/zpool.cache"
 					else
 						bad_msg "zpool.cache not found or empty, zpool import will be slow"
@@ -127,15 +151,12 @@ do
 				;;
 			esac
 		;;
-		dobtrfs*)
-			USE_BTRFS=1
-		;;
 		quiet|quiet_genkernel)
 			QUIET=1
 		;;
 		# Debug Options
 		debug)
-			DEBUG='yes'
+			run touch "${GK_DEBUGMODE_STATEFILE}"
 		;;
 		# Scan delay options
 		scandelay=*)
@@ -157,18 +178,15 @@ do
 		doload=*)
 			MDOLIST=$(echo ${MDOLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 		;;
-		nodetect)
-			NODETECT=1
-		;;
 		noload=*)
 			MLIST=$(echo ${MLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 			export MLIST
 		;;
 		# Redirect output to a specific tty
 		CONSOLE=*|console=*)
-			CONSOLE=${x#*=}
-			CONSOLE=$(basename ${CONSOLE})
-#			exec >${CONSOLE} <${CONSOLE} 2>&1
+			NEW_CONSOLE=${x#*=}
+			NEW_CONSOLE=$(basename ${NEW_CONSOLE})
+			NEW_CONSOLE=${NEW_CONSOLE%%,*}
 		;;
 		# /dev/md
 		lvmraid=*)
@@ -182,10 +200,8 @@ do
 		part|partitionable)
 			MDPART=1
 		;;
+		# For network options see start_network() in initrd.scripts
 		# NFS
-		ip=*)
-			IP=${x#*=}
-		;;
 		nfsroot=*)
 			NFSROOT=${x#*=}
 		;;
@@ -226,9 +242,11 @@ do
 		# Crypto
 		crypt_root=*)
 			CRYPT_ROOT=${x#*=}
+			USE_CRYPTSETUP=1
 		;;
 		crypt_swap=*)
 			CRYPT_SWAP=${x#*=}
+			USE_CRYPTSETUP=1
 		;;
 		root_key=*)
 			CRYPT_ROOT_KEY=${x#*=}
@@ -236,15 +254,20 @@ do
 		root_keydev=*)
 			CRYPT_ROOT_KEYDEV=${x#*=}
 		;;
+		root_keydev_fstype=*)
+			CRYPT_ROOT_KEYDEV_FSTYPE=${x#*=}
+		;;
 		root_trim=*)
 			CRYPT_ROOT_TRIM=${x#*=}
 		;;
-
 		swap_key=*)
 			CRYPT_SWAP_KEY=${x#*=}
 		;;
 		swap_keydev=*)
 			CRYPT_SWAP_KEYDEV=${x#*=}
+		;;
+		swap_keydev_fstype=*)
+			CRYPT_SWAP_KEYDEV_FSTYPE=${x#*=}
 		;;
 		real_resume=*|resume=*)
 			REAL_RESUME=${x#*=}
@@ -254,6 +277,99 @@ do
 		;;
 		crypt_silent)
 			CRYPT_SILENT=1
+		;;
+		dosshd)
+			USE_SSH=1
+		;;
+		gk.bootfont.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				GK_BOOTFONT_DISABLED=1
+			fi
+			unset tmp_disabled
+		;;
+		gk.hw.load-all=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				GK_HW_LOAD_ALL_MODULES=1
+			fi
+			unset tmp_disabled
+		;;
+		gk.hw.use-modules_load=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				GK_HW_USE_MODULES_LOAD=1
+			fi
+			unset tmp_disabled
+		;;
+		gk.log.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				[ -f "${GK_INIT_LOG}" ] && rm "${GK_INIT_LOG}"
+				GK_INIT_LOG=
+				touch "${GK_INIT_LOG_DISABLED}"
+			fi
+			unset tmp_disabled
+		;;
+		gk.sshd.port=*)
+			tmp_port=${x#*=}
+			if is_int "${tmp_port}"
+			then
+				GK_SSHD_PORT=${tmp_port}
+			else
+				warn_msg "'${x}' does not look like a valid port -- ignored!"
+			fi
+			unset tmp_port
+		;;
+		gk.sshd.wait=*)
+			tmp_wait=${x#*=}
+			if is_int "${tmp_wait}"
+			then
+				GK_SSHD_WAIT=${tmp_wait}
+			else
+				warn_msg "'${x}' does not look like a valid time (second) value -- ignored!"
+			fi
+			unset tmp_wait
+		;;
+		gk.udev.debug=*)
+			tmp_enabled=${x#*=}
+			if is_true "${tmp_enabled}"
+			then
+				GK_UDEV_DEBUG=1
+			fi
+			unset tmp_enabled
+		;;
+		gk.udev.timeout=*)
+			tmp_timeout=${x#*=}
+			if is_int "${tmp_timeout}"
+			then
+				GK_UDEV_TIMEOUT=${tmp_timeout}
+			else
+				warn_msg "'${x}' does not look like a valid time (second) value -- ignored!"
+			fi
+			unset tmp_timeout
+		;;
+		gk.userinteraction.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				touch "${GK_USERINTERACTION_DISABLED_STATEFILE}"
+			fi
+			unset tmp_disabled
+		;;
+		gk.prompt.timeout=*)
+			tmp_timeout=${x#*=}
+			if is_int "${tmp_timeout}"
+			then
+				GK_PROMPT_TIMEOUT=${tmp_timeout}
+			else
+				warn_msg "'${x}' does not look like a valid time (second) value -- ignored!"
+			fi
+			unset tmp_timeout
 		;;
 		real_rootflags=*)
 			REAL_ROOTFLAGS=${x#*=}
@@ -267,15 +383,16 @@ do
 		keymap=*)
 			keymap=${x#*=}
 		;;
-    locale=*)
-      locale=${x#*=}
-    ;;
-    aufs)
-      aufs=1
-    ;;
+		locale=*)
+			locale=${x#*=}
+		;;
+		aufs)
+			aufs=1
+		;;
 		aufs\=*)
-      aufs=1
-			if echo "${x#*=}" | grep , &>/dev/null; then
+			aufs=1
+			if echo "${x#*=}" | grep , &>/dev/null
+			then
 				aufs_dev_uid=${x#*,}
 				aufs_dev=${x%,*}
 			else
@@ -285,24 +402,25 @@ do
 		# Allow user to specify the modules location
 		aufs.modules\=*)
 			aufs_modules_dir=${x#*=}
-                        aufs_modules=1
+			aufs_modules=1
 		;;
-    overlayfs)
-      overlayfs=1
-    ;;
-  overlayfs\=*)
-    overlayfs=1
-    if echo "${x#*=}" | grep , &>/dev/null; then
-      overlayfs_dev_uid=${x#*,}
-      overlayfs_dev=${x%,*}
-    else
-      overlayfs_dev=${x#*=}
-    fi
-    ;;
+		overlayfs)
+			overlayfs=1
+		;;
+		overlayfs\=*)
+			overlayfs=1
+			if echo "${x#*=}" | grep , &>/dev/null
+			then
+				overlayfs_dev_uid=${x#*,}
+				overlayfs_dev=${x%,*}
+			else
+				overlayfs_dev=${x#*=}
+			fi
+		;;
 		# Allow user to specify the modules location
 		overlayfs.modules\=*)
 			overlayfs_modules_dir=${x#*=}
-                        overlayfs_modules=1
+			overlayfs_modules=1
 		;;
 		unionfs)
 			if [ ! -x /sbin/unionfs ]
@@ -321,6 +439,28 @@ do
 		;;
 	esac
 done
+
+if [ -n "${NEW_CONSOLE}" ]
+then
+	# We cannot update console while processing CMDLINE because we
+	# are only interested in last console= value.
+	[ ! -c "${NEW_CONSOLE}" ] && NEW_CONSOLE="/dev/${NEW_CONSOLE}"
+	if [ -c "${NEW_CONSOLE}" ]
+	then
+		exec >${NEW_CONSOLE} <${NEW_CONSOLE} 2>&1
+		good_msg "Console switched from '${CONSOLE}' to '${NEW_CONSOLE}'!"
+		CONSOLE="${NEW_CONSOLE}"
+	else
+		bad_msg "Unable to switch console: '${NEW_CONSOLE}' not found or not a character device!"
+	fi
+fi
+
+good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
+
+if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
+then
+	hash setfont >/dev/null 2>&1 && run setfont /lib/console/font -C ${CONSOLE} 2>&1
+fi
 
 quiet_kmsg
 
@@ -353,23 +493,25 @@ case "${REAL_ROOT}" in
 esac
 
 # Verify that it is safe to use ZFS
-if [ "$USE_ZFS" = "1" ]
+if [ "${USE_ZFS}" = '1' ]
 then
-	for i in /sbin/zfs /sbin/zpool
+	for i in zfs zpool
 	do
-		if [ ! -x ${i} ]
+		if ! hash ${i} >/dev/null 2>&1
 		then
 			USE_ZFS=0
-			bad_msg 'Aborting use of zfs because ${i} not found!'
+			bad_msg "Aborting use of ZFS because '${i}' not found!"
 			break
 		fi
 	done
+	unset i
 
-	[ "$USE_ZFS" = "1" ] && MY_HWOPTS="${MY_HWOPTS} zfs"
+	[ "${USE_ZFS}" = '1' ] && MY_HWOPTS="${MY_HWOPTS} zfs"
 fi
 
-# Hack for f2fs, which uses crc32 but does not depend on it (in many kernels at least):
-if [ "${ROOTFSTYPE}" = "f2fs" ]; then
+if [ "${ROOTFSTYPE}" = "f2fs" ]
+then
+	# Hack for f2fs, which uses crc32 but does not depend on it (in many kernels at least):
 	FIRSTMODS="${FIRSTMODS} crc32_generic"
 fi
 
@@ -383,52 +525,79 @@ mount_devfs
 # Mount sysfs
 mount_sysfs
 
-# Initialize mdev
-good_msg 'Activating mdev'
-
-# Serialize hotplug events
-touch /dev/mdev.seq
-
-# Setup hotplugging for firmware loading
-if [ -f "/proc/sys/kernel/hotplug" ];
+if [ -e /proc/sys/kernel/hotplug ]
 then
-  echo /sbin/mdev > /proc/sys/kernel/hotplug
+	log_msg "COMMAND: 'echo "" > /proc/sys/kernel/hotplug'"
+	echo "" > /proc/sys/kernel/hotplug
 fi
 
 # Load modules listed in MY_HWOPTS if /lib/modules exists for the running kernel
 if [ -z "${DO_modules}" ]
 then
-	good_msg 'Skipping module load; disabled via commandline'
+	good_msg 'Skipping module load; disabled via command-line'
 elif [ -d "/lib/modules/${KV}" ]
 then
-	good_msg 'Loading modules'
-	if [ -n "$FIRSTMODS" ]; then
+	if [ -n "${FIRSTMODS}" ]
+	then
+		good_msg 'Loading first modules ...'
 		# try these modules first -- detected modules for root device:
 		modules_load firstmods ${FIRSTMODS}
 	fi
+
 	# Load appropriate kernel modules
-	if [ "${NODETECT}" != '1' ]
+	if [ "${GK_HW_USE_MODULES_LOAD}" = '1' ]
 	then
+		good_msg 'Loading modules ...'
 		for modules in ${MY_HWOPTS}
 		do
 			modules_scan ${modules}
 		done
 	fi
-	# Always eval doload=...
-	modules_load extra_load ${MDOLIST}
+
+	if [ -n "${MDOLIST}" ]
+	then
+		good_msg 'Loading modules from command-line ...'
+		modules_load extra_load ${MDOLIST}
+	fi
 else
 	good_msg 'Skipping module load; no modules in the ramdisk!'
 fi
 
-# Ensure that device nodes are properly configured
-mdev -s || bad_msg "mdev -s failed"
+# Run debug shell if requested
+rundebugshell "before starting udevd"
+
+# Initialize udev
+if [ ! -f "/etc/udev/hwdb.bin" ]
+then
+	good_msg 'Generating /etc/udev/hwdb.bin ...'
+	run udevadm hwdb --update \
+		|| bad_msg 'Failed to generate /etc/udev/hwdb.bin!'
+fi
+
+good_msg 'Activating udev ...'
+
+udevd_cmd="run udevd --resolve-names=never"
+if [ "${GK_UDEV_DEBUG}" = '1' ]
+then
+	udevd_cmd="${udevd_cmd} --debug > ${GK_UDEV_LOG} 2>&1 &"
+else
+	udevd_cmd="${udevd_cmd} --daemon"
+fi
+eval "${udevd_cmd}"
+if [ $? -eq 0 ]
+then
+	run udevadm trigger --action=add
+	udevsettle
+else
+	bad_msg "udevd failed to run"
+fi
 
 cd /
 
 # Start iSCSI
-if [ -e /bin/iscsistart ]
+if hash iscsistart >/dev/null 2>&1
 then
-	startiscsi
+	start_iscsi
 fi
 
 # Loop file already exists on fs, assume no mount needed,
@@ -443,45 +612,42 @@ fi
 # Apply scan delay if specified
 sdelay
 
-# Setup btrfs, see bug 303529
-setup_btrfsctl
-
-# Setup md device nodes if they dont exist
-setup_md_device
-
 # Scan volumes
-startVolumes
+start_volumes
 
 setup_keymap
 
-# Initialize LUKS root device except for livecd's
-if [ "${CDROOT}" != 1 ]
+if [ "${USE_SSH}" = '1' ]
 then
-	startLUKS
+	start_network
+	start_sshd
+fi
+
+# Initialize LUKS root device except for livecd's
+if [ "${CDROOT}" != '1' ]
+then
+	start_LUKS
 	if [ "${NORESUME}" != '1' ] && [ -n "${REAL_RESUME}" ]
 	then
 		case "${REAL_RESUME}" in
-			LABEL=*|UUID=*)
-
+			LABEL=*|UUID=*|PARTLABEL=*|PARTUUID=*)
 				RESUME_DEV=""
 				retval=1
 
-				if [ ${retval} -ne 0 ]; then
+				if [ ${retval} -ne 0 ]
+				then
 					RESUME_DEV=$(findfs "${REAL_RESUME}" 2>/dev/null)
 					retval=$?
 				fi
 
-				if [ ${retval} -ne 0 ]; then
-					RESUME_DEV=$(busybox findfs "${REAL_RESUME}" 2>/dev/null)
+				if [ ${retval} -ne 0 ]
+				then
+					RESUME_DEV=$(blkid -o device -l -t "${REAL_RESUME}" 2>/dev/null)
 					retval=$?
 				fi
 
-				if [ ${retval} -ne 0 ]; then
-					RESUME_DEV=$(blkid -o device -l -t "${REAL_RESUME}")
-					retval=$?
-				fi
-
-				if [ ${retval} -eq 0 ] && [ -n "${RESUME_DEV}" ]; then
+				if [ ${retval} -eq 0 ] && [ -n "${RESUME_DEV}" ]
+				then
 					good_msg "Detected real_resume=${RESUME_DEV}"
 					REAL_RESUME="${RESUME_DEV}"
 				fi
@@ -492,7 +658,7 @@ then
 	fi
 fi
 
-mkdir -p "${NEW_ROOT}"
+run mkdir -p "${NEW_ROOT}"
 CHROOT="${NEW_ROOT}"
 
 # Run debug shell if requested
@@ -500,26 +666,30 @@ rundebugshell "before setting up the root filesystem"
 
 if [ "${CDROOT}" = '1' ]
 then
-        # Setup the root filesystem
-        bootstrapFS
+	# Setup the root filesystem
+	bootstrapFS
 
-	if [ 1 = "$aufs" ]; then
-                setup_aufs
-		CHROOT=$aufs_union
-        elif [ 1 = "$overlayfs" ] && [ "${got_good_root}" != '1' ]; then
-                bootstrapCD
+	if [ "${aufs}" = '1' ]
+	then
+		setup_aufs
+		CHROOT=${aufs_union}
+	elif [ "${overlayfs}" = '1' ] && [ "${got_good_root}" != '1' ]
+	then
+		bootstrapCD
 		CHROOT=${NEW_ROOT}
 	fi
 
-	if [ "${got_good_root}" != '1' ] && [ /dev/nfs != "$REAL_ROOT" ] && [ sgimips != "$LOOPTYPE" ] && [ 1 != "$aufs" ] && [ 1 != "$overlayfs" ]; then
+	if [ "${got_good_root}" != '1' ] && [ /dev/nfs != "${REAL_ROOT}" ] && [ sgimips != "${LOOPTYPE}" ] && [ 1 != "${aufs}" ] && [ 1 != "${overlayfs}" ]
+	then
 		bootstrapCD
 	fi
 
 	if [ "${REAL_ROOT}" = '' ] && [ "${got_good_root}" != '1' ]
 	then
-		warn_msg "No bootable medium found. Waiting for new devices..."
+		warn_msg "No bootable medium found. Waiting for new devices ..."
 		COUNTER=0
-		while [ ${COUNTER} -lt 3 ]; do
+		while [ ${COUNTER} -lt 3 ]
+		do
 			sleep 3
 			let COUNTER=${COUNTER}+1
 		done
@@ -530,12 +700,12 @@ then
 	if [ "${REAL_ROOT}" = '' ] && [ "${got_good_root}" != '1' ]
 	then
 		# Undo stuff
-		umount  "${NEW_ROOT}/dev" 2>/dev/null
-		umount  "${NEW_ROOT}/sys" 2>/dev/null
-		umount /sys 2>/dev/null
+		run umount  "${NEW_ROOT}/dev" 2>/dev/null
+		run umount  "${NEW_ROOT}/sys" 2>/dev/null
+		run umount /sys 2>/dev/null
 
-		umount  "${NEW_ROOT}"
-		rm -rf  "${NEW_ROOT}/*"
+		run umount  "${NEW_ROOT}"
+		run rm -rf  "${NEW_ROOT}/*"
 
 		bad_msg 'Could not find CD to boot, something else needed!'
 		CDROOT=0
@@ -543,160 +713,185 @@ then
 fi
 
 # Determine root device
-good_msg 'Determining root device ...'
-ROOTDELAY_100MSEC=1
-[ -n "${ROOTDELAY}" ] && ROOTDELAY_100MSEC=$(($ROOTDELAY * 10))
+let ROOTDELAY_TIMEOUT=$(date +%s)+1
+ROOTDELAY_TIME_WAITED=0
+[ -n "${ROOTDELAY}" -a ${ROOTDELAY} -gt 0 ] && let ROOTDELAY_TIMEOUT=${ROOTDELAY_TIMEOUT}+${ROOTDELAY}-1
 while true
 do
+	good_msg_n "Determining root device (trying ${REAL_ROOT}) ..."
+
 	while [ "${got_good_root}" != '1' ]
 	do
 		# Start of sleep loop waiting on root
-		while [ ${ROOTDELAY_100MSEC} -ge 0 -a "${got_good_root}" != '1' ] ; do
-		case "${REAL_ROOT}" in
-			LABEL=*|UUID=*)
+		while [ "${got_good_root}" != '1' -a $(date +%s) -le ${ROOTDELAY_TIMEOUT} ]
+		do
+			case "${REAL_ROOT}" in
+				LABEL=*|UUID=*|PARTLABEL=*|PARTUUID=*)
+					ROOT_DEV=""
+					retval=1
 
-				ROOT_DEV=""
-				retval=1
-
-				if [ ${retval} -ne 0 ]; then
-					ROOT_DEV=$(findfs "${REAL_ROOT}" 2>/dev/null)
-					retval=$?
-				fi
-
-				if [ ${retval} -ne 0 ]; then
-					ROOT_DEV=$(busybox findfs "${REAL_ROOT}" 2>/dev/null)
-					retval=$?
-				fi
-
-				if [ ${retval} -ne 0 ]; then
-					ROOT_DEV=$(blkid -o device -l -t "${REAL_ROOT}")
-					retval=$?
-				fi
-
-				if [ ${retval} -eq 0 ] && [ -n "${ROOT_DEV}" ]; then
-					good_msg "Detected real_root=${ROOT_DEV}"
-					REAL_ROOT="${ROOT_DEV}"
-				else
-					prompt_user "REAL_ROOT" "root block device"
-					got_good_root=0
-					continue
-				fi
-				;;
-			ZFS*)
-				if [ "${USE_ZFS}" = '0' ]; then
-					prompt_user "REAL_ROOT" "root block device"
-					continue
-				fi
-
-				ROOT_DEV="${REAL_ROOT#*=}"
-				if [ "${ROOT_DEV}" != 'ZFS' ]
-				then
-					if [ "$(zfs get type -o value -H ${ROOT_DEV})" = 'filesystem' ]
+					if [ ${retval} -ne 0 ]
 					then
-						got_good_root=1;
+						ROOT_DEV=$(findfs "${REAL_ROOT}" 2>/dev/null)
+						retval=$?
+					fi
+
+					if [ ${retval} -ne 0 ]
+					then
+						ROOT_DEV=$(blkid -o device -l -t "${REAL_ROOT}" 2>/dev/null)
+						retval=$?
+					fi
+
+					if [ ${retval} -eq 0 ] && [ -n "${ROOT_DEV}" ]
+					then
+						got_good_root=1
+						REAL_ROOT="${ROOT_DEV}"
+						echo
+						good_msg "Root device detected as ${REAL_ROOT}!"
+						break
+					fi
+				;;
+				ZFS*)
+					if [ "${USE_ZFS}" = '0' ]
+					then
+						bad_msg "Cannot use ZFS when started without 'dozfs' kernel command-line parameter!"
+						break
+					fi
+
+					ROOT_DEV="${REAL_ROOT#*=}"
+					if [ "${ROOT_DEV}" != 'ZFS' ]
+					then
+						if [ "$(get_zfs_property "${ROOT_DEV}" type)" = 'filesystem' ]
+						then
+							got_good_root=1
+							REAL_ROOT=${ROOT_DEV}
+							ROOTFSTYPE=zfs
+							echo
+							good_msg "Root device detected as ${REAL_ROOT}!"
+							break
+						else
+							bad_msg "${ROOT_DEV} is not a filesystem"
+							continue
+						fi
+					else
+						BOOTFS=$(zpool list -H -o bootfs 2>/dev/null)
+						if [ "${BOOTFS}" != '-' ]
+						then
+							for i in ${BOOTFS}
+							do
+								zfs get type ${i} > /dev/null 2>&1
+								if [ $? -eq 0 ]
+								then
+									got_good_root=1
+									REAL_ROOT=${i}
+									ROOTFSTYPE=zfs
+									echo
+									good_msg "Root device detected as ${REAL_ROOT}!"
+									break
+								fi
+							done
+						fi
+					fi
+				;;
+				*)
+					ROOT_DEV=$(readlink -f "${REAL_ROOT}")
+					if [ -b "${ROOT_DEV}" ]
+					then
+						got_good_root=1
 						REAL_ROOT=${ROOT_DEV}
-						ROOTFSTYPE=zfs
-					else
-						bad_msg "${ROOT_DEV} is not a filesystem"
-						prompt_user "REAL_ROOT" "root block device"
-						got_good_root=0
-						continue
+						echo
+						good_msg "Root device detected as ${REAL_ROOT}!"
+						break
 					fi
-				else
-					BOOTFS=$(/sbin/zpool list -H -o bootfs)
-					if [ "${BOOTFS}" != '-' ]
-					then
-
-						for i in ${BOOTFS}
-						do
-
-							zfs get type ${i} > /dev/null 2>&1
-							retval=$?
-
-							if [ ${retval} -eq 0 ];	then
-								got_good_root=1
-								REAL_ROOT=${i}
-								ROOTFSTYPE=zfs
-								break
-							fi
-
-						done;
-
-					else
-						got_good_root=0
-					fi
-
-				fi
-
-				if [ ${got_good_root} -ne 1 ]; then
-					prompt_user "REAL_ROOT" "root block device"
-					got_good_root=0
-				fi
-
-				continue
 				;;
-		esac
+			esac
+			unset ROOT_DEV
 
-		if [ "${got_good_root}" != '1' ] ; then
-		  let ROOTDELAY_100MSEC=${ROOTDELAY_100MSEC}-1
-		  usleep 100
-		fi
+			if [ "${got_good_root}" != '1' ]
+			then
+				let ROOTDELAY_TIME_WAITED=${ROOTDELAY_TIME_WAITED}+1
+				sleep 0.1s
+
+				let ROOTDELAY_100MSEC_MODULO=${ROOTDELAY_TIME_WAITED}%10
+				if [ ${ROOTDELAY_100MSEC_MODULO} = 0 ]
+				then
+					printf "."
+				fi
+			fi
 		done  # End of sleep loop waiting on root
-		if [ "${REAL_ROOT}" = '' ]
+
+		if [ $(date +%s) -gt ${ROOTDELAY_TIMEOUT} ]
 		then
-			# No REAL_ROOT determined/specified. Prompt user for root block device.
-			prompt_user "REAL_ROOT" "root block device"
-			got_good_root=0
+			echo
+		fi
+
+		if [ "${USE_ZFS}" = '1' ]
+		then
+			write_env_file \
+				"${ZFS_ENC_ENV_FILE}" \
+				REAL_ROOT \
+				ROOTFSTYPE
+		fi
 
 		# Check for a block device or /dev/nfs or zfs encryption
-		elif [ -b "${REAL_ROOT}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ]
+		if [ -n "${REAL_ROOT}" ] && [ "${REAL_ROOT}" = "/dev/nfs" ] || [ "${ROOTFSTYPE}" = "zfs" ] || [ -b "${REAL_ROOT}" ]
 		then
-			if [ "${ROOTFSTYPE}" = "zfs" ]; then
+			if [ "${ROOTFSTYPE}" = "zfs" ]
+			then
 				# at this point we determined dataset and are ready to mount
 				# let's check if this dataset is encrypted and ask for passphrase
-				if [ "$(zpool list -H -o feature@encryption "${REAL_ROOT%%/*}")" = 'active' ]; then
-					ZFS_KEYSTATUS="$(zfs get -H -o value keystatus "${REAL_ROOT}")"
-					ZFS_ENCRYPTIONROOT="$(zfs get -H -o value encryptionroot "${REAL_ROOT}")"
-					if ! [ "${ZFS_ENCRYPTIONROOT}" = '-' ] || [ "${ZFS_KEYSTATUS}" = 'available' ]; then
+				if [ "$(zpool list -H -o feature@encryption "${REAL_ROOT%%/*}" 2>/dev/null)" = 'active' ]
+				then
+					ZFS_KEYSTATUS="$(get_zfs_property "${REAL_ROOT}" keystatus)"
+					ZFS_ENCRYPTIONROOT="$(get_zfs_property "${REAL_ROOT}" encryptionroot)"
+					if [ "${ZFS_ENCRYPTIONROOT}" != '-' ] && [ "${ZFS_KEYSTATUS}" = 'unavailable' ]
+					then
 						good_msg "Detected ZFS encryption, asking for key"
-						zfs load-key "${ZFS_ENCRYPTIONROOT}"
-						retval=$?
-						# if the key loaded fine, confirm got_good_root to exit second while loop
-						if [ ${retval} -eq 0 ];	then
-							got_good_root=1
-						else
-							bad_msg "${ROOT_DEV} is encrypted and not mountable without key"
-							prompt_user "REAL_ROOT" "root block device"
+						run zfs load-key "${ZFS_ENCRYPTIONROOT}"
+
+						# Get new key status to check if load-key was successful
+						# or dataset has been opened by someone else in the meantime (through SSH for instance)
+						ZFS_KEYSTATUS="$(get_zfs_property "${REAL_ROOT}" keystatus)"
+
+						if [ "${ZFS_KEYSTATUS}" != 'available' ]
+						then
+							bad_msg "${REAL_ROOT} is encrypted and not mountable without key"
 							got_good_root=0
+							break
+						fi
+
+						if [ -f "${ZFS_ENC_OPENED_LOCKFILE}" ]
+						then
+							good_msg "${REAL_ROOT} device meanwhile was opened by someone else."
+						else
+							run touch "${ZFS_ENC_OPENED_LOCKFILE}"
 						fi
 					fi
 				fi
 			else
 				got_good_root=1
 			fi
-		else
-			bad_msg "Block device ${REAL_ROOT} is not a valid root device..."
-			REAL_ROOT=""
-			got_good_root=0
 		fi
+
+		break
 	done
 
-
-	if [ "${CDROOT}" = 1 -a "${got_good_root}" = '1' -a "${REAL_ROOT}" != "/dev/nfs" ]
+	if [ "${got_good_root}" = '1' -a "${CDROOT}" = 1 -a "${REAL_ROOT}" != "/dev/nfs" ]
 	then
 		# CD already mounted; no further checks necessary
 		break
-	elif [ "${LOOPTYPE}" = "sgimips" ]
+	elif [ "${got_good_root}" = '1' -a "${LOOPTYPE}" = 'sgimips' ]
 	then
 		# sgimips mounts the livecd root partition directly
 		# there is no isofs filesystem to worry about
 		break
-	else
-		good_msg "Mounting $REAL_ROOT as root..."
+	elif [ "${got_good_root}" = '1' ]
+	then
+		good_msg "Mounting ${REAL_ROOT} as root ..."
 
 		if [ "${ROOTFSTYPE}" = 'zfs' ]
 		then
-			if [ "$(zfs get -H -o value mountpoint "${REAL_ROOT}")" = 'legacy' ]
+			if [ "$(get_zfs_property "${REAL_ROOT}" mountpoint)" = 'legacy' ]
 			then
 				MOUNT_STATE=rw
 			else
@@ -707,47 +902,106 @@ do
 		fi
 
 		# Try to mount the device as ${NEW_ROOT}
-		if [ "${REAL_ROOT}" = '/dev/nfs' ]; then
+		if [ "${REAL_ROOT}" = '/dev/nfs' ]
+		then
 			findnfsmount
 			mountret=$?
 		else
 			# If $REAL_ROOT is a symlink
 			# Resolve it like util-linux mount does
-			[ -L ${REAL_ROOT} ] && REAL_ROOT=`readlink ${REAL_ROOT}`
+			[ -L ${REAL_ROOT} ] && REAL_ROOT=$(readlink -f ${REAL_ROOT})
+
+			# determine fs -- 'auto' will not trigger module loading!
+			ROOTFSTYPE=$(determine_fs "${REAL_ROOT}" "${ROOTFSTYPE}")
+
 			# mount ro so fsck doesn't barf later
-			if [ "${REAL_ROOTFLAGS}" = '' ]; then
+			if [ "${REAL_ROOTFLAGS}" = '' ]
+			then
 				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}"
-				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}
+				run mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE} ${REAL_ROOT} ${NEW_ROOT}
 				mountret=$?
 			else
 				good_msg "Using mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}"
-				mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
+				run mount -t ${ROOTFSTYPE} -o ${MOUNT_STATE},${REAL_ROOTFLAGS} ${REAL_ROOT} ${NEW_ROOT}
 				mountret=$?
 			fi
 		fi
 
 		# If mount is successful break out of the loop
 		# else not a good root and start over.
-		if [ "$mountret" = '0' ]
+		if [ "${mountret}" = '0' ]
 		then
-			if [ -d ${NEW_ROOT}/dev -a -x "${NEW_ROOT}${REAL_INIT:-/sbin/init}" ] || [ "${REAL_ROOT}" = "/dev/nfs" ]
+			# Make sure that entries from $NEWROOT/etc/initramfs.mounts
+			# are mounted before validating $REAL_INIT in case init isn't
+			# located on $REAL_ROOT.
+			process_initramfs_mounts
+
+			init_binary_file="${NEW_ROOT}${REAL_INIT:-/sbin/init}"
+			init_binary_fallback_file="${NEW_ROOT}/bin/sh"
+
+			if [ -f "${init_binary_file}" -a -x "${init_binary_file}" ]
 			then
 				break
 			else
-				bad_msg "The filesystem mounted at ${REAL_ROOT} does not appear to be a valid /, try again"
-				got_good_root=0
-				REAL_ROOT=''
+				warn_msg "'${init_binary_file}' was not found, is not a file or is not executable, maybe a symlink?" ${QUIET}
 			fi
-		else
-			bad_msg "Could not mount specified ROOT, try again"
+
+			if [ -L "${init_binary_file}" ]
+			then
+				good_msg "Symlink detected! Assuming split /usr ..." ${QUIET}
+				break
+			else
+				warn_msg "'${init_binary_file}' is not a symlink, do we have at least /bin/sh?" ${QUIET}
+			fi
+
+			if [ -f "${init_binary_fallback_file}" -a -x "${init_binary_fallback_file}" ]
+			then
+				REAL_INIT="${init_binary_fallback_file/${NEW_ROOT}}"
+				good_msg "Executable fallback file '${init_binary_fallback_file}' detected!" ${QUIET}
+				break
+			else
+				warn_msg "'${init_binary_fallback_file}' was not found, is not a file or is not executable, maybe we are working with NFS?" ${QUIET}
+			fi
+
+			if [ "${REAL_ROOT}" = "/dev/nfs" ]
+			then
+				good_msg "NFS detected!" ${QUIET}
+				break
+			else
+				warn_msg "No NFS detected!" ${QUIET}
+			fi
+
+			bad_msg "The filesystem mounted at ${REAL_ROOT} does not appear to be a valid /:"
+			bad_msg "Neither executable file '${init_binary_file}' nor '${init_binary_fallback_file}' was found."
+			bad_msg "If correct root device was specified, check 'root' or 'init' kernel command-line parameter!"
 			got_good_root=0
-			REAL_ROOT=''
+		else
+			bad_msg "Could not mount specified ROOT!"
+			got_good_root=0
 		fi
+	fi
+
+	if [ "${got_good_root}" = '0' ]
+	then
+		if mountpoint "${NEW_ROOT}" 1>/dev/null 2>&1
+		then
+			run umount "${NEW_ROOT}" 1>/dev/null 2>&1
+			if [ $? -ne 0 ]
+			then
+				echo
+				bad_msg "Failed to umount ${REAL_ROOT} which was mounted as ${NEW_ROOT}!"
+				warn_msg "You probably need to open a shell and restore mountpoint before you are able to mount another device as ${NEW_ROOT}."
+				echo
+			fi
+		fi
+
+		bad_msg "Block device ${REAL_ROOT} is not a valid root device ..."
+		prompt_user "REAL_ROOT" "root block device"
+		ROOTDELAY_TIME_WAITED=0
+		let ROOTDELAY_TIMEOUT=$(date +%s)+1
 	fi
 done
 # End determine root device
-
-#verbose_kmsg
 
 # If CD root is set determine the looptype to boot
 if [ "${CDROOT}" = '1' ]
@@ -771,17 +1025,17 @@ then
 		losetup /dev/loop0 "${CDROOT_PATH}/${LOOPEXT}${LOOP}"
 		test_success 'Preparing loop filesystem'
 
-		startLUKS
+		start_LUKS
 
 		case ${LOOPTYPE} in
 			normal)
 				MOUNTTYPE="ext2"
 				;;
 			*)
-				MOUNTTYPE="${LOOPTYPE}"
+				MOUNTTYPE=$(determine_fs "/dev/mapper/root" "${MOUNTTYPE}")
 				;;
 		esac
-		mount -t "${MOUNTTYPE}" -o ro /dev/mapper/root "${NEW_ROOT}/mnt/livecd"
+		run mount -t "${MOUNTTYPE}" -o ro /dev/mapper/root "${NEW_ROOT}/mnt/livecd"
 		test_success 'Mount filesystem'
 		FS_LOCATION='mnt/livecd'
 	# Setup the loopback mounts, if unencrypted
@@ -789,34 +1043,37 @@ then
 		if [ "${LOOPTYPE}" = 'normal' ]
 		then
 			good_msg 'Mounting loop filesystem'
-			mount -t ext2 -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
+			run mount -t ext2 -o loop,ro "${CDROOT_PATH}/${LOOPEXT}${LOOP}" "${NEW_ROOT}/mnt/livecd"
 			test_success 'Mount filesystem'
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'squashfs' ]
 		then
-                        good_msg 'Mounting squashfs filesystem'
+			good_msg 'Mounting squashfs filesystem'
 
-                        if [ 1 = "$aufs" ]; then
-                                setup_squashfs_aufs
-                                test_success 'Mount aufs filesystem'
-                        elif [ 1 = "$overlayfs" ]; then
-                                setup_overlayfs
-                                test_success 'Mount overlayfs filesystem'
-                        else
-                                _CACHED_SQUASHFS_PATH="${NEW_ROOT}/mnt/${LOOP}"
-                                _squashfs_path="${CDROOT_PATH}/${LOOPEXT}${LOOP}"  # Default to uncached
-                                # Upgrade to cached version if possible
-                                [ "${DO_cache}" -a -f "${_CACHED_SQUASHFS_PATH}" ] \
-                                                && _squashfs_path=${_CACHED_SQUASHFS_PATH}
-                                mount -t squashfs -o loop,ro "${_squashfs_path}" "${NEW_ROOT}/mnt/livecd" || {
-                                        bad_msg "Squashfs filesystem could not be mounted, dropping into shell."
-                                        if [ -e /proc/filesystems ]; then
-                                                fgrep -q squashfs /proc/filesystems || \
-                                                        bad_msg "HINT: Your kernel does not know filesystem \"squashfs\"."
-                                        fi
-                                        do_rundebugshell
-                                }
-                        fi
+			if [ "${aufs}" = '1' ]
+			then
+				setup_squashfs_aufs
+				test_success 'Mount aufs filesystem'
+			elif [ "${overlayfs}" = '1' ]
+			then
+				setup_overlayfs
+				test_success 'Mount overlayfs filesystem'
+			else
+				_CACHED_SQUASHFS_PATH="${NEW_ROOT}/mnt/${LOOP}"
+				_squashfs_path="${CDROOT_PATH}/${LOOPEXT}${LOOP}"  # Default to uncached
+				# Upgrade to cached version if possible
+				[ "${DO_cache}" -a -f "${_CACHED_SQUASHFS_PATH}" ] \
+					&& _squashfs_path=${_CACHED_SQUASHFS_PATH}
+				mount -t squashfs -o loop,ro "${_squashfs_path}" "${NEW_ROOT}/mnt/livecd" || {
+					bad_msg "Squashfs filesystem could not be mounted, dropping into shell."
+					if [ -e /proc/filesystems ]
+					then
+						grep -Fq squashfs /proc/filesystems || \
+							bad_msg "HINT: Your kernel does not know filesystem \"squashfs\"."
+					fi
+					run_emergency_shell
+				}
+			fi
 
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'gcloop' ]
@@ -825,7 +1082,7 @@ then
 			echo ' ' | losetup -E 19 -e ucl-0 -p0 "${NEW_ROOT}/dev/loop0" "${CDROOT_PATH}/${LOOPEXT}${LOOP}"
 			test_success 'losetup the loop device'
 
-			mount -t ext2 -o ro "${NEW_ROOT}/dev/loop0" "${NEW_ROOT}/mnt/livecd"
+			run mount -t ext2 -o ro "${NEW_ROOT}/dev/loop0" "${NEW_ROOT}/mnt/livecd"
 			test_success 'Mount the losetup loop device'
 			FS_LOCATION='mnt/livecd'
 		elif [ "${LOOPTYPE}" = 'zisofs' ]
@@ -853,25 +1110,28 @@ then
 			test_success 'losetup /dev/sr0 /dev/loop0'
 
 			good_msg 'Mounting the Root Partition'
-			mount -t squashfs -o ro "${NEW_ROOT}${CDROOT_DEV}" "${NEW_ROOT}/mnt/livecd"
+			run mount -t squashfs -o ro "${NEW_ROOT}${CDROOT_DEV}" "${NEW_ROOT}/mnt/livecd"
 			test_success 'mount /dev/loop0 /'
 			FS_LOCATION='mnt/livecd'
 		fi
 	fi # if [ -n "${CRYPT_ROOT}" ]
 
-	if [ 1 = "$aufs" ]; then
-		aufs_insert_dir "$CHROOT" "$aufs_ro_branch"
+	if [ "${aufs}" = '1' ]
+	then
+		aufs_insert_dir "${CHROOT}" "${aufs_ro_branch}"
 
-                # Function to handle the RC_NO_UMOUNTS variable in $CHROOT/etc/rc.conf
-                conf_rc_no_umounts
+		# Function to handle the RC_NO_UMOUNTS variable in $CHROOT/etc/rc.conf
+		conf_rc_no_umounts
 
-                # Fstab changes for aufs
-                if ! grep -q '^aufs' "$CHROOT/etc/fstab" 2>/dev/null; then
-                        for dir in /var/tmp /tmp; do
-                                [ ! -d $CHROOT$dir ] && mkdir -p "$CHROOT$dir"
-                        done
+		# Fstab changes for aufs
+		if ! grep -q '^aufs' "${CHROOT}/etc/fstab" 2>/dev/null
+		then
+			for dir in /var/tmp /tmp
+			do
+				[ ! -d ${CHROOT}${dir} ] && run mkdir -p "${CHROOT}${dir}"
+			done
 
-                        cat > "$CHROOT/etc/fstab" << FSTAB
+			cat > "${CHROOT}/etc/fstab" << FSTAB
 ####################################################
 ## ATTENTION: THIS IS THE FSTAB ON THE LIVECD     ##
 ## PLEASE EDIT THE FSTAB at /mnt/gentoo/etc/fstab ##
@@ -880,157 +1140,135 @@ aufs            /                               aufs    defaults        0 0
 vartmp          /var/tmp                        tmpfs   defaults        0 0
 tmp             /tmp                            tmpfs   defaults        0 0
 FSTAB
-                fi
+		fi
 
-                # Check modules support
-                is_union_modules aufs
+		# Check modules support
+		is_union_modules aufs
 
-                # Create the directories for our new union mounts
-                [ ! -d $CHROOT$NEW_ROOT ] && mkdir -p "$CHROOT$NEW_ROOT"
+		# Create the directories for our new union mounts
+		[ ! -d ${CHROOT}${NEW_ROOT} ] && mkdir -p "${CHROOT}${NEW_ROOT}"
 
-                # Check to see if we successfully mounted $aufs_dev
-                if [ -n "$aufs_dev" ] && grep $aufs_dev /etc/mtab 1>/dev/null; then
-                        [ ! -d $CHROOT$aufs_dev_mnt ] && mkdir -p "$CHROOT$aufs_dev_mnt"
-                        mount --move "$aufs_dev_mnt" "$CHROOT$aufs_dev_mnt"
-                fi
+		# Check to see if we successfully mounted $aufs_dev
+		if [ -n "${aufs_dev}" ] && grep ${aufs_dev} /etc/mtab 1>/dev/null
+		then
+			[ ! -d ${CHROOT}${aufs_dev_mnt} ] && run mkdir -p "${CHROOT}${aufs_dev_mnt}"
+			run mount --move "${aufs_dev_mnt}" "${CHROOT}${aufs_dev_mnt}"
+		fi
 	fi
 
 	# Unpacking additional packages from NFS mount, or root (if squashfs was found there)
 	# This is useful for adding kernel modules to /lib
 	# We do this now, so that additional packages can add whereever they want.
-	if [ "${REAL_ROOT}" = '/dev/nfs' ] || [ "${got_loop_wo_mount}" == '1' ]
+	if [ "${REAL_ROOT}" = '/dev/nfs' ] || [ "${got_loop_wo_mount}" = '1' ]
 	then
 		if [ -e "${CDROOT_PATH}/add" ]
 		then
+				# shellcheck disable=SC2045
 				for targz in $(ls ${CDROOT_PATH}/add/*.tar.gz)
 				do
 					tarname=$(basename ${targz})
 					good_msg "Adding additional package ${tarname}"
-					(cd ${NEW_ROOT} ; /bin/tar -xf ${targz})
+					(cd ${NEW_ROOT} ; tar -xf ${targz})
 				done
 		fi
 	fi
 
+	if [ "${USE_UNIONFS_NORMAL}" = '1' ]
+	then
+		setup_unionfs ${NEW_ROOT} /${FS_LOCATION}
+		CHROOT=/union
+	elif [ "${aufs}" != '1'  ] && [ "${overlayfs}" != '1' ]
+	then
+		good_msg "Copying read-write image contents to tmpfs"
 
-  if [ "${USE_UNIONFS_NORMAL}" = '1' ]; then
-    setup_unionfs ${NEW_ROOT} /${FS_LOCATION}
-    CHROOT=/union
-  elif [ 1 != "$aufs"  ] && [ 1 != "$overlayfs" ]; then
-    good_msg "Copying read-write image contents to tmpfs"
+		# Copy over stuff that should be writable
+		(
+			cd "${NEW_ROOT}/${FS_LOCATION}"
+			cp -a ${ROOT_TREES} "${NEW_ROOT}"
+		) ||
+		{
+			bad_msg "Copying failed, dropping into a shell."
+			run_emergency_shell
+		}
 
-    # Copy over stuff that should be writable
-    (
-    cd "${NEW_ROOT}/${FS_LOCATION}"
-    cp -a ${ROOT_TREES} "${NEW_ROOT}"
-    ) ||
-      {
-        bad_msg "Copying failed, dropping into a shell."
-        do_rundebugshell
-      }
+		# Now we do the links.
+		for x in ${ROOT_LINKS}
+		do
+			if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ]
+			then
+				ln -s "$(readlink ${NEW_ROOT}/${FS_LOCATION}/${x})" "${x}" 2>/dev/null
+			else
+				# List all subdirectories of x
+				find "${NEW_ROOT}/${FS_LOCATION}/${x}" -type d 2>/dev/null |
+				while read directory
+				do
+					# Strip the prefix of the FS_LOCATION
+					directory="${directory#${NEW_ROOT}/${FS_LOCATION}/}"
 
-      # Now we do the links.
-      for x in ${ROOT_LINKS}; do
-        if [ -L "${NEW_ROOT}/${FS_LOCATION}/${x}" ]; then
-          ln -s "$(readlink ${NEW_ROOT}/${FS_LOCATION}/${x})" "${x}" 2>/dev/null
-        else
-          # List all subdirectories of x
-          find "${NEW_ROOT}/${FS_LOCATION}/${x}" -type d 2>/dev/null |
-          while read directory; do
-            # Strip the prefix of the FS_LOCATION
-            directory="${directory#${NEW_ROOT}/${FS_LOCATION}/}"
+					# Skip this directory if we already linked a parent directory
+					if [ "${current_parent}" != '' ]
+					then
+						var=$(echo "${directory}" | grep "^${current_parent}")
+						if [ "${var}" != '' ]
+						then
+							continue
+						fi
+					fi
 
-            # Skip this directory if we already linked a parent directory
-            if [ "${current_parent}" != '' ]; then
-              var=$(echo "${directory}" | grep "^${current_parent}")
-              if [ "${var}" != '' ]; then
-                continue
-              fi
-            fi
-            # Test if the directory exists already
-            if [ -e "/${NEW_ROOT}/${directory}" ]; then
-              # It does exist, link all the individual files
-              for file in $(ls /${NEW_ROOT}/${FS_LOCATION}/${directory}); do
-                if [ ! -d "/${NEW_ROOT}/${FS_LOCATION}/${directory}/${file}" ] && [ ! -e "${NEW_ROOT}/${directory}/${file}" ]; then
-                  ln -s "/${FS_LOCATION}/${directory}/${file}" "${directory}/${file}" 2> /dev/null
-                fi
-              done
-            else
-              # It does not exist, make a link to the livecd
-              ln -s "/${FS_LOCATION}/${directory}" "${directory}" 2>/dev/null
-              current_parent="${directory}"
-            fi
-          done
-        fi
-      done
+					# Test if the directory exists already
+					if [ -e "/${NEW_ROOT}/${directory}" ]
+					then
+						# It does exist, link all the individual files
+						# shellcheck disable=SC2045
+						for file in $(ls /${NEW_ROOT}/${FS_LOCATION}/${directory})
+						do
+							if [ ! -d "/${NEW_ROOT}/${FS_LOCATION}/${directory}/${file}" ] && [ ! -e "${NEW_ROOT}/${directory}/${file}" ]
+							then
+								ln -s "/${FS_LOCATION}/${directory}/${file}" "${directory}/${file}" 2> /dev/null
+							fi
+						done
+					else
+						# It does not exist, make a link to the livecd
+						ln -s "/${FS_LOCATION}/${directory}" "${directory}" 2>/dev/null
+						current_parent="${directory}"
+					fi
+				done
+			fi
+		done
 
-      mkdir -p initramfs proc tmp run sys 2>/dev/null
-      chmod 1777 tmp
+		mkdir -p initramfs proc tmp run sys 2>/dev/null
+		chmod 1777 tmp
+	fi
 
-    fi
-
-    # Have handy /mnt/cdrom (CDROOT_PATH) as well
-    if [ 1 = "$aufs" ]; then
-      [ ! -d "$CHROOT$CDROOT_PATH" ] && mkdir "$CHROOT$CDROOT_PATH"
-      mount --move "$CDROOT_PATH" "$CHROOT$CDROOT_PATH"
-    else
-      [ ! -d "$NEW_ROOT$CDROOT_PATH" ] && mkdir -p "$NEW_ROOT$CDROOT_PATH"
-      mount --move "$CDROOT_PATH" "$NEW_ROOT$CDROOT_PATH"
-    fi
-
-    #UML=$(cat /proc/cpuinfo|grep UML|sed -e 's|model name.*: ||')
-    #if [ "${UML}" = 'UML' ]
-    #then
-    #	# UML Fixes
-    #	good_msg 'Updating for uml system'
-    #fi
-
-    # Let Init scripts know that we booted from CD
-    export CDBOOT
-    CDBOOT=1
-  else
-    if [ "${USE_UNIONFS_NORMAL}" = '1' ]
-    then
-      mkdir /union_changes
-      mount -t tmpfs tmpfs /union_changes
-      setup_unionfs /union_changes ${NEW_ROOT}
-      mkdir -p ${UNION}/tmp/.initrd
-    elif [ 1 = "$aufs" ]; then
-      aufs_insert_dir "$aufs_union" "$NEW_ROOT"
-      mkdir -p "$aufs_union/tmp/.initrd"
-    fi
-
-  fi # if [ "${CDROOT}" = '1' ]
-
-# Mount the additional things as required by udev & systemd
-if [ -f ${NEW_ROOT}/etc/initramfs.mounts ]; then
-	fslist=$(get_mounts_list)
-else
-	fslist="/usr"
-fi
-
-for fs in $fslist; do
-	dev=$(get_mount_device $fs)
-	[ -z "${dev}" ] && continue
-	# Resolve it like util-linux mount does
-	[ -L ${dev} ] && dev=`readlink ${dev}`
-	# In this case, it's probably part of the filesystem
-	# and not a mountpoint
-	[ -z "$dev" ] && continue
-	fstype=$(get_mount_fstype $fs)
-	if get_mount_options $fs | fgrep -q bind ; then
-		opts='bind'
-		dev=${NEW_ROOT}${dev}
+	# Have handy /mnt/cdrom (CDROOT_PATH) as well
+	if [ "${aufs}" = '1' ]
+	then
+		[ ! -d "${CHROOT}${CDROOT_PATH}" ] && mkdir "${CHROOT}${CDROOT_PATH}"
+		run mount --move "${CDROOT_PATH}" "${CHROOT}${CDROOT_PATH}"
 	else
-		# ro must be trailing, and the options will always contain at least 'defaults'
-		opts="$(get_mount_options $fs | strip_mount_options),ro"
+		[ ! -d "${NEW_ROOT}${CDROOT_PATH}" ] && mkdir -p "${NEW_ROOT}${CDROOT_PATH}"
+		run mount --move "${CDROOT_PATH}" "${NEW_ROOT}${CDROOT_PATH}"
 	fi
-	mnt=${NEW_ROOT}${fs}
-	cmd="mount -t $fstype -o $opts $dev $mnt"
-	good_msg "Mounting $dev as ${fs}: $cmd"
-	if ! $cmd; then
-		bad_msg "Unable to mount $dev for $fs"
+
+	# Let Init scripts know that we booted from CD
+	export CDBOOT
+	CDBOOT=1
+else
+	if [ "${USE_UNIONFS_NORMAL}" = '1' ]
+	then
+		run mkdir /union_changes
+		run mount -t tmpfs tmpfs /union_changes
+		setup_unionfs /union_changes ${NEW_ROOT}
+		run mkdir -p ${UNION}/tmp/.initrd
+	elif [ "${aufs}" = '1' ]
+	then
+		aufs_insert_dir "${aufs_union}" "${NEW_ROOT}"
+		run mkdir -p "${aufs_union}/tmp/.initrd"
 	fi
-done # for fs in $fslist; do
+fi # if [ "${CDROOT}" = '1' ]
+
+# Re-run to ensure $NEWROOT/etc/initramfs.mounts was processed at least once
+process_initramfs_mounts
 
 # Execute script on the cdrom just before boot to update things if necessary
 cdupdate
@@ -1043,21 +1281,24 @@ fi
 
 verbose_kmsg
 
-if [ 1 = "$aufs" ]; then
-        aufs_union_memory=$CHROOT/.unions/memory
+if [ "${aufs}" = '1' ]
+then
+	aufs_union_memory=${CHROOT}/.unions/memory
 
-	mkdir -p "$aufs_union_memory"
-	mount --move "$aufs_memory" "$aufs_union_memory"
-        test_success "Failed to move aufs $aufs_memory into the system root"
+	run mkdir -p "${aufs_union_memory}"
+	run mount --move "${aufs_memory}" "${aufs_union_memory}"
+	test_success "Failed to move aufs ${aufs_memory} into the system root"
 
-        for dir in /mnt/gentoo $aufs_rw_branch $aufs_ro_branch; do
-		mkdir -p "$CHROOT$dir"
-		chmod 755 "$CHROOT$dir"
+	for dir in /mnt/gentoo ${aufs_rw_branch} ${aufs_ro_branch}
+	do
+		run mkdir -p "${CHROOT}${dir}"
+		run chmod 755 "${CHROOT}${dir}"
 	done
 
-        for mount in $aufs_rw_branch $aufs_ro_branch; do
-                mount --move "$mount" "$CHROOT$mount"
-        done
+	for mount in ${aufs_rw_branch} ${aufs_ro_branch}
+	do
+		run mount --move "${mount}" "${CHROOT}${mount}"
+	done
 fi
 
 # Copy user keymap generated file if available
@@ -1066,32 +1307,19 @@ copyKeymap
 # Setup any user defined environment locales for desktop usage
 setup_locale
 
-good_msg "Booting (initramfs)"
-
-cd "${CHROOT}"
-mkdir "${CHROOT}/proc" "${CHROOT}/sys" "${CHROOT}/run" 2>/dev/null
-
-# If devtmpfs is mounted, try move it to the new root
-# If that fails, try to unmount all possible mounts of
-# devtmpfs as stuff breaks otherwise
-for fs in /dev /sys /proc
-do
-	if grep -qs "$fs" /proc/mounts
-	then
-		if ! mount -o move $fs "${CHROOT}"$fs
-		then
-			umount $fs || \
-			bad_msg "Failed to move and unmount the ramdisk $fs!"
-		fi
-	fi
-done
-
-if [ ! -e "${CHROOT}/dev/console" ] || [ ! -e "${CHROOT}/dev/null" ]
+if [ "${USE_SSH}" = '1' ]
 then
-	bad_msg "ERROR: your real /dev is missing console and null"
-elif [ -e /etc/initrd.splash -a ! -e "${CHROOT}/dev/tty1" ]
+	wait_sshd
+fi
+
+cleanup
+
+udevsettle
+run udevadm control --exit
+if pgrep udevd >/dev/null 2>&1
 then
-	bad_msg "ERROR: your real /dev is missing tty1, required for splash"
+	warn_msg "udevd is still running -- Trying to kill it ..."
+	run pkill -9 udevd >/dev/null 2>&1
 fi
 
 # Run debug shell if requested
@@ -1099,22 +1327,25 @@ rundebugshell "before entering switch_root"
 
 # init_opts is set in the environment by the kernel when it parses the command line
 init=${REAL_INIT:-/sbin/init}
-if ! mountpoint "${CHROOT}"; then
-	bad_msg "$CHROOT was not a mountpoint"
-elif chroot "${CHROOT}" /usr/bin/test ! -x /${init} ; then
+if ! mountpoint "${CHROOT}" 1>/dev/null 2>&1
+then
+	bad_msg "${CHROOT} was not a mountpoint"
+elif chroot "${CHROOT}" test ! -x /${init#/}
+then
 	bad_msg "init=${init} does not exist in the rootfs!"
-elif [ $$ != 1 ]; then
+elif [ $$ != 1 ]
+then
 	bad_msg "PID was not 1! switch_root would fail"
 else
-	good_msg "Switching to real root: /sbin/switch_root -c /dev/console ${CHROOT} ${init} ${init_opts}"
-	exec /sbin/switch_root -c "/dev/console" "${CHROOT}" "${init}" ${init_opts}
+	good_msg "Switching to real root: switch_root ${CHROOT} ${init} ${init_opts}"
+	exec switch_root "${CHROOT}" "${init}" ${init_opts}
 fi
 
 # If we get here, something bad has happened
 splash 'verbose'
 
 bad_msg "A fatal error has occured since ${init} did not"
-bad_msg "boot correctly. Trying to open a shell..."
+bad_msg "boot correctly. Trying to open a shell ..."
 
 exec /bin/bash
 exec /bin/sh

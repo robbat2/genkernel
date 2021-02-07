@@ -1,5 +1,5 @@
-#PACKAGE_VERSION = `/bin/fgrep GK_V= genkernel | sed "s/.*GK_V='\([^']\+\)'/\1/"`
-PACKAGE_VERSION = `git describe --tags |sed 's,^v,,g'`
+#PACKAGE_VERSION = $(shell /bin/grep -F -- GK_V= genkernel | sed "s/.*GK_V='\([^']\+\)'/\1/")
+PACKAGE_VERSION = $(shell git describe --tags |sed 's,^v,,g')
 distdir = genkernel-$(PACKAGE_VERSION)
 MANPAGE = genkernel.8
 # Add off-Git/generated files here that need to be shipped with releases
@@ -35,7 +35,7 @@ else
 	@true
 endif
 
-dist: verify-doc check-git-repository distclean $(EXTRA_DIST)
+dist: verify-shellscripts-initramfs verify-doc check-git-repository distclean $(EXTRA_DIST)
 	mkdir "$(distdir)"
 	git ls-files -z | xargs -0 cp --no-dereference --parents --target-directory="$(distdir)" \
 		$(EXTRA_DIST)
@@ -53,7 +53,7 @@ distclean: clean
 	if grep -sq THIS_CONFIG_IS_BROKEN $< ; then \
 		cat $< >$@ ; \
 	else \
-		perl merge.pl $< $(BASE_KCONF) > $@ ; \
+		perl merge.pl $< $(BASE_KCONF) | sort > $@ ; \
 	fi ;
 
 %.8: doc/%.8.txt doc/asciidoc.conf Makefile genkernel
@@ -72,11 +72,13 @@ verify-doc: doc/genkernel.8.txt
 		tr -s ' ' '\n' | \
 		sed -r \
 			-e 's,[[:space:]]*--(no-)?,,g' \
+			-e '/boot-font/s,=\(current\|<file>\|none\),,g' \
 			-e '/bootloader/s,=\(grub\|grub2\),,g' \
-			-e '/microcode/s,\[\],,g' | \
+			-e '/microcode/s,=\(all\|amd\|intel\),,g' \
+			-e '/ssh-host-keys/s,=\(create\|create-from-host\|runtime\),,g' | \
 		while read opt ; do \
 			regex="^*--(...no-...)?$$opt" ; \
-			if ! egrep -e "$$regex" $< -sq ; then \
+			if ! grep -Ee "$$regex" $< -sq ; then \
 				touch faildoc ; \
 				echo "Undocumented option: $$opt" ; \
 			fi ; \
@@ -87,3 +89,13 @@ verify-doc: doc/genkernel.8.txt
 		exit 1 ; \
 	fi ; \
 	rm -f faildoc
+
+verify-shellscripts-initramfs:
+# we need to check every file because a fatal error in
+# an included file (SC1094) is just a warning at the moment
+	shellcheck \
+		--external-sources \
+		--source-path SCRIPTDIR \
+		--severity error \
+		defaults/linuxrc \
+		defaults/initrd.scripts

@@ -1,0 +1,19 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	local myconf=(
+		--enable-static
+		--without-docbook
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	rm -rf \
+		"${D}"/usr/bin \
+		"${D}"/usr/share
+}

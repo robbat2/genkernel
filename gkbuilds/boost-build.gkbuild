@@ -1,0 +1,68 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# distcc is known to fail compiling boost and will fallback
+# to local processing; Even when using distcc pump mode.
+DISABLE_DISTCC=yes
+
+MY_PV="${PV//./_}"
+S="${WORKDIR}/boost_${MY_PV}/tools/build/src"
+QA_IGNORE_DYNAMICALLY_LINKED_PROGRAM='(bjam|b2)$'
+
+src_prepare() {
+	default
+
+	# remove default -march/-mcpu definitions
+	# bjam is trying to be clever and injects -march= in order to
+	# optimize code for you. This breaks on 32-bit builds, because
+	# -march=i686 will not work on an i486 CHOST.
+	# https://bugs.gentoo.org/624616
+	sed -e '/^cpu-flags\s*gcc\s*OPTIONS/d' \
+		-e '/toolset\.flags\s*gcc\s*OPTIONS/d' \
+		-e "/cpu_flags('gcc',\s*'OPTIONS'/d" \
+		-i tools/gcc.{jam,py} || die "Failed removing -march/-mcpu"
+}
+
+src_compile() {
+	cd engine || die "Failed to chdir to '${S}/engine'!"
+
+	local myargs=(
+		./build.sh
+		cxx
+		-d+2
+		--without-python
+	)
+
+	CC=$(tc-getBUILD_CC) CXX=$(tc-getBUILD_CXX) gkexec "${myargs[*]}"
+}
+
+src_install() {
+	mkdir -p "${D}"/usr/bin \
+		|| die "Failed to create '${D}/usr/bin'!"
+
+	cp --target-directory="${D}/usr/bin" engine/{bjam,b2} \
+		|| die "Failed to install 'engine/{bjam,b2}' to '${D}/usr/bin'!"
+
+	mkdir -p "${D}"/usr/share/boost-build \
+		|| die "Failed to create '${D}/usr/share/boost-build'!"
+
+	cp \
+		--recursive \
+		--target-directory="${D}/usr/share/boost-build" \
+		../boost-build.jam \
+		bootstrap.jam \
+		build-system.jam \
+		../example/user-config.jam \
+		build \
+		kernel \
+		options \
+		tools \
+		util \
+		|| die "Failed to copy *.jam files to '${D}/usr/share/boost-build'!"
+
+	find "${D}/usr/share/boost-build" -iname "*.py" -delete \
+		|| die "Failed to remove python files"
+
+	echo 'variant gentoorelease : release : <optimization>none <debug-symbols>none <runtime-link>shared ;' > "${D}/usr/share/boost-build/site-config.jam" \
+		|| die "Failed to create '${D}/usr/share/boost-build/site-config.jam'!"
+}

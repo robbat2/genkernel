@@ -1,0 +1,64 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	default
+
+	# Build static switch_root
+	sed -i \
+		-e '/^switch_root_SOURCES =.*/a switch_root_LDFLAGS = -all-static' \
+		sys-utils/Makemodule.am \
+		|| die
+
+	gkautoreconf
+}
+
+src_configure() {
+	export ac_cv_header_security_pam_misc_h=no
+	export ac_cv_header_security_pam_appl_h=no
+
+	local myconf=(
+		--disable-libtool-lock
+		--enable-libmount
+		--disable-libsmartcols
+		--disable-libfdisk
+		--enable-libuuid
+		--without-ncursesw
+		--without-ncurses
+		--disable-widechar
+		--without-python
+		--disable-pylibmount
+		--enable-switch_root
+		--enable-static-programs=blkid
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	local MYMAKEOPTS=( "V=1" )
+	MYMAKEOPTS+=( "DESTDIR=${D}" )
+	MYMAKEOPTS+=( "install-pkgconfigDATA" )
+	MYMAKEOPTS+=( "install-nodist_blkidincHEADERS" )
+	MYMAKEOPTS+=( "install-nodist_mountincHEADERS" )
+	MYMAKEOPTS+=( "install-usrlib_execLTLIBRARIES" )
+	MYMAKEOPTS+=( "install-uuidincHEADERS" )
+	gkmake "${MYMAKEOPTS[@]}"
+
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	cp -a blkid.static "${D}"/sbin/blkid \
+		|| die "Failed to copy '${S}/blkid.static' to '${D}/sbin/blkid'!"
+
+	cp -a switch_root "${D}"/sbin/switch_root \
+		|| die "Failed to copy '${S}/switch_root' to '${D}/sbin/switch_root'!"
+
+	local sbin
+	for sbin in \
+		"${D}/sbin/blkid" \
+		"${D}/sbin/switch_root" \
+	; do
+		"${STRIP}" --strip-all "${sbin}" \
+			|| die "Failed to strip '${sbin}'!"
+	done
+}

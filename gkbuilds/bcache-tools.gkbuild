@@ -1,0 +1,27 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	append-ldflags -static
+}
+
+src_compile() {
+	PKG_CONFIG="$(tc-getPKG_CONFIG) --static" \
+	gkmake V=1
+}
+
+src_install() {
+	gkmake V=1 UDEVLIBDIR="$(get_udevdir)" DESTDIR="${D}" install
+
+	rm -rf \
+		"${D}"/lib \
+		"${D}"/usr/lib/initcpio \
+		"${D}"/usr/sbin \
+		"${D}"/usr/share
+
+	"${STRIP}" --strip-all "${D}"/usr/lib/udev/bcache-register \
+		|| die "Failed to strip '${D}/usr/lib/udev/bcache-register'!"
+
+	"${STRIP}" --strip-all "${D}"/usr/lib/udev/probe-bcache \
+		|| die "Failed to strip '${D}/usr/lib/udev/probe-bcache'!"
+}

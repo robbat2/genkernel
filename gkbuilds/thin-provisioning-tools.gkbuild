@@ -1,0 +1,34 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	default
+	gkautoreconf
+}
+
+src_configure() {
+	local myconf=(
+		--with-optimisation=''
+		--disable-testing
+		--enable-static
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_compile() {
+	MAKEOPTS+=" V="
+	gkmake
+}
+
+src_install() {
+	local MYMAKEOPTS=( "DESTDIR=${D}" )
+	MYMAKEOPTS+=( -j1 )
+	MYMAKEOPTS+=( "DATADIR=${D}/usr/share" )
+	MYMAKEOPTS+=( "install" )
+
+	gkmake "${MYMAKEOPTS[@]}"
+
+	rm -rf \
+		"${D}"/usr/share
+}

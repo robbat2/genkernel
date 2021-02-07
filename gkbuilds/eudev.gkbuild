@@ -1,0 +1,43 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	local myconf=(
+		--exec-prefix=
+		--bindir=/usr/bin
+		--sbindir=/usr/sbin
+		--includedir=/usr/include
+		--libdir=/usr/lib
+		--enable-static
+		--enable-blkid
+		--disable-introspection
+		--disable-manpages
+		--disable-selinux
+		--disable-rule-generator
+		--disable-hwdb
+		--enable-kmod
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	local files_to_strip=()
+	files_to_strip+=( /usr/bin/udevadm )
+	files_to_strip+=( /usr/lib/udev/ata_id )
+	files_to_strip+=( /usr/lib/udev/cdrom_id )
+	files_to_strip+=( /usr/lib/udev/collect )
+	files_to_strip+=( /usr/lib/udev/mtd_probe )
+	files_to_strip+=( /usr/lib/udev/scsi_id )
+	files_to_strip+=( /usr/lib/udev/v4l_id )
+	files_to_strip+=( /usr/sbin/udevd )
+
+	local file_to_strip=
+	for file_to_strip in "${files_to_strip[@]}"
+	do
+		"${STRIP}" --strip-all "${D}"${file_to_strip} \
+			|| die "Failed to strip '${D}${file_to_strip}'!"
+	done
+}

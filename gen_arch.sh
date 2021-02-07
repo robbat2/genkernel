@@ -1,63 +1,20 @@
 #!/bin/bash
 # $Id$
 
-get_official_arch() {
-	if [ "${CMD_ARCHOVERRIDE}" != '' ]
-	then
-		ARCH=${CMD_ARCHOVERRIDE}
-	else
-		if [ "${ARCH_OVERRIDE}" != '' ]
-		then
-			ARCH=${ARCH_OVERRIDE}
-		else
-			ARCH=`uname -m`
-			case "${ARCH}" in
-				i?86)
-					ARCH="x86"
-					;;
-				mips|mips64)
-					ARCH="mips"
-					;;
-				arm*)
-					ARCH=arm
-					;;
-				*)
-					;;
-			esac
-		fi
-	fi
-
-	if [ "${CMD_UTILS_ARCH}" != '' ]
-	then
-		UTILS_ARCH=${CMD_UTILS_ARCH}
-	else
-		if [ "${UTILS_ARCH}" != '' ]
-		then
-			UTILS_ARCH=${UTILS_ARCH}
-		fi
-	fi
-
-	# sparc64 klibc is b0rked, so we force to 32
-	if [ "${ARCH}" = 'sparc64' ]
-	then
-		UTILS_ARCH='sparc'
-	fi
-
-	ARCH_CONFIG="${GK_SHARE}/arch/${ARCH}/config.sh"
-	[ -f "${ARCH_CONFIG}" ] || gen_die "${ARCH} not yet supported by genkernel. Please add the arch-specific config file, ${ARCH_CONFIG}"
-}
-
-set_kernel_arch() {
-	[ -z "${VER}" ] && gen_die "cannot set KERNEL_ARCH without VER!"
-	[ -z "${SUB}" ] && gen_die "cannot set KERNEL_ARCH without SUB!"
-	[ -z "${PAT}" ] && gen_die "cannot set KERNEL_ARCH without PAT!"
+determine_kernel_arch() {
+	[ -z "${VER}" ] && gen_die "Cannot determine KERNEL_ARCH without \$VER!"
+	[ -z "${SUB}" ] && gen_die "Cannot determine KERNEL_ARCH without \$SUB!"
+	[ -z "${PAT}" ] && gen_die "Cannot determine KERNEL_ARCH without \$PAT!"
 
 	KERNEL_ARCH=${ARCH}
 	case ${ARCH} in
+		parisc|parisc64)
+			KERNEL_ARCH=parisc
+			;;
 		ppc|ppc64*)
 			if [ "${VER}" -ge "3" ]
 			then
-					KERNEL_ARCH=powerpc
+				KERNEL_ARCH=powerpc
 			elif [ "${VER}" -eq "2" -a "${PAT}" -ge "6" ]
 			then
 				if [ "${PAT}" -eq "6" -a "${SUB}" -ge "16" ] || [ "${PAT}" -gt "6" ]
@@ -69,7 +26,7 @@ set_kernel_arch() {
 		x86)
 			if [ "${VER}" -ge "3" ]
 			then
-					KERNEL_ARCH=x86
+				KERNEL_ARCH=x86
 			elif [ "${VER}" -eq "2" -a "${PAT}" -ge "6" ] || [ "${VER}" -gt "2" ]
 			then
 				if [ "${PAT}" -eq "6" -a "${SUB}" -ge "24" ] || [ "${PAT}" -gt "6" ]
@@ -83,7 +40,7 @@ set_kernel_arch() {
 		x86_64)
 			if [ "${VER}" -ge "3" ]
 			then
-					KERNEL_ARCH=x86
+				KERNEL_ARCH=x86
 			elif [ "${VER}" -eq "2" -a "${PAT}" -ge "6" ] || [ "${VER}" -gt "2" ]
 			then
 				if [ "${PAT}" -eq "6" -a "${SUB}" -ge "24" ] || [ "${PAT}" -gt "6" ]
@@ -93,6 +50,5 @@ set_kernel_arch() {
 			fi
 			;;
 	esac
-	export KERNEL_ARCH
-	print_info 2 "KERNEL_ARCH=${KERNEL_ARCH}"
+	print_info 2 "KERNEL_ARCH set to '${KERNEL_ARCH}' ..."
 }

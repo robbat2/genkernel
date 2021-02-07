@@ -1,0 +1,84 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# distcc is known to fail compiling boost and will fallback
+# to local processing; Even when using distcc pump mode.
+DISABLE_DISTCC=yes
+
+create_user-config.jam() {
+	local user_config_jam="${S}"/user-config.jam
+	if [[ -s ${user_config_jam} ]]; then
+		return
+	fi
+
+	local compiler compiler_version compiler_executable="$(tc-getCXX)"
+	compiler="gcc"
+	compiler_version="$(gcc-version)"
+
+	cat > "${user_config_jam}" <<- __EOF__ || die
+		using ${compiler} : ${compiler_version} : ${compiler_executable} : <cflags>"${CFLAGS}" <cxxflags>"${CXXFLAGS}" <linkflags>"${LDFLAGS}" ;
+	__EOF__
+}
+
+ejam() {
+	create_user-config.jam
+
+	local myargs=(
+		b2
+		"--user-config=${S}/user-config.jam"
+		--without-python
+		"$@"
+	)
+
+	gkexec "${myargs[*]}"
+}
+
+src_configure() {
+	# Workaround for too many parallel processes requested, bug #506064
+	[[ "$(makeopts_jobs)" -gt 64 ]] && MAKEOPTS="${MAKEOPTS} -j64"
+
+	OPTIONS=(
+		gentoorelease
+		"-j$(makeopts_jobs)"
+		-q
+		-d+2
+		pch=off
+		--disable-icu boost.locale.icu=off
+		--without-mpi
+		--without-locale
+		--without-context --without-coroutine --without-fiber
+		--without-stacktrace
+		--boost-build="${BROOT}"/usr/share/boost-build
+		--prefix="/usr"
+		--layout=system
+		--no-cmake-config
+		threading=multi
+		link=shared,static
+		# this seems to be the only way to disable compression algorithms
+		# https://www.boost.org/doc/libs/1_70_0/libs/iostreams/doc/installation.html#boost-build
+		-sNO_BZIP2=1
+		-sNO_LZMA=1
+		-sNO_ZLIB=1
+		-sNO_ZSTD=1
+	)
+
+	# bug 298489
+	if [[ "${CHOST}" == powerpc* ]]; then
+		[[ $(gcc-version) > 4.3 ]] && append-flags -mno-altivec
+	fi
+
+	# Use C++14 globally as of 1.62
+	append-cxxflags -std=c++14
+}
+
+src_compile() {
+	ejam "${OPTIONS[@]}" || die "Compilation of Boot libraries failed!"
+}
+
+src_install() {
+	ejam \
+		"${OPTIONS[@]}" \
+		--includedir="${D}/usr/include" \
+		--libdir="${D}/usr/lib" \
+		install || die "Installation of Boost libraries failed!"
+}

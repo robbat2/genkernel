@@ -1,0 +1,35 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+S="${WORKDIR}/hwids-${P}"
+
+_emake() {
+	gkmake \
+		V=1 \
+		NET=yes \
+		PCI=yes \
+		UDEV=yes \
+		USB=yes \
+		"$@"
+}
+
+src_prepare() {
+	default
+
+	# we cannot run host's udevadm
+	sed -i -e '/udevadm hwdb/d' Makefile || die
+}
+
+src_compile() {
+	_emake
+}
+
+src_install() {
+	_emake \
+		HWDBDIR="$(get_udevdir)/hwdb.d" \
+		DESTDIR="${D}" \
+		install
+
+	rm -rf \
+		"${D}"/usr/share
+}

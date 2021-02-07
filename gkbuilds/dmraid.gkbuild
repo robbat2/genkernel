@@ -1,0 +1,31 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	# pkg_check_modules is not in aclocal.m4 by default, and autoreconf doesn't add it
+	cat /usr/share/aclocal/pkg.m4 >>"${S}"/aclocal.m4 \
+		|| die "Failed to append '/usr/share/aclocal/pkg.m4' to '${S}/aclocal.m4'!"
+
+	default
+}
+
+src_configure() {
+	local myconf=(
+		--enable-static_link
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	default
+
+	"${STRIP}" --strip-all "${D}"/usr/sbin/dmraid \
+		|| die "Failed to strip '${D}/usr/sbin/dmraid'!"
+
+	# For backward compatibility
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	ln -s ../usr/sbin/dmraid "${D}"/sbin/dmraid \
+		|| die "Failed to create symlink '${D}/sbin/dmraid' to '${D}/usr/sbin/dmraid'!"
+}

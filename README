@@ -1,30 +1,45 @@
 # $Id$
 
+GENERAL CONCEPT:
+Genkernel's primary job is to bring up only the basic stuff needed
+to mount your (block) device containing the root filesystem so that
+we can hand off control to real system as soon as possible.
+
+It's _not_ genkernel's goal to load all available modules, to start
+all available devices, to unlock additional volumes, to start network
+or do other fancy stuff. So don't forget to set up your normal boot
+services so that the real system can finish boot and do all of the
+things mentioned above.
+
 DEPENDENCIES:
   - GCC and binutils
   - GNU Bash
   - PaX Utilities
+  - Autoconf and Automake
 
 USAGE:
-  See http://www.gentoo.org/doc/en/genkernel.xml or
+  See https://wiki.gentoo.org/wiki/Genkernel or
   issue ``genkernel --help''.
 
 PORTING:
   To port to other arches:
 
   # cd /usr/share/genkernel
-  # cp -Rp x86 ${myarch}
-  # mkdir /usr/share/genkernel/pkg/${myarch}
+  # cp -Rp x86_64 ${myarch}
 
   Modify what is needed in the /usr/share/genkernel/${myarch}
   directory, as well making a generic kernel-config.
+
+  Check determine_real_args() function in gen_determineargs.sh
+  if you need to add anything like support for your architecture's
+  GCC triplet or mapping to kernel's arch.
 
 IMPORTANT KERNEL NOTES:
   - You MUST have /dev/pts turned on.
   - To boot genkernel properly, the kernel config must have
     Initial RAM disk support.
 
-BOOTING A KERNEL WITH INITRD:
+BOOTING A KERNEL WITH INITRAMFS:
 
   GRUB:
     root=	needs to point to your root partition
@@ -32,8 +47,18 @@ BOOTING A KERNEL WITH INITRD:
     		1024x768 - 16bpp and you'll get a pretty splash if
     		configured properly
 
-  GRUB EXAMPLE ENTRY:
-    title=2.6.0 [ Genkernel ]
+  GRUB 1.x EXAMPLE ENTRY:
+    title Gentoo Linux
     root (hd0,0)
-    kernel (hd0,0)/boot/kernel-2.6.0-gentoo root=/dev/hda3 vga=0x317
-    initrd (hd0,0)/boot/initrd-2.6.0-gentoo
+    kernel /vmlinuz-5.4.2-gentoo-x86_64 root=/dev/sda1 vga=0x791
+    initrd /initramfs-5.4.2-gentoo-x86_64.img
+
+  EXTLINUX (SYSLINUX) EXAMPLE ENTRY:
+    LABEL genkernel-latest
+        MENU LABEL Gentoo Linux (latest)
+        LINUX /kernel
+        INITRD /initramfs
+        APPEND dolvm crypt_root=UUID=a8c5be51-bd1b-4446-a430-1d0ed576fa73 root=UUID=a2e5968c-5917-41ef-bf81-edffd54c8abd rootfs=ext4 root_trim=yes dosshd
+
+  NOTE: The example above uses genkernel's --symlink feature and
+        initramfs was built with --lvm, --luks and --ssh.

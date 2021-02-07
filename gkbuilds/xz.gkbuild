@@ -1,0 +1,19 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	local myconf=(
+		--enable-threads
+		--enable-static
+		--disable-nls
+		--disable-xz
+		--disable-xzdec
+		--disable-lzmadec
+		--disable-lzmainfo
+		--disable-lzma-links
+		--disable-scripts
+		--disable-doc
+	)
+
+	gkconf "${myconf[@]}"
+}

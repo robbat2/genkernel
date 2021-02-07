@@ -1,0 +1,50 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	default
+
+	# flag cleanup
+	sed -i -r \
+		-e 's:[[:space:]]?-(Werror|Os|falign-(functions|jumps|loops|labels)=1|fomit-frame-pointer)\>::g' \
+		Makefile.flags || gen_die
+
+	sed -i \
+		-e "/^CROSS_COMPILE/s:=.*:= ${CHOST}-:" \
+		-e "/^CC\>/s:=.*:= $(tc-getCC):" \
+		-e "/^HOSTCC/s:=.*:= $(tc-getBUILD_CC):" \
+		-e "/^HOSTCXX/s:=.*:= $(tc-getBUILD_CXX):" \
+		-e "/^PKG_CONFIG\>/s:=.*:= $(tc-getPKG_CONFIG):" \
+		Makefile || gen_die
+
+	sed -i \
+		-e 's:-static-libgcc::' \
+		Makefile.flags || die
+
+	cp "${TEMP}"/busybox-config "${S}"/.config \
+		|| die "Failed top copy '${TEMP}/busybox-config' to '${S}/.config'!"
+
+	cp "${TEMP}"/busybox-config "${S}"/.config.gk_orig \
+		|| die "Failed top copy '${TEMP}/busybox-config' to '${S}/.config.gk_orig'!"
+}
+
+src_configure() {
+	gkexec "yes '' | ${MAKE} V=1 oldconfig" 1
+}
+
+src_install() {
+	#gkmake CONFIG_PREFIX="${D}" install
+	mkdir "${D}"/bin || die "Failed to create '${D}/bin'!"
+
+	cp -a busybox "${D}"/bin/ \
+		|| die "Failed to copy '${S}/busybox' to '${D}/bin/'!"
+
+	"${STRIP}" --strip-all "${D}"/bin/busybox \
+		|| die "Failed to strip '${D}/bin/busybox'!"
+
+	mkdir "${D}"/configs || die "Failed to create '${D}/configs'!"
+	cp -a --target-directory="${D}"/configs \
+		"${S}"/.config \
+		"${S}"/.config.gk_orig \
+		|| die "Failed to copy '${S}/.config{,gk_orig}' to '${D}/configs'!"
+}

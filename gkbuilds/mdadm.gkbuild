@@ -1,0 +1,38 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	default
+
+	local defs='-DNO_DLM -DNO_COROSYNC'
+	sed -i \
+		-e "/^CFLAGS = /s:^CFLAGS = \(.*\)$:CFLAGS = ${CFLAGS} ${defs}:" \
+		-e "/^CXFLAGS = /s:^CXFLAGS = \(.*\)$:CXFLAGS = ${CFLAGS} ${defs}:" \
+		-e "/^CWFLAGS = /s:^CWFLAGS = \(.*\)$:CWFLAGS = -Wall:" \
+		-e "s/^# LDFLAGS = -static/LDFLAGS = -static/" \
+		-e "s|^UDEVDIR := .*|UDEVDIR = $(get_udevdir)|" \
+		Makefile \
+		|| die "Failed to sed mdadm Makefile"
+}
+
+src_compile() {
+	gkmake V=1 mdadm mdmon
+}
+
+src_install() {
+	gkmake V=1 DESTDIR="${D}" install-udev
+
+	mkdir -p "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	cp -a mdadm "${D}"/sbin/ \
+		|| die "Failed to copy '${S}/mdadm' to '${D}/sbin/'!"
+
+	"${STRIP}" --strip-all "${D}"/sbin/mdadm \
+		|| die "Failed to strip '${D}/sbin/mdadm'!"
+
+	cp -a mdmon "${D}"/sbin/ \
+		|| die "Failed to copy '${D}/sbin/mdmon' to '${D}/sbin/'!"
+
+	"${STRIP}" --strip-all "${D}"/sbin/mdmon \
+		|| die "Failed to strip '${D}/sbin/mdmon'!"
+}

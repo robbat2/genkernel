@@ -1,0 +1,24 @@
+Use pkg-config from environment variable (mimic's autotools' behavior).
+
+While here, request static libs because genkernel builds static unionfs only.
+
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -1,5 +1,7 @@
++PKG_CONFIG ?= pkg-config
++
+ CFLAGS += -Wall
+-CPPFLAGS += $(shell pkg-config --cflags fuse)
++CPPFLAGS += $(shell $(PKG_CONFIG) --cflags fuse)
+ CPPFLAGS += -DFUSE_USE_VERSION=29
+ 
+ CPPFLAGS += -DLIBC_XATTR # glibc nowadays includes xattr
+@@ -10,7 +12,7 @@ CPPFLAGS += -DLIBC_XATTR # glibc nowadays includes xattr
+ 
+ LDFLAGS +=
+ 
+-LIB = $(shell pkg-config --libs fuse) -lpthread
++LIB = $(shell $(PKG_CONFIG) --static --libs fuse) -lpthread
+ 
+ HASHTABLE_OBJ = hashtable.o hashtable_itr.o
+ UNIONFS_OBJ = unionfs.o opts.o debug.o findbranch.o readdir.o \

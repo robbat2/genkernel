@@ -1,0 +1,66 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_prepare() {
+	default
+
+	# Since we've patched many .c files, the make process will try to
+	# re-build the manpages by running `./bin --help`.  When doing a
+	# cross-compile, we can't do that since 'bin' isn't a native bin.
+	# Also, it's not like we changed the usage on any of these things,
+	# so let's just update the timestamps and skip the help2man step.
+	set -- man/*.x
+	touch ${@/%x/1}
+
+	# Avoid perl dep for compiled in dircolors default #348642
+	touch src/dircolors.h
+	touch ${@/%x/1}
+}
+
+src_configure() {
+	append-ldflags -static
+
+	# configure doesn't like our TMPDIR and would try to write to
+	# /usr instead which would trigger sandbox
+	export ac_cv_sys_long_file_names=yes
+
+	export gl_cv_func_mknod_works=yes #409919
+
+	# no selinux
+	export ac_cv_{header_selinux_{context,flash,selinux}_h,search_setfilecon}=no
+
+	if tc-is-cross-compiler
+	then
+		export fu_cv_sys_stat_statfs2_bsize=yes #311569
+		export gl_cv_func_realpath_works=yes #416629
+		export gl_cv_func_working_mktime=yes
+	fi
+
+	local myconf=(
+		--with-packager="genkernel"
+		--enable-largefile
+		--disable-libcap
+		--disable-nls
+		--disable-acl
+		--disable-xattr
+		--without-gmp
+		--enable-no-install-program="stdbuf,groups,hostname,kill,su,uptime"
+	)
+
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	local MYMAKEOPTS=( "V=1" )
+	MYMAKEOPTS+=( "DESTDIR=${D}" )
+	MYMAKEOPTS+=( "install" )
+	gkmake "${MYMAKEOPTS[@]}"
+
+	# We are only interested in b2sum
+	find "${D}" -type f -not -name 'b2sum' -print0 | xargs --null -I {} rm {}
+
+	rm -rf "${D}"/usr/share || die "Failed to remove '${D}/usr/share'!"
+
+	"${STRIP}" --strip-all "${D}"/usr/bin/b2sum \
+		|| die "Failed to strip '${D}/usr/bin/b2sum'!"
+}

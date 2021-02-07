@@ -1,0 +1,15 @@
+# Copyright 1999-2019 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+src_configure() {
+	append-ldflags -static
+}
+
+src_install() {
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+	install -m 0755 -s src/unionfs "${D}"/sbin/unionfs \
+		|| die "Failed to install 'unionfs' to '${D}/sbin/'!"
+
+	"${STRIP}" --strip-all "${D}"/sbin/unionfs \
+		|| die "Failed to strip '${D}/sbin/unionfs'!"
+}

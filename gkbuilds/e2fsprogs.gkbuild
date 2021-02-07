@@ -1,0 +1,50 @@
+# Copyright 1999-2020 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# e2fsprogs-1.45.6-build.patch would trigger gkautoreconf
+# which we cannot run because of gettext-0.20 incompatibility
+WANT_AUTORECONF=no
+
+src_configure() {
+	append-ldflags -static
+
+	export VARTEXFONTS="${T}/fonts"
+
+	local myconf=(
+		--bindir=/bin
+		--with-root-prefix=""
+		--disable-nls
+		--enable-libblkid
+		--enable-libuuid
+		--disable-fsck
+		--disable-uuidd
+		--disable-debugfs
+		--disable-imager
+		--enable-resizer
+		--disable-defrag
+	)
+
+	ac_cv_path_LDCONFIG=: \
+	CC="$(tc-getCC)" \
+	BUILD_CC="$(tc-getBUILD_CC)" \
+	BUILD_LD="$(tc-getBUILD_LD)" \
+	gkconf "${myconf[@]}"
+}
+
+src_install() {
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	local file=
+	for file in \
+		e2fsck/e2fsck \
+		misc/mke2fs \
+		resize/resize2fs \
+	; do
+		cp -a "${S}"/${file} "${D}"/sbin/ \
+			|| die "Failed to copy '${S}/${file}' to '${D}/sbin/'!"
+
+		local filename=$(basename "${file}")
+		"${STRIP}" --strip-all "${D}"/sbin/${filename} \
+			|| die "Failed to strip '${D}/sbin/${file}'!"
+	done
+}
