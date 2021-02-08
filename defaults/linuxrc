@@ -372,6 +372,15 @@ do
 			fi
 			unset tmp_disabled
 		;;
+		gk.preserverun.disabled=*)
+			tmp_disabled=${x#*=}
+			if is_true "${tmp_disabled}"
+			then
+				warn_msg "gk.preserverun.disabled is set; /run will not be moved to newroot!"
+				GK_PRESERVE_RUN=0
+			fi
+			unset tmp_disabled
+		;;
 		gk.prompt.timeout=*)
 			tmp_timeout=${x#*=}
 			if is_int "${tmp_timeout}"
@@ -1335,6 +1344,12 @@ fi
 
 # Run debug shell if requested
 rundebugshell "before entering switch_root"
+
+if [ "${GK_PRESERVE_RUN}" = '0' ]
+then
+	GK_INIT_LOG=
+	run umount /run
+fi
 
 # init_opts is set in the environment by the kernel when it parses the command line
 init=${REAL_INIT:-/sbin/init}

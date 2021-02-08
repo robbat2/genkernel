@@ -745,6 +745,12 @@ recognized by the kernel itself.
     By default we will wait up to 120 seconds (UDEV default) for
     UDEV event queue to become empty.
 
+*gk.preserverun.disabled*=<...>::
+    By default, *switch_root* will preserve and move already mounted '/run'
+    to *newroot*. This boolean option allows you to disable preserving of
+    '/run', which is maybe required for SELinux due to missing labeling
+    support in genkernel.
+
 *gk.prompt.timeout*=<...>::
 By default a prompt within genkernel initramfs like shown when set
 *root* could not be found will never timeout. Use this option to set
