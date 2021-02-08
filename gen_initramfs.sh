@@ -1827,12 +1827,6 @@ append_modprobed() {
 	fi
 }
 
-# check for static linked file with objdump
-is_static() {
-	LANG="C" LC_ALL="C" objdump -T $1 2>&1 | grep "not a dynamic object" > /dev/null
-	return $?
-}
-
 append_auxiliary() {
 	local TDIR="${TEMP}/initramfs-aux-temp"
 	if [ -d "${TDIR}" ]
