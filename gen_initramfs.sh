@@ -628,7 +628,8 @@ append_eudev() {
 		local gen_hwdb_cmd=( "${TDIR}/usr/bin/udevadm" )
 		gen_hwdb_cmd+=( hwdb --update --root "${TDIR}" )
 		print_info 3 "COMMAND: ${gen_hwdb_cmd[*]}" 1 0 1
-		eval "${gen_hwdb_cmd[@]}" || gen_die "Failed to pre-generate initramfs' /etc/udev/hwdb.bin!"
+		eval "${gen_hwdb_cmd[@]}" 2>&1 | tee -a "${LOGFILE}" \
+			|| gen_die "Failed to pre-generate initramfs' /etc/udev/hwdb.bin!"
 
 		# Now that we have a pre-generated hwdb in initramfs
 		# we can delete source files
