@@ -535,6 +535,14 @@ then
 	FIRSTMODS="${FIRSTMODS} crc32_generic"
 fi
 
+if [ "${ROOTFSTYPE}" = "btrfs" -o -x /sbin/btrfs ]
+then
+	# We have no mechanism to trigger btrfs module loading before UDEV's btrfs builtin
+	# will run; In addition, loading btrfs via UDEV could cause problems for slow
+	# machines, see https://github.com/dracutdevs/dracut/issues/658
+	FIRSTMODS="${FIRSTMODS} btrfs"
+fi
+
 splash 'init'
 
 cmdline_hwopts
