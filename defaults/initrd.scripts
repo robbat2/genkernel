@@ -1767,6 +1767,10 @@ openLUKS() {
 		swap)
 			local TYPE=SWAP
 			;;
+		*)
+			bad_msg "OpenLUKS(): Unknown type '${1}' specified!"
+			exit 1
+			;;
 	esac
 
 	local LUKS_NAME="${1}"
