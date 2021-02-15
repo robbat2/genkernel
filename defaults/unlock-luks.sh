@@ -49,6 +49,12 @@ main() {
 	eval local cryptsetup_options='"${CRYPT_'${TYPE}'_OPTIONS}"'
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 
+	if [ -z "${LUKS_DEVICE}" ]
+	then
+		bad_msg "'crypt_${NAME}' kernel command-line argument is not set!"
+		exit 1
+	fi
+
 	while true
 	do
 		local gpg_cmd crypt_filter_ret
@@ -61,7 +67,7 @@ main() {
 			LUKS_DEVICE=$(find_real_device "${LUKS_DEVICE}")
 			if [ -z "${LUKS_DEVICE}" ]
 			then
-				bad_msg "Looks like CRYPT_${TYPE} kernel cmdline argument is not set." "${CRYPT_SILENT}"
+				bad_msg "Failed to find LUKS device. If crypt_${NAME} kernel command-line argument is correct you are probably missing kernel support for your storage!" ${CRYPT_SILENT}
 				exit 1
 			fi
 

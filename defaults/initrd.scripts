@@ -1783,6 +1783,12 @@ openLUKS() {
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
 	local mntkey="/mnt/key/" crypt_filter_ret=
 
+	if [ -z "${LUKS_DEVICE}" ]
+	then
+		bad_msg "'crypt_${1}' kernel command-line argument is not set!"
+		exit 1
+	fi
+
 	while true
 	do
 		local gpg_cmd=""
@@ -1810,7 +1816,7 @@ openLUKS() {
 			LUKS_DEVICE=$(find_real_device "${LUKS_DEVICE}")
 			if [ -z "${LUKS_DEVICE}" ]
 			then
-				bad_msg "Looks like CRYPT_${TYPE} kernel cmdline argument is not set." ${CRYPT_SILENT}
+				bad_msg "Failed to find LUKS device. If crypt_${1} kernel command-line argument is correct you are probably missing kernel support for your storage!" ${CRYPT_SILENT}
 				DEV_ERROR=1
 				continue
 			fi
