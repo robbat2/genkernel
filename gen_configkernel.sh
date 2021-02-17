@@ -978,7 +978,7 @@ config_kernel() {
 
 			print_info 2 "$(get_indent 1)>> Ensure that required kernel options for early microcode loading support are set ..."
 			kconfigs_microcode+=( 'CONFIG_MICROCODE' )
-			kconfigs_microcode+=( 'CONFIG_MICROCODE_OLD_INTERFACE' )
+			[ ${KV_NUMERIC} -le 4003 ] && kconfigs_microcode+=( 'CONFIG_MICROCODE_OLD_INTERFACE' )
 			[ ${KV_NUMERIC} -le 4003 ] && kconfigs_microcode+=( 'CONFIG_MICROCODE_EARLY' )
 
 			# Intel
