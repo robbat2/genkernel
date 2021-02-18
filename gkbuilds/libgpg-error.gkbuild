@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_prepare() {
@@ -59,24 +59,8 @@ src_install() {
 
 	rm -rf \
 		"${D}"/usr/bin/gpg-error \
+		"${D}"/usr/bin/gpg-error-config \
 		"${D}"/usr/bin/gpgrt-config \
 		"${D}"/usr/bin/yat2m \
 		"${D}"/usr/share
-
-	mv "${D}"/usr/bin/gpg-error-config "${D}"/usr/bin/gpg-error-config.ori \
-		|| die "Failed to rename '${D}/usr/bin/gpg-error-config' to '${D}/usr/bin/gpg-error-config.ori'!"
-
-	cat >"${D}"/usr/bin/gpg-error-config <<-EOF
-	#!/bin/sh
-
-	SYSROOT=\$(dirname "\$(dirname "\$(dirname "\$(readlink -fm "\$0")")")")
-
-	exec "\${SYSROOT}"/usr/bin/gpg-error-config.ori "\$@" | sed -e 's#/#'\${SYSROOT}'/#'
-	EOF
-
-	chmod +x "${D}"/usr/bin/gpg-error-config \
-		|| die "Failed to chmod of '${D}/bin/gpg-error-config'!"
-
-	ln -s gpg-error-config "${D}"/usr/bin/gpgrt-config \
-		|| die "Failed to symlink '${D}/bin/gpgrt-config' to '${D}/bin/gpg-error-config'!"
 }
