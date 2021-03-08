@@ -47,6 +47,7 @@ main() {
 	eval local LUKS_DEVICE='"${CRYPT_'${TYPE}'}"'
 	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEYFILE}"'
 	eval local cryptsetup_options='"${CRYPT_'${TYPE}'_OPTIONS}"'
+	cryptsetup_options="$(trim "${cryptsetup_options}")"
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 
 	if [ -z "${LUKS_DEVICE}" ]
