@@ -780,10 +780,6 @@ when not set. This will allow remote user to provide answer through
 *dolvm*::
     Activate LVM volumes on bootup.
 
-*lvmraid*=<...>::
-    Specify RAID devices to set up before the activation of LVM volumes.
-    Implies option *dolvm*.
-
 *domdadm*::
     Scan for RAID arrays on bootup.
 

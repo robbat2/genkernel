@@ -186,8 +186,7 @@ do
 		;;
 		# /dev/md
 		lvmraid=*)
-			RAID_DEVICES="${x#*=}"
-			RAID_DEVICES="$(echo ${RAID_DEVICES} | sed -e 's/,/ /g')"
+			warn_msg "'${x}' kernel command-line argument is deprecated; Use 'dolvm' instead!"
 			USE_LVM_NORMAL=1
 		;;
 		part=*)
