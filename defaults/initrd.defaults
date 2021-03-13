@@ -56,7 +56,6 @@ ROOT_LINKS='bin sbin lib lib32 lib64 boot usr opt emul'
 ROOT_TREES='etc root home var'
 
 REAL_ROOT=''
-CONSOLE='/dev/console'
 NEW_ROOT='/newroot'
 no_umounts='/newroot|/mnt/aufs-dev|/mnt/aufs-rw-branch|/mnt/livecd|/mnt/cdrom|/.unions/memory|/.unions/memory/xino'
 ROOTDELAY=5

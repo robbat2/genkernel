@@ -21,6 +21,7 @@
 [ ! -e /dev/zero ]     && mknod /dev/zero c 1 5
 
 # Take control
+CONSOLE="/dev/$(get_active_console)"
 exec 0<>${CONSOLE} 1<>${CONSOLE} 2<>${CONSOLE}
 
 if [ "$$" != '1' ]

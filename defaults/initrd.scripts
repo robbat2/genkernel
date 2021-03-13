@@ -2722,6 +2722,21 @@ setup_unionfs() {
 	fi
 }
 
+get_active_console() {
+	local active_console=console
+
+	while [ -f /sys/class/tty/${active_console}/active ]
+	do
+		active_console=$(cat /sys/class/tty/${active_console}/active)
+
+		# last console will be the active one,
+		# see https://www.kernel.org/doc/html/latest/admin-guide/serial-console.html
+		active_console=${active_console##* }
+	done
+
+	echo ${active_console}
+}
+
 get_mounts_list() {
 	awk '
 		/^[[:blank:]]*#/ { next }
