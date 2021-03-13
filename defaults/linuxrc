@@ -21,7 +21,7 @@
 [ ! -e /dev/zero ]     && mknod /dev/zero c 1 5
 
 # Take control
-exec >${CONSOLE} <${CONSOLE} 2>&1
+exec 0<>${CONSOLE} 1<>${CONSOLE} 2<>${CONSOLE}
 
 if [ "$$" != '1' ]
 then
@@ -462,7 +462,7 @@ then
 	[ ! -c "${NEW_CONSOLE}" ] && NEW_CONSOLE="/dev/${NEW_CONSOLE}"
 	if [ -c "${NEW_CONSOLE}" ]
 	then
-		exec >${NEW_CONSOLE} <${NEW_CONSOLE} 2>&1
+		exec 0<>${NEW_CONSOLE} 1<>${NEW_CONSOLE} 2<>${NEW_CONSOLE}
 		good_msg "Console switched from '${CONSOLE}' to '${NEW_CONSOLE}'!"
 		CONSOLE="${NEW_CONSOLE}"
 	else
