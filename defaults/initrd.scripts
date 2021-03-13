@@ -1035,7 +1035,7 @@ run_shell() {
 		&& [ -c "${CONSOLE}" ]
 	then
 		log_msg "Opening rescue shell on ${CONSOLE} ..."
-		setsid ${SH} -c "exec sh --login <${CONSOLE} >${CONSOLE} 2>&1"
+		setsid ${SH} -c "exec sh --login 0<>${CONSOLE} 1<>${CONSOLE} 2<>${CONSOLE}"
 	elif command -v cttyhack 1>/dev/null 2>&1
 	then
 		log_msg "Opening rescue shell using cttyhack ..."
@@ -1043,7 +1043,7 @@ run_shell() {
 	elif [ -c '/dev/tty1' ]
 	then
 		log_msg "Opening rescue shell on /dev/tty1 fallback ..."
-		setsid ${SH} -c 'exec sh --login </dev/tty1 >/dev/tty1 2>&1'
+		setsid ${SH} -c "exec sh --login 0<>/dev/tty1 1<>/dev/tty1 2<>/dev/tty1"
 	else
 		log_msg "Opening rescue shell (last resort) ..."
 		${SH} --login
@@ -1055,7 +1055,7 @@ run_shell() {
 
 	# We maybe have called exec and dettached from main script; We
 	# must restore control...
-	exec >${CONSOLE} <${CONSOLE} 2>&1
+	exec 0<>${CONSOLE} 1<>${CONSOLE} 2<>${CONSOLE}
 }
 
 fs_type_in_use() {
