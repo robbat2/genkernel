@@ -453,7 +453,13 @@ good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
 
 if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
 then
-	hash setfont >/dev/null 2>&1 && run setfont /lib/console/font -C ${CONSOLE} 2>&1
+	if echo "$(get_active_console)" | grep -qF ttyS
+	then
+		warn_msg "Active console is ${console}; Not loading embedded boot font ..."
+	elif hash setfont >/dev/null 2>&1
+	then
+		run setfont /lib/console/font -C ${CONSOLE} 2>&1
+	fi
 fi
 
 quiet_kmsg
