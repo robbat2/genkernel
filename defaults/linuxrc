@@ -178,12 +178,6 @@ do
 			MLIST=$(echo ${MLIST} ${x#*=} | sed -e 's/^\ *//;s/,/ /g')
 			export MLIST
 		;;
-		# Redirect output to a specific tty
-		CONSOLE=*|console=*)
-			NEW_CONSOLE=${x#*=}
-			NEW_CONSOLE=$(basename ${NEW_CONSOLE})
-			NEW_CONSOLE=${NEW_CONSOLE%%,*}
-		;;
 		# /dev/md
 		lvmraid=*)
 			warn_msg "'${x}' kernel command-line argument is deprecated; Use 'dolvm' instead!"
@@ -454,21 +448,6 @@ do
 		;;
 	esac
 done
-
-if [ -n "${NEW_CONSOLE}" ]
-then
-	# We cannot update console while processing CMDLINE because we
-	# are only interested in last console= value.
-	[ ! -c "${NEW_CONSOLE}" ] && NEW_CONSOLE="/dev/${NEW_CONSOLE}"
-	if [ -c "${NEW_CONSOLE}" ]
-	then
-		exec 0<>${NEW_CONSOLE} 1<>${NEW_CONSOLE} 2<>${NEW_CONSOLE}
-		good_msg "Console switched from '${CONSOLE}' to '${NEW_CONSOLE}'!"
-		CONSOLE="${NEW_CONSOLE}"
-	else
-		bad_msg "Unable to switch console: '${NEW_CONSOLE}' not found or not a character device!"
-	fi
-fi
 
 good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
 
