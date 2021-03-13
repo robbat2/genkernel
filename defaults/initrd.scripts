@@ -314,6 +314,7 @@ bootstrapFS() {
 	[ ! -e "${NEW_ROOT}/dev/null" ]    && run mknod -m 666 "${NEW_ROOT}"/dev/null c 1 3
 	[ ! -e "${NEW_ROOT}/dev/zero" ]    && run mknod -m 666 "${NEW_ROOT}"/dev/zero c 1 5
 	[ ! -e "${NEW_ROOT}/dev/console" ] && run mknod -m 600 "${NEW_ROOT}"/dev/console c 5 1
+	[ ! -e "${NEW_ROOT}/dev/tty0" ]    && run mknod -m 620 "${NEW_ROOT}"/dev/tty0 c 4 0
 	[ ! -e "${NEW_ROOT}/dev/ttyS0" ]   && run mknod -m 660 "${NEW_ROOT}"/dev/ttyS0 c 4 64
 
 	# For SGI LiveCDs
