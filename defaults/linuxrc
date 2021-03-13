@@ -57,11 +57,6 @@ gk_ver="$(cat /etc/build_id)"
 gk_build_date="$(cat /etc/build_date)"
 kernel_ver="$(uname -r)"
 
-if [ "$0" = '/init' ]
-then
-	[ -e /linuxrc ] && run rm /linuxrc
-fi
-
 CMDLINE=$(cat /proc/cmdline)
 # Scan CMDLINE for any specified real_root= or cdroot arguments
 FAKE_ROOT=''
