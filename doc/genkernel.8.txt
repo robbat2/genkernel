@@ -832,6 +832,12 @@ when not set. This will allow remote user to provide answer through
     will load that font. This boolean option allows you to disable
     loading of the user embedded bootfont.
 
+*gk.emergency*=<reboot|poweroff|halt>::
+    By default, genkernel tries to spawn a rescue shell in case of
+    a critical failure (see *gk.userinteraction.disabled* to prevent this).
+    This option controls the action to execute when rescue is not possible.
+    Default is "halt".
+
 *gk.hw.load-all*=<...>::
     By default, genkernel loads various module groups (nvme, sata,
     scsi, pata, usb...) until block device specified in *root* parameter
@@ -856,7 +862,7 @@ or desired, e.g. for a kiosk system, this boolean option will disable
 any prompting, including the rescue shell.
 
 NOTE: Because no user interaction is possible when this option is set,
-system will automatically reboot on error after a timeout.
+on error, system will immediately execute *gk.emergency* action.
 
 *noload*=<...>::
 List of modules to skip loading.

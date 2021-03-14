@@ -289,6 +289,24 @@ do
 			fi
 			unset tmp_disabled
 		;;
+		gk.emergency=*)
+			tmp_action=${x#*=}
+			case "${tmp_action}" in
+				reboot)
+					GK_EMERGENCY_ACTION="reboot -f"
+					;;
+				poweroff)
+					GK_EMERGENCY_ACTION="poweroff -f"
+					;;
+				halt)
+					GK_EMERGENCY_ACTION="halt -f"
+					;;
+				*)
+					warn_msg "'${x}' is an unsupported emergency action -- ignored!"
+					;;
+			esac
+			unset tmp_action
+		;;
 		gk.hw.load-all=*)
 			tmp_disabled=${x#*=}
 			if is_true "${tmp_disabled}"
@@ -1341,28 +1359,39 @@ fi
 
 # init_opts is set in the environment by the kernel when it parses the command line
 init=${REAL_INIT:-/sbin/init}
-if ! mountpoint "${CHROOT}" 1>/dev/null 2>&1
-then
-	bad_msg "${CHROOT} was not a mountpoint"
-elif chroot "${CHROOT}" test ! -x /${init#/}
-then
-	bad_msg "init=${init} does not exist in the rootfs!"
-elif [ $$ != 1 ]
-then
-	bad_msg "PID was not 1! switch_root would fail"
-else
-	good_msg "Switching to real root: switch_root ${CHROOT} ${init} ${init_opts}"
-	exec switch_root "${CHROOT}" "${init}" ${init_opts}
-fi
 
-# If we get here, something bad has happened
-splash 'verbose'
+while true
+do
+	# switch_root can only be called from PID 1;
+	# So stay in loop as long as user is able
+	# to fix the problem.
 
-bad_msg "A fatal error has occured since ${init} did not"
-bad_msg "boot correctly. Trying to open a shell ..."
+	if  ! mountpoint "${CHROOT}" 1>/dev/null 2>&1
+	then
+		bad_msg "${CHROOT} is not a mountpoint; Was root device (${REAL_ROOT}) not mounted?"
+	elif ! chroot "${CHROOT}" test -x /${init#/} 1>/dev/null 2>&1
+	then
+		mounted_root_device=$(mountpoint -n /newroot 2>/dev/null | awk '{ print $1 }')
+		bad_msg "init (${init}) not found in mounted root device (${mounted_root_device})!"
+	else
+		break
+	fi
 
-exec /bin/bash
-exec /bin/sh
-exec /bin/ash
-exec /bin/dash
-exec sh
+	run_emergency_shell
+	if ! is_userinteraction_allowed
+	then
+		${GK_EMERGENCY_ACTION} || exit 1
+	fi
+done
+
+good_msg "Switching to real root: switch_root ${CHROOT} ${init} ${init_opts}"
+exec switch_root "${CHROOT}" "${init}" ${init_opts}
+
+# If we reached here, something went very badly wrong in the initramfs.
+# However, spawning a rescue shell at this point would not help anymore:
+#   1) We have to assume that switch_root has already messed with
+#      initramfs (i.e. we probably have no /dev anymore).
+#   2) Any shell we would spawn would become child of PID 1 which would
+#      prevent user from calling switch_root once the user believes the
+#      problem was fixed.
+${GK_EMERGENCY_ACTION} || exit 1
