@@ -821,7 +821,7 @@ setup_overlayfs() {
 	local workdir="${overlay}/.work"
 	local static=/mnt/livecd
 
-	rundebugshell overlayfs
+	run_debug_shell overlayfs
 	for i in "${overlay}" "${static}"
 	do
 		[ ! -d "${i}" ] && run mkdir -p "${i}"
@@ -999,6 +999,16 @@ run() {
 	fi
 
 	return ${retval}
+}
+
+run_debug_shell() {
+	is_debug || return
+
+	good_msg 'Starting debug shell as requested by "debug" option.'
+	good_msg "Run '${BOLD}gksosreport${NORMAL}' to generate debug report"
+	good_msg "in case you want to file a bug report."
+	good_msg "Stopping by: ${1}"
+	run_shell
 }
 
 run_emergency_shell() {
@@ -2514,20 +2524,6 @@ cdupdate() {
 			good_msg 'No cdupdate.sh script found, skipping ...'
 		fi
 	fi
-}
-
-rundebugshell() {
-	if is_debug
-	then
-		good_msg 'Starting debug shell as requested by "debug" option.'
-		good_msg "Run '${BOLD}gksosreport${NORMAL}' to generate debug report"
-		good_msg "in case you want to file a bug report."
-	else
-		return 0
-	fi
-
-	good_msg "Stopping by: ${1}"
-	run_shell
 }
 
 do_resume() {

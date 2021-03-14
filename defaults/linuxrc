@@ -572,7 +572,7 @@ else
 fi
 
 # Run debug shell if requested
-rundebugshell "before starting udevd"
+run_debug_shell "before starting udevd"
 
 # Initialize udev
 if [ ! -f "/etc/udev/hwdb.bin" ]
@@ -670,7 +670,7 @@ run mkdir -p "${NEW_ROOT}"
 CHROOT="${NEW_ROOT}"
 
 # Run debug shell if requested
-rundebugshell "before setting up the root filesystem"
+run_debug_shell "before setting up the root filesystem"
 
 if [ "${CDROOT}" = '1' ]
 then
@@ -1331,7 +1331,7 @@ then
 fi
 
 # Run debug shell if requested
-rundebugshell "before entering switch_root"
+run_debug_shell "before switch_root"
 
 if [ "${GK_PRESERVE_RUN}" = '0' ]
 then
