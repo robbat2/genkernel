@@ -1072,6 +1072,10 @@ run_shell() {
 		${SH} --login
 	fi
 
+	# Leave function early when /dev/null does not exist anymore,
+	# i.e. after failed switch_root call
+	[ ! -e /dev/null ] && return
+
 	rm "${GK_SHELL_LOCKFILE}"
 
 	echo
