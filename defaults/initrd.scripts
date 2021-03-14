@@ -648,6 +648,15 @@ is_true() {
 	return 1
 }
 
+is_userinteraction_allowed() {
+	if [ -f "${GK_USERINTERACTION_DISABLED_STATEFILE}" ]
+	then
+		return 1
+	fi
+
+	return 0
+}
+
 # Function to create an ext2 fs on $aufs_dev, $aufs_dev_mnt mountpoint
 create_changefs() {
 	local size
@@ -1012,15 +1021,19 @@ run_debug_shell() {
 }
 
 run_emergency_shell() {
-	echo
-	gksosreport
-	good_msg 'You might want to save "/run/initramfs/gksosreport.txt" to a USB stick or /boot'
-	good_msg 'after mounting them and attach it to a bug report.'
+	if is_userinteraction_allowed
+	then
+		echo
+		gksosreport
+		good_msg 'You might want to save "/run/initramfs/gksosreport.txt" to a USB stick or /boot'
+		good_msg 'after mounting them and attach it to a bug report.'
+	fi
+
 	run_shell
 }
 
 run_shell() {
-	if [ -f "${GK_USERINTERACTION_DISABLED_STATEFILE}" ]
+	if ! is_userinteraction_allowed
 	then
 		bad_msg "gk.userinteraction.disabled is set; Spawning a shell is disabled!"
 		return
