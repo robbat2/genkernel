@@ -571,8 +571,8 @@ NOTE: System.map filename and System.map symlink name must be different.
     Specify directory to copy firmware from (defaults to '/lib/firmware').
 
 *--firmware-files*=<files>::
-    Specifies specific firmware files to copy. This overrides *--firmware-dir*.
-    For multiple files, separate the filenames with a comma.
+    Specifies specific firmware files or directories to copy, relative to
+    *--firmware-dir*. For multiple files, separate the filenames with a comma.
 
 *--*[*no-*]*firmware-install*::
     Enable or disables installation of firmware onto root filesystem.

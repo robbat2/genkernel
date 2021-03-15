@@ -1652,10 +1652,10 @@ append_firmware() {
 
 	mkdir -p "${TDIR}"/lib/firmware || gen_die "Failed to create '${TDIR}/lib/firmware'!"
 
-	if [ -n "${FIRMWARE_FILES}" ]
+	if [ ${#FIRMWARE_FILES[@]} -gt 0 ]
 	then
 		pushd "${FIRMWARE_DIR}" &>/dev/null || gen_die "Failed to chdir to '${FIRMWARE_DIR}'!"
-		cp -rL --parents --target-directory="${TDIR}/lib/firmware" ${FIRMWARE_FILES} 2>/dev/null \
+		cp -rL --parents --target-directory="${TDIR}/lib/firmware" "${FIRMWARE_FILES[@]}" 2>/dev/null \
 			|| gen_die "Failed to copy firmware files (${FIRMWARE_FILES}) to '${TDIR}/lib/firmware'!"
 		popd &>/dev/null || gen_die "Failed to chdir!"
 	else
