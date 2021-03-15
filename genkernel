@@ -532,6 +532,18 @@ then
 		print_warning 1 'add "rootfstype=ext3" or "rootfstype=ext4" to the list of boot parameters.'
 	fi
 	unset CONFGREP_CMD
+
+	cfg_CONFIG_CMDLINE_OVERRIDE=$(kconfig_get_opt "${KERNEL_CONFIG}" CONFIG_CMDLINE_OVERRIDE)
+	if [ "${cfg_CONFIG_CMDLINE_OVERRIDE}" = "y" ]
+	then
+		cfg_CONFIG_CMDLINE=$(kconfig_get_opt "${KERNEL_CONFIG}" CONFIG_CMDLINE)
+		print_warning 1 ''
+		print_warning 1 "${BOLD}Note:${NORMAL}"
+		print_warning 1 'You have set CONFIG_CMDLINE_OVERRIDE=y.'
+		print_warning 1 "You will be unable to alter set kernel parameters (${cfg_CONFIG_CMDLINE}) at runtime!"
+		unset cfg_CONFIG_CMDLINE
+	fi
+	unset cfg_CONFIG_CMDLINE_OVERRIDE
 fi
 
 isTrue "${CMD_INSTALL}" && restore_boot_mount_state
