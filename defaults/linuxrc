@@ -42,9 +42,6 @@ then
 	chmod 0750 /run/initramfs
 fi
 
-# Prevent superfluous printks from being printed to the console
-echo 1 > /proc/sys/kernel/printk
-
 if [ ! -s /etc/ld.so.cache ]
 then
 	# Looks like we were unable to run ldconfig during initramfs generation
@@ -54,6 +51,7 @@ fi
 # Set up symlinks
 run busybox --install -s
 
+console_loglevel="$(cut -b1 /proc/sys/kernel/printk 2>/dev/null || echo 7)"
 gk_ver="$(cat /etc/build_id)"
 gk_build_date="$(cat /etc/build_date)"
 kernel_ver="$(uname -r)"
@@ -467,6 +465,9 @@ do
 	esac
 done
 
+# Prevent superfluous printks from being printed to the console
+echo ${GK_CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk
+
 good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
 
 if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
@@ -479,8 +480,6 @@ then
 		run setfont /lib/console/font -C ${CONSOLE} 2>&1
 	fi
 fi
-
-quiet_kmsg
 
 if [ "${CDROOT}" = '0' ]
 then
@@ -1305,8 +1304,6 @@ then
 	CHROOT="${CHROOT}/${SUBDIR}"
 fi
 
-verbose_kmsg
-
 if [ "${aufs}" = '1' ]
 then
 	aufs_union_memory=${CHROOT}/.unions/memory
@@ -1383,6 +1380,13 @@ do
 		${GK_EMERGENCY_ACTION} || exit 1
 	fi
 done
+
+if [[ "${console_loglevel}" != "${GK_CONSOLE_LOGLEVEL}" ]]
+then
+	good_msg "Restoring console log level (${console_loglevel}) ..."
+	echo ${console_loglevel} > /proc/sys/kernel/printk \
+		&& log_msg "COMMAND: 'echo \"${console_loglevel}\" > /proc/sys/kernel/printk'"
+fi
 
 good_msg "Switching to real root: switch_root ${CHROOT} ${init} ${init_opts}"
 exec switch_root "${CHROOT}" "${init}" ${init_opts}

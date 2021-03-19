@@ -2502,24 +2502,6 @@ sdelay() {
 	fi
 }
 
-quiet_kmsg() {
-	# if QUIET is set make the kernel less chatty
-	if [ -n "${QUIET}" ]
-	then
-		echo '0' > /proc/sys/kernel/printk \
-			&& log_msg "COMMAND: 'echo \"0\" > /proc/sys/kernel/printk'"
-	fi
-}
-
-verbose_kmsg() {
-	# if QUIET is set make the kernel less chatty
-	if [ -n "${QUIET}" ]
-	then
-		echo '6' > /proc/sys/kernel/printk \
-			&& log_msg "COMMAND: 'echo \"6\" > /proc/sys/kernel/printk'"
-	fi
-}
-
 cdupdate() {
 	if [ "${CDROOT}" = '1' ]
 	then
