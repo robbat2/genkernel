@@ -334,8 +334,17 @@ config_kernel() {
 
 	if [ -n "${add_config}" ]
 	then
+		local kconfig_md5sum_old="$(md5sum < "${KERNEL_OUTPUTDIR}/.config")"
+
 		print_info 1 "$(get_indent 1)>> Invoking ${add_config} ..."
 		compile_generic ${add_config} kernelruntask
+
+		local kconfig_md5sum_new="$(md5sum < "${KERNEL_OUTPUTDIR}/.config")"
+		if [[ "${kconfig_md5sum_old}" == "${kconfig_md5sum_new}" ]]
+		then
+			print_warning 1 "$(get_indent 1)>> Kernel config was not modified!"
+		fi
+		unset kconfig_md5sum_old kconfig_md5sum_new
 	fi
 
 	local -a required_kernel_options
