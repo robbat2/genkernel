@@ -1207,7 +1207,7 @@ append_linker() {
 		mkdir -p "${TDIR}"/sbin || gen_die "Failed to create '${TDIR}/sbin'!"
 
 		local libdir=$(get_chost_libdir)
-		copy_system_binaries "${TDIR}/sbin" "${libdir}/../../sbin/ldconfig"
+		copy_system_binaries "${TDIR}/sbin" "${libdir%/usr\/*}/sbin/ldconfig"
 	else
 		# Only copy /etc/ld.so.conf.d -- /etc/ld.so.conf was already
 		# added to CPIO via append_base_layout() and because we only
