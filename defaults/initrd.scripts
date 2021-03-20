@@ -85,16 +85,16 @@ modules_scan() {
 	fi
 
 	log_msg "Loading modules of module group '${1}' (smart loading: ${smart_loading}) ..."
-	[ -z "${QUIET}" ] && \
-		printf "%b" "${BOLD}   ::${NORMAL} Loading from ${1}: "
+	is_quiet \
+		|| printf "%b" "${BOLD}   ::${NORMAL} Loading from ${1}: "
 
 	for x in ${MODS}
 	do
 		MLOAD=$(echo ${MLIST} | sed -e "s/.*${x}.*/${x}/")
 		if [ "${MLOAD}" = "${x}" ] # Only module to no-load
 		then
-			[ -z "${QUIET}" ] && \
-				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
+			is_quiet \
+				|| printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		elif [ "${MLOAD}" = "${MLIST}" ]
 		then
 			if [ "${smart_loading}" = "yes" ]
@@ -131,14 +131,15 @@ modules_scan() {
 				echo "not loaded"
 
 			! is_debug && [ "${loaded}" = "0" ] && \
-				[ -z "${QUIET}" ] && \
+				! is_quiet && \
 				printf "%b" "${x} "
 		else
-			[ -z "${QUIET}" ] && \
-				printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
+			is_quiet \
+				|| printf "%b\n" "${BOLD}   ::${NORMAL} Skipping ${x} ..."
 		fi
 	done
-	[ -z "${QUIET}" ] && echo
+
+	is_quiet || echo
 }
 
 uppercase() {
@@ -625,6 +626,12 @@ is_log_enabled() {
 	fi
 
 	return 0
+}
+
+is_quiet() {
+	is_true "${QUIET}" && return 0
+
+	return 1
 }
 
 is_true() {
@@ -1174,7 +1181,7 @@ good_msg() {
 
 	log_msg "[OK] ${msg_string}"
 
-	[ "${2-${QUIET}}" != '1' ] && printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+	is_true "${2-${QUIET}}" || printf "%b\n" "${GOOD}>>${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 good_msg_n() {
@@ -1183,7 +1190,7 @@ good_msg_n() {
 
 	log_msg "[OK] ${msg_string}"
 
-	[ "${2-${QUIET}}" != '1' ] && printf "%b" "${GOOD}>>${NORMAL}${BOLD} ${msg_string}"
+	is_true "${2-${QUIET}}" || printf "%b" "${GOOD}>>${NORMAL}${BOLD} ${msg_string}"
 }
 
 bad_msg() {
@@ -1202,7 +1209,7 @@ warn_msg() {
 
 	log_msg "[**] ${msg_string}"
 
-	[ "${2-${QUIET}}" != '1' ] && printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
+	is_true "${2-${QUIET}}" || printf "%b\n" "${WARN}**${NORMAL}${BOLD} ${msg_string} ${NORMAL}"
 }
 
 warn_msg_n() {
@@ -1211,7 +1218,7 @@ warn_msg_n() {
 
 	log_msg "[**] ${msg_string}"
 
-	[ "${2-${QUIET}}" != '1' ] && printf "%b" "${WARN}**${NORMAL}${BOLD} ${msg_string}"
+	is_true "${2-${QUIET}}" || printf "%b" "${WARN}**${NORMAL}${BOLD} ${msg_string}"
 }
 
 write_env_file() {
@@ -1625,7 +1632,7 @@ start_volumes() {
 
 				local lvm_cmd="run lvm vgscan 2>&1"
 				is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
-				[ -n "${QUIET}" ] && lvm_cmd="${lvm_cmd} 1>/dev/null"
+				is_quiet && lvm_cmd="${lvm_cmd} 1>/dev/null"
 
 				eval "${lvm_cmd}"
 				if [ $? -ne 0 ]
@@ -1641,7 +1648,7 @@ start_volumes() {
 			# To activate volumegroups on all devices in the cache
 			local lvm_cmd="run lvm vgchange -ay --sysinit 2>&1"
 			is_log_enabled && lvm_cmd="${lvm_cmd} | tee -a '${GK_INIT_LOG}'"
-			[ -n "${QUIET}" ] && lvm_cmd="${lvm_cmd} 1>/dev/null"
+			is_quiet && lvm_cmd="${lvm_cmd} 1>/dev/null"
 
 			eval "${lvm_cmd}"
 			if [ $? -ne 0 ]
@@ -1663,7 +1670,7 @@ start_volumes() {
 
 			local zfs_cmd="run /sbin/zpool import -N -a ${ZPOOL_CACHE} ${ZPOOL_FORCE} 2>&1"
 			is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
-			[ -n "${QUIET}" ] && zfs_cmd="${zfs_cmd} 1>/dev/null"
+			is_quiet && zfs_cmd="${zfs_cmd} 1>/dev/null"
 
 			eval "${zfs_cmd}"
 			if [ $? -ne 0 ]
@@ -1681,7 +1688,7 @@ start_volumes() {
 
 					local zfs_cmd="run /sbin/zpool export -f '${ZFS_POOL}' 2>&1"
 					is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
-					[ -n "${QUIET}" ] && zfs_cmd="${zfs_cmd} 1>/dev/null"
+					is_quiet && zfs_cmd="${zfs_cmd} 1>/dev/null"
 
 					eval "${zfs_cmd}"
 					if [ $? -ne 0 ]
@@ -1693,7 +1700,7 @@ start_volumes() {
 
 					zfs_cmd="run /sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} '${ZFS_POOL}' 2>&1"
 					is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
-					[ -n "${QUIET}" ] && zfs_cmd="${zfs_cmd} 1>/dev/null"
+					is_quiet && zfs_cmd="${zfs_cmd} 1>/dev/null"
 
 					eval "${zfs_cmd}"
 					if [ $? -ne 0 ]
@@ -1706,7 +1713,7 @@ start_volumes() {
 
 				local zfs_cmd="run /sbin/zpool import -N ${ZPOOL_CACHE} ${ZPOOL_FORCE} '${ZFS_POOL}' 2>&1"
 				is_log_enabled && zfs_cmd="${zfs_cmd} | tee -a '${GK_INIT_LOG}'"
-				[ -n "${QUIET}" ] && zfs_cmd="${zfs_cmd} 1>/dev/null"
+				is_quiet && zfs_cmd="${zfs_cmd} 1>/dev/null"
 
 				eval "${zfs_cmd}"
 				if [ $? -ne 0 ]
@@ -1729,7 +1736,7 @@ start_iscsi() {
 
 		iscsi_cmd="run iscsistart -b 2>&1"
 		is_log_enabled && iscsi_cmd="${iscsi_cmd} | tee -a '${GK_INIT_LOG}'"
-		[ -n "${QUIET}" ] && iscsi_cmd="${iscsi_cmd} 1>/dev/null"
+		is_quiet && iscsi_cmd="${iscsi_cmd} 1>/dev/null"
 
 		eval "${iscsi_cmd}"
 		if [ $? -ne 0 ]
@@ -1783,7 +1790,7 @@ start_iscsi() {
 
 		iscsi_cmd="run iscsistart -i '${ISCSI_INITIATORNAME}' -t '${ISCSI_TARGET}' -a '${ISCSI_ADDRESS}' ${ADDITIONAL} 2>&1"
 		is_log_enabled && iscsi_cmd="${iscsi_cmd} | tee -a '${GK_INIT_LOG}'"
-		[ -n "${QUIET}" ] && iscsi_cmd="${iscsi_cmd} 1>/dev/null"
+		is_quiet && iscsi_cmd="${iscsi_cmd} 1>/dev/null"
 
 		eval "${iscsi_cmd}"
 		if [ $? -ne 0 ]
@@ -2142,12 +2149,12 @@ start_network() {
 			let interface_timeout_100msec_modulo=${interface_time_waited}%10
 			if [ ${interface_timeout_100msec_modulo} = 0 ]
 			then
-				[ -z "${QUIET}" ] && printf "."
+				is_quiet || printf "."
 			fi
 		fi
 	done
 
-	[ -z "${QUIET}" ] && echo
+	is_quiet || echo
 
 	if [ "${have_interface}" != '1' ]
 	then
@@ -2271,10 +2278,10 @@ kill_network() {
 			ipv6_tentative || break
 			sleep 1
 			: $(( dad_timeout -= 1 ))
-			[ -z "${QUIET}" ] && printf "."
+			is_quiet || printf "."
 		done
 
-		[ -z "${QUIET}" ] && echo ''
+		is_quiet || echo
 
 		if [ ${dad_timeout} -le 0 ]
 		then
@@ -2296,10 +2303,10 @@ kill_network() {
 		fi
 		sleep 1
 		: $(( deconfiguration_timeout -= 1 ))
-		[ -z "${QUIET}" ] && printf "."
+		is_quiet || printf "."
 	done
 
-	[ -z "${QUIET}" ] && echo ''
+	is_quiet || echo
 
 	if [ ${deconfiguration_timeout} -le 0 ]
 	then
@@ -2433,10 +2440,10 @@ wait_sshd() {
 		fi
 		sleep 1
 		: $(( ssh_timeout -= 1 ))
-		[ -z "${QUIET}" ] && printf "."
+		is_quiet || printf "."
 	done
 
-	[ -z "${QUIET}" ] && echo ""
+	is_quiet || echo
 }
 
 kill_sshd() {
@@ -2494,7 +2501,7 @@ sdelay() {
 		do
 			let SDELAY=${SDELAY}-1
 			sleep 1
-			[ -z "${QUIET}" ] && printf "."
+			is_quiet || printf "."
 		done
 		echo
 	elif [ "${CDROOT}" = '1' ]
