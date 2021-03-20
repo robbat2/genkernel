@@ -30,11 +30,11 @@ receivefile() {
 			file=${CRYPT_SWAP_KEYFILE}
 			;;
 		'')
-			bad_msg "No keyfile specified." "${CRYPT_SILENT}"
+			bad_msg "No keyfile specified." ${CRYPT_SILENT}
 			exit 1
 			;;
 		*)
-			bad_msg "Unknown '${1}' keyfile received." "${CRYPT_SILENT}"
+			bad_msg "Unknown '${1}' keyfile received." ${CRYPT_SILENT}
 			exit 1
 			;;
 	esac
@@ -67,12 +67,12 @@ then
 					exit 1
 				fi
 			else
-				bad_msg "Keyfile was not properly received!" "${CRYPT_SILENT}"
+				bad_msg "Keyfile was not properly received!" ${CRYPT_SILENT}
 				exit 1
 			fi
 			;;
 		*)
-			bad_msg "Command '${command}' is not supported!" "${CRYPT_SILENT}"
+			bad_msg "Command '${command}' is not supported!" ${CRYPT_SILENT}
 			exit 1
 	esac
 else
