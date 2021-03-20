@@ -592,7 +592,7 @@ conf_rc_no_umounts() {
 }
 
 is_debug() {
-	is_debug=1
+	local is_debug=1
 
 	if [ -f "${GK_DEBUGMODE_STATEFILE}" ]
 	then
