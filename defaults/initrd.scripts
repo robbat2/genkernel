@@ -1444,15 +1444,15 @@ cmdline_hwopts() {
 }
 
 setup_keymap() {
-	local console=$(get_active_console)
-	if echo "${console}" | grep -qF 'ttyS'
-	then
-		warn_msg "Active console is ${console}; Skipping dokeymap ..."
-		return
-	fi
-
 	if [ "${DO_keymap}" ]
 	then
+		local console=$(get_active_console)
+		if echo "${console}" | grep -qF 'ttyS'
+		then
+			warn_msg "Active console is ${console}; Skipping dokeymap ..."
+			return
+		fi
+
 		if [ ! -e /dev/vc/0 -a ! -e /dev/tty0 ]
 		then
 			DEVBIND=1
