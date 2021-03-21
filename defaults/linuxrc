@@ -646,6 +646,8 @@ then
 				RESUME_DEV=""
 				retval=1
 
+				good_msg "Determining resume device (trying ${REAL_RESUME}) ..."
+
 				if [ ${retval} -ne 0 ]
 				then
 					RESUME_DEV=$(findfs "${REAL_RESUME}" 2>/dev/null)
@@ -660,7 +662,7 @@ then
 
 				if [ ${retval} -eq 0 ] && [ -n "${RESUME_DEV}" ]
 				then
-					good_msg "Detected real_resume=${RESUME_DEV}"
+					good_msg "Resume device detected as ${RESUME_DEV}!"
 					REAL_RESUME="${RESUME_DEV}"
 				fi
 				;;
