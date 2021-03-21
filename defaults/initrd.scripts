@@ -2538,30 +2538,38 @@ do_resume() {
 	local device=$(find_real_device "${REAL_RESUME}")
 	if [ -z "${device}" ]
 	then
-		warn_msg "REAL_RESUME (${REAL_RESUME}) device not found; Skipping resume ..."
+		warn_msg "resume device (${REAL_RESUME}) not found; Skipping resume ..." 0
 		return 0
 	else
 		REAL_RESUME="${device}"
 	fi
 
+	local resume_tried=no
 	if [ -d /proc/suspend2 -o -d /sys/power/suspend2 -o -d /sys/power/tuxonice ]
 	then
 		tuxonice_resume
-	else
+		resume_tried=yes
+	elif [ -f /sys/power/resume ]
+	then
 		swsusp_resume
+		resume_tried=yes
+	fi
+
+	if is_true "${resume_tried}"
+	then
+		warn_msg "System is not resuming from ${REAL_RESUME}, probably because it wasn't suspended; Continue normal booting ..."
+	else
+		warn_msg "resume device (${REAL_RESUME}) specified but kernel is lacking proper hibernation support!"
 	fi
 }
 
 swsusp_resume() {
 	# determine swap resume partition
 	local device=$(ls -lL "${REAL_RESUME}" | sed 's/\  */ /g' | cut -d \  -f 5-6 | sed 's/,\ */:/')
-	if [ -f /sys/power/resume ]
-	then
-		log_msg "Trying to resume using swsusp ..."
-		log_msg "COMMAND: 'echo \"${device}\" > /sys/power/resume'"
-		echo "${device}" > /sys/power/resume
-		log_msg "System is not resuming from ${REAL_RESUME}, probably because it wasn't suspended; Continue normal booting ..."
-	fi
+
+	log_msg "Trying to resume using swsusp ..."
+	log_msg "COMMAND: 'echo \"${device}\" > /sys/power/resume'"
+	echo "${device}" > /sys/power/resume
 }
 
 tuxonice_resume() {
@@ -2627,7 +2635,6 @@ tuxonice_resume() {
 	echo "${REAL_RESUME}" > "${tuxonice_resumedev}"
 	log_msg "COMMAND: 'echo > ${tuxonice_do_resume}'"
 	echo > "${tuxonice_do_resume}"
-	log_msg "System is not resuming from ${REAL_RESUME}, probably because it wasn't suspended; Continue normal booting ..."
 }
 
 find_loop() {
