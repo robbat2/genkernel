@@ -1238,7 +1238,7 @@ write_env_file() {
 crypt_filter() {
 	if [ "${CRYPT_SILENT}" = '1' ]
 	then
-		eval run ${1} >/dev/null 2>&1
+		eval run ${1}
 	else
 		splash 'verbose' >/dev/null &
 		eval run ${1}
