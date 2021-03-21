@@ -1054,8 +1054,8 @@ run_shell() {
 	export PS1='rescueshell \w \# '
 
 	echo
-	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${gk_ver}${NORMAL} (${gk_build_date}) ${BOLD}rescue shell${NORMAL}!" 0
-	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${kernel_ver}${NORMAL}" 0
+	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${GK_META_VERSION}${NORMAL} (${GK_META_BUILD_DATE}) ${BOLD}rescue shell${NORMAL}!" 0
+	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${KV}${NORMAL}" 0
 	echo
 
 	# Avoid /dev/{console,tty0} due to "can't access tty; job control turned off" problem;

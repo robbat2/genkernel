@@ -51,21 +51,8 @@ fi
 # Set up symlinks
 run busybox --install -s
 
-console_loglevel="$(cut -b1 /proc/sys/kernel/printk 2>/dev/null || echo 7)"
-gk_ver="$(cat /etc/build_id)"
-gk_build_date="$(cat /etc/build_date)"
-kernel_ver="$(uname -r)"
-
-CMDLINE=$(cat /proc/cmdline)
-# Scan CMDLINE for any specified real_root= or cdroot arguments
-FAKE_ROOT=''
-FAKE_INIT=''
-FAKE_ROOTFLAGS=''
-ROOTFSTYPE='auto'
-CRYPT_SILENT=0
-QUIET=''
-
-run mkdir -p /etc/cmdline /etc/modprobe.d
+# Handle kernel command-line parameters
+CMDLINE=$(cat /proc/cmdline 2>/dev/null)
 for x in ${CMDLINE}
 do
 	case "${x}" in
@@ -468,7 +455,7 @@ done
 # Prevent superfluous printks from being printed to the console
 echo ${GK_CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk
 
-good_msg "${gk_ver} (${gk_build_date}). Linux kernel ${kernel_ver}"
+good_msg "${GK_META_VERSION} (${GK_META_BUILD_DATE}). Linux kernel ${KV}"
 
 if [ "${GK_BOOTFONT_DISABLED}" = '0' -a -e /lib/console/font ]
 then
@@ -1381,11 +1368,11 @@ do
 	fi
 done
 
-if [[ "${console_loglevel}" != "${GK_CONSOLE_LOGLEVEL}" ]]
+if [[ "${CONSOLE_LOGLEVEL}" != "${GK_CONSOLE_LOGLEVEL}" ]]
 then
 	good_msg "Restoring console log level (${console_loglevel}) ..."
-	echo ${console_loglevel} > /proc/sys/kernel/printk \
-		&& log_msg "COMMAND: 'echo \"${console_loglevel}\" > /proc/sys/kernel/printk'"
+	echo ${CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk \
+		&& log_msg "COMMAND: 'echo \"${CONSOLE_LOGLEVEL}\" > /proc/sys/kernel/printk'"
 fi
 
 good_msg "Switching to real root: switch_root ${CHROOT} ${init} ${init_opts}"

@@ -81,14 +81,10 @@ else
 	# Don't log further remote shell output
 	GK_INIT_LOG=
 
-	gk_ver="$(cat /etc/build_id)"
-	gk_build_date="$(cat /etc/build_date)"
-	kernel_ver="$(uname -r)"
-
 	export PS1='remote rescueshell \w \# '
 
-	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${gk_ver}${NORMAL} (${gk_build_date}) ${BOLD}remote rescue shell${NORMAL}!"
-	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${kernel_ver}${NORMAL}"
+	GOOD=${BLUE} good_msg "${NORMAL}Welcome to ${BOLD}${GK_META_VERSION}${NORMAL} (${GK_META_BUILD_DATE}) ${BOLD}remote rescue shell${NORMAL}!"
+	GOOD=${BLUE} good_msg "${NORMAL}...running Linux kernel ${BOLD}${KV}${NORMAL}"
 	echo
 	good_msg "${NORMAL}The lockfile '${BOLD}${GK_SSHD_LOCKFILE}${NORMAL}' was created."
 	good_msg "${NORMAL}In order to resume boot process, run '${BOLD}resume-boot${NORMAL}'."
