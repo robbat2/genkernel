@@ -1111,6 +1111,15 @@ append_zfs() {
 		local dest_file="${TDIR%/}${udev_file/${udevdir}/${udevdir_initramfs}}"
 		cp -aL "${udev_file}" "${dest_file}" \
 			|| gen_die "Failed to copy '${udev_file}' to '${dest_file}'"
+
+		if [[ "${dest_file}" == *.rules ]]
+		then
+			print_info 5 "Updating UDEV dir in '${dest_file}' ..."
+			sed -i \
+				-e "s|${udevdir}|${udevdir_initramfs}|g" \
+				"${dest_file}" \
+				|| gen_die "Failed to update UDEV dir in '${dest_file}'"
+		fi
 	done
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
