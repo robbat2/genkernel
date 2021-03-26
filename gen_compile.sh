@@ -510,6 +510,23 @@ populate_binpkg() {
 		unset patch patchdir
 	fi
 
+	if [[ -f "${BINPKG}" ]]
+	then
+		if isTrue "$(is_glibc)"
+		then
+			local libdir=$(get_chost_libdir)
+			local glibc_test_file="${libdir}/libnss_files.so"
+
+			if [[ "${BINPKG}" -ot "${glibc_test_file}" ]]
+			then
+				print_info 3 "${CHECK_LEVEL_PREFIX}Glibc (${glibc_test_file}) is newer than us; Removing stale ${P} binpkg ..."
+				rm "${BINPKG}" || gen_die "Failed to remove stale binpkg '${BINPKG}'!"
+			fi
+
+			print_info 3 "${CHECK_LEVEL_PREFIX}Existing ${P} binpkg is newer than glibc (${glibc_test_file}); Skipping ..."
+		fi
+	fi
+
 	if [[ ! -f "${BINPKG}" ]]
 	then
 		print_info 3 "${CHECK_LEVEL_PREFIX}Binpkg '${BINPKG}' does NOT exist; Need to build ${P} ..."
