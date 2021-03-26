@@ -1372,7 +1372,7 @@ done
 
 if [[ "${CONSOLE_LOGLEVEL}" != "${GK_CONSOLE_LOGLEVEL}" ]]
 then
-	good_msg "Restoring console log level (${console_loglevel}) ..."
+	good_msg "Restoring console log level (${CONSOLE_LOGLEVEL}) ..."
 	echo ${CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk \
 		&& log_msg "COMMAND: 'echo \"${CONSOLE_LOGLEVEL}\" > /proc/sys/kernel/printk'"
 fi
