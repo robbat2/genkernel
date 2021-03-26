@@ -1067,7 +1067,8 @@ append_zfs() {
 	mkdir -p "${TDIR}"/etc/zfs || gen_die "Failed to create '${TDIR}/etc/zfs'!"
 
 	# Copy files to /etc/zfs
-	for i in zdev.conf zpool.cache
+	local i
+	for i in vdev_id.conf zdev.conf zpool.cache
 	do
 		if [ -f /etc/zfs/${i} ]
 		then
