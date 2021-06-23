@@ -452,8 +452,11 @@ do
 	esac
 done
 
-# Prevent superfluous printks from being printed to the console
-echo ${GK_CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk
+if ! is_quiet
+then
+	# Prevent superfluous printks from being printed to the console
+	echo ${GK_CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk
+fi
 
 good_msg "${GK_META_VERSION} (${GK_META_BUILD_DATE}). Linux kernel ${KV}"
 
@@ -1370,7 +1373,7 @@ do
 	fi
 done
 
-if [[ "${CONSOLE_LOGLEVEL}" != "${GK_CONSOLE_LOGLEVEL}" ]]
+if ! is_quiet && [[ "${CONSOLE_LOGLEVEL}" != "${GK_CONSOLE_LOGLEVEL}" ]]
 then
 	good_msg "Restoring console log level (${CONSOLE_LOGLEVEL}) ..."
 	echo ${CONSOLE_LOGLEVEL} > /proc/sys/kernel/printk \
