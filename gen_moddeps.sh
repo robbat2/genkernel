@@ -61,6 +61,7 @@ modules_kext() {
 	module_compression_algorithms[NONE]='.ko'
 	module_compression_algorithms[GZIP]='.ko.gz'
 	module_compression_algorithms[XZ]='.ko.xz'
+	module_compression_algorithms[ZSTD]='.ko.zst'
 
 	local module_compression_algorithm
 	for module_compression_algorithm in "${!module_compression_algorithms[@]}"
