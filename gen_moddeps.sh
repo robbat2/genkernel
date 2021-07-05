@@ -47,7 +47,6 @@ gen_deps() {
 }
 
 modules_dep_list() {
-	KEXT=$(modules_kext)
 	if [ -f "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}/modules.dep" ]
 	then
 		grep -F -- "/${1}${KEXT}:" "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}/modules.dep" | cut -d\:  -f2
