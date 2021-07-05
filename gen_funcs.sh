@@ -1952,7 +1952,7 @@ expand_file() {
 	local file="${1}"
 	local expanded_file=
 
-	expanded_file=$(python -c "import os; print(os.path.expanduser('${file}'))" 2>/dev/null)
+	expanded_file=$("${GK_SHARE}/path_expander.py" "${file}" 2>/dev/null)
 	if [ -z "${expanded_file}" ]
 	then
 		# if Python failed for some reason, just reset
