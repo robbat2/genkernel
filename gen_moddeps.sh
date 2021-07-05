@@ -4,7 +4,7 @@
 gen_dep_list() {
 	if isTrue "${ALLRAMDISKMODULES}"
 	then
-		strip_mod_paths $(find "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" -name "*$(modules_kext)") | sort
+		strip_mod_paths $(find "${KERNEL_MODULES_PREFIX%/}/lib/modules/${KV}" -name "*${KEXT}") | sort
 	else
 		rm -f "${TEMP}/moddeps" >/dev/null
 
