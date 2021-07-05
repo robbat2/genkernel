@@ -57,11 +57,29 @@ modules_dep_list() {
 modules_kext() {
 	local KEXT='.ko'
 
-	if grep -sq '^CONFIG_MODULE_COMPRESS=y' "${KERNEL_OUTPUTDIR}"/.config
-	then
-		grep -sq '^CONFIG_MODULE_COMPRESS_XZ=y' "${KERNEL_OUTPUTDIR}"/.config && KEXT='.ko.xz'
-		grep -sq '^CONFIG_MODULE_COMPRESS_GZIP=y' "${KERNEL_OUTPUTDIR}"/.config && KEXT='.ko.gz'
-	fi
+	declare -A module_compression_algorithms=()
+	module_compression_algorithms[NONE]='.ko'
+	module_compression_algorithms[GZIP]='.ko.gz'
+	module_compression_algorithms[XZ]='.ko.xz'
+
+	local module_compression_algorithm
+	for module_compression_algorithm in "${!module_compression_algorithms[@]}"
+	do
+		print_info 5 "Checking if module compression algorithm '${module_compression_algorithm}' is being used ..."
+
+		local koption="CONFIG_MODULE_COMPRESS_${module_compression_algorithm}"
+		local value_koption=$(kconfig_get_opt "${KERNEL_OUTPUTDIR}/.config" "${koption}")
+		if [[ "${value_koption}" != "y" ]]
+		then
+			print_info 5 "Cannot use '${module_compression_algorithm}' algorithm for module compression, kernel option '${koption}' is not set!"
+			continue
+		fi
+
+		print_info 5 "Will use '${module_compression_algorithm}' algorithm for kernel module compression!"
+		KEXT="${module_compression_algorithms[${module_compression_algorithm}]}"
+		break
+	done
+	unset module_compression_algorithms module_compression_algorithm koption value_koption
 
 	echo ${KEXT}
 }
