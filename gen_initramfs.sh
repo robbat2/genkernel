@@ -1759,18 +1759,18 @@ append_modules() {
 	print_info 2 "$(get_indent 2)modules: >> Copying modules from '${modules_srcdir}' to initramfs ..."
 
 	local i= mymod=
-	local MOD_EXT="$(modules_kext)"
+	local -x KEXT="$(modules_kext)"
 	local n_copied_modules=0
 	for i in $(gen_dep_list)
 	do
-		mymod=$(find . -name "${i}${MOD_EXT}" 2>/dev/null | head -n 1)
+		mymod=$(find . -name "${i}${KEXT}" 2>/dev/null | head -n 1)
 		if [ -z "${mymod}" ]
 		then
-			print_warning 3 "$(get_indent 3) - ${i}${MOD_EXT} not found; Skipping ..."
+			print_warning 3 "$(get_indent 3) - ${i}${KEXT} not found; Skipping ..."
 			continue;
 		fi
 
-		print_info 3 "$(get_indent 3) - Copying ${i}${MOD_EXT} ..."
+		print_info 3 "$(get_indent 3) - Copying ${i}${KEXT} ..."
 		cp -ax --parents --target-directory "${modules_dstdir}" "${mymod}" 2>/dev/null \
 			|| gen_die "Failed to copy '${modules_srcdir}/${mymod}' to '${modules_dstdir}'!"
 		n_copied_modules=$[$n_copied_modules+1]
