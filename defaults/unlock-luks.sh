@@ -58,6 +58,10 @@ main() {
 
 	while true
 	do
+		# Reset cryptsetup_options on each iteration
+		eval local cryptsetup_options='"${CRYPT_'${TYPE}'_OPTIONS}"'
+		cryptsetup_options="$(trim "${cryptsetup_options}")"
+
 		local gpg_cmd crypt_filter_ret
 
 		if [ -e "${OPENED_LOCKFILE}" ]

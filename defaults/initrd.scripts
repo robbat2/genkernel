@@ -1831,8 +1831,6 @@ openLUKS() {
 	eval local LUKS_KEY='"${CRYPT_'${TYPE}'_KEY}"'
 	eval local LUKS_KEYDEV='"${CRYPT_'${TYPE}'_KEYDEV}"'
 	eval local LUKS_KEYDEV_FSTYPE='"${CRYPT_'${TYPE}'_KEYDEV_FSTYPE}"'
-	eval local cryptsetup_options='"${CRYPT_'${TYPE}'_OPTIONS}"'
-	cryptsetup_options="$(trim "${cryptsetup_options}")"
 	eval local OPENED_LOCKFILE='"${CRYPT_'${TYPE}'_OPENED_LOCKFILE}"'
 	local DEV_ERROR=0 KEY_ERROR=0 KEYDEV_ERROR=0
 	local mntkey="/mnt/key/" crypt_filter_ret=
@@ -1845,6 +1843,10 @@ openLUKS() {
 
 	while true
 	do
+		# Reset cryptsetup_options on each iteration
+		eval local cryptsetup_options='"${CRYPT_'${TYPE}'_OPTIONS}"'
+		cryptsetup_options="$(trim "${cryptsetup_options}")"
+
 		local gpg_cmd=""
 		if [ -e "${OPENED_LOCKFILE}" ]
 		then
