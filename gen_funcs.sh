@@ -1073,7 +1073,7 @@ get_tar_cmd() {
 		pcmd=$(which pbzip2 2>/dev/null)
 	elif [[ "${archive_file}" == *.tar.xz ]]
 	then
-		pcmd=$(which pxz 2>/dev/null)
+		pcmd="'xz -T$(makeopts_jobs)'"
 	elif [[ "${archive_file}" == *.tar.gz ]]
 	then
 		pcmd=$(which pigz 2>/dev/null)
