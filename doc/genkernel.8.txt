@@ -246,14 +246,35 @@ LOW-LEVEL COMPILATION OPTIONS
 *--kernel-as*=<assembler>::
     Assembler to use for the kernel compilation.
 
+*--kernel-ar*=<archiver>::
+    Archiver to use for the kernel compilation.
+
 *--kernel-cc*=<compiler>::
     Compiler to use for the kernel compilation (e.g. distcc).
 
 *--kernel-ld*=<linker>::
     Linker to use for the kernel compilation.
 
-*--kernel-make*=<makeprg>::
+*--kernel-nm*=<nm>::
+    NM utility to use for the kernel compilation.
+
+*--kernel-make*=<makeprog>::
     GNU Make to use for the kernel compilation.
+
+*--kernel-objcopy*=<objcopyprog>::
+    Objcopy utility to use for the kernel compilation.
+
+*--kernel-objdump*=<objdumpprog>::
+    Objdump utility to use for the kernel compilation.
+
+*--kernel-ranlib*=<ranlibprog>::
+    Ranlib utility to use for the kernel compilation.
+
+*--kernel-readelf*=<readelfprog>::
+    Readelf utility to use for the kernel compilation.
+
+*--kernel-strip*=<stripprog>::
+    Strip utility to use for the kernel compilation.
 
 *--kernel-target*=<t>::
     Override default make target (bzImage), note that values
@@ -272,6 +293,9 @@ LOW-LEVEL COMPILATION OPTIONS
 *--utils-as*=<assembler>::
     Assembler to use for utilities.
 
+*--utils-ar*=<archiver>::
+    Archiver to use for utilities.
+
 *--utils-cflags*=<cflags>::
     C compiler flags used to compile utilities.
 
@@ -286,6 +310,24 @@ LOW-LEVEL COMPILATION OPTIONS
 
 *--utils-make*=<makeprog>::
     GNU Make to use for utilities.
+
+*--utils-nm*=<nm>::
+    NM utility to use for utilities.
+
+*--utils-objcopy*=<objcopyprog>::
+    Objcopy utility to use for utilities.
+
+*--utils-objdump*=<objdumpprog>::
+    Objdump utility to use for utilities.
+
+*--utils-ranlib*=<ranlibprog>::
+    Ranlib utility to use for utilities.
+
+*--utils-readelf*=<readelfprof>::
+    Readelf utility to use for utilities.
+
+*--utils-strip*=<striprog>::
+    Strip utility to use for utilities.
 
 *--makeopts*=<makeopts>::
     GNU Make options such as -j2, etc.
