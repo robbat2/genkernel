@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 2019-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # distcc is known to fail compiling boost and will fallback
@@ -18,6 +18,14 @@ create_user-config.jam() {
 	cat > "${user_config_jam}" <<- __EOF__ || die
 		using ${compiler} : ${compiler_version} : ${compiler_executable} : <cflags>"${CFLAGS}" <cxxflags>"${CXXFLAGS}" <linkflags>"${LDFLAGS}" ;
 	__EOF__
+
+	# Boost.Build does not allow for disabling of numpy
+	# extensions, thereby leading to automagic numpy
+	# https://github.com/boostorg/python/issues/111#issuecomment-280447482
+	sed \
+		-e 's/\[ unless \[ python\.numpy \] : <build>no \]/<build>no/g' \
+		-i "${S}"/libs/python/build/Jamfile \
+		|| die
 }
 
 ejam() {
