@@ -12,10 +12,12 @@ QA_IGNORE_DYNAMICALLY_LINKED_PROGRAM='(bjam|b2)$'
 src_compile() {
 	cd engine || die "Failed to chdir to '${S}/engine'!"
 
+	# Using BUILD CXX here because the host system
+	# building the initramfs must be able to execute created b2 program
 	local myargs=(
 		./build.sh
 		cxx
-		--cxx="$(tc-getCXX)"
+		--cxx="$(tc-getBUILD_CXX)"
 		--cxxflags="${CXXFLAGS}"
 		-d+2
 		--without-python
