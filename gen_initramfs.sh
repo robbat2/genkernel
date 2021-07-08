@@ -1754,12 +1754,13 @@ append_modules() {
 		gen_die "${error_message}"
 	fi
 
+	determine_KEXT
+
 	cd "${modules_srcdir}" || gen_die "Failed to chdir to '${modules_srcdir}'!"
 
 	print_info 2 "$(get_indent 2)modules: >> Copying modules from '${modules_srcdir}' to initramfs ..."
 
 	local i= mymod=
-	local -x KEXT="$(modules_kext)"
 	local n_copied_modules=0
 	for i in $(gen_dep_list)
 	do

@@ -1,6 +1,41 @@
 #!/bin/bash
 # $Id$
 
+determine_KEXT() {
+	local kconfig_file_used="${KERNEL_CONFIG}"
+	if isTrue "${BUILD_KERNEL}"
+	then
+		kconfig_file_used="${KERNEL_OUTPUTDIR}/.config"
+	fi
+
+	KEXT='.ko'
+
+	declare -A module_compression_algorithms=()
+	module_compression_algorithms[NONE]='.ko'
+	module_compression_algorithms[GZIP]='.ko.gz'
+	module_compression_algorithms[XZ]='.ko.xz'
+	module_compression_algorithms[ZSTD]='.ko.zst'
+
+	local module_compression_algorithm
+	for module_compression_algorithm in "${!module_compression_algorithms[@]}"
+	do
+		print_info 5 "Checking if module compression algorithm '${module_compression_algorithm}' is being used ..."
+
+		local koption="CONFIG_MODULE_COMPRESS_${module_compression_algorithm}"
+		local value_koption=$(kconfig_get_opt "${kconfig_file_used}" "${koption}")
+		if [[ "${value_koption}" != "y" ]]
+		then
+			print_info 5 "Cannot use '${module_compression_algorithm}' algorithm for module compression, kernel option '${koption}' is not set!"
+			continue
+		fi
+
+		print_info 5 "Will use '${module_compression_algorithm}' algorithm for kernel module compression!"
+		KEXT="${module_compression_algorithms[${module_compression_algorithm}]}"
+		break
+	done
+	unset module_compression_algorithms module_compression_algorithm koption value_koption
+}
+
 determine_KV() {
 	local old_KV=
 	[ -n "${KV}" ] && old_KV="${KV}"
