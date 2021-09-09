@@ -1,0 +1,12 @@
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -155,6 +155,8 @@ tools_kmod_SOURCES += \
+ 	tools/remove.c
+ endif
+ 
++tools_kmod_LDFLAGS = -all-static
++
+ tools_kmod_LDADD = \
+ 	shared/libshared.la \
+ 	libkmod/libkmod-internal.la
+ 

@@ -1727,8 +1727,18 @@ append_modules() {
 		rm -r "${TDIR}" || gen_die "Failed to clean out existing '${TDIR}'!"
 	fi
 
+	populate_binpkg kmod
+
 	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
+
+	unpack "$(get_gkpkg_binpkg kmod)" "${TDIR}"
+
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
+
+	# Delete unneeded files
+	rm -rf \
+		usr/include \
+		usr/lib
 
 	local mydir=
 	for mydir in \
@@ -1788,7 +1798,7 @@ append_modules() {
 		|| gen_die "Failed to copy '${modules_srcdir}/modules*' to '${modules_dstdir}'!"
 
 	print_info 2 "$(get_indent 2)modules: Updating modules.dep ..."
-	local a depmod_cmd=( depmod -a -b "${TDIR}" ${KV} )
+	local depmod_cmd=( depmod -a -b "${TDIR}" ${KV} )
 	print_info 3 "COMMAND: ${depmod_cmd[*]}" 1 0 1
 	eval "${depmod_cmd[@]}" || gen_die "Failed to run '${depmod_cmd[*]}'!"
 
@@ -1985,6 +1995,16 @@ append_data() {
 
 create_initramfs() {
 	print_info 1 "initramfs: >> Initializing ..."
+
+	if ! isTrue "${BUILD_KERNEL}"
+	then
+		# Check early for suitable kmod
+		determine_KEXT
+		if ! isTrue "$(is_kext_supported_by_kmod "${KEXT}")"
+		then
+			gen_die "${KMOD_CMD} does not support chosen module compression algorithm. Please re-emerge sys-apps/kmod with USE=$(get_kext_kmod_use_flag "${KEXT}") enabled or adjust CONFIG_MODULE_COMPRESS_* kernel option!"
+		fi
+	fi
 
 	# Create empty cpio
 	CPIO_ARCHIVE="${TMPDIR}/${GK_FILENAME_TEMP_INITRAMFS}"

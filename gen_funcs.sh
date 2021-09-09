@@ -287,6 +287,48 @@ is_psf_file() {
 	echo "${file_is_psf}"
 }
 
+is_kext_supported_by_kmod() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local requested_feature=${1}
+	requested_feature=${requested_feature##*.}
+	requested_feature=${requested_feature^^}
+
+	local is_supported=no
+
+	if [[ "${requested_feature}" == GZ ]]
+	then
+		requested_feature=ZLIB
+	elif [[ "${requested_feature}" == ZST ]]
+	then
+		requested_feature=ZSTD
+	fi
+
+	case "${requested_feature}" in
+		KO)
+			is_supported=yes
+			;;
+		*)
+			local line
+			while read line; do
+				if [[ ! ${line} =~ ^[\+\-] ]]
+				then
+					continue
+				fi
+
+				if [[ ${line} =~ \+${requested_feature} ]]
+				then
+					is_supported=yes
+					break
+				fi
+			done < <("${KMOD_CMD}" -V)
+			;;
+	esac
+
+	echo "${is_supported}"
+}
+
 is_valid_ssh_host_keys_parameter_value() {
 	local parameter_value=${1}
 
@@ -2121,6 +2163,36 @@ make_bootdir_writable() {
 	then
 		gen_die "Cannot write to bootdir '${BOOTDIR}'!"
 	fi
+}
+
+get_kext_kmod_use_flag() {
+	[[ ${#} -ne 1 ]] \
+		&& gen_die "$(get_useful_function_stack "${FUNCNAME}")Invalid usage of ${FUNCNAME}(): Function takes exactly one argument (${#} given)!"
+
+	local kext=${1}
+	kext=${kext##*.}
+	kext=${kext^^}
+
+	local use_flag=
+
+	case "${kext}" in
+		GZ)
+			use_flag="zlib"
+			;;
+		KO)
+			;;
+		XZ)
+			use_flag="lzma"
+			;;
+		ZST)
+			use_flag="zstd"
+			;;
+		*)
+			gen_die "$(get_useful_function_stack)Internal error: KEXT '${kext}' is unknown!"
+			;;
+	esac
+
+	echo "${use_flag}"
 }
 
 # @FUNCTION: get_nproc

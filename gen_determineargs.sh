@@ -314,6 +314,12 @@ determine_real_args() {
 		gen_die "'realpath -m /' failed. We need a realpath version which supports '-m' mode!"
 	fi
 
+	KMOD_CMD=$(which kmod 2>/dev/null)
+	if [ -z "${KMOD_CMD}" ]
+	then
+		gen_die "kmod not found. Is sys-apps/kmod installed?"
+	fi
+
 	if hash grep &>/dev/null
 	then
 		GREP_CMD=grep

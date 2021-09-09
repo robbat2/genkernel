@@ -20,8 +20,9 @@ src_prepare() {
 src_configure() {
 	local myconf=(
 		--enable-static
+		--disable-manpages
 		--disable-python
-		--disable-tools
+		--enable-tools
 		--with-xz
 		--with-zlib
 		--with-zstd
@@ -48,4 +49,27 @@ src_install() {
 
 	rm -rf \
 		"${D}"/usr/share/
+
+	"${STRIP}" --strip-all "${D}"/usr/bin/kmod \
+		|| die "Failed to strip '${D}/usr/bin/kmod'!"
+
+	mkdir "${D}"/bin || die "Failed to create '${D}/bin'!"
+
+	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
+
+	# We need to install these links where busybox would create them
+	local symlink_targets=()
+	symlink_targets+=( /sbin/depmod )
+	symlink_targets+=( /sbin/insmod )
+	symlink_targets+=( /sbin/lsmod )
+	symlink_targets+=( /sbin/modinfo )
+	symlink_targets+=( /sbin/modprobe )
+	symlink_targets+=( /sbin/rmmod )
+
+	local symlink_target=
+	for symlink_target in "${symlink_targets[@]}"
+	do
+		ln -s ../usr/bin/kmod "${D}${symlink_target}" \
+			|| die "Failed to create symlink '${D}${symlink_target}' to '${D}/usr/bin/kmod'!"
+	done
 }
