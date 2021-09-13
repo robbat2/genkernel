@@ -86,24 +86,24 @@ longusage() {
   echo "  Low-Level Compile settings"
   echo "	--cross-compile=<target-triplet>"
   echo "				Target triple (i.e. aarch64-linux-gnu) to build for"
-  echo "	--kernel-as=<assembler>	Assembler to use for kernel"
   echo "	--kernel-ar=<archiver>	Archiver to use for kernel"
+  echo "	--kernel-as=<assembler>	Assembler to use for kernel"
   echo "	--kernel-cc=<compiler>	Compiler to use for kernel (e.g. distcc)"
   echo "	--kernel-ld=<linker>	Linker to use for kernel"
-  echo "	--kernel-nm=<nm>	NM utility to use for kernel"
   echo "	--kernel-make=<makeprg> GNU Make to use for kernel"
+  echo "	--kernel-nm=<nm>	NM utility to use for kernel"
   echo "	--kernel-target=<t>	Override default make target (bzImage)"
   echo "	--kernel-binary=<path>	Override default kernel binary path (arch/foo/boot/bar)"
   echo "	--kernel-outputdir=<path>"
   echo "				Save output files outside the source tree"
-  echo "	--utils-as=<assembler>	Assembler to use for utils"
   echo "	--utils-ar=<archiver>	Archiver to use for utils"
+  echo "	--utils-as=<assembler>	Assembler to use for utils"
   echo "	--utils-cc=<compiler>	C Compiler to use for utilities"
   echo "	--utils-cxx=<compiler>	C++ Compiler to use for utilities"
   echo "	--utils-cflags=<cflags> C compiler flags used to compile utilities"
   echo "	--utils-ld=<linker>	Linker to use for utils"
-  echo "	--utils-nm=<nm>		NM utility to use for utils"
   echo "	--utils-make=<makeprog>	GNU Make to use for utils"
+  echo "	--utils-nm=<nm>		NM utility to use for utils"
   echo "	--makeopts=<makeopts>	Make options such as -j2, etc ..."
   echo "	--mountboot		Mount BOOTDIR automatically if mountable"
   echo "	--no-mountboot		Don't mount BOOTDIR automatically"
@@ -292,13 +292,13 @@ parse_cmdline() {
 			CMD_CROSS_COMPILE="${*#*=}"
 			print_info 3 "CMD_CROSS_COMPILE: ${CMD_CROSS_COMPILE}"
 			;;
-		--kernel-as=*)
-			CMD_KERNEL_AS="${*#*=}"
-			print_info 3 "CMD_KERNEL_AS: ${CMD_KERNEL_AS}"
-			;;
 		--kernel-ar=*)
 			CMD_KERNEL_AR="${*#*=}"
 			print_info 3 "CMD_KERNEL_AR: ${CMD_KERNEL_AR}"
+			;;
+		--kernel-as=*)
+			CMD_KERNEL_AS="${*#*=}"
+			print_info 3 "CMD_KERNEL_AS: ${CMD_KERNEL_AS}"
 			;;
 		--kernel-cc=*)
 			CMD_KERNEL_CC="${*#*=}"
@@ -308,13 +308,13 @@ parse_cmdline() {
 			CMD_KERNEL_LD="${*#*=}"
 			print_info 3 "CMD_KERNEL_LD: ${CMD_KERNEL_LD}"
 			;;
-		--kernel-nm=*)
-			CMD_KERNEL_NM="${*#*=}"
-			print_info 3 "CMD_KERNEL_NM: ${CMD_KERNEL_NM}"
-			;;
 		--kernel-make=*)
 			CMD_KERNEL_MAKE="${*#*=}"
 			print_info 3 "CMD_KERNEL_MAKE: ${CMD_KERNEL_MAKE}"
+			;;
+		--kernel-nm=*)
+			CMD_KERNEL_NM="${*#*=}"
+			print_info 3 "CMD_KERNEL_NM: ${CMD_KERNEL_NM}"
 			;;
 		--kernel-objcopy=*)
 			CMD_KERNEL_OBJCOPY="${*#*=}"
@@ -348,13 +348,13 @@ parse_cmdline() {
 			CMD_KERNEL_OUTPUTDIR="${*#*=}"
 			print_info 3 "CMD_KERNEL_OUTPUTDIR: ${CMD_KERNEL_OUTPUTDIR}"
 			;;
-		--utils-as=*)
-			CMD_UTILS_AS="${*#*=}"
-			print_info 3 "CMD_UTILS_AS: ${CMD_UTILS_AS}"
-			;;
 		--utils-ar=*)
 			CMD_UTILS_AR="${*#*=}"
 			print_info 3 "CMD_UTILS_AR: ${CMD_UTILS_AR}"
+			;;
+		--utils-as=*)
+			CMD_UTILS_AS="${*#*=}"
+			print_info 3 "CMD_UTILS_AS: ${CMD_UTILS_AS}"
 			;;
 		--utils-cc=*)
 			CMD_UTILS_CC="${*#*=}"
@@ -372,13 +372,13 @@ parse_cmdline() {
 			CMD_UTILS_LD="${*#*=}"
 			print_info 3 "CMD_UTILS_LD: ${CMD_UTILS_LD}"
 			;;
-		--utils-nm=*)
-			CMD_UTILS_NM="${*#*=}"
-			print_info 3 "CMD_UTILS_NM: ${CMD_UTILS_NM}"
-			;;
 		--utils-make=*)
 			CMD_UTILS_MAKE="${*#*=}"
 			print_info 3 "CMD_UTILS_MAKE: ${CMD_UTILS_MAKE}"
+			;;
+		--utils-nm=*)
+			CMD_UTILS_NM="${*#*=}"
+			print_info 3 "CMD_UTILS_NM: ${CMD_UTILS_NM}"
 			;;
 		--utils-objcopy=*)
 			CMD_UTILS_OBJCOPY="${*#*=}"

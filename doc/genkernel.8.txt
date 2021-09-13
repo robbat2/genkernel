@@ -243,11 +243,11 @@ LOW-LEVEL COMPILATION OPTIONS
     when the system running genkernel has a different architecture like
     the system which should boot the created kernel/initramfs.
 
-*--kernel-as*=<assembler>::
-    Assembler to use for the kernel compilation.
-
 *--kernel-ar*=<archiver>::
     Archiver to use for the kernel compilation.
+
+*--kernel-as*=<assembler>::
+    Assembler to use for the kernel compilation.
 
 *--kernel-cc*=<compiler>::
     Compiler to use for the kernel compilation (e.g. distcc).
@@ -255,11 +255,11 @@ LOW-LEVEL COMPILATION OPTIONS
 *--kernel-ld*=<linker>::
     Linker to use for the kernel compilation.
 
-*--kernel-nm*=<nm>::
-    NM utility to use for the kernel compilation.
-
 *--kernel-make*=<makeprog>::
     GNU Make to use for the kernel compilation.
+
+*--kernel-nm*=<nm>::
+    NM utility to use for the kernel compilation.
 
 *--kernel-objcopy*=<objcopyprog>::
     Objcopy utility to use for the kernel compilation.
@@ -290,11 +290,11 @@ LOW-LEVEL COMPILATION OPTIONS
     tree (eg because cannot write to that directory as the user genkernel is
     running as).
 
-*--utils-as*=<assembler>::
-    Assembler to use for utilities.
-
 *--utils-ar*=<archiver>::
     Archiver to use for utilities.
+
+*--utils-as*=<assembler>::
+    Assembler to use for utilities.
 
 *--utils-cflags*=<cflags>::
     C compiler flags used to compile utilities.
