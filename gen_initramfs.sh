@@ -1832,10 +1832,19 @@ append_modprobed() {
 	mkdir "${TDIR}" || gen_die "Failed to create '${TDIR}'!"
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 
-	mkdir -p "${TDIR}"/etc || gen_die "Failed to create '${TDIR}/etc'!"
+	local modprobe_dir
+	for modprobe_dir in /etc/modprobe.d /lib/modprobe.d
+	do
+		if [[ ! -e "${modprobe_dir}" ]]; then
+			print_info 5 "'${modprobe_dir}' does not exist; Skipping ..."
+			continue
+		fi
 
-	cp -rL "/etc/modprobe.d" "${TDIR}"/etc/ 2>/dev/null \
-		|| gen_die "Failed to copy '/etc/modprobe.d'!"
+		mkdir -p "${TDIR}${modprobe_dir}" || gen_die "Failed to create '${TDIR}${modprobe_dir}'!"
+
+		cp -aL "${modprobe_dir}"/. "${TDIR}${modprobe_dir}" 2>/dev/null \
+			|| gen_die "Failed to copy '${modprobe_dir}'!"
+	done
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
 	log_future_cpio_content
