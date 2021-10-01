@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_configure() {
@@ -9,6 +9,14 @@ src_configure() {
 		--disable-python
 		--disable-documentation
 	)
+
+	if isTrue "$(is_glibc)"
+	then
+		myconf+=( --enable-backtrace )
+	else
+		# backtrace does not work on musl, bug #815676
+		myconf+=( --disable-backtrace )
+	fi
 
 	gkconf "${myconf[@]}"
 }
