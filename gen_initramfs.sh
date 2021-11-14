@@ -562,8 +562,16 @@ append_busybox() {
 	if isTrue "$(is_glibc)"
 	then
 		local libdir=$(get_chost_libdir)
-		mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
-		copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_dns.so
+		local libnss_dns="${libdir}/libnss_dns.so"
+
+		# NSS dns module was moved into libc in >=glibc-2.34
+		# but when this file exists we are probably dealing with older glibc
+		# and need to manually copy the module.
+		if [[ -f "${libnss_dns}" ]]
+		then
+			mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
+			copy_system_binaries "${TDIR}"/lib "${libnss_dns}"
+		fi
 	fi
 
 	log_future_cpio_content
