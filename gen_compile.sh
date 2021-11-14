@@ -515,7 +515,12 @@ populate_binpkg() {
 		if isTrue "$(is_glibc)"
 		then
 			local libdir=$(get_chost_libdir)
-			local glibc_test_file="${libdir}/libnss_files.so"
+			local glibc_test_file="${libdir}/libc.a"
+
+			if [[ ! -f "${glibc_test_file}" ]]
+			then
+				gen_die "Internal error: File '${glibc_test_file}' not found! Do not know how to deal with this glibc version."
+			fi
 
 			if [[ "${BINPKG}" -ot "${glibc_test_file}" ]]
 			then
