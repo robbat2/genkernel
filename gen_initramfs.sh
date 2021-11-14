@@ -1601,8 +1601,16 @@ append_dropbear() {
 	if isTrue "$(is_glibc)"
 	then
 		local libdir=$(get_chost_libdir)
-		mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
-		copy_system_binaries "${TDIR}"/lib "${libdir}"/libnss_files.so
+		local libnss_files="${libdir}/libnss_files.so"
+
+		# NSS files module was moved into libc in >=glibc-2.34
+		# but when this file exists we are probably dealing with older glibc
+		# and need to manually copy the module.
+		if [[ -f "${libnss_files}" ]]
+		then
+			mkdir -p "${TDIR}"/lib || gen_die "Failed to create '${TDIR}/lib'!"
+			copy_system_binaries "${TDIR}"/lib "${libnss_files}"
+		fi
 	fi
 
 	cd "${TDIR}" || gen_die "Failed to chdir to '${TDIR}'!"
