@@ -322,7 +322,7 @@ is_kext_supported_by_kmod() {
 					is_supported=yes
 					break
 				fi
-			done < <("${KMOD_CMD}" -V)
+			done < <("${KMOD_CMD}" -V 2>/dev/null)
 			;;
 	esac
 

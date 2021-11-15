@@ -314,12 +314,6 @@ determine_real_args() {
 		gen_die "'realpath -m /' failed. We need a realpath version which supports '-m' mode!"
 	fi
 
-	KMOD_CMD=$(which kmod 2>/dev/null)
-	if [ -z "${KMOD_CMD}" ]
-	then
-		gen_die "kmod not found. Is sys-apps/kmod installed?"
-	fi
-
 	if hash grep &>/dev/null
 	then
 		GREP_CMD=grep
@@ -1230,6 +1224,15 @@ determine_real_args() {
 		if  ! isTrue "${BUILD_KERNEL}" || ! isTrue "${BUILD_RAMDISK}"
 		then
 			gen_die "Invalid action specified: --integrated-initramfs option requires action \"all\", i.e. building of kernel and initramfs at the same time!"
+		fi
+	fi
+
+	KMOD_CMD=$(which kmod 2>/dev/null)
+	if ! isTrue "${BUILD_STATIC}"
+	then
+		if [ -z "${KMOD_CMD}" ]
+		then
+			gen_die "kmod not found. Is sys-apps/kmod installed?"
 		fi
 	fi
 
