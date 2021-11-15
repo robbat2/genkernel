@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_prepare() {
@@ -29,7 +29,7 @@ src_configure() {
 	# no selinux
 	export ac_cv_{header_selinux_{context,flash,selinux}_h,search_setfilecon}=no
 
-	if tc-is-cross-compiler
+	if isTrue "$(tc-is-cross-compiler)"
 	then
 		export fu_cv_sys_stat_statfs2_bsize=yes #311569
 		export gl_cv_func_realpath_works=yes #416629
