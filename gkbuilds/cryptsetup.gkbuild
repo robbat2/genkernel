@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 src_configure() {
@@ -13,6 +13,7 @@ src_configure() {
 		--sbindir=/sbin
 		--disable-nls
 		--disable-selinux
+		--disable-ssh-token
 		--disable-veritysetup
 		--disable-cryptsetup-reencrypt
 		--disable-integritysetup
