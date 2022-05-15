@@ -2007,11 +2007,14 @@ append_auxiliary() {
 }
 
 append_data() {
-	local name=$1 var=$2
+	[ $# -eq 0 ] && gen_die "append_data() called with zero arguments"
+
+	local name=$1
 	local func="append_${name}"
 
-	[ $# -eq 0 ] && gen_die "append_data() called with zero arguments"
-	if [ $# -eq 1 ] || isTrue "${var}"
+	shift
+
+	if [ $# -eq 0 ] || anyTrue "$@"
 	then
 		print_info 1 "$(get_indent 1)>> Appending ${name} cpio data ..."
 		${func} || gen_die "${func}() failed!"
@@ -2037,7 +2040,7 @@ create_initramfs() {
 	append_data 'base_layout'
 	append_data 'util-linux'
 	append_data 'eudev'
-	append_data 'devicemanager'
+	append_data 'devicemanager' "${DMRAID}" "${LVM}" "${LUKS}" "${MULTIPATH}"
 	append_data 'auxiliary' "${BUSYBOX}"
 	append_data 'busybox' "${BUSYBOX}"
 	append_data 'b2sum' "${B2SUM}"
