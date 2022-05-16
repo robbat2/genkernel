@@ -47,11 +47,8 @@ src_install() {
 
 	mkdir "${D}"/sbin || die "Failed to create '${D}/sbin'!"
 
-	cp -a blkid.static "${D}"/sbin/blkid \
-		|| die "Failed to copy '${S}/blkid.static' to '${D}/sbin/blkid'!"
-
-	cp -a switch_root "${D}"/sbin/switch_root \
-		|| die "Failed to copy '${S}/switch_root' to '${D}/sbin/switch_root'!"
+	install_exe 'blkid.static' "${D}"/sbin/blkid
+	install_exe 'switch_root' "${D}"/sbin/switch_root
 
 	local sbin
 	for sbin in \

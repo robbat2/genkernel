@@ -34,8 +34,7 @@ src_install() {
 		"${D}"/sbin/* \
 		"${D}"/usr/share/
 
-	cp -a cryptsetup.static "${D}"/sbin/cryptsetup \
-		|| die "Failed to copy '${S}/cryptsetup.static' to '${D}/sbin/cryptsetup'!"
+	install_exe 'cryptsetup.static' "${D}"/sbin/cryptsetup
 
 	"${STRIP}" --strip-all "${D}"/sbin/cryptsetup \
 		|| die "Failed to strip '${D}/sbin/cryptsetup'!"

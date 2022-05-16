@@ -1983,6 +1983,29 @@ check_distfiles() {
 	fi
 }
 
+# @FUNCTION: install_exe
+# @USAGE: <file> <destination>
+# @DESCRIPTION:
+# Finds an executable binary file and installs it in cases where there may be
+# similarly named shell wrapper scripts. This happens when GNU libtool creates
+# an executable named 'foo' while slibtool creates '.libs/foo' and 'foo' is a
+# shell script that should not be installed.
+install_exe() {
+	local file="${1##*/}"
+	local dest="${2}"
+
+	local dir
+	[[ "${1%/*}" == "${file}" ]] || dir="${1%/*}/"
+
+	[[ -f "${dir}${file}" ]] || gen_die "File '${dir}${file}' does not exist!"
+
+	# Ensure only the binaries are installed and not a similarly named wrapper script
+	find "${S}/${dir}" -type f -name "${file}" -print0 |
+		xargs -0 file | grep executable | grep ELF | cut -f 1 -d : |
+		xargs -I '{}' cp -a '{}' "${dest}" ||
+		gen_die "Failed to copy '${S}/${dir}${file}' to '${dest}'!"
+}
+
 # @FUNCTION: expand_file
 # @USAGE: <file>
 # @DESCRIPTION:
