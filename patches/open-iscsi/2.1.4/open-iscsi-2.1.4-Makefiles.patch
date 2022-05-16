@@ -9,7 +9,7 @@
  
  LIBISCSI_USR_DIR=$(TOPDIR)/libopeniscsiusr
  
-@@ -44,17 +44,18 @@ EXTRA_MAN_FILES = libopeniscsiusr.h.3
+@@ -45,17 +45,18 @@ EXTRA_MAN_FILES = libopeniscsiusr.h.3
  OBJS = context.o misc.o session.o sysfs.o iface.o idbm.o node.o default.o
  
  CFLAGS ?= -O2 -g
@@ -40,10 +40,10 @@
 +PKG_CONFIG ?= pkg-config
  
  CFLAGS ?= -O2 -g
- WARNFLAGS ?= -Wall -Wstrict-prototypes
-@@ -76,9 +76,9 @@ iscsistart: $(ISCSI_LIB_SRCS) $(INITIATOR_SRCS) $(FW_BOOT_SRCS) \
+ WARNFLAGS ?= -Wall -Wextra -Werror -Wstrict-prototypes -fno-common
+@@ -78,9 +78,9 @@ iscsistart: $(ISCSI_LIB_SRCS) $(INITIATOR_SRCS) $(FW_BOOT_SRCS) \
  		iscsistart.o statics.o
- 	$(CC) $(CFLAGS) $^ -o $@ -static -lrt $(LDFLAGS) $(ISCSI_LIB)
+ 	$(CC) $(CFLAGS) $^ -o $@ -lcrypto -lrt $(LDFLAGS) $(ISCSI_LIB)
  clean:
 -	rm -f *.o $(PROGRAMS) .depend $(LIBSYS)
 +	$(RM) *.o $(PROGRAMS) .depend $(LIBSYS)
