@@ -1,0 +1,11 @@
+--- a/usr/Makefile
++++ b/usr/Makefile
+@@ -76,7 +76,7 @@	$(CC) $(CFLAGS) $^ -o $@ -lisns -lcrypto -lmount $(LDFLAGS) $(ISCSI_LIB)
+ 
+ iscsistart: $(ISCSI_LIB_SRCS) $(INITIATOR_SRCS) $(FW_BOOT_SRCS) \
+ 		iscsistart.o statics.o
+-	$(CC) $(CFLAGS) $^ -o $@ -lcrypto -lrt $(LDFLAGS) $(ISCSI_LIB)
++	$(CC) $(CFLAGS) $^ -o $@ -static -lcrypto -lrt $(LDFLAGS) $(ISCSI_LIB)
+ clean:
+	$(RM) *.o $(PROGRAMS) .depend $(LIBSYS)
+ 
