@@ -22,6 +22,15 @@ isTrue() {
 	return 1
 }
 
+anyTrue() {
+	local x
+	for x
+	do
+		isTrue "${x}" && return 0
+	done
+	return 1
+}
+
 set_color_vars() {
 	if ! isTrue "${NOCOLOR}"
 	then
