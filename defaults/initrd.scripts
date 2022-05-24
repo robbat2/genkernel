@@ -1848,7 +1848,7 @@ openLUKS() {
 			good_msg "The LUKS device ${LUKS_DEVICE} meanwhile was opened by someone else."
 			break
 		# if crypt_silent=1 and some error occurs, enter shell quietly
-		elif [ \( ${CRYPT_SILENT} -eq 1 \) -a \( \( \( ${DEV_ERROR} -eq 1 \) \) ]
+		elif [ \( ${CRYPT_SILENT} -eq 1 \) -a \( \( ${DEV_ERROR} -eq 1 \) \) ]
 		then
 			run_emergency_shell
 		elif [ \( ${CRYPT_SILENT} -eq 1 \) -a \( \( \( ${HEADER_ERROR} -eq 1 \) \) -o \( ${HEADERDEV_ERROR} -eq 1 \) \) ]
