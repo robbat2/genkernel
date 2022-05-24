@@ -2486,17 +2486,22 @@ ipv6_tentative() {
 }
 
 start_LUKS_root() {
-	# if key is set but neither ssh enabled or key device is given, find
-	# the key device
+	# if key/header is set but neither ssh enabled or key device is given, find
+	# the key/header device
 
-	if [ -n "${CRYPT_ROOT_KEY}" ]
+	if (
+		[ -n "${CRYPT_ROOT_KEY}" -a -z "${CRYPT_ROOT_KEYDEV}" ] ||
+		[ -n "${CRYPT_ROOT_HEADER}" -a -z "${CRYPT_ROOT_HEADERDEV}" ]
+	)
 	then
-		( [ -z "${CRYPT_ROOT_KEYDEV}" ] || [ -z "${CRYPT_ROOT_HEADERDEV}" ] ) \
-			&& sleep 6
-
-		[ -z "${CRYPT_ROOT_KEYDEV}" ] && bootstrapKey "ROOT"
-		[ -z "${CRYPT_ROOT_HEADERDEV}" ] && bootstrapHeader "ROOT"
+		sleep 6
 	fi
+
+	[ -n "${CRYPT_ROOT_KEY}" -a -z "${CRYPT_ROOT_KEYDEV}" ] \
+		&& bootstrapKey "ROOT"
+
+	[ -n "${CRYPT_ROOT_HEADER}" -a -z "${CRYPT_ROOT_HEADERDEV}" ] \
+		&& bootstrapHeader "ROOT"
 
 	if [ -n "${CRYPT_ROOT}" ]
 	then
@@ -2512,15 +2517,21 @@ start_LUKS_root() {
 }
 
 start_LUKS_swap() {
-	if [ -n "${CRYPT_SWAP_KEY}" ]
-	then
-		# same for swap, but no need to sleep if root was unencrypted
-		( [ -z "${CRYPT_ROOT_KEYDEV}" ] || [ -z "${CRYPT_ROOT_HEADERDEV}" ] ) \
-			&& [ -z "${CRYPT_ROOT}" ] && sleep 6
+	# same for swap, but no need to sleep if root was unencrypted
 
-		[ -z "${CRYPT_SWAP_KEYDEV}" ] && bootstrapKey "SWAP"
-		[ -z "${CRYPT_SWAP_HEADERDEV}" ] && bootstrapHeader "SWAP"
+	if (
+		[ -n "${CRYPT_SWAP_KEY}" -a -z "${CRYPT_SWAP_KEYDEV}" ] ||
+		[ -n "${CRYPT_SWAP_HEADER}" -a -z "${CRYPT_SWAP_HEADERDEV}" ]
+	)
+	then
+		[ -z "${CRYPT_ROOT}" ] && sleep 6
 	fi
+
+	[ -n "${CRYPT_SWAP_KEY}" -a -z "${CRYPT_SWAP_KEYDEV}" ] \
+		&& bootstrapKey "SWAP"
+
+	[ -n "${CRYPT_SWAP_HEADER}" -a -z "${CRYPT_SWAP_HEADERDEV}" ] \
+		&& bootstrapHeader "SWAP"
 
 	if [ -n "${CRYPT_SWAP}" ]
 	then
