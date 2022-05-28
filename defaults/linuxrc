@@ -671,7 +671,8 @@ keyctl_keyadd
 if [ "${CDROOT}" != '1' ]
 then
 	if ( [ -n "${CRYPT_SWAP_KEY}" ] && [ -z "${CRYPT_SWAP_KEYDEV}" ] ) || \
-	   ( [ -n "${CRYPT_SWAP_HEADER}" ] && [ -z "${CRYPT_SWAP_HEADERDEV}" ] )
+	   ( [ -n "${CRYPT_SWAP_HEADER}" ] && [ -z "${CRYPT_SWAP_HEADERDEV}" ] ) || \
+	   ( [ "${REAL_ROOT}" = "${REAL_RESUME}" ] || [ ${USE_LVM_NORMAL} -eq 1 ] )
 	then
 		# the swap key or header might be on the root fs so start it first in this case
 		start_LUKS_root
