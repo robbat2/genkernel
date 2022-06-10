@@ -32,7 +32,7 @@ GKICM_LZMA_EXT=".lzma"
 GKICM_LZMA_PKG="app-arch/xz-utils"
 
 GKICM_XZ_KOPTNAME="XZ"
-GKICM_XZ_CMD="xz -e --check=none -z -f -9"
+GKICM_XZ_CMD="xz -e --check=none -z -f -9 -T 0"
 GKICM_XZ_EXT=".xz"
 GKICM_XZ_PKG="app-arch/xz-utils"
 
