@@ -53,6 +53,6 @@ src_install() {
 	find "${D}/usr/share/boost-build" -iname "*.py" -delete \
 		|| die "Failed to remove python files"
 
-	echo 'variant gentoorelease : release : <optimization>none <debug-symbols>none <runtime-link>shared ;' > "${D}/usr/share/boost-build/site-config.jam" \
+	echo 'variant gentoorelease : release : <optimization>off <debug-symbols>off <runtime-link>shared ;' > "${D}/usr/share/boost-build/site-config.jam" \
 		|| die "Failed to create '${D}/usr/share/boost-build/site-config.jam'!"
 }
